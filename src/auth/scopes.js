@@ -74,10 +74,14 @@ export const SCOPE_GROUPS = {
   ],
   dataTransfer: [
     'https://www.googleapis.com/auth/admin.datatransfer'
-  ],
-  alertCenter: [
-    'https://www.googleapis.com/auth/apps.alerts'
   ]
+  // alertCenter ('https://www.googleapis.com/auth/apps.alerts') is intentionally
+  // left out of the login request: Alert Center is a limited-availability Google
+  // API and Google's OAuth consent screen won't let this scope be requested/shown
+  // even with the API enabled, which blocks the ENTIRE login. The alertcenter
+  // tools still exist in the code; they just won't be authorized until Google
+  // allowlists this scope for the project (or a future service-account/domain-wide
+  // delegation setup, which doesn't go through this same consent screen).
 };
 
 export const ALL_SCOPES = Array.from(new Set(Object.values(SCOPE_GROUPS).flat()));
