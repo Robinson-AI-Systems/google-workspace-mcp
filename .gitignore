@@ -1,0 +1,7 @@
+node_modules/
+token.json
+config.json
+.env
+.env.local
+*.log
+.vercel

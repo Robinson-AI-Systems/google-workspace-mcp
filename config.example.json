@@ -1,0 +1,7 @@
+{
+  "_comment": "Copy this file to config.json and fill in your own values. Only used for LOCAL mode (running on your own computer). The hosted (Vercel) deployment uses environment variables instead - see DEPLOY.md.",
+  "authMode": "oauth",
+  "oauthClientId": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+  "oauthClientSecret": "YOUR_CLIENT_SECRET",
+  "oauthRedirectUri": "http://localhost:53682/oauth2callback"
+}

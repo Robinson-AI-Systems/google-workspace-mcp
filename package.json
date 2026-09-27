@@ -1,0 +1,26 @@
+{
+  "name": "robinson-google-workspace-mcp",
+  "version": "1.0.0",
+  "description": "Standalone MCP server giving Claude full control of Google Workspace: Gmail, Drive, Calendar, Sheets, Docs, Slides, Forms, Tasks, Contacts, Chat, plus complete Admin SDK (users, groups, domains, aliases, org units, devices, roles, security, reports, licensing) across multiple domains.",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "google-workspace-mcp": "src/index.js",
+    "google-workspace-mcp-authorize": "src/auth/cli-authorize.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "authorize": "node src/auth/cli-authorize.js",
+    "check": "node --check src/index.js && for f in src/**/*.js api/**/*.js; do node --check \"$f\"; done"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "@neondatabase/serverless": "^0.10.4",
+    "googleapis": "^144.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "Robinson AI Systems",
+  "license": "MIT"
+}
