@@ -40,6 +40,8 @@ Visit `https://YOUR-VERCEL-URL.vercel.app/api/google/authorize` in a browser, si
 
 The server asks Google which mailbox actually signed in and files the tokens under that email, so you cannot mislabel one. The first account you ever connect becomes the *default* (used by any Claude connection that never picked one). The home page of the server lists every connected account.
 
+Upgrading from the single-account version needs nothing from you: on its first request the new code copies the existing sign-in into the account list as the default. The old `google_auth` table is left in place so an older deployment can keep running against the same database; drop it by hand whenever you like.
+
 ## Part 4 — Add it to Claude as a custom connector
 
 1. In claude.ai, go to **Settings > Connectors > Add custom connector** (or a Project's connectors, if you want it scoped to one project).
