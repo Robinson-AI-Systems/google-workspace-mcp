@@ -7,12 +7,12 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { registry } from '../src/tools/index.js';
 import { errorResult } from '../src/tools/util.js';
-import { buildHostedApiClients } from '../src/auth/google-auth-hosted.js';
+import { buildHostedApiClients, ensureMigrated } from '../src/auth/google-auth-hosted.js';
 import { getAccessToken, initSchema } from '../src/db.js';
 
 export const config = { api: { bodyParser: true } };
 
-function buildServer() {
+function buildServer(googleAccount) {
   const server = new Server(
     { name: 'robinson-google-workspace-mcp', version: '1.0.0' },
     { capabilities: { tools: {} } }
@@ -27,7 +27,7 @@ function buildServer() {
       return { content: [{ type: 'text', text: `Unknown tool: ${name}` }], isError: true };
     }
     try {
-      const clients = await buildHostedApiClients();
+      const clients = await buildHostedApiClients(googleAccount);
       return await toolHandler(args || {}, clients);
     } catch (err) {
       return errorResult(err);
@@ -57,7 +57,12 @@ export default async function handler(req, res) {
     return;
   }
 
-  const server = buildServer();
+  // Upgrade older deployments (one shared Google login) in place, once.
+  await ensureMigrated();
+
+  // Every tool call on this connection acts as the Google account chosen at
+  // login time (NULL = the server's default account, for older connections).
+  const server = buildServer(tokenRecord.google_account || undefined);
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   res.on('close', () => {
     transport.close();

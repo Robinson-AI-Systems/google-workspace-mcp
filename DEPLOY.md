@@ -30,16 +30,24 @@ Tell Claude "go ahead and provision it" once you have your Google OAuth Client I
 
 Once deployed, go back to Google Cloud Console (Part 1, step 5) and make sure the redirect URI exactly matches your real Vercel URL, e.g. `https://robinson-google-workspace-mcp.vercel.app/api/google/callback`.
 
-## Part 3 — Connect your Google Workspace account (you do this — 1 minute)
+## Part 3 — Connect your Google Workspace account(s) (you do this — 1 minute each)
 
 Visit `https://YOUR-VERCEL-URL.vercel.app/api/google/authorize` in a browser, signed in as your Workspace **super admin** account, and approve access. This is what lets the server act on your whole Workspace, not just your own inbox.
 
+**More than one business on the same Workspace?** Repeat this once per mailbox. To skip Google's account chooser and give the account a friendly name, use:
+
+`https://YOUR-VERCEL-URL.vercel.app/api/google/authorize?account=ops@yourbusiness.com&label=Your%20Business`
+
+The server asks Google which mailbox actually signed in and files the tokens under that email, so you cannot mislabel one. The first account you ever connect becomes the *default* (used by any Claude connection that never picked one). The home page of the server lists every connected account.
+
 ## Part 4 — Add it to Claude as a custom connector
 
-1. In claude.ai, go to **Settings > Connectors > Add custom connector**.
+1. In claude.ai, go to **Settings > Connectors > Add custom connector** (or a Project's connectors, if you want it scoped to one project).
 2. Enter the URL: `https://YOUR-VERCEL-URL.vercel.app/api/mcp`
-3. Claude will redirect you to a small login page on your own server — enter the `ADMIN_PASSPHRASE` from Part 2.
-4. Done. All 327 tools are now available in any Claude conversation.
+3. Claude will redirect you to a small login page on your own server. If more than one Google account is connected, **pick the one this Claude connection should act as**, then enter the `ADMIN_PASSPHRASE` from Part 2.
+4. Done. Every tool in this connection now acts as that mailbox. Ask Claude to run `workspace_whoami` any time to confirm which one it is in.
+
+To switch a connection to a different account, disconnect and reconnect it and pick the other account. Connections made before the account picker existed keep working and use the default account.
 
 ## Notes on how the login works
 

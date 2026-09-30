@@ -14,8 +14,9 @@ import * as licensing from './licensing.js';
 import * as chat from './chat.js';
 import * as extraAdminApis from './extra-admin-apis.js';
 import * as workflows from './workflows.js';
+import * as accounts from './accounts.js';
 
 export const registry = mergeNamespaces([
   gmail, drive, calendar, sheets, docs, slides, forms, tasks, people,
-  adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows
+  adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts
 ]);

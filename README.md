@@ -1,6 +1,6 @@
 # Robinson Google Workspace MCP
 
-A Claude connector that gives Claude real, working control over your Google Workspace — not just email and calendar, but the admin side too: creating/suspending users, managing groups, adding domains and aliases, pushing Chrome policies, running security audits, and more. **327 tools** across every major Google Workspace service.
+A Claude connector that gives Claude real, working control over your Google Workspace — not just email and calendar, but the admin side too: creating/suspending users, managing groups, adding domains and aliases, pushing Chrome policies, running security audits, and more. **331 tools** across every major Google Workspace service, and it can hold sign-ins for more than one mailbox (e.g. one per business on the same Workspace), with each Claude connection bound to the one you pick.
 
 Built for one goal: you should be able to tell Claude what you want done in Google Workspace — in plain English — and have it actually happen, without you opening the admin console.
 
@@ -26,6 +26,7 @@ Built for one goal: you should be able to tell Claude what you want done in Goog
 | Domain verification | 3 | verify a new domain end-to-end |
 | Vault | 5 | legal holds, matters |
 | Data Transfer | 3 | bulk-transfer a departing employee's files |
+| **Accounts** | 4 | `workspace_whoami` (which mailbox this connection acts as), list/default/remove connected Google accounts |
 | **Workflows (compound actions)** | 5 | `workflow_onboard_employee`, `workflow_offboard_employee`, `workflow_add_domain_and_start_verification`, `workflow_audit_external_sharing`, `workflow_security_snapshot` |
 
 The "workflow_*" tools are the ones worth knowing about specifically: instead of you (or Claude) stringing together six separate admin calls to offboard someone, `workflow_offboard_employee` does the whole checklist — suspend, sign out everywhere, revoke third-party app access, revoke app passwords, transfer their files, remove from all groups — in one call.

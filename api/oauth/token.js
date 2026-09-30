@@ -1,5 +1,5 @@
 import { randomToken, verifyPkce, parseBody } from '../../src/oauth/helpers.js';
-import { getOAuthClient, consumeAuthCode, createAccessToken, initSchema } from '../../src/db.js';
+import { getOAuthClient, consumeAuthCode, createAccessToken, getGoogleAccountForRefreshToken, initSchema } from '../../src/db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -36,7 +36,8 @@ export default async function handler(req, res) {
 
     const accessToken = randomToken(32);
     const refreshToken = randomToken(32);
-    await createAccessToken({ accessToken, refreshToken, clientId: body.client_id });
+    // The Google account chosen on the login page travels with the token from here on.
+    await createAccessToken({ accessToken, refreshToken, clientId: body.client_id, googleAccount: record.google_account });
     res.status(200).json({ access_token: accessToken, token_type: 'Bearer', expires_in: 3600 * 24 * 30, refresh_token: refreshToken });
     return;
   }
@@ -47,7 +48,9 @@ export default async function handler(req, res) {
     // this server has exactly one real user; the access token itself is the durable
     // credential Claude keeps using.)
     const accessToken = randomToken(32);
-    await createAccessToken({ accessToken, refreshToken: body.refresh_token, clientId: body.client_id });
+    // Keep acting as whichever Google account the original login chose.
+    const googleAccount = await getGoogleAccountForRefreshToken(body.refresh_token);
+    await createAccessToken({ accessToken, refreshToken: body.refresh_token, clientId: body.client_id, googleAccount });
     res.status(200).json({ access_token: accessToken, token_type: 'Bearer', expires_in: 3600 * 24 * 30 });
     return;
   }
