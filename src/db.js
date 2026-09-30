@@ -139,20 +139,27 @@ export async function removeGoogleAccount(email) {
 }
 
 /**
- * One-time upgrade for deployments that predate google_accounts: move the
- * single legacy sign-in into the new table. `resolveEmail` is given the old
- * tokens and must return the mailbox they belong to (we ask Gmail, since the
- * tokens themselves don't say). Safe to call on every request: it does
- * nothing once the legacy row is gone.
+ * One-time upgrade for deployments that predate google_accounts: copy the
+ * single legacy sign-in into the new table as the default account.
+ * `resolveEmail` is given the old tokens and must return the mailbox they
+ * belong to (we ask Gmail, since the tokens themselves don't say).
+ *
+ * The legacy row is deliberately LEFT IN PLACE, not deleted: Vercel builds a
+ * preview of every branch against the same database, so old and new code
+ * can be running at the same time, and the old code still reads google_auth.
+ * Safe to call on every request: it does nothing once google_accounts has
+ * any row. The legacy table can be dropped by hand once nothing old is
+ * deployed.
  */
 export async function migrateLegacyGoogleAuth(resolveEmail) {
   const q = db();
+  const existing = await q`SELECT count(*)::int AS n FROM google_accounts`;
+  if (existing[0].n > 0) return null;
   const legacy = await q`SELECT tokens FROM google_auth WHERE id = 1`;
   if (!legacy[0]) return null;
   const email = normalizeEmail(await resolveEmail(legacy[0].tokens));
   if (!email) throw new Error('Could not determine which mailbox the existing Google sign-in belongs to.');
   await saveGoogleTokensFor(email, legacy[0].tokens, { label: 'Migrated from single-account setup' });
-  await q`DELETE FROM google_auth WHERE id = 1`;
   return email;
 }
 
