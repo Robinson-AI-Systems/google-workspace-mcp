@@ -54,21 +54,125 @@ export async function initSchema() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `;
+  // One row per Google mailbox this server is allowed to act as. Before
+  // 2026-09-30 there was exactly one sign-in (the google_auth table above,
+  // kept so existing deployments upgrade in place -- see migrateLegacyGoogleAuth).
+  await q`
+    CREATE TABLE IF NOT EXISTS google_accounts (
+      email TEXT PRIMARY KEY,
+      label TEXT,
+      tokens JSONB NOT NULL,
+      is_default BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )
+  `;
+  // Which Google account each Claude connection acts as. NULL means "the
+  // default account", which is what every connection made before this
+  // column existed gets, so nothing changes for them.
+  await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS google_account TEXT`;
+  // Same for the short-lived login codes: the account picked on the login
+  // page rides along until the token is issued.
+  await q`ALTER TABLE oauth_codes ADD COLUMN IF NOT EXISTS google_account TEXT`;
 }
 
-// ---------- Google tokens (single tenant: one Workspace account) ----------
-export async function getGoogleTokens() {
+// ---------- Google accounts (one row per mailbox the server can act as) ----------
+
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+/** Every connected Google account, default first. Tokens are NOT included. */
+export async function listGoogleAccounts() {
   const q = db();
-  const rows = await q`SELECT tokens FROM google_auth WHERE id = 1`;
+  return q`
+    SELECT email, label, is_default, created_at, updated_at
+    FROM google_accounts
+    ORDER BY is_default DESC, created_at ASC
+  `;
+}
+
+/** The account a connection with no explicit choice acts as. */
+export async function getDefaultGoogleAccount() {
+  const q = db();
+  const rows = await q`SELECT email FROM google_accounts ORDER BY is_default DESC, created_at ASC LIMIT 1`;
+  return rows[0]?.email || null;
+}
+
+export async function getGoogleTokensFor(email) {
+  const q = db();
+  const rows = await q`SELECT tokens FROM google_accounts WHERE email = ${normalizeEmail(email)}`;
   return rows[0]?.tokens || null;
 }
 
-export async function saveGoogleTokens(tokens) {
+/**
+ * Save (or refresh) the tokens for one account. Merging with `||` keeps the
+ * refresh_token from the first sign-in when Google later hands back an
+ * access_token-only refresh.
+ */
+export async function saveGoogleTokensFor(email, tokens, { label } = {}) {
   const q = db();
+  const e = normalizeEmail(email);
+  const count = await q`SELECT count(*)::int AS n FROM google_accounts`;
+  const makeDefault = count[0].n === 0; // the first account ever added is the default
   await q`
-    INSERT INTO google_auth (id, tokens, updated_at) VALUES (1, ${JSON.stringify(tokens)}::jsonb, now())
-    ON CONFLICT (id) DO UPDATE SET tokens = google_auth.tokens || EXCLUDED.tokens, updated_at = now()
+    INSERT INTO google_accounts (email, label, tokens, is_default, updated_at)
+    VALUES (${e}, ${label || null}, ${JSON.stringify(tokens)}::jsonb, ${makeDefault}, now())
+    ON CONFLICT (email) DO UPDATE SET
+      tokens = google_accounts.tokens || EXCLUDED.tokens,
+      label = COALESCE(EXCLUDED.label, google_accounts.label),
+      updated_at = now()
   `;
+}
+
+export async function setDefaultGoogleAccount(email) {
+  const q = db();
+  const e = normalizeEmail(email);
+  const rows = await q`SELECT 1 FROM google_accounts WHERE email = ${e}`;
+  if (!rows[0]) throw new Error(`No connected Google account named ${e}.`);
+  await q`UPDATE google_accounts SET is_default = (email = ${e})`;
+}
+
+export async function removeGoogleAccount(email) {
+  const q = db();
+  await q`DELETE FROM google_accounts WHERE email = ${normalizeEmail(email)}`;
+}
+
+/**
+ * One-time upgrade for deployments that predate google_accounts: copy the
+ * single legacy sign-in into the new table as the default account.
+ * `resolveEmail` is given the old tokens and must return the mailbox they
+ * belong to (we ask Gmail, since the tokens themselves don't say).
+ *
+ * The legacy row is deliberately LEFT IN PLACE, not deleted: Vercel builds a
+ * preview of every branch against the same database, so old and new code
+ * can be running at the same time, and the old code still reads google_auth.
+ * Safe to call on every request: it does nothing once google_accounts has
+ * any row. The legacy table can be dropped by hand once nothing old is
+ * deployed.
+ */
+export async function migrateLegacyGoogleAuth(resolveEmail) {
+  const q = db();
+  const existing = await q`SELECT count(*)::int AS n FROM google_accounts`;
+  if (existing[0].n > 0) return null;
+  const legacy = await q`SELECT tokens FROM google_auth WHERE id = 1`;
+  if (!legacy[0]) return null;
+  const email = normalizeEmail(await resolveEmail(legacy[0].tokens));
+  if (!email) throw new Error('Could not determine which mailbox the existing Google sign-in belongs to.');
+  await saveGoogleTokensFor(email, legacy[0].tokens, { label: 'Migrated from single-account setup' });
+  return email;
+}
+
+// Kept for anything still importing the old names; both now mean "the default account".
+export async function getGoogleTokens() {
+  const email = await getDefaultGoogleAccount();
+  return email ? getGoogleTokensFor(email) : null;
+}
+
+export async function saveGoogleTokens(tokens) {
+  const email = await getDefaultGoogleAccount();
+  if (!email) throw new Error('No Google account connected yet.');
+  return saveGoogleTokensFor(email, tokens);
 }
 
 // ---------- Connector OAuth: dynamic client registration ----------
@@ -87,11 +191,11 @@ export async function getOAuthClient(clientId) {
 }
 
 // ---------- Connector OAuth: authorization codes (PKCE) ----------
-export async function createAuthCode({ code, clientId, redirectUri, codeChallenge, codeChallengeMethod, ttlSeconds = 600 }) {
+export async function createAuthCode({ code, clientId, redirectUri, codeChallenge, codeChallengeMethod, googleAccount, ttlSeconds = 600 }) {
   const q = db();
   await q`
-    INSERT INTO oauth_codes (code, client_id, redirect_uri, code_challenge, code_challenge_method, expires_at)
-    VALUES (${code}, ${clientId}, ${redirectUri}, ${codeChallenge || null}, ${codeChallengeMethod || null}, now() + (${ttlSeconds} || ' seconds')::interval)
+    INSERT INTO oauth_codes (code, client_id, redirect_uri, code_challenge, code_challenge_method, google_account, expires_at)
+    VALUES (${code}, ${clientId}, ${redirectUri}, ${codeChallenge || null}, ${codeChallengeMethod || null}, ${googleAccount ? normalizeEmail(googleAccount) : null}, now() + (${ttlSeconds} || ' seconds')::interval)
   `;
 }
 
@@ -104,12 +208,20 @@ export async function consumeAuthCode(code) {
 }
 
 // ---------- Connector OAuth: access tokens ----------
-export async function createAccessToken({ accessToken, refreshToken, clientId, ttlSeconds = 3600 * 24 * 30 }) {
+export async function createAccessToken({ accessToken, refreshToken, clientId, googleAccount, ttlSeconds = 3600 * 24 * 30 }) {
   const q = db();
   await q`
-    INSERT INTO oauth_tokens (access_token, refresh_token, client_id, expires_at)
-    VALUES (${accessToken}, ${refreshToken || null}, ${clientId}, now() + (${ttlSeconds} || ' seconds')::interval)
+    INSERT INTO oauth_tokens (access_token, refresh_token, client_id, google_account, expires_at)
+    VALUES (${accessToken}, ${refreshToken || null}, ${clientId}, ${googleAccount ? normalizeEmail(googleAccount) : null}, now() + (${ttlSeconds} || ' seconds')::interval)
   `;
+}
+
+/** Which Google account a refresh token was issued for, so a refreshed token keeps it. */
+export async function getGoogleAccountForRefreshToken(refreshToken) {
+  const q = db();
+  if (!refreshToken) return null;
+  const rows = await q`SELECT google_account FROM oauth_tokens WHERE refresh_token = ${refreshToken} ORDER BY created_at DESC LIMIT 1`;
+  return rows[0]?.google_account || null;
 }
 
 export async function getAccessToken(accessToken) {

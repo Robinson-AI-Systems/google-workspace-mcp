@@ -1,8 +1,19 @@
 // Same job as google-auth.js, but for the hosted (Vercel) deployment: reads
-// and persists the Google token from Postgres (Neon) instead of a local file,
+// and persists Google tokens from Postgres (Neon) instead of a local file,
 // since serverless functions don't keep a filesystem between invocations.
+//
+// Since 2026-09-30 the server can hold a sign-in for MORE THAN ONE Google
+// mailbox (for example one per business on the same Workspace). Every
+// function here takes the account email to act as; a Claude connection's
+// account is chosen once, on the connector login page, and rides along on
+// its bearer token (see api/oauth/authorize.js and api/mcp.js).
 import { google } from 'googleapis';
-import { getGoogleTokens, saveGoogleTokens } from '../db.js';
+import {
+  getGoogleTokensFor,
+  saveGoogleTokensFor,
+  getDefaultGoogleAccount,
+  migrateLegacyGoogleAuth
+} from '../db.js';
 import { ALL_SCOPES } from './scopes.js';
 import { buildDataTransferClient } from './datatransfer-client.js';
 
@@ -23,39 +34,86 @@ export function buildGoogleOAuthClient() {
   );
 }
 
-export function getGoogleAuthUrl(state) {
+/**
+ * The Google sign-in link. `loginHint` pre-selects the mailbox on Google's
+ * account chooser so you don't accidentally connect the wrong business.
+ */
+export function getGoogleAuthUrl(state, loginHint) {
   const client = buildGoogleOAuthClient();
-  return client.generateAuthUrl({ access_type: 'offline', prompt: 'consent', scope: ALL_SCOPES, state });
+  return client.generateAuthUrl({
+    access_type: 'offline',
+    prompt: 'consent',
+    scope: ALL_SCOPES,
+    state,
+    login_hint: loginHint || undefined
+  });
 }
 
-export async function handleGoogleCallback(code) {
+/** Ask Gmail which mailbox a set of tokens belongs to. */
+async function whichMailbox(tokens) {
+  const client = buildGoogleOAuthClient();
+  client.setCredentials(tokens);
+  const gmail = google.gmail({ version: 'v1', auth: client });
+  const profile = await gmail.users.getProfile({ userId: 'me' });
+  return profile.data.emailAddress;
+}
+
+/**
+ * Finish a Google sign-in. We never trust the browser to tell us which
+ * account was used; we ask Google, then file the tokens under that email.
+ * Returns the email that was connected.
+ */
+export async function handleGoogleCallback(code, { label } = {}) {
   const client = buildGoogleOAuthClient();
   const { tokens } = await client.getToken(code);
-  const existing = (await getGoogleTokens()) || {};
-  const merged = { ...existing, ...tokens };
-  await saveGoogleTokens(merged);
-  return merged;
+  const email = await whichMailbox(tokens);
+  await saveGoogleTokensFor(email, tokens, { label });
+  return email;
 }
 
-/** Returns an authenticated Google auth client, refreshing + persisting as needed. Fresh per request (serverless-safe). */
-export async function getHostedAuthClient() {
-  const saved = await getGoogleTokens();
+/**
+ * Upgrade a pre-multi-account deployment in place. Runs on every request
+ * and costs one cheap query once the legacy row is gone.
+ */
+export async function ensureMigrated() {
+  return migrateLegacyGoogleAuth(whichMailbox);
+}
+
+/**
+ * Work out which account a request should act as: the one on its connector
+ * token if set, otherwise the server's default account.
+ */
+export async function resolveAccount(requested) {
+  if (requested) return String(requested).trim().toLowerCase();
+  const fallback = await getDefaultGoogleAccount();
+  if (!fallback) {
+    throw new Error('Google Workspace is not connected yet. Visit /api/google/authorize once to sign in.');
+  }
+  return fallback;
+}
+
+/** Returns an authenticated Google auth client for one account, refreshing + persisting as needed. Fresh per request (serverless-safe). */
+export async function getHostedAuthClient(account) {
+  const email = await resolveAccount(account);
+  const saved = await getGoogleTokensFor(email);
   if (!saved) {
-    throw new Error('Google Workspace is not connected yet. Visit /api/google/authorize once to sign in as your admin account.');
+    throw new Error(`Google account ${email} is not connected. Visit /api/google/authorize?account=${encodeURIComponent(email)} signed in as that mailbox.`);
   }
   const client = buildGoogleOAuthClient();
   client.setCredentials(saved);
   client.on('tokens', (tokens) => {
     // Fire and forget; failures here shouldn't break the current request.
-    saveGoogleTokens({ ...saved, ...tokens }).catch(() => {});
+    saveGoogleTokensFor(email, { ...saved, ...tokens }).catch(() => {});
   });
+  client.actingAs = email; // handy for the whoami tool and error messages
   return client;
 }
 
-export async function buildHostedApiClients() {
-  const auth = await getHostedAuthClient();
+export async function buildHostedApiClients(account) {
+  const auth = await getHostedAuthClient(account);
   return {
     auth,
+    actingAs: auth.actingAs,
     gmail: google.gmail({ version: 'v1', auth }),
     drive: google.drive({ version: 'v3', auth }),
     calendar: google.calendar({ version: 'v3', auth }),
