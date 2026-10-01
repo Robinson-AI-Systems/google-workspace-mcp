@@ -39,8 +39,19 @@ describe('describeThread', () => {
     expect(describeThread(thread('d', msg('c@y.test', 9), msg('"Support" <HELP@x.test>', 2, [])), mine).unanswered).toBe(false);
   });
   it('a draft is not an answer; order does not depend on how Google lists the messages', () => {
-    expect(describeThread(thread('e', msg('c@y.test', 5), msg('ops@x.test', 1, ['DRAFT'])), mine).unanswered).toBe(false); // last is my draft, still not inbound
+    expect(describeThread(thread('e', msg('c@y.test', 5), msg('other@y.test', 1, ['DRAFT'])), mine).unanswered).toBe(false); // a DRAFT label alone is enough, even from an address not in my list
     expect(describeThread(thread('f', msg('ops@x.test', 1, ['SENT']), msg('c@y.test', 5)), mine).unanswered).toBe(false); // out-of-order list: the newest is mine
+  });
+  it('bounces, no-reply and list mail, and a last message in the bin, do not count as someone waiting', () => {
+    for (const from of ['Mail Delivery <mailer-daemon@googlemail.com>', 'noreply@shop.test', 'no-reply@shop.test', 'postmaster@y.test', 'bounces@y.test']) {
+      expect(describeThread(thread('x', msg(from, 3)), mine).unanswered, from).toBe(false);
+    }
+    const listMail = msg('news@y.test', 3); listMail.payload.headers.push({ name: 'List-Id', value: '<list.y.test>' });
+    expect(describeThread(thread('l', listMail), mine).unanswered).toBe(false);
+    const auto = msg('c@y.test', 3); auto.payload.headers.push({ name: 'Auto-Submitted', value: 'auto-replied' });
+    expect(describeThread(thread('a', auto), mine).unanswered).toBe(false);
+    expect(describeThread(thread('t', msg('c@y.test', 3, ['TRASH'])), mine).unanswered).toBe(false);
+    expect(describeThread(thread('p', msg('', 3)), mine).unanswered).toBe(false);
   });
   it('an empty thread is ignored', () => expect(describeThread({ id: 'z', messages: [] }, mine)).toBeNull());
 });
@@ -79,6 +90,28 @@ describe('gmail_inbox_summary', () => {
     await inboxSummary({}, f.clients, { now: NOW });
     await findUnanswered({ label: 'Leads' }, f.clients, { now: NOW });
     expect(f.calls.filter((c) => !/\.(get|list)$/.test(c.path))).toEqual([]);
+  });
+});
+
+describe('when the mailbox is big or the address list cannot be read', () => {
+  it('find_unanswered pages past 100 conversations, and says the OLDEST may be missing when it still has to stop', async () => {
+    const many = Array.from({ length: 130 }, (_, i) => thread(`t${i}`, msg('a@y.test', 100 + i, ['L1'])));
+    const f = setup(many);
+    const pages = [many.slice(0, 100), many.slice(100)];
+    let n = 0;
+    f.when('gmail.users.threads.list').resolves(() => { const page = pages[n++]; return { data: { threads: page.map((t) => ({ id: t.id })), nextPageToken: n < 2 ? 'next' : undefined } }; });
+    const out = await findUnanswered({ label: 'Leads', olderThanHours: 0 }, f.clients, { now: NOW });
+    expect(out.count).toBe(130);
+    expect(out.note).toBeUndefined();
+    const stuck = setup(many.slice(0, 100));
+    stuck.when('gmail.users.threads.list').resolves({ data: { threads: many.slice(0, 100).map((t) => ({ id: t.id })), nextPageToken: 'always-more' } });
+    const cut = await findUnanswered({ label: 'Leads', olderThanHours: 0 }, stuck.clients, { now: NOW });
+    expect(cut.note).toMatch(/OLDEST waiting ones may be missing/);
+  });
+  it('warns when the send-as list cannot be read, because alias replies would look unanswered', async () => {
+    const f = setup([thread('a', msg('c@y.test', 5, ['INBOX']))]);
+    f.when('gmail.users.settings.sendAs.list').rejects(new Error('nope'));
+    expect((await inboxSummary({}, f.clients, { now: NOW })).warning).toMatch(/send-as addresses/);
   });
 });
 

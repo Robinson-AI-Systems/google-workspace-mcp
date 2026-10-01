@@ -55,7 +55,7 @@ export function applyDomainGuard(registry) {
         const bad = outsideDomains(rest, clients.allowedDomains);
         if (bad.length) return ok(refusal(bad, clients));
       }
-      return inner(rest, clients);
+      return inner(rest, crossDomain === true ? Object.assign(Object.create(Object.getPrototypeOf(clients || {})), clients, { crossDomain: true }) : clients);
     };
     return { ...tool, description: `${tool.description} Limited to this connection's own business domains unless crossDomain: true.`, inputSchema: { ...tool.inputSchema, properties: { ...props, crossDomain: CROSS_DOMAIN_FIELD } } };
   });

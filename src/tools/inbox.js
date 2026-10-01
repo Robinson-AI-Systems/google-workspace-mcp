@@ -4,6 +4,8 @@ import { ok } from './util.js';
 
 const HOUR = 3600000;
 const MAX_THREADS = 100;
+const MAX_THREADS_UNANSWERED = 500;   // find_unanswered pages further: the oldest waiting threads are the ones it exists to find
+const AUTOMATED = /^(mailer-daemon|postmaster|no-?reply|donotreply|do-not-reply|bounces?)\b/i;
 
 const emailIn = (header) => { const m = /<([^>]+)>/.exec(header || '') || /([^\s<>",;]+@[^\s<>",;]+)/.exec(header || ''); return m ? m[1].trim().toLowerCase() : ''; };
 const headerOf = (message, name) => (message.payload?.headers || []).find((h) => h.name?.toLowerCase() === name)?.value || '';
@@ -19,11 +21,12 @@ export function sinceClause(since, now = Date.now()) {
 
 async function myAddresses(gmail, actingAs) {
   const mine = new Set([String(actingAs || '').toLowerCase()]);
-  try { for (const s of (await gmail.users.settings.sendAs.list({ userId: 'me' })).data.sendAs || []) mine.add(String(s.sendAsEmail).toLowerCase()); } catch { /* fall back to the acting address alone */ }
+  try { for (const s of (await gmail.users.settings.sendAs.list({ userId: 'me' })).data.sendAs || []) mine.add(String(s.sendAsEmail).toLowerCase()); }
+  catch { mine.incomplete = true; } // only the acting address is known: replies sent from an alias would look unanswered
   return mine;
 }
 
-async function loadThreads(gmail, { q, labelIds, max = MAX_THREADS }) {
+async function loadThreads(gmail, { q, labelIds, max = MAX_THREADS }) {  // newest first, so a cut-off drops the OLDEST
   const ids = [];
   let pageToken;
   while (ids.length < max) {
@@ -34,7 +37,7 @@ async function loadThreads(gmail, { q, labelIds, max = MAX_THREADS }) {
   }
   const threads = [];
   for (let i = 0; i < ids.length; i += 5) {
-    threads.push(...await Promise.all(ids.slice(i, i + 5).map(async (id) => (await gmail.users.threads.get({ userId: 'me', id, format: 'metadata', metadataHeaders: ['From', 'Subject', 'Date'] })).data)));
+    threads.push(...await Promise.all(ids.slice(i, i + 5).map(async (id) => (await gmail.users.threads.get({ userId: 'me', id, format: 'metadata', metadataHeaders: ['From', 'Subject', 'Date', 'Auto-Submitted', 'Precedence', 'List-Id'] })).data)));
   }
   return { threads, more: Boolean(pageToken) };
 }
@@ -46,7 +49,9 @@ export function describeThread(thread, mine) {
   if (!last) return null;
   const from = emailIn(headerOf(last, 'from'));
   const labelIds = new Set(messages.flatMap((m) => m.labelIds || []));
-  const inbound = !mine.has(from) && !(last.labelIds || []).includes('SENT') && !(last.labelIds || []).includes('DRAFT');
+  const lastLabels = last.labelIds || [];
+  const automated = AUTOMATED.test(from) || /auto-(replied|generated)/i.test(headerOf(last, 'auto-submitted')) || /^(bulk|list|junk)$/i.test(headerOf(last, 'precedence')) || Boolean(headerOf(last, 'list-id'));
+  const inbound = from !== '' && !mine.has(from) && !automated && !['SENT', 'DRAFT', 'TRASH', 'SPAM'].some((l) => lastLabels.includes(l)); // a person wrote last and it is not in the bin
   return {
     threadId: thread.id,
     subject: headerOf(messages[0], 'subject') || '(no subject)',
@@ -93,7 +98,8 @@ export async function inboxSummary(args, clients, { now = Date.now() } = {}) {
     conversations: rows.length, unread: rows.filter((r) => r.unread).length, waitingForReply: rows.filter((r) => r.unanswered).length,
     topSenders: [...senders.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([from, count]) => ({ from, waiting: count })),
     oldestUnansweredPerLabel: Object.fromEntries(Object.entries(oldestPerLabel).map(([name, r]) => [name, show(r)])),
-    ...(more ? { note: `Only the first ${MAX_THREADS} conversations were looked at; narrow it with since.` } : {})
+    ...(more ? { note: `Only the newest ${MAX_THREADS} conversations were looked at; older ones are not in these counts. Narrow it with since.` } : {}),
+    ...(mine.incomplete ? { warning: 'Could not read your send-as addresses, so replies sent from an alias may look unanswered.' } : {})
   };
 }
 
@@ -104,11 +110,11 @@ export async function findUnanswered(args, clients, { now = Date.now() } = {}) {
   if (!l) return { found: false, note: `No label called "${args.label}" in ${actingAs}'s mailbox.` };
   const hours = Number.isFinite(Number(args.olderThanHours)) ? Number(args.olderThanHours) : 24;
   const mine = await myAddresses(gmail, actingAs);
-  const { threads, more } = await loadThreads(gmail, { labelIds: [l.id] });
+  const { threads, more } = await loadThreads(gmail, { labelIds: [l.id], max: MAX_THREADS_UNANSWERED });
   const waiting = threads.map((t) => describeThread(t, mine)).filter((r) => r && r.unanswered && now - r.lastAt >= hours * HOUR)
     .sort((a, b) => a.lastAt - b.lastAt)
     .map((r) => ({ threadId: r.threadId, subject: r.subject, from: r.lastFrom, waitingHours: Math.round((now - r.lastAt) / HOUR), messages: r.messages, unread: r.unread }));
-  return { found: true, mailbox: actingAs, label: l.name, olderThanHours: hours, count: waiting.length, threads: waiting, ...(more ? { note: `Only the first ${MAX_THREADS} conversations in this label were looked at.` } : {}) };
+  return { found: true, mailbox: actingAs, label: l.name, olderThanHours: hours, count: waiting.length, threads: waiting, ...(more ? { note: `Only the newest ${MAX_THREADS_UNANSWERED} conversations in this label were looked at, so the OLDEST waiting ones may be missing. Narrow the label or answer the newest first.` } : {}), ...(mine.incomplete ? { warning: 'Could not read your send-as addresses, so replies sent from an alias may look unanswered.' } : {}) };
 }
 
 export const tools = [

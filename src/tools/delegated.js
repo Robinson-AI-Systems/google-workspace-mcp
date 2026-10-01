@@ -5,3 +5,6 @@ import { buildDelegatedAuth, isDelegationConfigured } from '../auth/service-acco
 
 export const delegationReady = (clients) => clients?.delegationReady ?? isDelegationConfigured();
 export const delegatedGmail = (clients, email) => (clients?.gmailFor ?? ((e) => google.gmail({ version: 'v1', auth: buildDelegatedAuth(e) })))(email);
+
+/** May this connection open that mailbox? Only within its own domains, unless the call said crossDomain: true. */
+export const mailboxAllowed = (clients, email) => clients?.crossDomain === true || !Array.isArray(clients?.allowedDomains) || clients.allowedDomains.includes(String(email).split('@')[1]);

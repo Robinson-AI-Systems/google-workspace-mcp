@@ -60,7 +60,7 @@ export async function ensureLabels(gmail, wanted) {
     const row = { name: label.name, created };
     if (w.filterTo) {
       const to = norm(w.filterTo);
-      const has = filters.some((f) => norm(f.criteria?.to) === to && (f.action?.addLabelIds || []).includes(label.id));
+      const has = filters.some((f) => norm(f.criteria?.to) === to && Object.keys(f.criteria || {}).every((k) => k === 'to') && (f.action?.addLabelIds || []).includes(label.id));
       if (!has) {
         const made = (await gmail.users.settings.filters.create({ userId: 'me', requestBody: { criteria: { to }, action: { addLabelIds: [label.id] } } })).data;
         filters.push(made.id ? { ...made, criteria: made.criteria || { to }, action: made.action || { addLabelIds: [label.id] } } : { criteria: { to }, action: { addLabelIds: [label.id] } });
@@ -122,7 +122,7 @@ export const handlers = {
         wouldChange: wanted,
         aliasesToCreate: (args.aliases || []).map((a) => norm(a.email)).filter((e) => e && e !== user && !existing.some((s) => norm(s.sendAsEmail) === e)),
         aliasesAlreadyThere: (args.aliases || []).map((a) => norm(a.email)).filter((e) => existing.some((s) => norm(s.sendAsEmail) === e)),
-        labelsNote: (args.labels || []).length && user !== clients.actingAs ? 'Labels would be skipped: this connection does not act as that mailbox.' : undefined,
+        labelsNote: (args.labels || []).length && user !== norm(clients.actingAs) ? 'Labels would be skipped: this connection does not act as that mailbox.' : undefined,
         current: existing.map(summarize),
         note: 'Nothing was changed.'
       };
@@ -176,7 +176,7 @@ export const handlers = {
     // 3c. Profile photo, through the Directory (the connection's own admin permission, no delegation)
     if (args.avatarBase64) {
       try {
-        const photoData = String(args.avatarBase64).replace(/^data:[^,]*,/, '').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        const photoData = String(args.avatarBase64).replace(/^data:[^,]*,/, '').replace(/\s+/g, '').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
         await clients.admin.users.photos.update({ userKey: user, requestBody: { photoData } });
         const back = (await clients.admin.users.photos.get({ userKey: user })).data;
         report.photo = { set: Boolean(back?.photoData || back?.mimeType), mimeType: back?.mimeType, width: back?.width, height: back?.height };
@@ -210,7 +210,15 @@ export const handlers = {
       if (s.isDefault) report.defaultSender = s.sendAsEmail;
     }
     report.done = report.photo?.set !== false && !(report.labels?.done === false);
-    if (args.vacation) report.vacation = pickVacation((await gmail.users.settings.getVacation({ userId: 'me' })).data);
+    if (args.vacation) {
+      try {
+        report.vacation = pickVacation((await gmail.users.settings.getVacation({ userId: 'me' })).data);
+        if (args.vacation.enableAutoReply !== undefined && report.vacation.enableAutoReply !== !!args.vacation.enableAutoReply) report.done = false; // Google does not show what was asked for
+      } catch (err) {
+        report.vacation = { error: `Could not read the auto-reply back: ${String(err?.response?.data?.error?.message || err?.message || err).slice(0, 160)}` };
+        report.done = false;
+      }
+    }
     await recordChange(clients, {
       tool: 'workflow_brand_mailbox', target: user,
       summary: `Branded ${user}: ${wanted.join(', ') || 'no changes requested'}${report.done ? '' : ' (not everything could be applied: see the result)'}`,

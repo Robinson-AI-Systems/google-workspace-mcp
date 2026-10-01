@@ -6,7 +6,7 @@ You do not need tool names. Say what you want in a sentence. This page lists the
 
 - Anything that deletes, suspends, resets a password, signs someone out, changes forwarding or hands out admin rights **does nothing until you say yes**. Claude first shows you what it would do and what is there now.
 - You can always say "just show me what would happen" (a **preview**). A preview changes nothing.
-- After a change, Claude asks Google what it holds *now* and tells you that, not just what it sent. If Google does not show the change, it says "not confirmed".
+- After a change to one of those protected actions, Claude asks Google what it holds *now* and tells you that, not just what it sent. If Google does not show the change, it says "not confirmed". Mailbox branding reports what it could and could not apply in its result.
 - Every real change is written down. Ask "what did you change this week?" any time.
 - Each Claude connection can only manage its own business's domains. Asking about another domain gets a refusal unless you say you really mean it.
 
@@ -22,8 +22,8 @@ You do not need tool names. Say what you want in a sentence. This page lists the
 | **"What plan are we on and who has a licence?"** | Names the plans, how many people hold each and whether Gemini is included. | Nothing. |
 | **"Brand the mailbox for sam@..."** | Sets the sender name, signature, send-as addresses, optional photo and out-of-office reply. | You can ask for a preview first. It acts on the mailbox you name, so check the name. |
 | **"Change the time zone of the rentals calendar to Denver"** | Changes the calendar, then reads it back to prove it. | A preview if you ask. |
-| **"Offboard Sam"** | Puts up an out-of-office reply, removes the role addresses Sam can send as, suspends the account, signs Sam out everywhere, removes app access and app passwords, and (if you say so) hands files to someone and deletes the account. | **Always asks first**, showing what Sam's account looks like now. Deleting is a separate yes. |
-| **"What's waiting in my inbox / the Leads label?"** | Counts conversations, who is waiting longest for a reply, and the oldest unanswered one per label. "Which leads have waited over a day?" lists them oldest first. Changes nothing. | Nothing. |
+| **"Offboard Sam"** | Puts up an out-of-office reply, removes the role addresses Sam can send as, suspends the account, signs Sam out everywhere, removes app access and app passwords, and (if you say so) hands files to someone and deletes the account. | **Always asks first**, showing what Sam's account and mailbox look like now (including the role addresses it is about to remove). If you asked for deletion, the summary says PERMANENTLY DELETE and your yes covers it. Without domain-wide delegation the mailbox steps are skipped and the result says it is *not confirmed*. |
+| **"What's waiting in my inbox / the Leads label?"** | Counts conversations (the newest 100), who is waiting longest for a reply, and the oldest unanswered one per label. Bounces, no-reply and mailing-list mail are not counted as waiting. "Which leads have waited over a day?" lists them oldest first (it looks at the newest 500 and says so if older ones may be missing). Changes nothing. | Nothing. |
 
 ## Also useful
 

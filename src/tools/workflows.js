@@ -1,5 +1,5 @@
 import { ok, errorResult } from './util.js';
-import { delegatedGmail, delegationReady } from './delegated.js';
+import { delegatedGmail, delegationReady, mailboxAllowed } from './delegated.js';
 
 // Compound tools: each one does the multi-step job a human admin would do by
 // clicking through several admin console screens, in a single call.
@@ -56,7 +56,7 @@ export const tools = [
 ];
 
 /** The primary email address for a user key that may be an address, alias or ID. */
-const mailboxOf = async (admin, userKey) => (String(userKey).includes('@') ? String(userKey).trim().toLowerCase() : (await admin.users.get({ userKey, fields: 'primaryEmail' })).data.primaryEmail);
+const mailboxOf = async (admin, userKey) => String((await admin.users.get({ userKey, fields: 'primaryEmail' })).data.primaryEmail || '').trim().toLowerCase(); // always the primary address: an alias or ID is not a valid delegation subject
 
 export const handlers = {
   workflow_onboard_employee: async (args, clients) => {
@@ -116,12 +116,19 @@ export const handlers = {
 
     // Mailbox steps come first because a suspended mailbox cannot be opened: put up the out-of-office reply, and remove
     // the "send mail as" addresses so the mailbox can no longer send as the company's role addresses (the primary stays).
-    const ready = delegationReady(clients);
+    let ready = delegationReady(clients);
+    let email = null;
+    let skipNote = 'Domain-wide delegation is not set up, so the mailbox could not be opened. See DEPLOY.md Part 5.';
+    if (ready) {
+      try {
+        email = await mailboxOf(admin, args.userKey);
+        if (!mailboxAllowed(clients, email)) { ready = false; skipNote = `${email} is outside the domains this connection is limited to (${clients.allowedDomains.join(', ')}), so its mailbox was not opened. Use crossDomain: true if you really mean it.`; }
+      } catch (err) { ready = false; skipNote = `Could not find the person's address: ${err.message}`; }
+    }
     if (!ready) {
-      steps.push({ step: 'set_out_of_office', status: 'skipped', note: 'Domain-wide delegation is not set up, so the mailbox could not be opened. See DEPLOY.md Part 5.' });
+      steps.push({ step: 'set_out_of_office', status: 'skipped', note: skipNote });
     } else {
       try {
-        const email = await mailboxOf(admin, args.userKey);
         const g = delegatedGmail(clients, email);
         const message = args.outOfOfficeMessage || 'This person is no longer with the company.';
         await g.users.settings.updateVacation({ userId: 'me', requestBody: { enableAutoReply: true, responseSubject: 'No longer with the company', responseBodyPlainText: message, restrictToContacts: false, restrictToDomain: false } });
@@ -131,10 +138,10 @@ export const handlers = {
     }
     if (args.removeSendAsAliases !== false) {
       if (!ready) {
-        steps.push({ step: 'remove_send_as_aliases', status: 'skipped', note: 'Domain-wide delegation is not set up, so the mailbox could not be opened. See DEPLOY.md Part 5.' });
+        steps.push({ step: 'remove_send_as_aliases', status: 'skipped', note: skipNote });
       } else {
         try {
-          const g = delegatedGmail(clients, await mailboxOf(admin, args.userKey));
+          const g = delegatedGmail(clients, email);
           const aliases = ((await g.users.settings.sendAs.list({ userId: 'me' })).data.sendAs || []).filter((x) => !x.isPrimary);
           for (const a of aliases) await g.users.settings.sendAs.delete({ userId: 'me', sendAsEmail: a.sendAsEmail });
           steps.push({ step: 'remove_send_as_aliases', status: 'ok', count: aliases.length, removed: aliases.map((a) => a.sendAsEmail) });
