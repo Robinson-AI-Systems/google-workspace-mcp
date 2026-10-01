@@ -512,11 +512,11 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P2-7 | IN_REVIEW | PR pending | `workflow_search_presence_check` (read-only). Manual report still to do |
 | P2-8 | IN_REVIEW | PR pending | `workflow_weekly_digest`: emailing needs confirm:true. Manual run and committed sample still to do |
 | P3-1 | TODO | | |
-| P3-2 | TODO | | |
+| P3-2 | IN_REVIEW | PR pending | Offboarding already had dryRun/confirm/read-back/logging from P1-3. Added: removes send-as aliases and sets the out-of-office reply (the old description promised the reply but the code never did it) before suspending, via delegation; each is skipped with a reason when delegation is off. Not done: removing shares granted by P3-1 (P3-1 does not exist yet). Left as the guard wrapper rather than `defineWrite` (same behaviour) |
 | P3-3 | TODO | | |
-| P3-4 | TODO | | |
-| P3-5 | TODO | | |
-| P3-6 | TODO | | |
+| P3-4 | IN_REVIEW | PR pending | Added `avatarBase64`, `labels` (+`filterTo`), `vacation`, `dryRun`. Deviation: labels are only created when the connection IS that mailbox, because the delegated robot identity may not create labels (that needs a wider scope, which needs Chris's written approval). Manual check on the rentals mailbox still to do |
+| P3-5 | IN_REVIEW | PR pending | `gmail_inbox_summary`, `gmail_find_unanswered`; read-only; looks at up to 100 conversations and says when it stopped |
+| P3-6 | IN_REVIEW | PR pending | docs/OWNER-GUIDE.md written; needs Chris to read it and say it makes sense. Lists add-a-driver / set-up-a-business as not available yet |
 | P4-1 | TODO | | Needs Chris's written approval of two scopes |
 | P4-2 | TODO | | |
 | P4-3 | TODO | | |

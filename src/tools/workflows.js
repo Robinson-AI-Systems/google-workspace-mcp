@@ -1,4 +1,5 @@
 import { ok, errorResult } from './util.js';
+import { delegatedGmail, delegationReady } from './delegated.js';
 
 // Compound tools: each one does the multi-step job a human admin would do by
 // clicking through several admin console screens, in a single call.
@@ -24,13 +25,14 @@ export const tools = [
   },
   {
     name: 'workflow_offboard_employee',
-    description: "Full departure checklist in one call: suspends the account, signs them out of every session, revokes all OAuth app grants and app-specific passwords, sets an out-of-office auto-reply, transfers their Drive files to their manager, removes them from all groups, and (optionally) schedules deletion.",
+    description: "Full departure checklist in one call: suspends the account, signs them out of every session, revokes all OAuth app grants and app-specific passwords, removes their send-as aliases, sets an out-of-office auto-reply, transfers their Drive files to their manager, removes them from all groups, and (optionally) schedules deletion.",
     inputSchema: {
       type: 'object',
       properties: {
         userKey: { type: 'string' },
         transferDriveAndCalendarTo: { type: 'string', description: 'email of the person who should inherit their files/calendar' },
         outOfOfficeMessage: { type: 'string', default: 'This person is no longer with the company.' },
+        removeSendAsAliases: { type: 'boolean', default: true, description: 'remove the "send mail as" addresses (role addresses such as support@) from the mailbox; the primary address stays' },
         deleteAccount: { type: 'boolean', default: false, description: 'if true, permanently deletes the account after the other steps' }
       },
       required: ['userKey']
@@ -52,6 +54,9 @@ export const tools = [
     inputSchema: { type: 'object', properties: {} }
   }
 ];
+
+/** The primary email address for a user key that may be an address, alias or ID. */
+const mailboxOf = async (admin, userKey) => (String(userKey).includes('@') ? String(userKey).trim().toLowerCase() : (await admin.users.get({ userKey, fields: 'primaryEmail' })).data.primaryEmail);
 
 export const handlers = {
   workflow_onboard_employee: async (args, clients) => {
@@ -108,6 +113,34 @@ export const handlers = {
   workflow_offboard_employee: async (args, clients) => {
     const { admin, gmail, datatransfer } = clients;
     const steps = [];
+
+    // Mailbox steps come first because a suspended mailbox cannot be opened: put up the out-of-office reply, and remove
+    // the "send mail as" addresses so the mailbox can no longer send as the company's role addresses (the primary stays).
+    const ready = delegationReady(clients);
+    if (!ready) {
+      steps.push({ step: 'set_out_of_office', status: 'skipped', note: 'Domain-wide delegation is not set up, so the mailbox could not be opened. See DEPLOY.md Part 5.' });
+    } else {
+      try {
+        const email = await mailboxOf(admin, args.userKey);
+        const g = delegatedGmail(clients, email);
+        const message = args.outOfOfficeMessage || 'This person is no longer with the company.';
+        await g.users.settings.updateVacation({ userId: 'me', requestBody: { enableAutoReply: true, responseSubject: 'No longer with the company', responseBodyPlainText: message, restrictToContacts: false, restrictToDomain: false } });
+        const back = (await g.users.settings.getVacation({ userId: 'me' })).data;
+        steps.push({ step: 'set_out_of_office', status: back.enableAutoReply === true ? 'ok' : 'failed', ...(back.enableAutoReply === true ? {} : { error: 'Google does not show the auto-reply as on afterwards.' }) });
+      } catch (err) { steps.push({ step: 'set_out_of_office', status: 'failed', error: err.message }); }
+    }
+    if (args.removeSendAsAliases !== false) {
+      if (!ready) {
+        steps.push({ step: 'remove_send_as_aliases', status: 'skipped', note: 'Domain-wide delegation is not set up, so the mailbox could not be opened. See DEPLOY.md Part 5.' });
+      } else {
+        try {
+          const g = delegatedGmail(clients, await mailboxOf(admin, args.userKey));
+          const aliases = ((await g.users.settings.sendAs.list({ userId: 'me' })).data.sendAs || []).filter((x) => !x.isPrimary);
+          for (const a of aliases) await g.users.settings.sendAs.delete({ userId: 'me', sendAsEmail: a.sendAsEmail });
+          steps.push({ step: 'remove_send_as_aliases', status: 'ok', count: aliases.length, removed: aliases.map((a) => a.sendAsEmail) });
+        } catch (err) { steps.push({ step: 'remove_send_as_aliases', status: 'failed', error: err.message }); }
+      }
+    }
 
     try {
       await admin.users.update({ userKey: args.userKey, requestBody: { suspended: true } });

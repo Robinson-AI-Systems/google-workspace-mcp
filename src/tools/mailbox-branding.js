@@ -33,12 +33,52 @@ export const tools = [
           description: 'Role addresses to make sendable from this mailbox',
           items: { type: 'object', properties: { email: { type: 'string' }, displayName: { type: 'string' }, replyTo: { type: 'string' } }, required: ['email'] }
         },
-        makeDefault: { type: 'string', description: 'Optional: which address new messages should default to sending from' }
+        makeDefault: { type: 'string', description: 'Optional: which address new messages should default to sending from' },
+        avatarBase64: { type: 'string', description: 'Optional profile photo (PNG or JPEG, base64 or base64url). Set through the Directory; needs no delegation.' },
+        labels: { type: 'array', description: 'Optional Gmail labels to create, each optionally with a filter that files mail sent to an address into it. Only possible when this connection acts as that same mailbox (the robot identity cannot create labels).', items: { type: 'object', properties: { name: { type: 'string' }, filterTo: { type: 'string', description: 'files mail addressed to this address under the label' } }, required: ['name'] } },
+        vacation: { type: 'object', description: 'Optional auto-reply, passed to Gmail as is: { enableAutoReply, responseSubject, responseBodyPlainText, responseBodyHtml, restrictToContacts, restrictToDomain, startTime, endTime }' },
+        dryRun: { type: 'boolean', description: 'Preview only: show what would change and change nothing.' }
       },
       required: ['userEmail']
     }
   }
 ];
+
+const pickVacation = (v) => ({ enableAutoReply: !!v?.enableAutoReply, responseSubject: v?.responseSubject || '', hasBody: !!(v?.responseBodyPlainText || v?.responseBodyHtml), restrictToContacts: !!v?.restrictToContacts, restrictToDomain: !!v?.restrictToDomain });
+
+/** Create each label (and its to:-filter) only if it is missing; report what exists afterwards. */
+export async function ensureLabels(gmail, wanted) {
+  const labels = (await gmail.users.labels.list({ userId: 'me' })).data.labels || [];
+  const filters = (await gmail.users.settings.filters.list({ userId: 'me' })).data.filter || [];
+  const out = [];
+  for (const w of wanted) {
+    const name = String(w.name || '').trim();
+    if (!name) continue;
+    let label = labels.find((l) => String(l.name).toLowerCase() === name.toLowerCase());
+    let created = false;
+    if (!label) { label = (await gmail.users.labels.create({ userId: 'me', requestBody: { name, labelListVisibility: 'labelShow', messageListVisibility: 'show' } })).data; labels.push(label); created = true; }
+    const row = { name: label.name, created };
+    if (w.filterTo) {
+      const to = norm(w.filterTo);
+      const has = filters.some((f) => norm(f.criteria?.to) === to && (f.action?.addLabelIds || []).includes(label.id));
+      if (!has) {
+        const made = (await gmail.users.settings.filters.create({ userId: 'me', requestBody: { criteria: { to }, action: { addLabelIds: [label.id] } } })).data;
+        filters.push(made.id ? { ...made, criteria: made.criteria || { to }, action: made.action || { addLabelIds: [label.id] } } : { criteria: { to }, action: { addLabelIds: [label.id] } });
+      }
+      row.filterTo = to;
+      row.filterCreated = !has;
+    }
+    out.push(row);
+  }
+  // Read back what Google holds now
+  const nowLabels = (await gmail.users.labels.list({ userId: 'me' })).data.labels || [];
+  const nowFilters = (await gmail.users.settings.filters.list({ userId: 'me' })).data.filter || [];
+  const confirmed = out.every((r) => {
+    const l = nowLabels.find((x) => String(x.name).toLowerCase() === String(r.name).toLowerCase());
+    return l && (!r.filterTo || nowFilters.some((f) => norm(f.criteria?.to) === r.filterTo && (f.action?.addLabelIds || []).includes(l.id)));
+  });
+  return { done: confirmed, labels: out, confirmed };
+}
 
 export const handlers = {
   async workspace_delegation_status(args) {
@@ -75,6 +115,21 @@ export const handlers = {
     const existing = (await gmail.users.settings.sendAs.list({ userId: 'me' })).data.sendAs || [];
     const summarize = (s) => ({ email: s.sendAsEmail, displayName: s.displayName || '', hasSignature: !!s.signature, isDefault: !!s.isDefault, isPrimary: !!s.isPrimary });
 
+    const wanted = [args.displayName !== undefined && 'display name', args.signatureHtml !== undefined && 'signature', (args.aliases || []).length && `${args.aliases.length} alias(es)`, args.makeDefault && 'default sender', args.avatarBase64 && 'profile photo', (args.labels || []).length && `${args.labels.length} label(s)`, args.vacation && 'auto-reply'].filter(Boolean);
+    if (args.dryRun === true) {
+      const plan = {
+        done: false, dryRun: true, user,
+        wouldChange: wanted,
+        aliasesToCreate: (args.aliases || []).map((a) => norm(a.email)).filter((e) => e && e !== user && !existing.some((s) => norm(s.sendAsEmail) === e)),
+        aliasesAlreadyThere: (args.aliases || []).map((a) => norm(a.email)).filter((e) => existing.some((s) => norm(s.sendAsEmail) === e)),
+        labelsNote: (args.labels || []).length && user !== clients.actingAs ? 'Labels would be skipped: this connection does not act as that mailbox.' : undefined,
+        current: existing.map(summarize),
+        note: 'Nothing was changed.'
+      };
+      const logged = await recordChange(clients, { tool: 'workflow_brand_mailbox', target: user, summary: `PREVIEW: brand ${user}: ${wanted.join(', ') || 'no changes requested'}`, before: existing.map(summarize), dryRun: true });
+      return ok({ ...plan, logged: logged.logged });
+    }
+
     // Steps 1-3 change the mailbox. If one fails part-way, the earlier ones have already happened, so say so in the log.
     try {
       // 1. Primary address: name + signature
@@ -107,10 +162,38 @@ export const handlers = {
       if (args.makeDefault) {
         await gmail.users.settings.sendAs.patch({ userId: 'me', sendAsEmail: norm(args.makeDefault), requestBody: { isDefault: true } });
       }
+
+      // 3b. Optional auto-reply (a Gmail setting, so the robot identity can do it)
+      if (args.vacation) {
+        await gmail.users.settings.updateVacation({ userId: 'me', requestBody: args.vacation });
+      }
     } catch (err) {
       const why = String(err?.response?.data?.error?.message || err?.message || err).slice(0, 200);
       await recordChange(clients, { tool: 'workflow_brand_mailbox', target: user, summary: `Branding ${user} stopped part-way and may be partly applied (${why})`, before: existing.map(summarize), after: null });
       throw err;
+    }
+
+    // 3c. Profile photo, through the Directory (the connection's own admin permission, no delegation)
+    if (args.avatarBase64) {
+      try {
+        const photoData = String(args.avatarBase64).replace(/^data:[^,]*,/, '').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        await clients.admin.users.photos.update({ userKey: user, requestBody: { photoData } });
+        const back = (await clients.admin.users.photos.get({ userKey: user })).data;
+        report.photo = { set: Boolean(back?.photoData || back?.mimeType), mimeType: back?.mimeType, width: back?.width, height: back?.height };
+      } catch (err) {
+        report.photo = { set: false, error: String(err?.response?.data?.error?.message || err?.message || err).slice(0, 200) };
+      }
+    }
+
+    // 3d. Labels and the filters that fill them. Creating a label needs more than the robot identity may do, so this only
+    // runs when the connection IS that mailbox.
+    if ((args.labels || []).length) {
+      if (user !== norm(clients.actingAs)) {
+        report.labels = { done: false, why: `Labels can only be created while this connection acts as ${user} itself (it acts as ${clients.actingAs}). The robot identity is not allowed to create labels.` };
+      } else {
+        try { report.labels = await ensureLabels(clients.gmail, args.labels); }
+        catch (err) { report.labels = { done: false, why: String(err?.response?.data?.error?.message || err?.message || err).slice(0, 200) }; }
+      }
     }
 
     // 4. Read back so the caller sees what Google now holds, not what we sent
@@ -126,10 +209,11 @@ export const handlers = {
       if (s.isPrimary) report.primary = row; else report.aliases.push(row);
       if (s.isDefault) report.defaultSender = s.sendAsEmail;
     }
-    report.done = true;
+    report.done = report.photo?.set !== false && !(report.labels?.done === false);
+    if (args.vacation) report.vacation = pickVacation((await gmail.users.settings.getVacation({ userId: 'me' })).data);
     await recordChange(clients, {
       tool: 'workflow_brand_mailbox', target: user,
-      summary: `Branded ${user}: ${[args.displayName !== undefined && 'display name', args.signatureHtml !== undefined && 'signature', (args.aliases || []).length && `${args.aliases.length} alias(es)`, args.makeDefault && 'default sender'].filter(Boolean).join(', ') || 'no changes requested'}`,
+      summary: `Branded ${user}: ${wanted.join(', ') || 'no changes requested'}${report.done ? '' : ' (not everything could be applied: see the result)'}`,
       before: existing.map(summarize), after: after.map(summarize)
     });
     return ok(report);
