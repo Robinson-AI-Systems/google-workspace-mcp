@@ -8,7 +8,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { registry } from '../src/tools/index.js';
 import { errorResult } from '../src/tools/util.js';
 import { buildHostedApiClients, ensureMigrated } from '../src/auth/google-auth-hosted.js';
-import { getAccessToken, initSchema, touchAccessToken, connectionId } from '../src/db.js';
+import { getAccessToken, initSchema, touchAccessToken, connectionId, getAllowedDomains } from '../src/db.js';
 
 export const config = { api: { bodyParser: true } };
 
@@ -29,6 +29,7 @@ function buildServer(googleAccount, connection) {
     try {
       const clients = await buildHostedApiClients(googleAccount);
       clients.connection = connection; // which Claude connection is asking, for the change log
+      clients.allowedDomains = await getAllowedDomains(clients.actingAs); // which business domains this connection may manage (src/tools/domain-guard.js)
       return await toolHandler(args || {}, clients);
     } catch (err) {
       return errorResult(err);

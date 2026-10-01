@@ -3,7 +3,9 @@
 // housekeeping like renaming or removing one. Nothing here talks to Google
 // except workspace_whoami, which confirms the identity with Gmail itself.
 import { ok } from './util.js';
-import { listGoogleAccounts, setDefaultGoogleAccount, removeGoogleAccount, listConnections, revokeConnection, listRecentChanges } from '../db.js';
+import { listGoogleAccounts, setDefaultGoogleAccount, removeGoogleAccount, listConnections, revokeConnection, listRecentChanges, setAllowedDomains, getAllowedDomains } from '../db.js';
+import { recordChange } from '../changelog.js';
+import { normalizeDomains } from '../domains.js';
 
 export const tools = [
   {
@@ -25,6 +27,11 @@ export const tools = [
     name: 'workspace_remove_account',
     description: "Forget a connected Google account's sign-in. Any Claude connection bound to it stops working until that account is connected again. Cannot be undone from here.",
     inputSchema: { type: 'object', properties: { email: { type: 'string' }, confirm: { type: 'boolean', description: 'Must be true.' } }, required: ['email', 'confirm'] }
+  },
+  {
+    name: 'workspace_set_allowed_domains',
+    description: 'Choose which email domains a Google account\'s connections may manage with the admin tools (users, groups, domains, licenses). By default an account may only manage its own domain, so the Appliance Rentals connection cannot touch AI Systems users. Widening this lowers a safety limit: it does nothing until you pass confirm: true (ask the person first). Pass an empty list to go back to "own domain only". Returns the list now in force.',
+    inputSchema: { type: 'object', properties: { email: { type: 'string', description: 'The connected Google account' }, domains: { type: 'array', items: { type: 'string' }, description: 'e.g. ["robinsonaisystems.com", "appliancerentals.com"]. Empty = own domain only.' }, confirm: { type: 'boolean', description: 'Must be true.' } }, required: ['email', 'domains'] }
   },
   {
     name: 'workspace_recent_changes',
@@ -68,6 +75,15 @@ export const handlers = {
     if (args.confirm !== true) return ok('Nothing removed: pass confirm: true to proceed.');
     await removeGoogleAccount(args.email);
     return ok(await listGoogleAccounts());
+  },
+  async workspace_set_allowed_domains(args, clients) {
+    const email = String(args.email || '').trim().toLowerCase();
+    const before = await getAllowedDomains(email);
+    const wanted = normalizeDomains(args.domains || []); // throws a plain message on something that is not a domain
+    if (args.confirm !== true) return ok({ done: false, needsConfirmation: true, account: email, allowedNow: before, wouldBecome: wanted.length ? wanted : 'own domain only', note: 'Nothing was changed. Ask the person, then run it again with confirm: true.' });
+    const now = await setAllowedDomains(email, wanted);
+    const logged = await recordChange(clients, { tool: 'workspace_set_allowed_domains', target: email, summary: `Allowed domains for ${email}: ${before.join(', ')} -> ${now.join(', ')}`, before: { allowedDomains: before }, after: { allowedDomains: now } });
+    return ok({ done: true, account: email, allowedDomains: now, logged: logged.logged });
   },
   async workspace_recent_changes(args) {
     const days = /^(\d+)d$/i.exec(String(args.since || '').trim());
