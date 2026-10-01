@@ -110,3 +110,37 @@ describe('workflow_offboard_employee', () => {
     expect(out.confirmed).toBe(false);
   });
 });
+
+describe('workflow_offboard_employee: business shares granted by workflow_add_staff_member', () => {
+  const { BUSINESSES } = { BUSINESSES: { cal: 'c_dd214eeba2ec27ed60d341f7aed60beb32c7a883034f39be4153111ce846996d@group.calendar.google.com', folder: '13yNQodb3ELaaOwnjziqpolwHtVYbKLaJ' } };
+  const rentals = 'sam@robinsonappliancerentals.com';
+  function withShares() {
+    const f = setup();
+    f.when('admin.users.get').resolves(() => ({ data: { primaryEmail: rentals, suspended: seq.includes('suspend') } }));
+    f.when('calendar.acl.list').resolves({ data: { items: [{ id: `user:${rentals}`, role: 'writer', scope: { type: 'user', value: rentals } }, { id: 'user:other@x.test', role: 'owner', scope: { type: 'user', value: 'other@x.test' } }] } });
+    f.when('drive.permissions.list').resolves({ data: { permissions: [{ id: 'p1', type: 'user', role: 'reader', emailAddress: rentals }] } });
+    return f;
+  }
+  it('takes them off the business calendar and folder, and only them', async () => {
+    const f = withShares();
+    const out = body(await registry.handlers.workflow_offboard_employee({ userKey: rentals, confirm: true }, f.clients));
+    expect(f.calls.find((c) => c.path === 'calendar.acl.delete').args[0]).toEqual({ calendarId: BUSINESSES.cal, ruleId: `user:${rentals}` });
+    expect(f.calls.find((c) => c.path === 'drive.permissions.delete').args[0]).toMatchObject({ fileId: BUSINESSES.folder, permissionId: 'p1' });
+    expect(out.details.steps.find((s) => s.step === 'remove_business_shares')).toMatchObject({ status: 'ok', removed: { calendar: 'writer', driveFolder: 'reader' } });
+    expect(out.after.businessSharesRemoved).toEqual({ calendar: 'writer', driveFolder: 'reader' });
+  });
+  it('does nothing for a person who was never shared, and skips a domain with no business setup', async () => {
+    const f = setup();
+    const out = body(await registry.handlers.workflow_offboard_employee({ userKey: 'sam@x.test', confirm: true }, f.clients));
+    expect(out.details.steps.find((s) => s.step === 'remove_business_shares').status).toBe('skipped');
+    expect(f.calls.some((c) => /acl\.delete|permissions\.delete/.test(c.path))).toBe(false);
+  });
+  it('a failure removing shares is reported and the account is still suspended', async () => {
+    const f = withShares();
+    f.when('calendar.acl.delete').rejects(googleError(403, 'forbidden', 'not the calendar owner'));
+    const out = body(await registry.handlers.workflow_offboard_employee({ userKey: rentals, confirm: true }, f.clients));
+    expect(out.details.steps.find((s) => s.step === 'remove_business_shares')).toMatchObject({ status: 'failed', error: 'not the calendar owner' });
+    expect(out.details.steps.find((s) => s.step === 'suspend').status).toBe('ok');
+    expect(out.confirmed).toBe(false);
+  });
+});

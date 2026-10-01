@@ -1,5 +1,7 @@
 import { ok, errorResult } from './util.js';
 import { delegatedGmail, delegationReady, mailboxAllowed } from './delegated.js';
+import { BUSINESSES } from '../businesses.js';
+import { removeCalendarAccess, removeDriveAccess } from './provision.js';
 
 // Compound tools: each one does the multi-step job a human admin would do by
 // clicking through several admin console screens, in a single call.
@@ -25,7 +27,7 @@ export const tools = [
   },
   {
     name: 'workflow_offboard_employee',
-    description: "Full departure checklist in one call: suspends the account, signs them out of every session, revokes all OAuth app grants and app-specific passwords, removes their send-as aliases, sets an out-of-office auto-reply, transfers their Drive files to their manager, removes them from all groups, and (optionally) schedules deletion.",
+    description: "Full departure checklist in one call: suspends the account, signs them out of every session, revokes all OAuth app grants and app-specific passwords, removes their send-as aliases, sets an out-of-office auto-reply, removes the business calendar and Drive folder sharing that workflow_add_staff_member granted, transfers their Drive files to their manager, removes them from all groups, and (optionally) schedules deletion.",
     inputSchema: {
       type: 'object',
       properties: {
@@ -148,6 +150,19 @@ export const handlers = {
         } catch (err) { steps.push({ step: 'remove_send_as_aliases', status: 'failed', error: err.message }); }
       }
     }
+
+    // Take them off the business calendar and Drive folder that workflow_add_staff_member shared with them.
+    try {
+      const primary = email || await mailboxOf(admin, args.userKey);
+      const biz = Object.values(BUSINESSES).find((b) => b.domain === String(primary).split('@')[1]);
+      if (!biz || (!biz.calendarId && !biz.driveFolderId)) steps.push({ step: 'remove_business_shares', status: 'skipped', note: 'No business calendar or folder is set up for their domain.' });
+      else {
+        const removed = {};
+        if (biz.calendarId) removed.calendar = await removeCalendarAccess(clients.calendar, biz.calendarId, primary);
+        if (biz.driveFolderId) removed.driveFolder = await removeDriveAccess(clients.drive, biz.driveFolderId, primary);
+        steps.push({ step: 'remove_business_shares', status: 'ok', removed });
+      }
+    } catch (err) { steps.push({ step: 'remove_business_shares', status: 'failed', error: err.message }); }
 
     try {
       await admin.users.update({ userKey: args.userKey, requestBody: { suspended: true } });
