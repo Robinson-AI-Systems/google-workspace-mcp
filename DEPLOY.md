@@ -80,6 +80,6 @@ By default the server keeps your Google sign-in tokens in the database as plain 
 1. Make a key: 32 random bytes written as base64. The easiest way is to ask Claude: "make me a TOKEN_ENCRYPTION_KEY". (Any tool that makes 32 random bytes and shows them as base64 works; the result is a 44-character string ending in `=`.)
 2. In Vercel > this project > **Settings > Environment Variables**, add `TOKEN_ENCRYPTION_KEY` with that value, for **all** environments. Redeploy when Vercel offers.
 3. Nothing else to do. The first time each connected account is used, its encrypted copy is created automatically.
-4. Keep a copy of the key somewhere safe (a password manager). If the key is lost or changed, the server notices it cannot read the encrypted copy, says so in the logs, and falls back to the plain copy, so nothing breaks while the plain copy still exists.
+4. Keep a copy of the key somewhere safe (a password manager). If the key is lost or changed, the server notices it cannot read the encrypted copy, says so in the logs, and falls back to the plain copy and re-encrypts it with the new key, so nothing breaks.
 
 If the setting is missing or wrong, the server keeps working exactly as before and logs one warning.

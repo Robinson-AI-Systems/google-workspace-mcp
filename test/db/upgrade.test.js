@@ -94,7 +94,6 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       const r = await row('a@example.test');
       expect(r.tokens).toEqual(tokens);               // older code reading only `tokens` still works
       expect(r.tokens_enc).toMatch(/^v1:/);
-      expect(r.tokens_enc).not.toContain('fake-refresh-1');
       expect(await db.getGoogleTokensFor('a@example.test')).toEqual(tokens);
     });
 
@@ -130,6 +129,42 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       expect((await db.getGoogleTokensFor('a@example.test')).access_token).toBe('fake-access-3');
     });
 
+    it('a save made by older code (plain copy only) is never hidden behind a stale encrypted copy', async () => {
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test', tokens);
+      expect((await row('a@example.test')).tokens_enc).toMatch(/^v1:/);
+      // What the previous version of the server does on a refresh or re-sign-in: touches only `tokens`.
+      await rawQuery(`UPDATE google_accounts SET tokens = tokens || '{"access_token":"fake-from-old-code","refresh_token":"fake-rotated"}'::jsonb WHERE email = 'a@example.test'`);
+      const got = await db.getGoogleTokensFor('a@example.test');
+      expect(got).toEqual({ access_token: 'fake-from-old-code', refresh_token: 'fake-rotated' });
+      // ...and the encrypted copy has caught up, so the next read is served from it.
+      const healed = await row('a@example.test');
+      expect(healed.tokens_enc).toMatch(/^v1:/);
+      const { decryptJson } = await import('../../src/crypto.js');
+      expect(decryptJson(healed.tokens_enc, Buffer.from(process.env.TOKEN_ENCRYPTION_KEY, 'base64'))).toEqual(got);
+    });
+
+    it('a save clears the encrypted copy first, so a failed re-encrypt can only mean "not encrypted yet"', async () => {
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test', tokens);
+      process.env.TOKEN_ENCRYPTION_KEY = 'not-a-valid-key'; // makes the encrypted step a no-op
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await db.saveGoogleTokensFor('a@example.test', { access_token: 'fake-access-9' });
+      warn.mockRestore();
+      expect((await row('a@example.test')).tokens_enc).toBeNull();
+    });
+
+    it('the encrypted copy really holds the tokens (decrypts to exactly the plain copy)', async () => {
+      await reset();
+      const key = crypto.randomBytes(32);
+      process.env.TOKEN_ENCRYPTION_KEY = key.toString('base64');
+      await db.saveGoogleTokensFor('a@example.test', tokens);
+      const { decryptJson } = await import('../../src/crypto.js');
+      expect(decryptJson((await row('a@example.test')).tokens_enc, key)).toEqual(tokens);
+    });
+
     it('a damaged or wrong-key encrypted copy never crashes a read: it warns and uses the plain copy', async () => {
       await reset();
       process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
@@ -140,7 +175,10 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64'); // a different key
       await db.saveGoogleTokensFor('b@example.test', tokens);
       process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
+      const rotatedKey = Buffer.from(process.env.TOKEN_ENCRYPTION_KEY, 'base64');
       expect(await db.getGoogleTokensFor('b@example.test')).toEqual(tokens);
+      const { decryptJson } = await import('../../src/crypto.js');
+      expect(decryptJson((await row('b@example.test')).tokens_enc, rotatedKey)).toEqual(tokens); // healed to the new key
       expect(warn).toHaveBeenCalled();
       expect(JSON.stringify(warn.mock.calls)).not.toContain('fake-');
       warn.mockRestore();
