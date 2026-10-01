@@ -6,7 +6,7 @@ import { CONSOLE_MAP, CONSOLE_HOME } from '../data/console-map.js';
 
 // ---------- P2-4: where is this setting? ----------
 const GENERIC = new Set(['email', 'mail', 'user', 'users', 'file', 'files', 'account', 'people', 'person', 'staff']); // too common to point at one page by themselves
-const STOP = new Set(['the', 'a', 'an', 'to', 'of', 'for', 'in', 'on', 'my', 'our', 'how', 'do', 'i', 'can', 'where', 'is', 'are', 'and', 'or', 'with', 'set', 'setting', 'settings', 'change', 'turn', 'find', 'what', 'it', 'up', 'google', 'workspace', 'admin', 'console']);
+const STOP = new Set(['add', 'the', 'a', 'an', 'to', 'of', 'for', 'in', 'on', 'my', 'our', 'how', 'do', 'i', 'can', 'where', 'is', 'are', 'and', 'or', 'with', 'set', 'setting', 'settings', 'change', 'turn', 'find', 'what', 'it', 'up', 'google', 'workspace', 'admin', 'console']);
 const SYNONYMS = { licence: 'license', licences: 'license', licenses: 'license', emails: 'email', mails: 'mail', passwords: 'password', calendars: 'calendar', drives: 'drive', groups: 'group', users: 'user', devices: 'device', apps: 'app', rooms: 'room', 'two-factor': '2fa', mfa: '2fa', '2-step': '2sv' };
 const words = (text) => String(text || '').toLowerCase().replace(/[^a-z0-9\- ]+/g, ' ').split(/\s+/).filter(Boolean).map((w) => SYNONYMS[w] || w);
 
@@ -16,6 +16,7 @@ export function matchSettings(query, limit = 3) {
   const nonStop = q.filter((w) => !STOP.has(w));
   const specific = nonStop.filter((w) => !GENERIC.has(w));
   const meaningful = specific.length ? specific : nonStop;
+  const isGeneric = (w) => specific.length > 0 && GENERIC.has(w); // when ALL the words are generic they are all we have, so count them
   if (!meaningful.length) return [];
   const scored = CONSOLE_MAP.map((entry, order) => {
     let score = 0;
@@ -23,10 +24,10 @@ export function matchSettings(query, limit = 3) {
     const titleWords = new Set(words(entry.title));
     for (const phrase of [...entry.keywords.map((k) => words(k).join(' ')), entry.id.replace(/-/g, ' ')]) {
       if (phrase.includes(' ') && text.includes(` ${phrase} `)) score += 4;       // whole multi-word phrase
-      else if (!phrase.includes(' ') && !GENERIC.has(phrase) && text.includes(` ${phrase} `)) score += 3; // single keyword
+      else if (!phrase.includes(' ') && !isGeneric(phrase) && text.includes(` ${phrase} `)) score += 3; // single keyword
     }
     for (const w of meaningful) {
-      if (keywordWords.has(w) && !GENERIC.has(w)) score += 1;
+      if (keywordWords.has(w) && !isGeneric(w)) score += 1;
       if (titleWords.has(w)) score += 2;
       else if (w.length >= 5 && [...titleWords, ...keywordWords].some((x) => x.length >= 5 && (x.startsWith(w) || w.startsWith(x)))) score += 1;
     }

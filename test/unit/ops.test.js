@@ -102,6 +102,8 @@ describe('workspace_where_is_setting: questions people actually ask', () => {
     expect(top('set up DMARC')).toBe('spf-dmarc');
     expect(top('reset a user password')).toBe('password-policy');
     expect(top('email allowlist')).toBe('gmail-spam');
+    expect(top('add a user')).toBe('users');
+    expect(top('add a domain')).toBe('domains');
   });
   it('the old email-allowlist entry is merged into the spam page, not duplicated', () => {
     expect(CONSOLE_MAP.filter((e) => /allowlist/.test(e.title) && /spam|allow/.test(e.id)).length).toBeLessThanOrEqual(2);

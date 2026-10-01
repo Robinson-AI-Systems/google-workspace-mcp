@@ -82,6 +82,8 @@ describe('scoring: apps, forwarding, groups, licences, sharing', () => {
     expect(r.status).toBe('WARN');
     expect(r.found).toContain('2 licences');
     expect(hr.scoreLicences(users, ['a@x.test'], NOW).status).toBe('PASS');
+    const fresh = [user('n@x.test', { lastLoginTime: '1970-01-01T00:00:00Z', creationTime: '2026-09-25T00:00:00Z' })];
+    expect(hr.scoreLicences(fresh, ['n@x.test'], NOW).status).toBe('PASS');
   });
   it('public-link files warn', () => {
     expect(hr.scoreSharing([]).status).toBe('PASS');

@@ -96,6 +96,8 @@ export function scoreLicences(users, licenceHolders, now = Date.now()) {
     const u = byEmail.get(String(holder).toLowerCase());
     if (!u) continue;
     const t = Date.parse(u.lastLoginTime);
+    const created = Date.parse(u.creationTime);
+    if (!u.suspended && created && created > cutoff) continue; // too new to have gone unused
     if (u.suspended || !t || t < Date.parse('1971-01-01') || t < cutoff) wasted.push(u.primaryEmail);
   }
   return wasted.length ? item('Paid licences nobody is using', 'WARN', `${wasted.length} licences are held by suspended or inactive accounts: ${list(wasted)}.`, 'Remove the licence (licensing_remove_license) or the account, and ask Google to lower the seat count (Billing > Subscriptions).')
