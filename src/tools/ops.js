@@ -48,7 +48,7 @@ const whereIsSetting = async (args) => {
 
 // ---------- P2-1: calendar settings ----------
 // Accepts every name the runtime's time zone database knows, old and new spellings alike (Asia/Kolkata and Asia/Calcutta).
-const validZone = (name) => { try { new Intl.DateTimeFormat('en', { timeZone: name }); return typeof name === 'string' && name.trim() === name && name.length > 0; } catch { return false; } };
+export const validZone = (name) => { try { new Intl.DateTimeFormat('en', { timeZone: name }); return typeof name === 'string' && name.trim() === name && name.length > 0; } catch { return false; } };
 const canonicalZone = (name) => { try { return new Intl.DateTimeFormat('en', { timeZone: name }).resolvedOptions().timeZone; } catch { return name; } };
 const sameZone = (a, b) => a === b || (validZone(a) && validZone(b) && canonicalZone(a) === canonicalZone(b)); // Google may store an alias of the name sent
 const CAL_FIELDS = ['summary', 'description', 'timeZone', 'location'];

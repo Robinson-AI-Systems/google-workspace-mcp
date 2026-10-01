@@ -10,7 +10,7 @@ You do not need tool names. Say what you want in a sentence. This page lists the
 - Every real change is written down. Ask "what did you change this week?" any time.
 - Each Claude connection can only manage its own business's domains. Asking about another domain gets a refusal unless you say you really mean it.
 
-## Ten things to ask for
+## Twelve things to ask for
 
 | Say this | What happens | What it asks you first |
 |---|---|---|
@@ -22,7 +22,9 @@ You do not need tool names. Say what you want in a sentence. This page lists the
 | **"What plan are we on and who has a licence?"** | Names the plans, how many people hold each and whether Gemini is included. | Nothing. |
 | **"Brand the mailbox for sam@..."** | Sets the sender name, signature, send-as addresses, optional photo and out-of-office reply. | You can ask for a preview first. It acts on the mailbox you name, so check the name. |
 | **"Change the time zone of the rentals calendar to Denver"** | Changes the calendar, then reads it back to prove it. | A preview if you ask. |
-| **"Offboard Sam"** | Puts up an out-of-office reply, removes the role addresses Sam can send as, suspends the account, signs Sam out everywhere, removes app access and app passwords, and (if you say so) hands files to someone and deletes the account. | **Always asks first**, showing what Sam's account and mailbox look like now (including the role addresses it is about to remove). If you asked for deletion, the summary says PERMANENTLY DELETE and your yes covers it. Without domain-wide delegation the mailbox steps are skipped and the result says it is *not confirmed*. |
+| **"Offboard Sam"** | Puts up an out-of-office reply, removes the role addresses Sam can send as, takes Sam off the business calendar and Drive folder, suspends the account, signs Sam out everywhere, removes app access and app passwords, and (if you say so) hands files to someone and deletes the account. | **Always asks first**, showing what Sam's account and mailbox look like now (including the role addresses it is about to remove). If you asked for deletion, the summary says PERMANENTLY DELETE and your yes covers it. Without domain-wide delegation the mailbox steps are skipped and the result says it is *not confirmed*. |
+| **"Add Sam as a driver for Appliance Rentals"** (or technician, office, admin) | Creates Sam's account with a one-time password, adds any extra addresses, shares the business calendar and Drive folder at the right level (driver/technician: see and change calendar events, view the folder; office/admin: manage the calendar, edit the folder), brands the mailbox, and asks Google to require 2-step sign-in. Safe to run again: it only does what is missing. The password is shown to you once, never saved in the change record. | Nobody is emailed unless you ask. If you want the login sent to you, or a welcome note sent to Sam's personal email, it **asks first**. A preview shows the whole plan. |
+| **"Set up a new business: Evergreen Hauling, evergreenhauling.com, owner ops@..."** | Adds the domain (or gives you the DNS record to prove you own it, and **stops** until that is done), then creates the business's folder in the Admin console, the owner's account, role addresses like support@ and billing@, a calendar in the right time zone, the nine standard Drive folders, the owner's mailbox branding, and finishes with an email health check. Safe to run again after you add the DNS record. | **Always asks first** (it adds a domain and a paid account), and a preview shows the full plan. It also needs your yes to work outside the business this connection normally manages. Labels and filters are made only when the connection is signed in as the owner. |
 | **"What's waiting in my inbox / the Leads label?"** | Counts conversations (the newest 100), who is waiting longest for a reply, and the oldest unanswered one per label. Bounces, no-reply and mailing-list mail are not counted as waiting. "Which leads have waited over a day?" lists them oldest first (it looks at the newest 500 and says so if older ones may be missing). Changes nothing. | Nothing. |
 
 ## Also useful
@@ -32,5 +34,4 @@ You do not need tool names. Say what you want in a sentence. This page lists the
 
 ## Not available yet
 
-- **"Add a driver" / "set up a new business"** in one sentence. These need the exact details of each business (folder names, calendars, signatures); see the open question in the pull request.
 - Changing DNS records from here (it needs a Vercel access token you have not created yet).

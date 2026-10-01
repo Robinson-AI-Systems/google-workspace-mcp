@@ -148,7 +148,7 @@ export const GUARDS = {
       const mailboxNotDone = wantedMailboxSteps.some((name) => steps.find((st) => st.step === name)?.status !== 'ok');
       return !steps.some((st) => st.status === 'failed') && !mailboxNotDone && (a.deleteAccount || !!after?.suspended === true);
     },
-    describe: (a) => ({ target: a.userKey, summary: `OFFBOARD ${a.userKey}: put up an out-of-office reply${a.removeSendAsAliases === false ? '' : ', REMOVE their "send mail as" addresses (e.g. support@)'}, suspend, sign out everywhere, revoke app access and app passwords${a.transferDriveAndCalendarTo ? `, transfer their Drive and Calendar to ${a.transferDriveAndCalendarTo}` : ''}${a.deleteAccount ? ', then PERMANENTLY DELETE the account' : ''}` }),
+    describe: (a) => ({ target: a.userKey, summary: `OFFBOARD ${a.userKey}: put up an out-of-office reply${a.removeSendAsAliases === false ? '' : ', REMOVE their "send mail as" addresses (e.g. support@)'}, suspend, sign out everywhere, remove their business calendar and folder sharing, revoke app access and app passwords${a.transferDriveAndCalendarTo ? `, transfer their Drive and Calendar to ${a.transferDriveAndCalendarTo}` : ''}${a.deleteAccount ? ', then PERMANENTLY DELETE the account' : ''}` }),
     before: async (a, clients) => {
       const { admin } = clients;
       const user = await data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,suspended,isAdmin,orgUnitPath' }));
@@ -164,7 +164,7 @@ export const GUARDS = {
     },
     after: async (a, { admin }, details) => {
       const steps = details?.steps || [];
-      const outcome = { outOfOffice: steps.find((st) => st.step === 'set_out_of_office')?.status, sendAsRemoved: steps.find((st) => st.step === 'remove_send_as_aliases')?.removed || [], sendAsStatus: steps.find((st) => st.step === 'remove_send_as_aliases')?.status };
+      const outcome = { outOfOffice: steps.find((st) => st.step === 'set_out_of_office')?.status, sendAsRemoved: steps.find((st) => st.step === 'remove_send_as_aliases')?.removed || [], sendAsStatus: steps.find((st) => st.step === 'remove_send_as_aliases')?.status, businessSharesRemoved: steps.find((st) => st.step === 'remove_business_shares')?.removed };
       try {
         const user = await data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,suspended' }));
         return { ...user, ...outcome, exists: !!a.deleteAccount }; // still there is only a failure if we were asked to delete
