@@ -1,7 +1,7 @@
 import { ok, errorResult } from './util.js';
 import { delegatedGmail, delegationReady, mailboxAllowed } from './delegated.js';
 import { BUSINESSES } from '../businesses.js';
-import { removeCalendarAccess, removeDriveAccess } from './provision.js';
+import { removeCalendarAccess, removeDriveAccess, calendarRole, drivePermission } from './provision.js';
 
 // Compound tools: each one does the multi-step job a human admin would do by
 // clicking through several admin console screens, in a single call.
@@ -156,10 +156,15 @@ export const handlers = {
       const primary = email || await mailboxOf(admin, args.userKey);
       const biz = Object.values(BUSINESSES).find((b) => b.domain === String(primary).split('@')[1]);
       if (!biz || (!biz.calendarId && !biz.driveFolderId)) steps.push({ step: 'remove_business_shares', status: 'skipped', note: 'No business calendar or folder is set up for their domain.' });
+      else if (!mailboxAllowed(clients, primary)) steps.push({ step: 'remove_business_shares', status: 'skipped', note: `${primary} is outside the domains this connection is limited to, so the business calendar and folder shares were not touched. Use crossDomain: true if you really mean it.` });
       else {
         const removed = {};
         if (biz.calendarId) removed.calendar = await removeCalendarAccess(clients.calendar, biz.calendarId, primary);
         if (biz.driveFolderId) removed.driveFolder = await removeDriveAccess(clients.drive, biz.driveFolderId, primary);
+        const still = [];
+        if (biz.calendarId && await calendarRole(clients.calendar, biz.calendarId, primary)) still.push('calendar');
+        if (biz.driveFolderId && await drivePermission(clients.drive, biz.driveFolderId, primary)) still.push('Drive folder');
+        if (still.length) throw new Error(`Google still shows them on the business ${still.join(' and ')} after removal.`);
         steps.push({ step: 'remove_business_shares', status: 'ok', removed });
       }
     } catch (err) { steps.push({ step: 'remove_business_shares', status: 'failed', error: err.message }); }

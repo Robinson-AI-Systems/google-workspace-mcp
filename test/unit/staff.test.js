@@ -23,7 +23,7 @@ function setup({ existing = false } = {}) {
   const state = { user: existing ? { primaryEmail: EMAIL, orgUnitPath: '/', isEnforcedIn2Sv: true } : null, aliases: [], acl: [], perms: [] };
   f.when('admin.users.get').resolves(() => { if (!state.user) throw googleError(404, 'notFound', 'Resource Not Found: userKey'); return { data: state.user }; });
   f.when('admin.users.insert').resolves((a) => { state.user = { primaryEmail: a.requestBody.primaryEmail, orgUnitPath: a.requestBody.orgUnitPath }; return { data: state.user }; });
-  f.when('admin.users.update').resolves((a) => { Object.assign(state.user, a.requestBody); return { data: state.user }; });
+  f.when('admin.users.update').resolves((a) => { const { isEnforcedIn2Sv, ...writable } = a.requestBody; Object.assign(state.user, writable); return { data: state.user }; }); // Google ignores isEnforcedIn2Sv: it is read-only
   f.when('admin.users.aliases.list').resolves(() => ({ data: { aliases: state.aliases.map((alias) => ({ alias })) } }));
   f.when('admin.users.aliases.insert').resolves((a) => { state.aliases.push(a.requestBody.alias); return { data: {} }; });
   f.when('calendar.acl.list').resolves(() => ({ data: { items: state.acl } }));
@@ -86,7 +86,10 @@ describe('workflow_add_staff_member', () => {
     expect(f.brand).toHaveBeenCalledTimes(1);
     expect(f.brand.mock.calls[0][0]).toMatchObject({ userEmail: EMAIL, displayName: 'Sam Lee', signatureHtml: '<b>Sam</b>', aliases: [{ email: 'dispatch@robinsonappliancerentals.com' }] });
     expect(JSON.stringify(await holder.db.listRecentChanges())).not.toContain(insert.password);
-    expect(out.details.steps.find((s) => s.step === 'require_2sv').status).toBe('ok');
+    const sv = out.details.steps.find((s) => s.step === 'check_2sv');
+    expect(sv).toMatchObject({ enrolled: false, requiredByPolicy: false });
+    expect(sv.note).toMatch(/organizational unit/);
+    expect(f.calls.some((c) => c.path === 'admin.users.update')).toBe(false);
   });
 
   it('running it twice changes nothing the second time', async () => {
@@ -149,6 +152,44 @@ describe('workflow_add_staff_member', () => {
     expect(by.brand_mailbox.error).toMatch(/delegation is not set up.*few minutes/);
     expect(by.share_calendar.status).toBe('ok');
     expect(out.details.warning).toMatch(/brand_mailbox/);
+    expect(out.confirmed).toBe(false);
+  });
+
+  it('a driver who already has direct Drive access is reported, not confirmed, and nothing is removed', async () => {
+    const f = setup({ existing: true });
+    f.state.perms.push({ id: 'p9', type: 'user', role: 'writer', emailAddress: EMAIL });
+    const out = body(await run({ role: 'driver' }, f));
+    const by = Object.fromEntries(out.details.steps.map((s) => [s.step, s]));
+    expect(by.share_drive_folder.status).toBe('failed');
+    expect(by.share_drive_folder.error).toMatch(/should not have/);
+    expect(f.calls.some((c) => c.path === 'drive.permissions.delete')).toBe(false);
+    expect(out.confirmed).toBe(false);
+  });
+
+  it('an existing Drive owner is never downgraded to editor', async () => {
+    const f = setup({ existing: true });
+    f.state.perms.push({ id: 'p9', type: 'user', role: 'owner', emailAddress: EMAIL });
+    const out = body(await run({ role: 'office' }, f));
+    expect(f.calls.some((c) => c.path === 'drive.permissions.update')).toBe(false);
+    expect(out.details.steps.find((s) => s.step === 'share_drive_folder').note).toMatch(/left alone/);
+  });
+
+  it('mailbox branding is skipped when the mailbox already shows that name and signature', async () => {
+    const f = setup();
+    f.clients.delegationReady = true;
+    f.clients.gmailFor = () => ({ users: { settings: { sendAs: { list: async () => ({ data: { sendAs: [{ sendAsEmail: EMAIL, displayName: 'Sam Lee', signature: '<b>Sam</b>' }] } }) } } } });
+    const out = body(await run({ signatureHtml: '<b>Sam</b>' }, f));
+    expect(f.brand).not.toHaveBeenCalled();
+    expect(out.details.steps.find((s) => s.step === 'brand_mailbox').status).toBe('unchanged');
+  });
+
+  it('long calendar and Drive sharing lists are read to the end, not just the first page', async () => {
+    const f = setup({ existing: true });
+    const pages = { a: { items: [{ id: 'user:x@x.test', role: 'reader', scope: { type: 'user', value: 'x@x.test' } }], nextPageToken: 'b' }, b: { items: [{ id: `user:${EMAIL}`, role: 'writer', scope: { type: 'user', value: EMAIL } }] } };
+    f.when('calendar.acl.list').resolves((a) => ({ data: pages[a.pageToken || 'a'] }));
+    const out = body(await run({ role: 'driver' }, f));
+    expect(f.calls.some((c) => c.path === 'calendar.acl.insert')).toBe(false); // found him on page two
+    expect(out.details.steps.find((s) => s.step === 'share_calendar').status).toBe('unchanged');
   });
 
   it('is refused for a connection limited to another business unless crossDomain is given', async () => {

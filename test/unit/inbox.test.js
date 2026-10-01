@@ -53,6 +53,18 @@ describe('describeThread', () => {
     expect(describeThread(thread('t', msg('c@y.test', 3, ['TRASH'])), mine).unanswered).toBe(false);
     expect(describeThread(thread('p', msg('', 3)), mine).unanswered).toBe(false);
   });
+  it('real customers are not lost: Google Group role mailboxes, website-form relays, and names that only start with "bounce"', () => {
+    const grp = msg('cust@y.test', 3); grp.payload.headers.push({ name: 'List-Id', value: '<support.x.test>' }, { name: 'Precedence', value: 'list' }, { name: 'X-Google-Group-Id', value: '123' });
+    expect(describeThread(thread('g', grp), mine).unanswered).toBe(true);
+    const form = msg('WordPress <wordpress@x.test>', 3); form.payload.headers.push({ name: 'Reply-To', value: 'Pat Lead <pat@y.test>' });
+    const d = describeThread(thread('w', form), mine);
+    expect(d.unanswered).toBe(true);
+    expect(d.lastFrom).toBe('pat@y.test'); // the customer, not the relay
+    const noPerson = msg('noreply@shop.test', 3); noPerson.payload.headers.push({ name: 'Reply-To', value: 'noreply@shop.test' });
+    expect(describeThread(thread('n', noPerson), mine).unanswered).toBe(false);
+    expect(describeThread(thread('b', msg('bounce.house@y.test', 3)), mine).unanswered).toBe(true);
+    expect(describeThread(thread('b2', msg('bounce+abc123@y.test', 3)), mine).unanswered).toBe(false);
+  });
   it('an empty thread is ignored', () => expect(describeThread({ id: 'z', messages: [] }, mine)).toBeNull());
 });
 

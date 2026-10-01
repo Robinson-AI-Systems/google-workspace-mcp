@@ -34,7 +34,7 @@ export const CONSOLE_MAP = [
   { id: 'password-policy', title: 'Password rules (length, strength, reuse, expiry)', keywords: ['password', 'password policy', 'password length', 'strength', 'expire', 'expiry', 'reuse'], link: G('/ac/security/passwordmanagement'),
     path: ['Security', 'Authentication', 'Password management'], note: 'A single user\'s password can be reset with admin_reset_user_password.' },
   { id: '2sv', title: '2-Step Verification: require it, set the grace period', keywords: ['2sv', 'two step', '2-step', 'two factor', '2fa', 'mfa', 'verification', 'enforce', 'security key', 'passkey'], link: G('/ac/security/2sv'),
-    path: ['Security', 'Authentication', '2-step verification', 'Pick the org unit', 'Allow users to turn on / Enforcement'], note: 'admin_set_2sv_enforcement can change enforcement by API; this page shows the full set of options.' },
+    path: ['Security', 'Authentication', '2-step verification', 'Pick the org unit', 'Allow users to turn on / Enforcement'], note: 'Google only lets you require 2-step for a whole organizational unit here; the per-person API field is read-only, so admin_set_2sv_enforcement may be ignored (its read-back tells you).' },
   { id: 'recovery', title: 'Account recovery (let users or admins reset their own access)', keywords: ['recovery', 'account recovery', 'recover', 'locked out', 'forgot password', 'recovery email', 'recovery phone', 'super admin recovery'], link: G('/ac/security/accountrecovery'),
     path: ['Security', 'Authentication', 'Account recovery'], note: null },
   { id: 'less-secure-apps', title: 'Less secure apps / app passwords', keywords: ['less secure', 'app password', 'app-specific password', 'legacy', 'basic auth'], link: null,

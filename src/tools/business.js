@@ -4,7 +4,7 @@
 // Every step looks first and changes only what is missing, so running it twice changes nothing the second time.
 import { ok } from './util.js';
 import { defineWrite, isNotFound } from './write.js';
-import { handlers as brandHandlers, ensureLabels } from './mailbox-branding.js';
+import { handlers as brandHandlers, ensureLabels, brandingMatches } from './mailbox-branding.js';
 import { emailHealth } from './email-health.js';
 import { validZone } from './ops.js';
 import { STANDARD_FOLDERS } from '../businesses.js';
@@ -90,6 +90,7 @@ const built = defineWrite({
     let blocked = null;
 
     await runStep(steps, 'domain', async () => {
+     try {
       const dom = await find(() => admin.domains.get({ customer: CUSTOMER, domainName: c.domain }));
       const exists = !!(dom && dom.domainName);
       if (exists && dom.verified === true) return { changed: false, verified: true };
@@ -97,6 +98,7 @@ const built = defineWrite({
       const token = await clients.siteVerification.webResource.getToken({ requestBody: { site: { type: 'INET_DOMAIN', identifier: c.domain }, verificationMethod: 'DNS_TXT' } });
       blocked = `${c.domain} is not verified yet. Add the DNS TXT record below, wait for it to take effect, then confirm with domain_confirm_verification and run this again.`;
       return { changed: !exists, verified: false, dnsTxtRecordToAdd: token.data?.token, note: blocked };
+     } catch (err) { blocked = `The domain step failed (${reasonOf(err)}), so nothing else was attempted. Fix that and run this again.`; throw err; }
     });
     const stop = () => blocked ? { skipped: 'Waiting for the domain to be verified (see the domain step).' } : null;
 
@@ -147,7 +149,10 @@ const built = defineWrite({
     const calName = args.calendarName || `${c.businessName} Calendar`;
     await runStep(steps, 'calendar', async () => {
       if (stop()) return stop();
-      let cal = ((await calendar.calendarList.list({})).data.items || []).find((x) => x.summary === calName);
+      const mine = [];
+      let pageToken;
+      do { const r = (await calendar.calendarList.list({ maxResults: 250, ...(pageToken ? { pageToken } : {}) })).data; mine.push(...(r.items || [])); pageToken = r.nextPageToken; } while (pageToken);
+      let cal = mine.find((x) => x.summary === calName && (x.accessRole === undefined || x.accessRole === 'owner'));
       let created = false;
       if (!cal) { cal = (await calendar.calendars.insert({ requestBody: { summary: calName, timeZone: args.timeZone } })).data; created = true; }
       let share = { changed: false };
@@ -174,6 +179,7 @@ const built = defineWrite({
       if (!args.brand) return { skipped: 'No branding given.' };
       if (!aliasesReady && c.aliasEmails.length) return { skipped: 'The role addresses are not in place yet.' };
       const brand = clients.brandMailbox || brandHandlers.workflow_brand_mailbox;
+      if (await brandingMatches(clients, { email: c.owner, displayName: args.brand.displayName, signatureHtml: args.brand.signatureHtml, aliases: c.aliasEmails })) return { changed: false, note: 'The mailbox already shows this name and signature; left as it is.' };
       const res = JSON.parse((await brand({ userEmail: c.owner, displayName: args.brand.displayName, signatureHtml: args.brand.signatureHtml, avatarBase64: args.brand.avatarBase64Url, aliases: c.aliasEmails.map((e) => ({ email: e })) }, clients)).content[0].text);
       if (res.done !== true) throw new Error(`${res.reason || 'Branding did not complete.'} A brand-new mailbox can take a few minutes to appear: run workflow_brand_mailbox shortly.`);
       return { changed: true, primary: res.primary, aliases: res.aliases };
@@ -192,14 +198,16 @@ const built = defineWrite({
       ...(blocked ? { stoppedEarly: blocked } : {}),
       ...(password ? { ownerTemporaryPassword: password, passwordNote: 'Shown once. Give it to the owner securely; they must change it at first sign-in.' } : {}),
       emailHealth: emailHealthReport,
+      ...(steps.some((x) => x.status === 'skipped' && x.note && !/^Waiting for the domain/.test(x.note)) ? { skipped: steps.filter((x) => x.status === 'skipped').map((x) => ({ step: x.step, why: x.note })) } : {}),
       ...(failed.length ? { warning: `${failed.length} step(s) failed: ${failed.map((s) => s.step).join(', ')}. Fix the cause and run it again: finished steps are not repeated.` } : {})
     });
   },
   readAfter: (args, clients) => inspect(args, clients),
-  verify(args, _b, after) {
+  verify(args, _b, after, details) {
     const c = clean(args);
     if (!after.domain.exists) return false;
-    if (!after.domain.verified) return true; // stopping at the DNS step is the expected result, not a mismatch
+    if ((details?.steps || []).some((x) => x.status === 'failed' && x.step !== 'email_health')) return false; // a failed step is not "confirmed"
+    if (!after.domain.verified) return true; // stopping at the DNS step is the expected result
     return after.orgUnit.exists && after.owner.exists && c.aliasEmails.every((a) => after.owner.aliases.includes(a)) && after.calendar.exists && after.driveFolder.exists;
   }
 });

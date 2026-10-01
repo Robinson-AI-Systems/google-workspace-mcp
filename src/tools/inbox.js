@@ -5,7 +5,7 @@ import { ok } from './util.js';
 const HOUR = 3600000;
 const MAX_THREADS = 100;
 const MAX_THREADS_UNANSWERED = 500;   // find_unanswered pages further: the oldest waiting threads are the ones it exists to find
-const AUTOMATED = /^(mailer-daemon|postmaster|no-?reply|donotreply|do-not-reply|bounces?)\b/i;
+const AUTOMATED = /^(mailer-daemon|postmaster|no-?reply|donotreply|do-not-reply|bounces?)(?=$|[+@_-])/i;
 
 const emailIn = (header) => { const m = /<([^>]+)>/.exec(header || '') || /([^\s<>",;]+@[^\s<>",;]+)/.exec(header || ''); return m ? m[1].trim().toLowerCase() : ''; };
 const headerOf = (message, name) => (message.payload?.headers || []).find((h) => h.name?.toLowerCase() === name)?.value || '';
@@ -37,7 +37,7 @@ async function loadThreads(gmail, { q, labelIds, max = MAX_THREADS }) {  // newe
   }
   const threads = [];
   for (let i = 0; i < ids.length; i += 5) {
-    threads.push(...await Promise.all(ids.slice(i, i + 5).map(async (id) => (await gmail.users.threads.get({ userId: 'me', id, format: 'metadata', metadataHeaders: ['From', 'Subject', 'Date', 'Auto-Submitted', 'Precedence', 'List-Id'] })).data)));
+    threads.push(...await Promise.all(ids.slice(i, i + 5).map(async (id) => (await gmail.users.threads.get({ userId: 'me', id, format: 'metadata', metadataHeaders: ['From', 'Subject', 'Date', 'Auto-Submitted', 'Precedence', 'List-Id', 'Reply-To', 'X-Google-Group-Id'] })).data)));
   }
   return { threads, more: Boolean(pageToken) };
 }
@@ -47,10 +47,16 @@ export function describeThread(thread, mine) {
   const messages = [...(thread.messages || [])].sort((a, b) => Number(a.internalDate) - Number(b.internalDate));
   const last = messages.at(-1);
   if (!last) return null;
-  const from = emailIn(headerOf(last, 'from'));
+  let from = emailIn(headerOf(last, 'from'));
   const labelIds = new Set(messages.flatMap((m) => m.labelIds || []));
   const lastLabels = last.labelIds || [];
-  const automated = AUTOMATED.test(from) || /auto-(replied|generated)/i.test(headerOf(last, 'auto-submitted')) || /^(bulk|list|junk)$/i.test(headerOf(last, 'precedence')) || Boolean(headerOf(last, 'list-id'));
+  // Website forms and no-reply relays often send "from" a robot address with the customer in Reply-To: the customer is who is waiting.
+  const replyTo = emailIn(headerOf(last, 'reply-to'));
+  if (replyTo && replyTo !== from && !AUTOMATED.test(replyTo) && !mine.has(replyTo)) from = replyTo;
+  // A Google Group role mailbox (support@, leads@) stamps every customer message with List-Id and Precedence: list; those are real customers.
+  const viaGroup = Boolean(headerOf(last, 'x-google-group-id'));
+  const listMail = !viaGroup && (Boolean(headerOf(last, 'list-id')) || /^(bulk|list|junk)$/i.test(headerOf(last, 'precedence')));
+  const automated = AUTOMATED.test(from) || /auto-(replied|generated)/i.test(headerOf(last, 'auto-submitted')) || listMail || (viaGroup && /^(bulk|junk)$/i.test(headerOf(last, 'precedence')));
   const inbound = from !== '' && !mine.has(from) && !automated && !['SENT', 'DRAFT', 'TRASH', 'SPAM'].some((l) => lastLabels.includes(l)); // a person wrote last and it is not in the bin
   return {
     threadId: thread.id,

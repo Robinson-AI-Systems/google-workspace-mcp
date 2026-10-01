@@ -50,7 +50,9 @@ export async function ensureAliases(admin, userKey, wanted) {
 }
 
 export async function calendarRole(calendar, calendarId, email) {
-  const rules = (await calendar.acl.list({ calendarId })).data.items || [];
+  const rules = [];
+  let pageToken;
+  do { const r = (await calendar.acl.list({ calendarId, maxResults: 250, ...(pageToken ? { pageToken } : {}) })).data; rules.push(...(r.items || [])); pageToken = r.nextPageToken; } while (pageToken);
   return rules.find((r) => r.scope?.type === 'user' && norm(r.scope.value) === norm(email)) || null;
 }
 
@@ -70,7 +72,9 @@ export async function ensureCalendarAccess(calendar, calendarId, email, role) {
 }
 
 export async function drivePermission(drive, fileId, email) {
-  const perms = (await drive.permissions.list({ fileId, supportsAllDrives: true, fields: 'permissions(id,type,role,emailAddress)' })).data.permissions || [];
+  const perms = [];
+  let pageToken;
+  do { const r = (await drive.permissions.list({ fileId, supportsAllDrives: true, pageSize: 100, fields: 'nextPageToken,permissions(id,type,role,emailAddress)', ...(pageToken ? { pageToken } : {}) })).data; perms.push(...(r.permissions || [])); pageToken = r.nextPageToken; } while (pageToken);
   return perms.find((p) => p.type === 'user' && norm(p.emailAddress) === norm(email)) || null;
 }
 
@@ -81,6 +85,7 @@ export async function ensureDriveAccess(drive, fileId, email, role) {
     await drive.permissions.create({ fileId, supportsAllDrives: true, sendNotificationEmail: false, requestBody: { type: 'user', role, emailAddress: norm(email) } });
     return { changed: true, role, was: null };
   }
+  if (['owner', 'organizer', 'fileOrganizer'].includes(p.role)) return { changed: false, role: p.role, note: `Already ${p.role}, which is higher than ${role}; left alone.` };
   if (p.role !== role) {
     const was = p.role;
     await drive.permissions.update({ fileId, permissionId: p.id, supportsAllDrives: true, requestBody: { role } });

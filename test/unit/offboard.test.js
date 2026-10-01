@@ -117,8 +117,12 @@ describe('workflow_offboard_employee: business shares granted by workflow_add_st
   function withShares() {
     const f = setup();
     f.when('admin.users.get').resolves(() => ({ data: { primaryEmail: rentals, suspended: seq.includes('suspend') } }));
-    f.when('calendar.acl.list').resolves({ data: { items: [{ id: `user:${rentals}`, role: 'writer', scope: { type: 'user', value: rentals } }, { id: 'user:other@x.test', role: 'owner', scope: { type: 'user', value: 'other@x.test' } }] } });
-    f.when('drive.permissions.list').resolves({ data: { permissions: [{ id: 'p1', type: 'user', role: 'reader', emailAddress: rentals }] } });
+    const acl = [{ id: `user:${rentals}`, role: 'writer', scope: { type: 'user', value: rentals } }, { id: 'user:other@x.test', role: 'owner', scope: { type: 'user', value: 'other@x.test' } }];
+    const perms = [{ id: 'p1', type: 'user', role: 'reader', emailAddress: rentals }];
+    f.when('calendar.acl.list').resolves(() => ({ data: { items: [...acl] } }));
+    f.when('calendar.acl.delete').resolves((a) => { acl.splice(acl.findIndex((r) => r.id === a.ruleId), 1); return { data: {} }; });
+    f.when('drive.permissions.list').resolves(() => ({ data: { permissions: [...perms] } }));
+    f.when('drive.permissions.delete').resolves((a) => { perms.splice(perms.findIndex((r) => r.id === a.permissionId), 1); return { data: {} }; });
     return f;
   }
   it('takes them off the business calendar and folder, and only them', async () => {
@@ -128,6 +132,21 @@ describe('workflow_offboard_employee: business shares granted by workflow_add_st
     expect(f.calls.find((c) => c.path === 'drive.permissions.delete').args[0]).toMatchObject({ fileId: BUSINESSES.folder, permissionId: 'p1' });
     expect(out.details.steps.find((s) => s.step === 'remove_business_shares')).toMatchObject({ status: 'ok', removed: { calendar: 'writer', driveFolder: 'reader' } });
     expect(out.after.businessSharesRemoved).toEqual({ calendar: 'writer', driveFolder: 'reader' });
+  });
+  it('says so when Google still shows them on the business calendar after removal', async () => {
+    const f = withShares();
+    f.when('calendar.acl.delete').resolves({ data: {} }); // the delete "works" but nothing changes
+    const out = body(await registry.handlers.workflow_offboard_employee({ userKey: rentals, confirm: true }, f.clients));
+    expect(out.details.steps.find((s) => s.step === 'remove_business_shares')).toMatchObject({ status: 'failed' });
+    expect(out.confirmed).toBe(false);
+  });
+  it('leaves another business\'s shares alone on a connection limited to a different domain', async () => {
+    const f = withShares();
+    f.clients.allowedDomains = ['robinsonaisystems.com'];
+    f.clients.crossDomain = false;
+    const out = body(await registry.handlers.workflow_offboard_employee({ userKey: '10299384756', confirm: true }, f.clients)); // a bare user ID slips past the address check
+    expect(f.calls.some((c) => c.path === 'calendar.acl.delete' || c.path === 'drive.permissions.delete')).toBe(false);
+    expect(out.details.steps.find((s) => s.step === 'remove_business_shares')).toMatchObject({ status: 'skipped' });
   });
   it('does nothing for a person who was never shared, and skips a domain with no business setup', async () => {
     const f = setup();
