@@ -16,6 +16,7 @@ const mutations = (calls) => calls.filter((c) => !READ_ONLY.test(c.path));
 const toolNamed = (n) => registry.tools.find((t) => t.name === n);
 
 // Realistic arguments for the names the guard descriptions read.
+const fromSchema = (tool) => Object.fromEntries(Object.entries(tool.inputSchema.properties || {}).filter(([k]) => k !== 'confirm' && k !== 'dryRun').map(([k, p]) => [k, ({ string: `${k}-x`, number: 1, integer: 1, boolean: true, array: ['x'], object: {} })[p.type] ?? 'x']));
 const ARGS = { userKey: 'sam@example.test', groupKey: 'team@example.test', alias: 'a@example.test', email: 'ops@example.test', fileId: 'f1', eventId: 'e1', calendarId: 'primary', id: 'id1', documentId: 'd1', spreadsheetId: 's1', sheetId: 1, presentationId: 'p1', pageObjectId: 'o1', objectId: 'o1', startIndex: 1, endIndex: 5, orgUnitPath: '/Old', domainName: 'example.test', domainAliasName: 'alias.example.test', roleId: '1', ids: ['m1'], messageId: 'm1' };
 
 beforeEach(async () => {
@@ -25,8 +26,11 @@ beforeEach(async () => {
 
 describe('the safety table', () => {
   it('has an entry for every tool whose name says it deletes, so a new delete tool cannot ship unguarded', () => {
-    const deleting = registry.tools.map((t) => t.name).filter((n) => /_delete/.test(n));
-    expect(deleting.filter((n) => !GUARDS[n])).toEqual([]);
+    // This server's own revoke tool already asks for confirm: true itself (see accounts.js).
+    const OWN_CONFIRM = new Set(['workspace_revoke_connection']);
+    const dangerous = registry.tools.map((t) => t.name).filter((n) => /_(delete|remove|clear|unshare|revoke|empty)(_|$)|transfer_ownership|start_transfer/.test(n));
+    expect(dangerous.length).toBeGreaterThan(40);
+    expect(dangerous.filter((n) => !GUARDS[n] && !OWN_CONFIRM.has(n))).toEqual([]);
   });
 
   it('covers the other dangerous tools too', () => {
@@ -52,20 +56,111 @@ describe('every guarded tool, called without permission', () => {
   for (const [name, spec] of Object.entries(GUARDS)) {
     it(`${name}: a preview changes nothing at Google`, async () => {
       const { clients, calls } = makeFakeClients();
-      const out = body(await registry.handlers[name]({ ...ARGS, dryRun: true }, clients));
+      const out = body(await registry.handlers[name]({ ...fromSchema(toolNamed(name)), dryRun: true }, clients));
       expect(out).toMatchObject({ done: false, dryRun: true });
       expect(mutations(calls), 'mutating calls').toEqual([]);
     });
     if (spec.destructive) {
       it(`${name}: without confirm it asks first and changes nothing`, async () => {
         const { clients, calls } = makeFakeClients();
-        const out = body(await registry.handlers[name]({ ...ARGS }, clients));
+        const out = body(await registry.handlers[name]({ ...fromSchema(toolNamed(name)) }, clients));
         expect(out).toMatchObject({ done: false, needsConfirmation: true });
         expect(mutations(calls), 'mutating calls').toEqual([]);
         expect(await holder.db.listRecentChanges()).toEqual([]);
       });
     }
   }
+});
+
+describe('risky uses of general-purpose tools need confirm too', () => {
+  const unconfirmed = async (name, args) => {
+    const { clients, calls } = makeFakeClients();
+    const out = body(await registry.handlers[name](args, clients));
+    return { out, calls };
+  };
+  it('admin_update_user cannot suspend, reset a password, archive or make an admin without confirm', async () => {
+    for (const updates of [{ suspended: true }, { password: 'x1y2z3' }, { archived: true }, { isAdmin: true }, { name: { givenName: 'Q' }, suspended: true }]) {
+      const { out, calls } = await unconfirmed('admin_update_user', { userKey: 'sam@example.test', updates });
+      expect(out, JSON.stringify(updates)).toMatchObject({ done: false, needsConfirmation: true });
+      expect(mutations(calls)).toEqual([]);
+    }
+  });
+  it('admin_update_user with ordinary fields still just works, and a requested change Google does not show is flagged', async () => {
+    const { clients, when } = makeFakeClients();
+    when('admin.users.get').resolves({ data: { primaryEmail: 'sam@example.test', recoveryEmail: 'old@example.test' } });
+    const out = body(await registry.handlers.admin_update_user({ userKey: 'sam@example.test', updates: { recoveryEmail: 'new@example.test' } }, clients));
+    expect(out).toMatchObject({ done: true, confirmed: false });
+    expect(out.warning).toMatch(/does not show/);
+  });
+  it('a public or domain-wide share, and a filter that forwards, need confirm; ordinary ones do not', async () => {
+    expect((await unconfirmed('drive_share_file', { fileId: 'f', type: 'anyone', role: 'reader' })).out.needsConfirmation).toBe(true);
+    expect((await unconfirmed('gmail_create_filter', { from: 'a@b.test', forward: 'x@y.test' })).out.needsConfirmation).toBe(true);
+    expect((await unconfirmed('drive_share_file', { fileId: 'f', type: 'user', emailAddress: 'a@b.test', role: 'reader' })).out.done).toBe(true);
+  });
+  it('bulk editors need confirm only when the requests delete something', async () => {
+    const del = { documentId: 'd', requests: [{ deleteContentRange: { range: { startIndex: 1, endIndex: 4 } } }] };
+    const ins = { documentId: 'd', requests: [{ insertText: { text: 'x', location: { index: 1 } } }] };
+    expect((await unconfirmed('docs_batch_update', del)).out.needsConfirmation).toBe(true);
+    expect((await unconfirmed('docs_batch_update', ins)).out.done).toBe(true);
+    expect((await unconfirmed('sheets_batch_update', { spreadsheetId: 's', requests: [{ deleteSheet: { sheetId: 1 } }] })).out.needsConfirmation).toBe(true);
+    expect((await unconfirmed('slides_batch_update', { presentationId: 'p', requests: [{ deleteObject: { objectId: 'o' } }] })).out.needsConfirmation).toBe(true);
+    expect((await unconfirmed('forms_batch_update', { formId: 'f', requests: [{ deleteItem: { location: { index: 0 } } }] })).out.needsConfirmation).toBe(true);
+  });
+  it('a dry run of a risky update says it would need confirm', async () => {
+    const { out } = await unconfirmed('admin_update_user', { userKey: 'sam@example.test', updates: { suspended: true }, dryRun: true });
+    expect(out.note).toMatch(/confirm: true/);
+  });
+});
+
+describe('"confirmed" means Google shows what was asked for', () => {
+  it('admin_suspend_user: not confirmed when the user is still not suspended afterwards', async () => {
+    const { clients, when } = makeFakeClients();
+    when('admin.users.get').resolves({ data: { primaryEmail: 'sam@example.test', suspended: false } });
+    expect(body(await registry.handlers.admin_suspend_user({ userKey: 'sam@example.test', confirm: true }, clients)).confirmed).toBe(false);
+  });
+  it('drive_empty_trash: not confirmed while files remain in the trash', async () => {
+    const { clients, when } = makeFakeClients();
+    when('drive.files.list').resolves({ data: { files: [{ id: '1', name: 'a' }] } });
+    expect(body(await registry.handlers.drive_empty_trash({ confirm: true }, clients)).confirmed).toBe(false);
+  });
+  it('drive_empty_trash: confirmed once the trash is empty', async () => {
+    const { clients, when } = makeFakeClients();
+    when('drive.files.list').resolvesOnce({ data: { files: [{ id: '1', name: 'a' }] } });
+    when('drive.files.list').resolves({ data: { files: [] } });
+    expect(body(await registry.handlers.drive_empty_trash({ confirm: true }, clients)).confirmed).toBe(true);
+  });
+  it('vacation and forwarding settings: compared with what was asked', async () => {
+    const { clients, when } = makeFakeClients();
+    when('gmail.users.settings.getVacation').resolves({ data: { enableAutoReply: false } });
+    expect(body(await registry.handlers.gmail_update_vacation_settings({ enableAutoReply: true, confirm: true }, clients)).confirmed).toBe(false);
+    when('gmail.users.settings.getAutoForwarding').resolves({ data: { enabled: false } });
+    expect(body(await registry.handlers.gmail_update_forwarding_settings({ enabled: false, confirm: true }, clients)).confirmed).toBe(true);
+  });
+  it('workflow_offboard_employee: not confirmed when a step failed, even though the handler itself did not throw', async () => {
+    const { clients, when } = makeFakeClients();
+    when('admin.users.get').resolves({ data: { primaryEmail: 'sam@example.test', suspended: false } });
+    when('admin.users.update').rejects(googleError(403, 'forbidden', 'Not Authorized'));
+    const out = body(await registry.handlers.workflow_offboard_employee({ userKey: 'sam@example.test', confirm: true }, clients));
+    expect(out.details.steps.some((st) => st.status === 'failed')).toBe(true);
+    expect(out.confirmed).toBe(false);
+  });
+  it('admin_make_super_admin writes exactly one log row', async () => {
+    const { clients, when } = makeFakeClients();
+    when('admin.users.get').resolvesOnce({ data: { primaryEmail: 'k@example.test', isAdmin: false } });
+    when('admin.users.get').resolves({ data: { primaryEmail: 'k@example.test', isAdmin: true } });
+    const out = body(await registry.handlers.admin_make_super_admin({ userKey: 'k@example.test', isAdmin: true, confirm: true }, clients));
+    expect(out.confirmed).toBe(true);
+    expect(await holder.db.listRecentChanges()).toHaveLength(1);
+  });
+  it('a tool with no read-back claims nothing (confirmed: null)', async () => {
+    const { clients } = makeFakeClients();
+    expect(body(await registry.handlers.docs_batch_update({ documentId: 'd', requests: [{ insertText: { text: 'x', location: { index: 1 } } }] }, clients)).confirmed).toBeNull();
+  });
+  it('a record Google keeps but marks deleted counts as gone (alerts, chat messages)', async () => {
+    const { clients, when } = makeFakeClients();
+    when('alertcenter.alerts.get').resolves({ data: { alertId: 'a', deleted: true } });
+    expect(body(await registry.handlers.admin_delete_alert({ alertId: 'a', confirm: true }, clients)).confirmed).toBe(true);
+  });
 });
 
 describe('guarded tools, confirmed', () => {

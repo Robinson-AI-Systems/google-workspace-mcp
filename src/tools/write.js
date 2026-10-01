@@ -13,7 +13,8 @@ import { recordChange } from '../changelog.js';
 const DRY_RUN_FIELD = { type: 'boolean', description: 'Preview only: say what would change and change nothing.' };
 const CONFIRM_FIELD = { type: 'boolean', description: 'Must be true for this to go ahead. Ask the person first; this is hard or impossible to undo.' };
 
-export function safetyNote(destructive) {
+export function safetyNote(destructive, sometimes = false) {
+  if (sometimes && !destructive) return ' SAFETY: pass dryRun: true to preview without changing anything. Some uses of this tool (the result says which) are risky and then do nothing until you pass confirm: true (ask the person first). Returns what Google holds afterwards and is written to the change log.';
   return destructive
     ? ' SAFETY: does nothing until you pass confirm: true (ask the person first). Pass dryRun: true to preview exactly what would change. Returns what Google holds afterwards and is written to the change log.'
     : ' Pass dryRun: true to preview without changing anything. Returns what Google holds afterwards and is written to the change log.';
@@ -40,17 +41,22 @@ function detailsOf(result) {
  * @param {string} spec.name
  * @param {string} spec.description
  * @param {object} spec.inputSchema
- * @param {boolean} [spec.destructive]
+ * @param {boolean} [spec.destructive]       always needs confirm: true
+ * @param {(args) => boolean} [spec.confirmWhen]  needs confirm: true only for some arguments (e.g. an update that suspends someone)
+ * @param {(args, before, after, details) => boolean} [spec.verify]  false when what Google holds afterwards is not what was asked for
  * @param {(args, clients) => {summary: string, target?: string, readBefore?: () => Promise<any>}} spec.plan
  * @param {(args, clients) => Promise<any>} spec.apply          does the change; may return an `ok(...)` result
  * @param {(args, clients, details) => Promise<any>} [spec.readAfter]  asks Google what it holds now
  * @returns {{ tool: object, handler: Function }}
  */
-export function defineWrite({ name, description, inputSchema, destructive = false, plan, apply, readAfter }) {
+export function defineWrite({ name, description, inputSchema, destructive = false, confirmWhen, plan, apply, readAfter, verify }) {
   const schema = JSON.parse(JSON.stringify(inputSchema || { type: 'object', properties: {} }));
   schema.properties = { ...(schema.properties || {}), dryRun: DRY_RUN_FIELD };
-  if (destructive) schema.properties.confirm = { ...CONFIRM_FIELD, ...(inputSchema?.properties?.confirm || {}), type: 'boolean' };
-  const tool = { name, description: description + safetyNote(destructive), inputSchema: schema };
+  const canNeedConfirm = destructive === true || typeof confirmWhen === 'function';
+  const needsConfirm = (args) => destructive === true || (typeof confirmWhen === 'function' && confirmWhen(args) === true);
+  if (canNeedConfirm) schema.properties.confirm = { ...CONFIRM_FIELD, ...(inputSchema?.properties?.confirm || {}), type: 'boolean' };
+  if (Array.isArray(schema.required)) schema.required = schema.required.filter((k) => k !== 'confirm'); // dryRun alone must be a valid call
+  const tool = { name, description: description + safetyNote(destructive === true, canNeedConfirm), inputSchema: schema };
 
   const handler = async (args = {}, clients) => {
     const { dryRun, confirm, ...rest } = args;
@@ -63,22 +69,27 @@ export function defineWrite({ name, description, inputSchema, destructive = fals
 
     if (dryRun === true) {
       const logged = await recordChange(clients, { tool: name, target: p.target, summary: `PREVIEW: ${p.summary}`, before, dryRun: true });
-      return ok({ done: false, dryRun: true, summary: p.summary, target: p.target, before, note: 'Nothing was changed. Run it again without dryRun to do it.' + (destructive ? ' It will also need confirm: true.' : ''), logged: logged.logged });
+      return ok({ done: false, dryRun: true, summary: p.summary, target: p.target, before, note: 'Nothing was changed. Run it again without dryRun to do it.' + (needsConfirm(callArgs) ? ' It will also need confirm: true.' : ''), logged: logged.logged });
     }
-    if (destructive && confirm !== true) {
+    if (needsConfirm(callArgs) && confirm !== true) {
       return ok({ done: false, needsConfirmation: true, summary: p.summary, target: p.target, before, note: 'Nothing was changed. Ask the person, then run it again with confirm: true (or dryRun: true to preview).' });
     }
 
     const result = await apply(callArgs, clients);       // a Google error here propagates: nothing is logged for a change that did not happen
     const details = detailsOf(result);
 
-    let after; let confirmed = true;
+    let after; let confirmed = readAfter ? true : null; // null: nothing was read back, so nothing is claimed
     try { after = readAfter ? await readAfter(callArgs, clients, details) : undefined; }
     catch (err) { after = { unreadable: reasonOf(err) }; confirmed = false; }
 
     if (after && after.exists === true) confirmed = false; // asked for a deleted thing and Google still has it
-    const logged = await recordChange(clients, { tool: name, target: p.target, summary: p.summary + (confirmed ? '' : ' (changed, but could not confirm it by reading it back)'), before, after });
-    return ok({ done: true, summary: p.summary, target: p.target, before, after, confirmed, details, logged: logged.logged });
+    let mismatch = false;
+    if (confirmed === true && verify) {
+      try { mismatch = verify(callArgs, before, after, details) === false; } catch { mismatch = false; }
+      if (mismatch) confirmed = false;                       // Google answered, but not with what was asked for
+    }
+    const logged = await recordChange(clients, { tool: name, target: p.target, summary: p.summary + (confirmed === false ? (mismatch ? ' (asked, but Google does not show the requested result)' : ' (changed, but could not confirm it by reading it back)') : ''), before, after });
+    return ok({ done: true, summary: p.summary, target: p.target, before, after, confirmed, ...(mismatch ? { warning: 'Google does not show the result that was asked for. Check it before telling the person it worked.' } : {}), details, logged: logged.logged });
   };
   return { tool, handler };
 }
@@ -94,13 +105,15 @@ export function guard(tool, oldHandler, spec) {
     name: tool.name,
     description: tool.description,
     inputSchema: tool.inputSchema,
-    destructive: spec.destructive,
+    destructive: spec.destructive === true,
+    confirmWhen: spec.confirmWhen,
     plan: (args, clients) => {
       const d = spec.describe(args);
       return { summary: d.summary, target: d.target, readBefore: spec.before ? () => spec.before(args, clients) : undefined };
     },
     apply: oldHandler,
-    readAfter: spec.after
+    readAfter: spec.after,
+    verify: spec.verify
   });
   return built;
 }
@@ -110,6 +123,7 @@ export function gone(get) {
   return async (args, clients) => {
     try {
       const data = await get(args, clients);
+      if (data && (data.deleted === true || data.deletionMetadata)) return { exists: false, note: 'Google keeps a record marked as deleted.' };
       if (data && data.status === 'cancelled') return { exists: false, note: 'Google keeps a "cancelled" marker for deleted events.' };
       return { exists: true, stillThere: data };
     } catch (err) {

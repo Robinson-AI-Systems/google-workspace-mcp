@@ -500,7 +500,7 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P0-7 | IN_REVIEW | #7 | Developing section added; tool count now 334 |
 | P1-1 | IN_REVIEW | #10 | Table, helper, 3 tools, last-used tracking; explicit logging added to brand_mailbox, make_super_admin, set_2sv_enforcement, move_user_orgunit, set_user_photo. Last-used is written at most once a minute per token (not every request). Manual check (brand a test alias, see one row) needs Chris's go-ahead: it changes a real mailbox |
 | P1-2 | IN_REVIEW | #9 | 12 mappings + unit tests; unknown errors and network failures unchanged |
-| P1-3 | IN_REVIEW | #11 | `defineWrite` plus `guard()` (wraps an existing tool: its old handler is the apply step) applied from one table, `src/tools/guards.js`, to 53 tools: every `_delete` tool, the other dangerous ones in the card, and the six exemplars. Dry runs are logged as previews and hidden from `workspace_recent_changes` unless `includeDryRuns`. Added a test that loads every source file. Remaining write tools: P5-1 |
+| P1-3 | IN_REVIEW | #11 | `defineWrite` plus `guard()` (wraps an existing tool: its old handler is the apply step) applied from one table, `src/tools/guards.js`, to 67 tools: every `_delete` tool, the other dangerous ones in the card, and the six exemplars. Dry runs are logged as previews and hidden from `workspace_recent_changes` unless `includeDryRuns`. Added a test that loads every source file. Remaining write tools: P5-1 |
 | P1-4 | TODO | | |
 | P1-5 | IN_REVIEW | PR pending | Done, with one deviation: `etag` is NOT stripped (contacts_update needs it). Note: file data over 64 KB (e.g. `drive_download_file` on big files) now returns the size instead of the data |
 | P2-1 | TODO | | |

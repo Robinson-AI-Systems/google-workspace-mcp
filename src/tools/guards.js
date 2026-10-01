@@ -14,6 +14,9 @@ const data = async (promise) => (await promise).data;
 const orgPath = (p) => String(p || '').replace(/^\//, '');
 
 const D = true; // destructive
+const SCALARS = new Set(['string', 'boolean', 'number']);
+const RISKY_USER_FIELDS = new Set(['suspended', 'password', 'archived', 'isAdmin', 'isDelegatedAdmin', 'changePasswordAtNextLogin', 'hashFunction']);
+const DELETING_REQUEST = (requests) => (Array.isArray(requests) ? requests : []).some((r) => Object.keys(r || {}).some((k) => /^delete/i.test(k)));
 
 // name -> { destructive, describe(args), before(args, clients), after(args, clients, details) }
 export const GUARDS = {
@@ -22,7 +25,7 @@ export const GUARDS = {
     describe: (a) => ({ target: a.userKey, summary: `PERMANENTLY delete the Workspace user ${a.userKey} (their data goes with them after 20 days)` }),
     before: (a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,name/fullName,suspended,isAdmin,orgUnitPath,lastLoginTime' })),
     after: gone((a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail' }))) },
-  admin_suspend_user: { destructive: D,
+  admin_suspend_user: { destructive: D, verify: (a, b, after) => after?.suspended === true,
     describe: (a) => ({ target: a.userKey, summary: `Suspend ${a.userKey}: they cannot sign in until unsuspended` }),
     before: (a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,suspended,lastLoginTime' })),
     after: (a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,suspended' })) },
@@ -34,14 +37,17 @@ export const GUARDS = {
     describe: (a) => ({ target: a.userKey, summary: `Sign ${a.userKey} out of every device and session` }),
     before: (a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,lastLoginTime' })),
     after: async () => ({ note: 'Google does not report open sessions; the sign-out request was accepted.' }) },
-  admin_make_super_admin: { destructive: D,
+  admin_make_super_admin: { destructive: D, verify: (a, b, after) => after?.isAdmin === !!a.isAdmin,
     describe: (a) => ({ target: a.userKey, summary: `${a.isAdmin ? 'GRANT' : 'REMOVE'} super admin ${a.isAdmin ? 'to' : 'from'} ${a.userKey}` }),
     before: (a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,isAdmin' })),
     after: (a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,isAdmin' })) },
   admin_update_user: { destructive: false,
+    // Suspending, resetting a password, archiving or changing admin rights through a general update is the same as using the dedicated tool, so it needs the same confirm.
+    confirmWhen: (a) => Object.keys(a.updates || {}).some((k) => RISKY_USER_FIELDS.has(k)),
+    verify: (a, before, after) => Object.entries(a.updates || {}).every(([k, v]) => !SCALARS.has(typeof v) || k === 'password' || after?.[k] === v),
     describe: (a) => ({ target: a.userKey, summary: `Update ${a.userKey}: ${Object.keys(a.updates || {}).join(', ') || 'nothing given'}` }),
-    before: async (a, { admin }) => pick(await data(admin.users.get({ userKey: a.userKey })), Object.keys(a.updates || {}).filter((k) => k !== 'password')),
-    after: async (a, { admin }) => pick(await data(admin.users.get({ userKey: a.userKey })), Object.keys(a.updates || {}).filter((k) => k !== 'password')) },
+    before: async (a, { admin }) => pick(await data(admin.users.get({ userKey: a.userKey, projection: 'full' })), Object.keys(a.updates || {}).filter((k) => k !== 'password')),
+    after: async (a, { admin }) => pick(await data(admin.users.get({ userKey: a.userKey, projection: 'full' })), Object.keys(a.updates || {}).filter((k) => k !== 'password')) },
   admin_delete_user_alias: { destructive: D,
     describe: (a) => ({ target: `${a.alias} on ${a.userKey}`, summary: `Remove the alias ${a.alias} from ${a.userKey} (mail to it stops arriving)` }),
     before: async (a, { admin }) => ({ aliases: (await data(admin.users.aliases.list({ userKey: a.userKey }))).aliases?.map((x) => x.alias) || [] }),
@@ -129,6 +135,8 @@ export const GUARDS = {
     before: (a, { licensing }) => data(licensing.licenseAssignments.get({ productId: a.productId || 'Google-Apps', skuId: a.skuId, userId: a.userId })),
     after: gone((a, { licensing }) => data(licensing.licenseAssignments.get({ productId: a.productId || 'Google-Apps', skuId: a.skuId, userId: a.userId }))) },
   workflow_offboard_employee: { destructive: D,
+    // The old handler records each step's failure inside the result instead of throwing; any failed step means the offboarding is not complete.
+    verify: (a, before, after, details) => !(details?.steps || []).some((st) => st.status === 'failed') && (a.deleteAccount || after?.suspended === true),
     describe: (a) => ({ target: a.userKey, summary: `OFFBOARD ${a.userKey}: suspend, sign out everywhere, revoke app access and app passwords${a.transferDriveAndCalendarTo ? `, transfer their Drive and Calendar to ${a.transferDriveAndCalendarTo}` : ''}${a.deleteAccount ? ', then PERMANENTLY DELETE the account' : ''}` }),
     before: async (a, { admin }) => {
       const user = await data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,suspended,isAdmin,orgUnitPath' }));
@@ -182,19 +190,19 @@ export const GUARDS = {
     describe: (a) => ({ target: a.sendAsEmail, summary: `Remove the "send mail as" address ${a.sendAsEmail}` }),
     before: (a, { gmail }) => data(gmail.users.settings.sendAs.get({ userId: 'me', sendAsEmail: a.sendAsEmail })).then((s) => pick(s, ['sendAsEmail', 'displayName', 'isDefault', 'verificationStatus'])),
     after: gone((a, { gmail }) => data(gmail.users.settings.sendAs.get({ userId: 'me', sendAsEmail: a.sendAsEmail }))) },
-  gmail_update_forwarding_settings: { destructive: D,
+  gmail_update_forwarding_settings: { destructive: D, verify: (a, b, after) => after?.enabled === !!a.enabled,
     describe: (a) => ({ target: 'auto-forwarding', summary: `${a.enabled ? `Forward ALL new mail to ${a.emailAddress || '(address not given)'}` : 'Turn off automatic forwarding'}` }),
     before: (a, { gmail }) => data(gmail.users.settings.getAutoForwarding({ userId: 'me' })),
     after: (a, { gmail }) => data(gmail.users.settings.getAutoForwarding({ userId: 'me' })) },
-  gmail_update_vacation_settings: { destructive: D,
+  gmail_update_vacation_settings: { destructive: D, verify: (a, b, after) => after?.enableAutoReply === !!a.enableAutoReply,
     describe: (a) => ({ target: 'vacation responder', summary: `${a.enableAutoReply ? 'Turn ON the automatic reply' : 'Turn OFF the automatic reply'}${a.responseSubject ? ` ("${a.responseSubject}")` : ''}` }),
     before: (a, { gmail }) => data(gmail.users.settings.getVacation({ userId: 'me' })).then((v) => pick(v, ['enableAutoReply', 'responseSubject', 'startTime', 'endTime', 'restrictToContacts', 'restrictToDomain'])),
     after: (a, { gmail }) => data(gmail.users.settings.getVacation({ userId: 'me' })).then((v) => pick(v, ['enableAutoReply', 'responseSubject', 'startTime', 'endTime', 'restrictToContacts', 'restrictToDomain'])) },
-  gmail_update_send_as: { destructive: false,
+  gmail_update_send_as: { destructive: false, verify: (a, b, after) => ['displayName', 'isDefault'].every((k) => a[k] === undefined || after?.[k] === a[k]),
     describe: (a) => ({ target: a.sendAsEmail, summary: `Change the "send mail as" address ${a.sendAsEmail}: ${Object.keys(a).filter((k) => k !== 'sendAsEmail').join(', ') || 'nothing given'}` }),
     before: (a, { gmail }) => data(gmail.users.settings.sendAs.get({ userId: 'me', sendAsEmail: a.sendAsEmail })).then((s) => ({ ...pick(s, ['sendAsEmail', 'displayName', 'isDefault', 'verificationStatus']), hasSignature: !!s.signature })),
     after: (a, { gmail }) => data(gmail.users.settings.sendAs.get({ userId: 'me', sendAsEmail: a.sendAsEmail })).then((s) => ({ ...pick(s, ['sendAsEmail', 'displayName', 'isDefault', 'verificationStatus']), hasSignature: !!s.signature })) },
-  gmail_create_filter: { destructive: false,
+  gmail_create_filter: { destructive: false, confirmWhen: (a) => !!a.forward,
     describe: (a) => ({ target: 'new Gmail filter', summary: `Create a Gmail filter (${[a.from && `from ${a.from}`, a.to && `to ${a.to}`, a.subject && `subject "${a.subject}"`, a.query && `matching "${a.query}"`].filter(Boolean).join(', ') || 'any mail'})${a.forward ? ` that FORWARDS to ${a.forward}` : ''}` }),
     after: (a, { gmail }, details) => (details?.id ? data(gmail.users.settings.filters.get({ userId: 'me', id: details.id })) : { note: 'Google did not return the new filter\'s id.' }) },
 
@@ -207,11 +215,11 @@ export const GUARDS = {
     describe: (a) => ({ target: `${a.revisionId} of ${a.fileId}`, summary: `Delete version ${a.revisionId} of the Drive file ${a.fileId}` }),
     before: (a, { drive }) => data(drive.revisions.get({ fileId: a.fileId, revisionId: a.revisionId, fields: 'id,modifiedTime,lastModifyingUser(emailAddress)' })),
     after: gone((a, { drive }) => data(drive.revisions.get({ fileId: a.fileId, revisionId: a.revisionId, fields: 'id' }))) },
-  drive_empty_trash: { destructive: D,
+  drive_empty_trash: { destructive: D, verify: (a, b, after) => after?.filesInTrash === 0,
     describe: () => ({ target: 'Drive trash', summary: 'PERMANENTLY empty the Drive trash (every file in it is lost for good)' }),
     before: async (a, { drive }) => { const r = await data(drive.files.list({ q: 'trashed = true', pageSize: 100, fields: 'files(id,name)' })); return { filesInTrash: (r.files || []).length, hasMore: !!r.nextPageToken, sample: (r.files || []).slice(0, 10).map((f) => f.name) }; },
     after: async (a, { drive }) => { const r = await data(drive.files.list({ q: 'trashed = true', pageSize: 10, fields: 'files(id)' })); return { filesInTrash: (r.files || []).length }; } },
-  drive_share_file: { destructive: false,
+  drive_share_file: { destructive: false, confirmWhen: (a) => a.type === 'anyone' || a.type === 'domain',
     describe: (a) => ({ target: a.fileId, summary: `Share the Drive file ${a.fileId} with ${a.type === 'anyone' ? 'ANYONE with the link' : (a.emailAddress || a.type || 'user')} as ${a.role}` }),
     before: async (a, { drive }) => ({ permissions: (await data(drive.permissions.list({ fileId: a.fileId, fields: 'permissions(id,type,role,emailAddress)', supportsAllDrives: true }))).permissions }),
     after: (a, { drive }, details) => (details?.id
@@ -253,7 +261,7 @@ export const GUARDS = {
     } },
 
   // ---------- Docs, Sheets, Slides (content inside a file) ----------
-  docs_delete_content: { destructive: D,
+  docs_delete_content: { destructive: D, verify: (a, before, after) => !(Number.isFinite(before?.lengthBefore) && Number.isFinite(after?.lengthAfter)) || after.lengthAfter < before.lengthBefore,
     describe: (a) => ({ target: a.documentId, summary: `Delete characters ${a.startIndex} to ${a.endIndex} of the document ${a.documentId}` }),
     before: async (a, { docs }) => { const d = await data(docs.documents.get({ documentId: a.documentId, fields: 'title,body(content(endIndex))' })); return { title: d.title, lengthBefore: d.body?.content?.at(-1)?.endIndex }; },
     after: async (a, { docs }) => { const d = await data(docs.documents.get({ documentId: a.documentId, fields: 'title,body(content(endIndex))' })); return { title: d.title, lengthAfter: d.body?.content?.at(-1)?.endIndex }; } },
@@ -265,10 +273,61 @@ export const GUARDS = {
     describe: (a) => ({ target: a.pageObjectId, summary: `Delete the slide/object ${a.pageObjectId} from the presentation ${a.presentationId}` }),
     before: async (a, { slides }) => { const p = await data(slides.presentations.get({ presentationId: a.presentationId, fields: 'slides(objectId)' })); return { slideCount: (p.slides || []).length, isASlide: (p.slides || []).some((s) => s.objectId === a.pageObjectId) }; },
     after: async (a, { slides }) => { const p = await data(slides.presentations.get({ presentationId: a.presentationId, fields: 'slides(objectId)' })); return { slideCount: (p.slides || []).length, exists: (p.slides || []).some((s) => s.objectId === a.pageObjectId) }; } },
-  slides_delete_text: { destructive: D,
+  slides_delete_text: { destructive: D, verify: (a, b, after) => after?.textLength === 0 || after?.note !== undefined,
     describe: (a) => ({ target: a.objectId, summary: `Clear ALL the text in the shape ${a.objectId} of the presentation ${a.presentationId}` }),
     before: (a, { slides }) => slideText(slides, a),
     after: (a, { slides }) => slideText(slides, a) },
+
+  // ---------- More tools that take something away or hand it over ----------
+  admin_remove_group_member: { destructive: D,
+    describe: (a) => ({ target: `${a.memberEmail} in ${a.groupKey}`, summary: `Remove ${a.memberEmail} from the group ${a.groupKey} (they stop getting its mail and access)` }),
+    before: (a, { admin }) => data(admin.members.get({ groupKey: a.groupKey, memberKey: a.memberEmail })).then((m) => pick(m, ['email', 'role', 'status'])),
+    after: gone((a, { admin }) => data(admin.members.get({ groupKey: a.groupKey, memberKey: a.memberEmail }))) },
+  drive_remove_permission: { destructive: D,
+    describe: (a) => ({ target: `${a.permissionId} on ${a.fileId}`, summary: `Stop sharing the Drive file ${a.fileId} with permission ${a.permissionId}` }),
+    before: (a, { drive }) => data(drive.permissions.get({ fileId: a.fileId, permissionId: a.permissionId, fields: 'id,type,role,emailAddress', supportsAllDrives: true })),
+    after: gone((a, { drive }) => data(drive.permissions.get({ fileId: a.fileId, permissionId: a.permissionId, fields: 'id', supportsAllDrives: true }))) },
+  drive_transfer_ownership: { destructive: D,
+    describe: (a) => ({ target: a.fileId, summary: `Make ${a.newOwnerEmail} the OWNER of the Drive file ${a.fileId}` }),
+    before: (a, { drive }) => data(drive.files.get({ fileId: a.fileId, fields: 'id,name,owners(emailAddress)', supportsAllDrives: true })),
+    after: (a, { drive }) => data(drive.files.get({ fileId: a.fileId, fields: 'id,name,owners(emailAddress)', supportsAllDrives: true })),
+    verify: (a, b, after) => (after?.owners || []).some((o) => String(o.emailAddress).toLowerCase() === String(a.newOwnerEmail).toLowerCase()) },
+  calendar_unshare_calendar: { destructive: D,
+    describe: (a) => ({ target: `${a.ruleId} on ${a.calendarId}`, summary: `Stop sharing the calendar ${a.calendarId} (access rule ${a.ruleId})` }),
+    before: (a, { calendar }) => data(calendar.acl.get({ calendarId: a.calendarId, ruleId: a.ruleId })),
+    after: gone((a, { calendar }) => data(calendar.acl.get({ calendarId: a.calendarId, ruleId: a.ruleId }))) },
+  gmail_remove_delegate: { destructive: D,
+    describe: (a) => ({ target: a.delegateEmail, summary: `Remove ${a.delegateEmail} as a delegate (they lose access to this mailbox)` }),
+    before: (a, { gmail }) => data(gmail.users.settings.delegates.get({ userId: 'me', delegateEmail: a.delegateEmail })),
+    after: gone((a, { gmail }) => data(gmail.users.settings.delegates.get({ userId: 'me', delegateEmail: a.delegateEmail }))) },
+  vault_remove_hold: { destructive: D,
+    describe: (a) => ({ target: `${a.holdId} in ${a.matterId}`, summary: `Remove the legal hold ${a.holdId}: the data it was preserving can then be deleted` }),
+    before: (a, { vault }) => data(vault.matters.holds.get({ matterId: a.matterId, holdId: a.holdId })).then((h) => pick(h, ['holdId', 'name', 'corpus'])),
+    after: gone((a, { vault }) => data(vault.matters.holds.get({ matterId: a.matterId, holdId: a.holdId }))) },
+  tasks_clear_completed: { destructive: D,
+    describe: (a) => ({ target: a.tasklistId || '@default', summary: `Hide every completed task in the list ${a.tasklistId || '(default)'}` }),
+    before: async (a, { tasks }) => ({ completedTasks: ((await data(tasks.tasks.list({ tasklist: a.tasklistId || '@default', showCompleted: true, showHidden: false, maxResults: 100 }))).items || []).filter((t) => t.status === 'completed').length }),
+    after: async (a, { tasks }) => ({ completedTasks: ((await data(tasks.tasks.list({ tasklist: a.tasklistId || '@default', showCompleted: true, showHidden: false, maxResults: 100 }))).items || []).filter((t) => t.status === 'completed').length }),
+    verify: (a, b, after) => after?.completedTasks === 0 },
+  sheets_clear_values: { destructive: D,
+    describe: (a) => ({ target: `${a.range} in ${a.spreadsheetId}`, summary: `Erase every value in ${a.range} of the spreadsheet ${a.spreadsheetId}` }),
+    before: async (a, { sheets }) => { const v = (await data(sheets.spreadsheets.values.get({ spreadsheetId: a.spreadsheetId, range: a.range }))).values || []; return { rows: v.length, firstRow: v[0]?.slice(0, 10) }; },
+    after: async (a, { sheets }) => ({ rows: ((await data(sheets.spreadsheets.values.get({ spreadsheetId: a.spreadsheetId, range: a.range }))).values || []).length }),
+    verify: (a, b, after) => after?.rows === 0 },
+  datatransfer_start_transfer: { destructive: D,
+    describe: (a) => ({ target: `${a.fromUserId} -> ${a.toUserId}`, summary: `Move ownership of ${a.fromUserId}'s data to ${a.toUserId} (${(a.applications || []).length} application(s))` }),
+    before: async (a, { admin }) => pick(await data(admin.users.get({ userKey: a.fromUserId, fields: 'primaryEmail,suspended' })), ['primaryEmail', 'suspended']),
+    after: async (a, clients, details) => ({ note: 'Google runs transfers in the background. Use datatransfer_get_transfer_status to follow it.', transferId: details?.id }) },
+
+  // ---------- Bulk editors: deleting through them needs the same confirm as the single-purpose delete tools ----------
+  docs_batch_update: { destructive: false, confirmWhen: (a) => DELETING_REQUEST(a.requests),
+    describe: (a) => ({ target: a.documentId, summary: `Apply ${(a.requests || []).length} edit(s) to the document ${a.documentId}${DELETING_REQUEST(a.requests) ? ' (includes deleting content)' : ''}` }) },
+  sheets_batch_update: { destructive: false, confirmWhen: (a) => DELETING_REQUEST(a.requests),
+    describe: (a) => ({ target: a.spreadsheetId, summary: `Apply ${(a.requests || []).length} edit(s) to the spreadsheet ${a.spreadsheetId}${DELETING_REQUEST(a.requests) ? ' (includes deleting rows, columns or sheets)' : ''}` }) },
+  slides_batch_update: { destructive: false, confirmWhen: (a) => DELETING_REQUEST(a.requests),
+    describe: (a) => ({ target: a.presentationId, summary: `Apply ${(a.requests || []).length} edit(s) to the presentation ${a.presentationId}${DELETING_REQUEST(a.requests) ? ' (includes deleting slides or content)' : ''}` }) },
+  forms_batch_update: { destructive: false, confirmWhen: (a) => DELETING_REQUEST(a.requests),
+    describe: (a) => ({ target: a.formId, summary: `Apply ${(a.requests || []).length} edit(s) to the form ${a.formId}${DELETING_REQUEST(a.requests) ? ' (includes deleting questions)' : ''}` }) },
 
   // ---------- This server's own sign-ins ----------
   workspace_remove_account: { destructive: D,
