@@ -7,6 +7,7 @@
 // function returning the current time in milliseconds, so tests can move time
 // forward (for lockout windows and token expiry) without waiting.
 import crypto from 'node:crypto';
+import { normalizeDomains, domainOfEmail } from '../../src/domains.js';
 const norm = (email) => String(email || '').trim().toLowerCase();
 
 export function createFakeDb({ clock = () => Date.now() } = {}) {
@@ -31,7 +32,19 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     async listGoogleAccounts() {
       return [...state.accounts.values()]
         .sort((a, b) => (Number(b.is_default) - Number(a.is_default)) || (a.created_at - b.created_at))
-        .map(({ email, label, is_default, created_at, updated_at }) => ({ email, label, is_default, created_at, updated_at }));
+        .map(({ email, label, is_default, created_at, updated_at, allowed_domains }) => ({ email, label, is_default, created_at, updated_at, allowed_domains: allowed_domains?.length ? allowed_domains : [norm(email).split('@')[1]], allowed_domains_custom: !!allowed_domains?.length }));
+    },
+    async getAllowedDomains(email) {
+      const a = state.accounts.get(norm(email));
+      return a?.allowed_domains?.length ? a.allowed_domains : [norm(email).split('@')[1] || ''];
+    },
+    async setAllowedDomains(email, domains) {
+      const e = norm(email);
+      const a = state.accounts.get(e);
+      const list = normalizeDomains(domains);
+      if (!a) throw new Error(`No connected Google account named ${e}.`);
+      a.allowed_domains = list.length ? list : null;
+      return list.length ? list : [e.split('@')[1]];
     },
     async getDefaultGoogleAccount() {
       return (await api.listGoogleAccounts())[0]?.email || null;

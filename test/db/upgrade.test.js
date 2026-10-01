@@ -51,6 +51,7 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       expect(afterFirst.tokens).toContain('google_account');
       expect(afterFirst.tokens).toEqual(expect.arrayContaining(['last_used_at', 'revoked_at']));
       expect(await columnsOf('change_log')).toEqual(['acting_as', 'after', 'at', 'before', 'connection', 'dry_run', 'id', 'summary', 'target', 'tool']);
+      expect(afterFirst.accounts).toContain('allowed_domains');
       expect(afterFirst.codes).toContain('google_account');
       expect(afterFirst.attempts).toEqual(['attempted_at', 'id', 'ip', 'success']);
 

@@ -195,6 +195,34 @@ export function runDbContract(label, { makeDb, seedLegacy }) {
       });
     });
 
+    describe('allowed domains (account guardrails)', () => {
+      it('defaults to the account\'s own domain, and says it is the default', async () => {
+        await db.saveGoogleTokensFor('ops@rentals.test', { access_token: 'a' });
+        expect(await db.getAllowedDomains('ops@rentals.test')).toEqual(['rentals.test']);
+        expect((await db.listGoogleAccounts())[0]).toMatchObject({ allowed_domains: ['rentals.test'], allowed_domains_custom: false });
+      });
+      it('can be set (cleaned up and de-duplicated) and then reset to the default', async () => {
+        await db.saveGoogleTokensFor('ops@rentals.test', { access_token: 'a' });
+        expect(await db.setAllowedDomains('Ops@Rentals.test', [' Rentals.test ', '@ai-systems.test', 'rentals.test'])).toEqual(['rentals.test', 'ai-systems.test']);
+        expect(await db.getAllowedDomains('ops@rentals.test')).toEqual(['rentals.test', 'ai-systems.test']);
+        expect((await db.listGoogleAccounts())[0]).toMatchObject({ allowed_domains_custom: true });
+        expect(await db.setAllowedDomains('ops@rentals.test', null)).toEqual(['rentals.test']);
+        expect((await db.listGoogleAccounts())[0].allowed_domains_custom).toBe(false);
+      });
+      it('refuses things that are not domains, and accounts it does not hold', async () => {
+        await db.saveGoogleTokensFor('ops@rentals.test', { access_token: 'a' });
+        await expect(db.setAllowedDomains('ops@rentals.test', ['not a domain'])).rejects.toThrow(/does not look like a domain/);
+        await expect(db.setAllowedDomains('ops@rentals.test', ['x@y.test'])).rejects.toThrow(/does not look like a domain/);
+        await expect(db.setAllowedDomains('nobody@rentals.test', ['a.test'])).rejects.toThrow(/No connected Google account/);
+      });
+      it('an account that was saved again keeps its setting', async () => {
+        await db.saveGoogleTokensFor('ops@rentals.test', { access_token: 'a' });
+        await db.setAllowedDomains('ops@rentals.test', ['x.test']);
+        await db.saveGoogleTokensFor('ops@rentals.test', { access_token: 'b' });
+        expect(await db.getAllowedDomains('ops@rentals.test')).toEqual(['x.test']);
+      });
+    });
+
     describe('change log', () => {
       it('stores a change with before and after, newest first', async () => {
         await db.recordChange({ actingAs: 'a@example.test', connection: 'cx/AAAAAAAA', tool: 'admin_move_user_orgunit', target: 'sam@example.test', summary: 'Moved sam', before: { orgUnitPath: '/' }, after: { orgUnitPath: '/Staff' } });
