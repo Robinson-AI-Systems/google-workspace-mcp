@@ -491,11 +491,11 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 
 | Card | Status | PR | Notes |
 | --- | --- | --- | --- |
-| P0-1 | TODO | | |
+| P0-1 | IN_REVIEW | #6 | Tests, fakes, DB tests, CI added. CI runs DB tests on a throwaway Postgres on every PR (no secret needed). Not yet proven: red-on-failure demo (do once on the PR) |
 | P0-2 | TODO | | |
-| P0-3 | TODO | | |
+| P0-3 | IN_REVIEW | #6 | Fix + unit test done. Manual Drive upload check needs Chris's go-ahead (writes to his Drive) |
 | P0-4 | TODO | | |
-| P0-5 | TODO | | |
+| P0-5 | IN_REVIEW | #6 | Lockout + constant-time compare + tests. Manual 5-wrong-tries check on the preview still to do |
 | P0-6 | TODO | | |
 | P0-7 | TODO | | |
 | P1-1 | TODO | | |

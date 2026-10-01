@@ -1,5 +1,6 @@
 import { ok } from './util.js';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { Readable } from 'node:stream';
 
 export const tools = [
   { name: 'drive_list_files', description: 'List files in Google Drive', inputSchema: { type: 'object', properties: { query: { type: 'string', description: "Drive query syntax e.g. \"mimeType='application/pdf'\"" }, maxResults: { type: 'number', default: 20 }, pageToken: { type: 'string' }, orderBy: { type: 'string' } } } },
@@ -57,9 +58,11 @@ export const handlers = {
     return ok({ base64Data: Buffer.from(res.data).toString('base64') });
   },
   drive_upload_file: async (args, { drive }) => {
+    // Google's upload client needs a stream, not a Buffer (a Buffer fails with "part.body.pipe is not a function").
+    const body = Readable.from(Buffer.from(args.base64Data, 'base64'));
     const res = await drive.files.create({
       requestBody: { name: args.name, parents: args.parentFolderId ? [args.parentFolderId] : undefined },
-      media: { mimeType: args.mimeType || 'application/octet-stream', body: Buffer.from(args.base64Data, 'base64') }
+      media: { mimeType: args.mimeType || 'application/octet-stream', body }
     });
     return ok(res.data);
   },

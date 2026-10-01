@@ -74,6 +74,18 @@ export async function initSchema() {
   // Same for the short-lived login codes: the account picked on the login
   // page rides along until the token is issued.
   await q`ALTER TABLE oauth_codes ADD COLUMN IF NOT EXISTS google_account TEXT`;
+  // Every try at the passphrase page, so repeated wrong guesses from one
+  // address can be locked out (see src/oauth/login-guard.js). Additive only.
+  await q`
+    CREATE TABLE IF NOT EXISTS login_attempts (
+      id BIGSERIAL PRIMARY KEY,
+      ip TEXT NOT NULL,
+      attempted_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      success BOOLEAN NOT NULL DEFAULT false
+    )
+  `;
+  await q`CREATE INDEX IF NOT EXISTS login_attempts_ip_time ON login_attempts (ip, attempted_at)`;
+  await q`CREATE INDEX IF NOT EXISTS login_attempts_time ON login_attempts (attempted_at)`;
 }
 
 // ---------- Google accounts (one row per mailbox the server can act as) ----------
@@ -233,4 +245,30 @@ export async function getAccessToken(accessToken) {
 export async function deleteAccessToken(accessToken) {
   const q = db();
   await q`DELETE FROM oauth_tokens WHERE access_token = ${accessToken}`;
+}
+
+// ---------- Connector OAuth: passphrase-page attempt log (lockout) ----------
+/** Write down a sign-in attempt (as a failure until proven otherwise) and return its id. */
+export async function recordLoginAttempt(ip) {
+  const q = db();
+  // Housekeeping: attempts older than a day no longer matter (the lockout window is minutes),
+  // so the table cannot grow forever, even from addresses that never come back.
+  await q`DELETE FROM login_attempts WHERE attempted_at < now() - interval '1 day'`;
+  const rows = await q`INSERT INTO login_attempts (ip, success) VALUES (${ip}, false) RETURNING id`;
+  return rows[0].id;
+}
+
+export async function markLoginAttemptSucceeded(id) {
+  const q = db();
+  await q`UPDATE login_attempts SET success = true WHERE id = ${id}`;
+}
+
+/** Failed attempts from this address inside the last `minutes` minutes. */
+export async function countRecentFailedLogins(ip, minutes) {
+  const q = db();
+  const rows = await q`
+    SELECT count(*)::int AS n FROM login_attempts
+    WHERE ip = ${ip} AND success = false AND attempted_at > now() - (${minutes} || ' minutes')::interval
+  `;
+  return rows[0].n;
 }
