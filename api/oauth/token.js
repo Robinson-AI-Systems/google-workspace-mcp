@@ -1,5 +1,5 @@
 import { randomToken, verifyPkce, parseBody } from '../../src/oauth/helpers.js';
-import { getOAuthClient, consumeAuthCode, createAccessToken, getGoogleAccountForRefreshToken, initSchema } from '../../src/db.js';
+import { getOAuthClient, consumeAuthCode, createAccessToken, getTokenByRefreshToken, initSchema } from '../../src/db.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -43,14 +43,26 @@ export default async function handler(req, res) {
   }
 
   if (body.grant_type === 'refresh_token') {
-    // Simplest correct behavior: issue a fresh access token tied to the same client.
-    // (Refresh tokens aren't separately validated against a stored value here since
-    // this server has exactly one real user; the access token itself is the durable
-    // credential Claude keeps using.)
+    // A refresh token is only honored if WE issued it, to THIS client. Without
+    // this check anyone who knew the server's address could mint a working
+    // access token by sending any string here.
+    const issued = await getTokenByRefreshToken(body.refresh_token);
+    if (!issued || issued.client_id !== body.client_id) {
+      res.status(400).json({ error: 'invalid_grant', error_description: 'Unknown refresh token.' });
+      return;
+    }
+    const client = await getOAuthClient(body.client_id);
+    if (!client) {
+      res.status(401).json({ error: 'invalid_client' });
+      return;
+    }
+    if (client.client_secret && client.client_secret !== body.client_secret) {
+      res.status(401).json({ error: 'invalid_client' });
+      return;
+    }
     const accessToken = randomToken(32);
     // Keep acting as whichever Google account the original login chose.
-    const googleAccount = await getGoogleAccountForRefreshToken(body.refresh_token);
-    await createAccessToken({ accessToken, refreshToken: body.refresh_token, clientId: body.client_id, googleAccount });
+    await createAccessToken({ accessToken, refreshToken: body.refresh_token, clientId: body.client_id, googleAccount: issued.google_account || null });
     res.status(200).json({ access_token: accessToken, token_type: 'Bearer', expires_in: 3600 * 24 * 30 });
     return;
   }

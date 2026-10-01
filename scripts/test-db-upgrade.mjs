@@ -54,7 +54,8 @@ const rec = await db.consumeAuthCode('test-c1');
 assert(rec.google_account === 'ops@robinsonappliancerentals.com', 'auth code stores the account');
 await db.createAccessToken({ accessToken: 'test-at1', refreshToken: 'test-rt1', clientId: 'test-client', googleAccount: rec.google_account });
 assert((await db.getAccessToken('test-at1')).google_account === 'ops@robinsonappliancerentals.com', 'access token carries the account');
-assert((await db.getGoogleAccountForRefreshToken('test-rt1')) === 'ops@robinsonappliancerentals.com', 'refresh keeps the account');
+assert((await db.getTokenByRefreshToken('test-rt1'))?.google_account === 'ops@robinsonappliancerentals.com', 'refresh keeps the account');
+assert((await db.getTokenByRefreshToken('never-issued')) === null, 'unknown refresh tokens are rejected');
 await db.createAccessToken({ accessToken: 'test-at0', clientId: 'test-client' });
 assert((await db.getAccessToken('test-at0')).google_account === null, 'an old-style connection has no account (=> default)');
 
