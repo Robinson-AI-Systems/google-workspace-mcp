@@ -11,7 +11,7 @@ import { randomToken, parseBody } from '../../src/oauth/helpers.js';
 import { getOAuthClient, createAuthCode, initSchema, listGoogleAccounts } from '../../src/db.js';
 import { ensureMigrated } from '../../src/auth/google-auth-hosted.js';
 
-function renderLoginPage({ error, hidden, accounts }) {
+function renderLoginPage({ error, hidden, accounts, selected }) {
   const hiddenInputs = Object.entries(hidden).map(([k, v]) => `<input type="hidden" name="${k}" value="${escapeHtml(v || '')}">`).join('\n');
   const accountField = accounts.length === 0
     ? `<p class="note">No Google account is connected yet. Open <code>/api/google/authorize</code> first, then come back.</p>`
@@ -20,7 +20,7 @@ function renderLoginPage({ error, hidden, accounts }) {
          <p class="note">This connection will act as <strong>${escapeHtml(accounts[0].label || accounts[0].email)}</strong>.</p>`
       : `<label for="google_account">Act as which Google account?</label>
          <select name="google_account" id="google_account" required>
-           ${accounts.map((a) => `<option value="${escapeHtml(a.email)}">${escapeHtml(a.label ? `${a.label} (${a.email})` : a.email)}${a.is_default ? ' — default' : ''}</option>`).join('\n')}
+           ${accounts.map((a) => `<option value="${escapeHtml(a.email)}"${a.email === selected ? ' selected' : ''}>${escapeHtml(a.label ? `${a.label} (${a.email})` : a.email)}${a.is_default ? ' — default' : ''}</option>`).join('\n')}
          </select>`;
   return `<!doctype html>
 <html><head><meta charset="utf-8"><title>Sign in</title>
@@ -89,13 +89,15 @@ export default async function handler(req, res) {
   }
   if (params.passphrase !== process.env.ADMIN_PASSPHRASE) {
     res.setHeader('Content-Type', 'text/html');
-    res.status(401).send(renderLoginPage({ error: 'Incorrect passphrase.', hidden, accounts }));
+    // Keep the account they picked so a passphrase typo doesn't silently flip it back to the default.
+    res.status(401).send(renderLoginPage({ error: 'Incorrect passphrase. Your account choice was kept.', hidden, accounts, selected: String(params.google_account || '').trim().toLowerCase() }));
     return;
   }
   const chosen = String(params.google_account || '').trim().toLowerCase();
   if (!accounts.some((a) => a.email === chosen)) {
+    // (passphrase check below happens first in practice; this guards a tampered form)
     res.setHeader('Content-Type', 'text/html');
-    res.status(400).send(renderLoginPage({ error: 'Pick one of the connected Google accounts.', hidden, accounts }));
+    res.status(400).send(renderLoginPage({ error: 'Pick one of the connected Google accounts.', hidden, accounts, selected: chosen }));
     return;
   }
 
