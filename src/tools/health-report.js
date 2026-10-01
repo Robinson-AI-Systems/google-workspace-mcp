@@ -29,7 +29,7 @@ export function scoreUsers(users, now = Date.now(), { partial = false } = {}) {
     : no2sv.length ? item('2-Step Verification', 'WARN', `${no2sv.length} of ${active.length} active people have not enrolled: ${list(no2sv.map((u) => u.primaryEmail))}.`, 'Ask them to enrol, then turn on enforcement.')
       : item('2-Step Verification', 'PASS', `All ${active.length} active people are enrolled.`));
   const notEnforced = active.filter((u) => !u.isEnforcedIn2Sv);
-  out.push(notEnforced.length ? item('2-Step enforcement', 'WARN', `Not enforced for ${notEnforced.length} of ${active.length} active people.`, 'Once everyone is enrolled, set enforcement for the top org unit (admin_set_2sv_enforcement or Security > 2-step verification).') : item('2-Step enforcement', 'PASS', 'Enforced for everyone active.'));
+  out.push(notEnforced.length ? item('2-Step enforcement', 'WARN', `Not enforced for ${notEnforced.length} of ${active.length} active people.`, 'Once everyone is enrolled, require it for the top org unit in Admin console > Security > 2-step verification.') : item('2-Step enforcement', 'PASS', 'Enforced for everyone active.'));
 
   const admins = active.filter((u) => u.isAdmin);
   out.push(admins.length === 0 ? (partial ? item('Super admins', 'WARN', 'None among the first people read (the list was cut short, so this may be wrong).', 'Run the report for one domain at a time.') : item('Super admins', 'FAIL', 'No active super admin found.', 'Make sure at least two trusted people are super admins.'))

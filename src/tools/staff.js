@@ -4,7 +4,7 @@
 // Every step looks first and changes only what is missing, so a second run changes nothing.
 import { ok } from './util.js';
 import { defineWrite } from './write.js';
-import { handlers as brandHandlers } from './mailbox-branding.js';
+import { handlers as brandHandlers, brandingMatches } from './mailbox-branding.js';
 import { BUSINESSES, ROLES } from '../businesses.js';
 import { domainOfEmail } from '../domains.js';
 import { norm, tempPassword, runStep, getUser, listAliases, ensureAliases, calendarRole, ensureCalendarAccess, drivePermission, ensureDriveAccess, sendPlainEmail, reasonOf } from './provision.js';
@@ -43,7 +43,7 @@ function summarize(args) {
   parts.push(biz.calendarId ? `share "${biz.calendarName}" as ${role.calendar === 'owner' ? 'owner (make changes and manage sharing)' : 'editor (see and edit events)'}` : 'skip the calendar (none is set up for this business)');
   parts.push(!role.drive ? `give no Drive folder access (${args.role}s do not need it)` : biz.driveFolderId ? `share the "${biz.driveFolderName}" folder as ${role.drive === 'writer' ? 'editor' : 'viewer'}` : 'skip the Drive folder (none is set up for this business)');
   parts.push(args.signatureHtml || args.displayName ? 'brand the mailbox (name, signature, role addresses)' : 'leave the mailbox unbranded (no name or signature given)');
-  parts.push('ask Google to require 2-Step Verification');
+  parts.push('report their 2-Step Verification status (it can only be required per organizational unit, in Admin console > Security)');
   if (args.emailLoginDetailsTo) parts.push(`EMAIL the login details to ${args.emailLoginDetailsTo}`);
   if (args.sendWelcome === true) parts.push(`EMAIL a welcome note with the login details to ${args.personalEmail}`);
   return `Add ${args.firstName} ${args.lastName} (${norm(args.email)}) to ${biz.label} as ${args.role} (${role.blurb}): ${parts.join('; ')}.`;
@@ -51,7 +51,7 @@ function summarize(args) {
 
 const built = defineWrite({
   name,
-  description: "Add a person to one of Chris's businesses in one call: creates their Google account in the right place with a one-time password, adds any extra addresses, shares the business calendar and Drive folder at the level their job needs (driver/technician: see and edit the calendar, view the folder; office/admin: manage the calendar, edit the folder), brands their mailbox, and asks Google to require 2-Step Verification. Safe to run twice. Nobody is emailed unless you ask: emailLoginDetailsTo sends the login to that address, sendWelcome sends it to the person's personalEmail; both need confirm: true. The one-time password is shown once in the result and never stored in the change log.",
+  description: "Add a person to one of Chris's businesses in one call: creates their Google account in the right place with a one-time password, adds any extra addresses, shares the business calendar and Drive folder at the level their job needs (driver/technician: see and edit the calendar, NO Drive folder access; office/admin: manage the calendar, edit the folder), brands their mailbox, and reports their 2-Step Verification status (Google only lets 2-Step be required for a whole organizational unit, in Admin console > Security, so this tool cannot switch it on for one person). Safe to run twice. Nobody is emailed unless you ask: emailLoginDetailsTo sends the login to that address, sendWelcome sends it to the person's personalEmail; both need confirm: true. The one-time password is shown once in the result and never stored in the change log.",
   inputSchema: {
     type: 'object',
     properties: {
@@ -107,7 +107,13 @@ const built = defineWrite({
     });
 
     await runStep(steps, 'share_drive_folder', async () => {
-      if (!role.drive) return { skipped: `A ${args.role} gets no Drive folder access.` };
+      if (!role.drive) {
+        if (biz.driveFolderId && accountReady) {
+          const existing = await drivePermission(drive, biz.driveFolderId, email);
+          if (existing) throw new Error(`${email} already has direct Drive access to "${biz.driveFolderName}" (${existing.role}), which a ${args.role} should not have. Nothing was removed: take it off in Drive, or with drive_remove_permission.`);
+        }
+        return { skipped: `A ${args.role} gets no Drive folder access.` };
+      }
       if (!biz.driveFolderId) return { skipped: `${biz.label} has no business Drive folder set up.` };
       if (!accountReady) return { skipped: 'The account does not exist.' };
       return { folder: biz.driveFolderName, ...(await ensureDriveAccess(drive, biz.driveFolderId, email, role.drive)) };
@@ -117,19 +123,17 @@ const built = defineWrite({
       if (!args.signatureHtml && !args.displayName) return { skipped: 'No name or signature given, so the mailbox was left unbranded.' };
       if (!accountReady) return { skipped: 'The account does not exist.' };
       const brand = clients.brandMailbox || brandHandlers.workflow_brand_mailbox;
-      const res = JSON.parse((await brand({ userEmail: email, displayName: args.displayName || `${args.firstName} ${args.lastName}`, signatureHtml: args.signatureHtml, aliases: (args.aliases || []).map((a) => ({ email: a })) }, clients)).content[0].text);
+      const wantName = args.displayName || `${args.firstName} ${args.lastName}`;
+      if (await brandingMatches(clients, { email, displayName: wantName, signatureHtml: args.signatureHtml, aliases: args.aliases || [] })) return { changed: false, note: 'The mailbox already shows this name and signature; left as it is.' };
+      const res = JSON.parse((await brand({ userEmail: email, displayName: wantName, signatureHtml: args.signatureHtml, aliases: (args.aliases || []).map((a) => ({ email: a })) }, clients)).content[0].text);
       if (res.done !== true) throw new Error(`${res.reason || 'Branding did not complete.'} A brand-new mailbox can take a few minutes to appear: run workflow_brand_mailbox for them shortly.`);
       return { changed: true, primary: res.primary, aliases: res.aliases };
     });
 
-    await runStep(steps, 'require_2sv', async () => {
+    await runStep(steps, 'check_2sv', async () => {
       if (!accountReady) return { skipped: 'The account does not exist.' };
       const u = await getUser(admin, email);
-      if (u?.isEnforcedIn2Sv === true) return { changed: false, note: 'Already required.' };
-      await admin.users.update({ userKey: email, requestBody: { isEnforcedIn2Sv: true } });
-      const back = await getUser(admin, email);
-      if (back?.isEnforcedIn2Sv !== true) throw new Error('Google does not show 2-Step Verification as required afterwards. Set it for their organizational unit in Admin console > Security > 2-step verification.');
-      return { changed: true, note: 'Google gives new people a grace period (up to 7 days) to enrol.' };
+      return { changed: false, enrolled: u?.isEnrolledIn2Sv === true, requiredByPolicy: u?.isEnforcedIn2Sv === true, note: u?.isEnforcedIn2Sv === true ? '2-Step Verification is required for them.' : '2-Step Verification is NOT required for them yet. Google only lets you require it for a whole organizational unit: Admin console > Security > 2-step verification, then pick their organizational unit.' };
     });
 
     if (args.emailLoginDetailsTo || args.sendWelcome === true) {
@@ -147,14 +151,17 @@ const built = defineWrite({
     return ok({
       user: email, steps,
       ...(password ? { temporaryPassword: password, passwordNote: 'Shown once. Give it to the person securely; they must change it at first sign-in.' } : {}),
+      ...(steps.some((x) => x.status === 'skipped' && x.step !== 'add_aliases') ? { skipped: steps.filter((x) => x.status === 'skipped').map((x) => ({ step: x.step, why: x.note })) } : {}),
       ...(failed.length ? { warning: `${failed.length} step(s) failed: ${failed.map((s) => s.step).join(', ')}. Run it again once fixed: finished steps are not repeated.` } : {})
     });
   },
   readAfter: (args, clients) => inspect(args, clients),
-  verify(args, _before, after) {
+  verify(args, _before, after, details) {
     const biz = BUSINESSES[args.business];
     const role = ROLES[args.role];
     if (!after.accountExists) return false;
+    if ((details?.steps || []).some((x) => x.status === 'failed')) return false; // a step that failed is not "confirmed"
+    if (biz.driveFolderId && !role.drive && after.driveRole) return false;
     if (!(args.aliases || []).map(norm).every((a) => after.aliases.includes(a))) return false;
     if (biz.calendarId && after.calendarRole !== role.calendar) return false;
     if (biz.driveFolderId && role.drive && after.driveRole !== role.drive) return false;

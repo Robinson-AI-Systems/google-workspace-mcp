@@ -111,7 +111,7 @@ describe('workflow_set_up_business', () => {
     expect(f.s.calendars).toEqual([expect.objectContaining({ summary: 'Evergreen Hauling Calendar', timeZone: 'America/Denver' })]);
     expect(f.s.acl).toEqual([expect.objectContaining({ role: 'owner', scope: { type: 'user', value: OWNER } })]);
     const root = f.s.folders.find((x) => x.name === 'Evergreen Hauling');
-    expect(f.s.folders.filter((x) => x.parent === root.id)).toHaveLength(9);
+    expect(f.s.folders.filter((x) => x.parent === root.id).map((x) => x.name)).toEqual(['01 Brand Kit', '02 Customers', '03 Agreements (signed)', '04 Invoices & Statements', '05 Receipts & Expenses', '06 Inventory & Appliance Photos', '07 Legal & Insurance', '08 Marketing', '09 Taxes & Accounting Exports']);
     expect(f.s.folders.map((x) => x.name)).toContain('03 Agreements (signed)');
     expect(f.s.perms).toEqual([expect.objectContaining({ role: 'writer', emailAddress: OWNER })]);
     expect(f.brand.mock.calls[0][0]).toMatchObject({ userEmail: OWNER, displayName: 'Evergreen Hauling', avatarBase64: 'AAAA', aliases: [{ email: 'support@evergreen.test' }, { email: 'billing@evergreen.test' }, { email: 'no-reply@evergreen.test' }] });
@@ -168,5 +168,32 @@ describe('workflow_set_up_business', () => {
     expect(by.drive_folders.status).toBe('ok');
     expect(out.details.warning).toMatch(/calendar/);
     expect(out.confirmed).toBe(false); // the calendar is missing afterwards
+  });
+
+  it('if the domain step itself fails, nothing else is built and it is not confirmed', async () => {
+    const f = setup();
+    f.when('admin.domains.insert').rejects(googleError(403, 'forbidden', 'Not authorized to add domains'));
+    const out = body(await run({ confirm: true }, f));
+    const by = stepsOf(out);
+    expect(by.domain.status).toBe('failed');
+    for (const step of ['org_unit', 'owner_account', 'calendar', 'drive_folders']) if (by[step]) expect(by[step].status, step).toBe('skipped');
+    expect(f.s.ou).toBeNull();
+    expect(f.s.folders).toEqual([]);
+    expect(out.confirmed).toBe(false);
+  });
+
+  it('a failed step later on means the result is not confirmed', async () => {
+    const f = setup({ domain: 'verified', actingAs: OWNER });
+    f.brand.mockImplementation(async () => ({ content: [{ type: 'text', text: JSON.stringify({ done: false, reason: 'no delegation' }) }] }));
+    const out = body(await run({ confirm: true, brand: { displayName: 'Evergreen', signatureHtml: '<b>E</b>' } }, f));
+    expect(stepsOf(out).brand_mailbox.status).toBe('failed');
+    expect(out.confirmed).toBe(false);
+  });
+
+  it('a calendar with the same name that someone else owns is not mistaken for ours', async () => {
+    const f = setup({ domain: 'verified', actingAs: OWNER });
+    f.s.calendars.push({ id: 'theirs', summary: 'Evergreen Hauling Calendar', accessRole: 'reader' });
+    const out = body(await run({ confirm: true }, f));
+    expect(stepsOf(out).calendar.created).toBe(true);
   });
 });

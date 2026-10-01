@@ -5,6 +5,7 @@
 import { google } from 'googleapis';
 import { recordChange } from '../changelog.js';
 import { ok } from './util.js';
+import { delegatedGmail, delegationReady, mailboxAllowed } from './delegated.js';
 import { buildDelegatedAuth, describeServiceAccount, isDelegationConfigured } from '../auth/service-account.js';
 
 const norm = (e) => String(e || '').trim().toLowerCase();
@@ -78,6 +79,18 @@ export async function ensureLabels(gmail, wanted) {
     return l && (!r.filterTo || nowFilters.some((f) => norm(f.criteria?.to) === r.filterTo && (f.action?.addLabelIds || []).includes(l.id)));
   });
   return { done: confirmed, labels: out, confirmed };
+}
+
+/** True when the mailbox already shows this name, signature and these send-as addresses (so branding it again would change nothing). Any doubt means false. */
+export async function brandingMatches(clients, { email, displayName, signatureHtml, aliases = [] }) {
+  try {
+    if (!delegationReady(clients) || !mailboxAllowed(clients, email)) return false;
+    const list = (await delegatedGmail(clients, email).users.settings.sendAs.list({ userId: 'me' })).data.sendAs || [];
+    const find = (e) => list.find((s) => norm(s.sendAsEmail) === norm(e));
+    const same = (s, name) => !!s && (name === undefined || (s.displayName || '') === name) && (signatureHtml === undefined || (s.signature || '') === signatureHtml);
+    if (!same(find(email), displayName)) return false;
+    return aliases.every((a) => same(find(a), displayName));
+  } catch { return false; }
 }
 
 export const handlers = {
