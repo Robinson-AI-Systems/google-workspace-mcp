@@ -7,6 +7,7 @@
 // Rule for adding tools: every tool whose name contains "_delete" must have an entry here
 // (test/unit/guards.test.js fails if one is missing).
 import { guard, gone } from './write.js';
+import { delegatedGmail, delegationReady, mailboxAllowed } from './delegated.js';
 
 const CUSTOMER = 'my_customer';
 const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj?.[k] !== undefined).map((k) => [k, obj[k]]));
@@ -139,21 +140,36 @@ export const GUARDS = {
     before: (a, { licensing }) => data(licensing.licenseAssignments.get({ productId: a.productId || 'Google-Apps', skuId: a.skuId, userId: a.userId })),
     after: gone((a, { licensing }) => data(licensing.licenseAssignments.get({ productId: a.productId || 'Google-Apps', skuId: a.skuId, userId: a.userId }))) },
   workflow_offboard_employee: { destructive: D,
-    // The old handler records each step's failure inside the result instead of throwing; any failed step means the offboarding is not complete.
-    verify: (a, before, after, details) => !(details?.steps || []).some((st) => st.status === 'failed') && (a.deleteAccount || !!after?.suspended === true),
-    describe: (a) => ({ target: a.userKey, summary: `OFFBOARD ${a.userKey}: suspend, sign out everywhere, revoke app access and app passwords${a.transferDriveAndCalendarTo ? `, transfer their Drive and Calendar to ${a.transferDriveAndCalendarTo}` : ''}${a.deleteAccount ? ', then PERMANENTLY DELETE the account' : ''}` }),
-    before: async (a, { admin }) => {
+    // The old handler records each step's failure inside the result instead of throwing; a failed step means the offboarding is not complete.
+    // A step that was skipped (the mailbox could not be opened) is not done either, so it is not confirmed.
+    verify: (a, before, after, details) => {
+      const steps = details?.steps || [];
+      const wantedMailboxSteps = ['set_out_of_office', ...(a.removeSendAsAliases === false ? [] : ['remove_send_as_aliases'])];
+      const mailboxNotDone = wantedMailboxSteps.some((name) => steps.find((st) => st.step === name)?.status !== 'ok');
+      return !steps.some((st) => st.status === 'failed') && !mailboxNotDone && (a.deleteAccount || !!after?.suspended === true);
+    },
+    describe: (a) => ({ target: a.userKey, summary: `OFFBOARD ${a.userKey}: put up an out-of-office reply${a.removeSendAsAliases === false ? '' : ', REMOVE their "send mail as" addresses (e.g. support@)'}, suspend, sign out everywhere, revoke app access and app passwords${a.transferDriveAndCalendarTo ? `, transfer their Drive and Calendar to ${a.transferDriveAndCalendarTo}` : ''}${a.deleteAccount ? ', then PERMANENTLY DELETE the account' : ''}` }),
+    before: async (a, clients) => {
+      const { admin } = clients;
       const user = await data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,suspended,isAdmin,orgUnitPath' }));
       const tokens = await data(admin.tokens.list({ userKey: a.userKey })).catch(() => ({}));
       const asps = await data(admin.asps.list({ userKey: a.userKey })).catch(() => ({}));
-      return { ...user, thirdPartyApps: (tokens.items || []).length, appPasswords: (asps.items || []).length };
+      let sendAs = { note: 'not read: domain-wide delegation is not set up' };
+      if (delegationReady(clients) && !mailboxAllowed(clients, user.primaryEmail)) sendAs = { note: 'not read: outside the domains this connection is limited to' };
+      else if (delegationReady(clients)) {
+        try { sendAs = ((await delegatedGmail(clients, user.primaryEmail).users.settings.sendAs.list({ userId: 'me' })).data.sendAs || []).map((x) => ({ email: x.sendAsEmail, isPrimary: !!x.isPrimary, displayName: x.displayName || '' })); }
+        catch (err) { sendAs = { note: `not read: ${String(err?.response?.data?.error?.message || err?.message || err).slice(0, 120)}` }; }
+      }
+      return { ...user, thirdPartyApps: (tokens.items || []).length, appPasswords: (asps.items || []).length, sendAs };
     },
-    after: async (a, { admin }) => {
+    after: async (a, { admin }, details) => {
+      const steps = details?.steps || [];
+      const outcome = { outOfOffice: steps.find((st) => st.step === 'set_out_of_office')?.status, sendAsRemoved: steps.find((st) => st.step === 'remove_send_as_aliases')?.removed || [], sendAsStatus: steps.find((st) => st.step === 'remove_send_as_aliases')?.status };
       try {
         const user = await data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,suspended' }));
-        return { ...user, exists: !!a.deleteAccount }; // still there is only a failure if we were asked to delete
+        return { ...user, ...outcome, exists: !!a.deleteAccount }; // still there is only a failure if we were asked to delete
       } catch (err) {
-        if (Number(err?.response?.status || err?.code) === 404) return { exists: false };
+        if (Number(err?.response?.status || err?.code) === 404) return { exists: false, ...outcome };
         throw err;
       }
     } },
