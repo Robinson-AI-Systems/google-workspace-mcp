@@ -1,6 +1,7 @@
 import { ok } from './util.js';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { Readable } from 'node:stream';
+import { fetchLimited } from './safe-fetch.js';
 
 export const tools = [
   { name: 'drive_list_files', description: 'List files in Google Drive', inputSchema: { type: 'object', properties: { query: { type: 'string', description: "Drive query syntax e.g. \"mimeType='application/pdf'\"" }, maxResults: { type: 'number', default: 20 }, pageToken: { type: 'string' }, orderBy: { type: 'string' } } } },
@@ -8,6 +9,7 @@ export const tools = [
   { name: 'drive_get_file', description: 'Get metadata for a Drive file or folder', inputSchema: { type: 'object', properties: { fileId: { type: 'string' } }, required: ['fileId'] } },
   { name: 'drive_download_file', description: 'Download the raw contents of a Drive file (returned as base64)', inputSchema: { type: 'object', properties: { fileId: { type: 'string' } }, required: ['fileId'] } },
   { name: 'drive_upload_file', description: 'Upload a new file to Drive from base64 content', inputSchema: { type: 'object', properties: { name: { type: 'string' }, mimeType: { type: 'string' }, base64Data: { type: 'string' }, parentFolderId: { type: 'string' } }, required: ['name', 'base64Data'] } },
+  { name: 'drive_upload_from_url', description: 'Copy a file from a web address straight into Drive, without passing the file through chat. Max 10 MB, http(s) only, internal/private addresses are refused. Works with any public link; for private GitHub files use a raw.githubusercontent.com link (the server\'s GitHub token is sent only to that host). Creates a new file; nothing is overwritten.', inputSchema: { type: 'object', properties: { url: { type: 'string' }, name: { type: 'string', description: 'File name in Drive' }, parentFolderId: { type: 'string' }, mimeType: { type: 'string', description: 'Optional; defaults to what the web address reports' } }, required: ['url', 'name'] } },
   { name: 'drive_create_folder', description: 'Create a folder in Drive', inputSchema: { type: 'object', properties: { name: { type: 'string' }, parentFolderId: { type: 'string' } }, required: ['name'] } },
   { name: 'drive_create_doc', description: 'Create a new empty Google Doc in Drive', inputSchema: { type: 'object', properties: { name: { type: 'string' }, parentFolderId: { type: 'string' } }, required: ['name'] } },
   { name: 'drive_create_spreadsheet', description: 'Create a new empty Google Sheet in Drive', inputSchema: { type: 'object', properties: { name: { type: 'string' }, parentFolderId: { type: 'string' } }, required: ['name'] } },
@@ -63,6 +65,15 @@ export const handlers = {
     const res = await drive.files.create({
       requestBody: { name: args.name, parents: args.parentFolderId ? [args.parentFolderId] : undefined },
       media: { mimeType: args.mimeType || 'application/octet-stream', body }
+    });
+    return ok(res.data);
+  },
+  drive_upload_from_url: async (args, { drive }, deps = {}) => {
+    const { bytes, contentType } = await fetchLimited(args.url, deps.fetchOptions);
+    const res = await drive.files.create({
+      requestBody: { name: args.name, parents: args.parentFolderId ? [args.parentFolderId] : undefined },
+      media: { mimeType: args.mimeType || (contentType || 'application/octet-stream').split(';')[0].trim(), body: Readable.from(bytes) },
+      fields: 'id, name, mimeType, size, webViewLink, parents'
     });
     return ok(res.data);
   },

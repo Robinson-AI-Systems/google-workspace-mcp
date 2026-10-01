@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/workflows/ci.yml)
 
-A Claude connector that gives Claude real, working control over your Google Workspace — not just email and calendar, but the admin side too: creating/suspending users, managing groups, adding domains and aliases, pushing Chrome policies, running security audits, and more. **333 tools** across every major Google Workspace service, and it can hold sign-ins for more than one mailbox (e.g. one per business on the same Workspace), with each Claude connection bound to the one you pick.
+A Claude connector that gives Claude real, working control over your Google Workspace — not just email and calendar, but the admin side too: creating/suspending users, managing groups, adding domains and aliases, pushing Chrome policies, running security audits, and more. **334 tools** across every major Google Workspace service, and it can hold sign-ins for more than one mailbox (e.g. one per business on the same Workspace), with each Claude connection bound to the one you pick.
 
 Built for one goal: you should be able to tell Claude what you want done in Google Workspace — in plain English — and have it actually happen, without you opening the admin console.
 
@@ -13,12 +13,29 @@ architecture, ordered task cards with acceptance checks, the test strategy,
 and a paste-ready prompt for the implementing model (Claude Sonnet 5.5). Start
 with `docs/plan/README.md`.
 
+## Developing
+
+You need Node 20 or newer.
+
+```
+npm ci            # install
+npm run check     # syntax check every source file
+npm test          # unit tests (about 5 seconds, touches nothing real)
+npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at any Postgres or a Neon branch
+```
+
+- Tests never call Google or the real database. `test/helpers/fake-google.js` stands in for the Google clients and `test/helpers/fake-db.js` for `src/db.js`; `test/contract/db-contract.js` runs the same checks against both so the fake cannot drift from the real thing. Database tests work inside their own temporary schema and clean up after themselves.
+- Never put a real token, passphrase or key in a test or a log. Tests use obviously fake values.
+- Database changes must be additive (`IF NOT EXISTS`); old and new code run against the same database at once.
+- One task card per pull request, branch `ai/<model>/<card>-<slug>`, ledger row in `docs/plan/TASKS.md` updated in the same PR. The full rules are in [`docs/plan/`](docs/plan/README.md).
+- GitHub runs check, unit tests and database tests (on a throwaway Postgres) on every pull request.
+
 ## What's covered
 
 | Area | Tools | Examples |
 |---|---|---|
 | Gmail | 56 | send/read/search mail, labels, filters, vacation responder, delegates, forwarding |
-| Drive | 35 | files, folders, sharing, permissions, revisions, trash, export |
+| Drive | 36 | files, folders, sharing, permissions, revisions, trash, export |
 | Calendar | 21 | events, sharing, recurring events, Meet links, free/busy |
 | Sheets | 23 | read/write cells, formatting, sorting, conditional formatting, protection |
 | Docs | 15 | create/edit content, tables, images, export to PDF/Word |
