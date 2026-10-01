@@ -177,17 +177,10 @@ export const handlers = {
     await admin.users.signOut({ userKey: args.userKey });
     return ok({ userKey: args.userKey, status: 'all sessions signed out' });
   },
-  admin_make_super_admin: async (args, clients) => {
-    const { admin } = clients;
-    const before = (await admin.users.get({ userKey: args.userKey, fields: 'primaryEmail,isAdmin' })).data;
+  // Before/after reading and the change-log entry come from the safety wrapper (src/tools/guards.js).
+  admin_make_super_admin: async (args, { admin }) => {
     await admin.users.makeAdmin({ userKey: args.userKey, requestBody: { status: args.isAdmin } });
-    // The change has happened. Read back what Google holds now; if that read fails, still record the change and say it is unconfirmed.
-    let after = null;
-    try { after = (await admin.users.get({ userKey: args.userKey, fields: 'primaryEmail,isAdmin' })).data; } catch { /* reported below */ }
-    const who = after?.primaryEmail || before.primaryEmail || args.userKey;
-    const now = after ? !!after.isAdmin : !!args.isAdmin;
-    await recordChange(clients, { tool: 'admin_make_super_admin', target: who, summary: `Super admin for ${who}: ${before.isAdmin ? 'yes' : 'no'} -> ${now ? 'yes' : 'no'}${after ? '' : ' (requested; could not read it back to confirm)'}`, before: { isAdmin: !!before.isAdmin }, after: { isAdmin: now, confirmed: !!after } });
-    return ok({ userKey: args.userKey, requested: args.isAdmin, isAdmin: now, confirmed: !!after });
+    return ok({ userKey: args.userKey, requested: !!args.isAdmin });
   },
   admin_undelete_user: async (args, { admin }) => {
     await admin.users.undelete({ userKey: args.userId, requestBody: { orgUnitPath: args.orgUnitPath || '/' } });

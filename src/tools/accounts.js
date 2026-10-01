@@ -29,7 +29,7 @@ export const tools = [
   {
     name: 'workspace_recent_changes',
     description: 'What has been changed in Workspace through this server? Newest first: when, which Google account it acted as, which Claude connection asked, which tool, what it touched, and what it was before and after. Only changes made through this server are listed (not edits made in Google directly). Defaults to the last 7 days.',
-    inputSchema: { type: 'object', properties: { since: { type: 'string', description: 'A date/time (e.g. 2026-09-28) or a number of days like "3d". Default 7d.' }, tool: { type: 'string', description: 'Only this tool, e.g. admin_move_user_orgunit' }, actingAs: { type: 'string', description: 'Only changes made as this Google account' }, limit: { type: 'number', default: 50 } } }
+    inputSchema: { type: 'object', properties: { since: { type: 'string', description: 'A date/time (e.g. 2026-09-28) or a number of days like "3d". Default 7d.' }, tool: { type: 'string', description: 'Only this tool, e.g. admin_move_user_orgunit' }, actingAs: { type: 'string', description: 'Only changes made as this Google account' }, includeDryRuns: { type: 'boolean', description: 'Also list previews (dryRun) that changed nothing. Default false.' }, limit: { type: 'number', default: 50 } } }
   },
   {
     name: 'workspace_list_connections',
@@ -78,7 +78,7 @@ export const handlers = {
       if (Number.isNaN(t.getTime())) return ok(`I could not read "${args.since}" as a date. Use a date like 2026-09-28 or a number of days like 3d.`);
       since = t.toISOString();
     } else since = new Date(Date.now() - 7 * 86400000).toISOString();
-    const rows = await listRecentChanges({ since, tool: args.tool, actingAs: args.actingAs, limit: args.limit });
+    const rows = await listRecentChanges({ since, tool: args.tool, actingAs: args.actingAs, limit: args.limit, includeDryRuns: args.includeDryRuns === true });
     return ok(rows.length ? rows : { changes: [], note: `Nothing recorded since ${since}. Only changes made through this server are listed.` });
   },
   async workspace_list_connections() {

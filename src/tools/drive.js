@@ -108,7 +108,7 @@ export const handlers = {
     return ok(res.data);
   },
   drive_delete_file: async (args, { drive }) => {
-    await drive.files.delete({ fileId: args.fileId });
+    await drive.files.delete({ fileId: args.fileId, supportsAllDrives: true });
     return ok({ deleted: args.fileId });
   },
   drive_list_trash: async (args, { drive }) => {

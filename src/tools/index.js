@@ -1,4 +1,5 @@
 import { mergeNamespaces } from './util.js';
+import { applyGuards } from './guards.js';
 import * as gmail from './gmail.js';
 import * as drive from './drive.js';
 import * as calendar from './calendar.js';
@@ -17,7 +18,7 @@ import * as workflows from './workflows.js';
 import * as accounts from './accounts.js';
 import * as mailboxBranding from './mailbox-branding.js';
 
-export const registry = mergeNamespaces([
+export const registry = applyGuards(mergeNamespaces([
   gmail, drive, calendar, sheets, docs, slides, forms, tasks, people,
   adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts, mailboxBranding
-]);
+]));
