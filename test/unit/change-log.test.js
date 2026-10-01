@@ -10,6 +10,7 @@ vi.mock('../../src/db.js', async (importActual) => {
 const { redact, recordChange } = await import('../../src/changelog.js');
 const { handlers: admin } = await import('../../src/tools/admin-directory.js');
 const { handlers: accounts } = await import('../../src/tools/accounts.js');
+const { registry } = await import('../../src/tools/index.js');
 
 const body = (r) => JSON.parse(r.content[0].text);
 const withUser = (when, user) => when('admin.users.get').resolves({ data: user });
@@ -57,14 +58,17 @@ describe('admin tools that now log', () => {
     expect(row).toMatchObject({ tool: 'admin_move_user_orgunit', target: 'sam@example.test', before: { orgUnitPath: '/' }, after: { orgUnitPath: '/Staff' }, acting_as: 'ops@example.test' });
   });
 
-  it('admin_make_super_admin reports what Google now holds, not what was asked', async () => {
+  it('admin_make_super_admin: one log row, the answer is what Google holds, and a change Google did not apply is flagged', async () => {
     const { clients, when } = makeFakeClients();
     when('admin.users.get').resolvesOnce({ data: { primaryEmail: 'kim@example.test', isAdmin: false } });
     when('admin.users.get').resolvesOnce({ data: { primaryEmail: 'kim@example.test', isAdmin: false } }); // Google did not apply it
-    const result = body(await admin.admin_make_super_admin({ userKey: 'kim@example.test', isAdmin: true }, clients));
-    expect(result).toMatchObject({ requested: true, isAdmin: false });
-    const [row] = await holder.db.listRecentChanges();
-    expect(row).toMatchObject({ before: { isAdmin: false }, after: { isAdmin: false } });
+    const result = body(await registry.handlers.admin_make_super_admin({ userKey: 'kim@example.test', isAdmin: true, confirm: true }, clients));
+    expect(result).toMatchObject({ done: true, confirmed: false, before: { isAdmin: false }, after: { isAdmin: false } });
+    expect(result.warning).toMatch(/does not show/);
+    const rows = await holder.db.listRecentChanges();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ tool: 'admin_make_super_admin', before: { isAdmin: false }, after: { isAdmin: false } });
+    expect(rows[0].summary).toMatch(/does not show the requested result/);
   });
 
   it('admin_set_2sv_enforcement logs before and after', async () => {
@@ -100,11 +104,10 @@ describe('admin_make_super_admin when the read-back fails', () => {
     const { clients, when } = makeFakeClients();
     when('admin.users.get').resolvesOnce({ data: { primaryEmail: 'kim@example.test', isAdmin: false } });
     when('admin.users.get').rejects(googleError(503, 'backendError', 'Backend Error'));
-    const result = body(await admin.admin_make_super_admin({ userKey: 'kim@example.test', isAdmin: true }, clients));
-    expect(result).toMatchObject({ requested: true, isAdmin: true, confirmed: false });
+    const result = body(await registry.handlers.admin_make_super_admin({ userKey: 'kim@example.test', isAdmin: true, confirm: true }, clients));
+    expect(result).toMatchObject({ done: true, confirmed: false });
     const [row] = await holder.db.listRecentChanges();
-    expect(row.summary).toMatch(/could not read it back/);
-    expect(row.after).toEqual({ isAdmin: true, confirmed: false });
+    expect(row.summary).toMatch(/could not confirm/);
   });
 });
 

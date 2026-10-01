@@ -5,6 +5,7 @@
 import { neon } from '@neondatabase/serverless';
 import crypto from 'node:crypto';
 import { loadKey, encryptJson, decryptJson } from './crypto.js';
+import { normalizeDomains, domainOfEmail } from './domains.js';
 
 let sql;
 function db() {
@@ -112,6 +113,8 @@ export async function initSchema() {
   // column stays in step until a later cleanup removes it, so older code that
   // only knows `tokens` keeps working during a deploy.
   await q`ALTER TABLE google_accounts ADD COLUMN IF NOT EXISTS tokens_enc TEXT`;
+  // Which email domains this account's connections may manage through the admin tools. NULL means "only the account's own domain" (see src/tools/domain-guard.js).
+  await q`ALTER TABLE google_accounts ADD COLUMN IF NOT EXISTS allowed_domains TEXT[]`;
 }
 
 // ---------- Google accounts (one row per mailbox the server can act as) ----------
@@ -123,12 +126,40 @@ function normalizeEmail(email) {
 /** Every connected Google account, default first. Tokens are NOT included. */
 export async function listGoogleAccounts() {
   const q = db();
-  return q`
-    SELECT email, label, is_default, created_at, updated_at
+  const rows = await q`
+    SELECT email, label, is_default, created_at, updated_at, allowed_domains
     FROM google_accounts
     ORDER BY is_default DESC, created_at ASC
   `;
+  return rows.map(withDomains);
 }
+
+const domainOf = domainOfEmail;
+// `allowed_domains` is always the list in force; `allowed_domains_custom` says whether someone set it (otherwise it is just the account's own domain).
+function withDomains(row) {
+  const { allowed_domains: custom, ...rest } = row;
+  return { ...rest, allowed_domains: custom && custom.length ? custom : [domainOf(row.email)], allowed_domains_custom: !!(custom && custom.length) };
+}
+
+/** The domains a connection acting as this account may manage. Defaults to the account's own domain. */
+export async function getAllowedDomains(email) {
+  const q = db();
+  const e = normalizeEmail(email);
+  const rows = await q`SELECT allowed_domains FROM google_accounts WHERE email = ${e}`;
+  const custom = rows[0]?.allowed_domains;
+  return custom && custom.length ? custom : [domainOf(e)];
+}
+
+/** `domains` null (or empty) goes back to "own domain only". Returns the list now in force. */
+export async function setAllowedDomains(email, domains) {
+  const q = db();
+  const e = normalizeEmail(email);
+  const list = normalizeDomains(domains);
+  const rows = await q`UPDATE google_accounts SET allowed_domains = ${list.length ? list : null}, updated_at = now() WHERE email = ${e} RETURNING email`;
+  if (!rows.length) throw new Error(`No connected Google account named ${e}.`);
+  return list.length ? list : [domainOf(e)];
+}
+
 
 /** The account a connection with no explicit choice acts as. */
 export async function getDefaultGoogleAccount() {
@@ -399,7 +430,7 @@ export async function recordChange({ actingAs, connection, tool, target, summary
 }
 
 /** Newest first. `since` is a date/time; omit it for "everything". */
-export async function listRecentChanges({ since, tool, actingAs, limit = 50 } = {}) {
+export async function listRecentChanges({ since, tool, actingAs, limit = 50, includeDryRuns = true } = {}) {
   const q = db();
   const n = Math.min(Math.max(Number(limit) || 50, 1), 500);
   return q`
@@ -408,6 +439,7 @@ export async function listRecentChanges({ since, tool, actingAs, limit = 50 } = 
     WHERE (${since ? new Date(since).toISOString() : null}::timestamptz IS NULL OR at >= ${since ? new Date(since).toISOString() : null}::timestamptz)
       AND (${tool || null}::text IS NULL OR tool = ${tool || null})
       AND (${actingAs ? normalizeEmail(actingAs) : null}::text IS NULL OR acting_as = ${actingAs ? normalizeEmail(actingAs) : null})
+      AND (${includeDryRuns === true}::boolean OR dry_run = false)
     ORDER BY at DESC, id DESC
     LIMIT ${n}
   `;

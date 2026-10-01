@@ -3,7 +3,9 @@
 // housekeeping like renaming or removing one. Nothing here talks to Google
 // except workspace_whoami, which confirms the identity with Gmail itself.
 import { ok } from './util.js';
-import { listGoogleAccounts, setDefaultGoogleAccount, removeGoogleAccount, listConnections, revokeConnection, listRecentChanges } from '../db.js';
+import { listGoogleAccounts, setDefaultGoogleAccount, removeGoogleAccount, listConnections, revokeConnection, listRecentChanges, setAllowedDomains, getAllowedDomains } from '../db.js';
+import { recordChange } from '../changelog.js';
+import { normalizeDomains } from '../domains.js';
 
 export const tools = [
   {
@@ -27,9 +29,14 @@ export const tools = [
     inputSchema: { type: 'object', properties: { email: { type: 'string' }, confirm: { type: 'boolean', description: 'Must be true.' } }, required: ['email', 'confirm'] }
   },
   {
+    name: 'workspace_set_allowed_domains',
+    description: 'Choose which email domains a Google account\'s connections may manage with the admin tools (users, groups, domains, licenses). By default an account may only manage its own domain, so the Appliance Rentals connection cannot touch AI Systems users. Widening this lowers a safety limit: it does nothing until you pass confirm: true (ask the person first). Pass an empty list to go back to "own domain only". Returns the list now in force.',
+    inputSchema: { type: 'object', properties: { email: { type: 'string', description: 'The connected Google account' }, domains: { type: 'array', items: { type: 'string' }, description: 'e.g. ["robinsonaisystems.com", "appliancerentals.com"]. Empty = own domain only.' }, confirm: { type: 'boolean', description: 'Must be true.' } }, required: ['email', 'domains'] }
+  },
+  {
     name: 'workspace_recent_changes',
     description: 'What has been changed in Workspace through this server? Newest first: when, which Google account it acted as, which Claude connection asked, which tool, what it touched, and what it was before and after. Only changes made through this server are listed (not edits made in Google directly). Defaults to the last 7 days.',
-    inputSchema: { type: 'object', properties: { since: { type: 'string', description: 'A date/time (e.g. 2026-09-28) or a number of days like "3d". Default 7d.' }, tool: { type: 'string', description: 'Only this tool, e.g. admin_move_user_orgunit' }, actingAs: { type: 'string', description: 'Only changes made as this Google account' }, limit: { type: 'number', default: 50 } } }
+    inputSchema: { type: 'object', properties: { since: { type: 'string', description: 'A date/time (e.g. 2026-09-28) or a number of days like "3d". Default 7d.' }, tool: { type: 'string', description: 'Only this tool, e.g. admin_move_user_orgunit' }, actingAs: { type: 'string', description: 'Only changes made as this Google account' }, includeDryRuns: { type: 'boolean', description: 'Also list previews (dryRun) that changed nothing. Default false.' }, limit: { type: 'number', default: 50 } } }
   },
   {
     name: 'workspace_list_connections',
@@ -69,6 +76,15 @@ export const handlers = {
     await removeGoogleAccount(args.email);
     return ok(await listGoogleAccounts());
   },
+  async workspace_set_allowed_domains(args, clients) {
+    const email = String(args.email || '').trim().toLowerCase();
+    const before = await getAllowedDomains(email);
+    const wanted = normalizeDomains(args.domains || []); // throws a plain message on something that is not a domain
+    if (args.confirm !== true) return ok({ done: false, needsConfirmation: true, account: email, allowedNow: before, wouldBecome: wanted.length ? wanted : 'own domain only', note: 'Nothing was changed. Ask the person, then run it again with confirm: true.' });
+    const now = await setAllowedDomains(email, wanted);
+    const logged = await recordChange(clients, { tool: 'workspace_set_allowed_domains', target: email, summary: `Allowed domains for ${email}: ${before.join(', ')} -> ${now.join(', ')}`, before: { allowedDomains: before }, after: { allowedDomains: now } });
+    return ok({ done: true, account: email, allowedDomains: now, logged: logged.logged });
+  },
   async workspace_recent_changes(args) {
     const days = /^(\d+)d$/i.exec(String(args.since || '').trim());
     let since;
@@ -78,7 +94,7 @@ export const handlers = {
       if (Number.isNaN(t.getTime())) return ok(`I could not read "${args.since}" as a date. Use a date like 2026-09-28 or a number of days like 3d.`);
       since = t.toISOString();
     } else since = new Date(Date.now() - 7 * 86400000).toISOString();
-    const rows = await listRecentChanges({ since, tool: args.tool, actingAs: args.actingAs, limit: args.limit });
+    const rows = await listRecentChanges({ since, tool: args.tool, actingAs: args.actingAs, limit: args.limit, includeDryRuns: args.includeDryRuns === true });
     return ok(rows.length ? rows : { changes: [], note: `Nothing recorded since ${since}. Only changes made through this server are listed.` });
   },
   async workspace_list_connections() {
