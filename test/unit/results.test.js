@@ -8,9 +8,26 @@ describe('ok() result shaping', () => {
     expect(parsed({ id: 'a', items: [1, 2, 3] })).toEqual({ id: 'a', items: [1, 2, 3] });
     expect(ok('hello').content[0].text).toBe('hello');
   });
-  it('removes etag and Google "service#thing" kind markers everywhere, but not other fields called kind', () => {
-    expect(parsed({ kind: 'drive#file', etag: '"x"', name: 'n', nested: [{ kind: 'calendar#event', etag: 'e', id: 1 }], meta: { kind: 'photo' } }))
-      .toEqual({ name: 'n', nested: [{ id: 1 }], meta: { kind: 'photo' } });
+  it('removes Google "service#thing" kind labels everywhere, but not other fields called kind', () => {
+    expect(parsed({ kind: 'drive#file', name: 'n', nested: [{ kind: 'calendar#event', id: 1 }], meta: { kind: 'photo' }, lang: { kind: 'C#' } }))
+      .toEqual({ name: 'n', nested: [{ id: 1 }], meta: { kind: 'photo' }, lang: { kind: 'C#' } });
+  });
+  it('keeps etag, because contacts_update needs the one contacts_get returns', () => {
+    expect(parsed({ resourceName: 'people/c1', etag: '%EgUBAj4=', metadata: { sources: [{ etag: 'inner' }] } }))
+      .toEqual({ resourceName: 'people/c1', etag: '%EgUBAj4=', metadata: { sources: [{ etag: 'inner' }] } });
+  });
+  it('passes dates, buffers and typed arrays through exactly as JSON.stringify would, and never throws', () => {
+    const value = { d: new Date(0), b: Buffer.from('hi'), u: new Uint8Array(2) };
+    expect(ok(value).content[0].text).toBe(JSON.stringify(value, null, 2));
+    const circular = {}; circular.self = circular;
+    expect(() => ok(circular)).not.toThrow();
+    expect(() => ok({ n: 10n })).not.toThrow();
+  });
+  it('never mistakes ordinary long text for file data', () => {
+    const letters = 'Hello'.repeat(30000);
+    expect(parsed({ body: letters }).body).toBe(letters);       // not a data-like field name
+    expect(parsed({ content: letters }).content).toMatchObject({ omitted: 'data' }); // data-like name and base64-shaped: size only
+    expect(ok(letters).content[0].text).toBe(letters);          // a bare string is never touched
   });
   it('cuts a long list inside a result to 200 and says how many there were, keeping nextPageToken', () => {
     const files = Array.from({ length: 450 }, (_, i) => ({ id: i }));

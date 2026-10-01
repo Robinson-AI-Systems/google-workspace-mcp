@@ -19,7 +19,10 @@ const RECONNECT = 'Open /api/google/authorize on your server while signed in as 
 /** Returns { what, cause, todo } for errors we recognise, or null. */
 export function explainError(err) {
   const { message, status, reason, retryAfter, location } = parts(err);
-  const has = (re) => re.test(message) || re.test(reason);
+  // A network failure (no answer from Google at all, e.g. ENOTFOUND) is not any of the Google errors below.
+  if (!err?.response && typeof err?.code === 'string') return null;
+  const has = (re) => re.test(message) || re.test(reason); // wording Google puts in the message or the reason
+  const reasonIs = (re) => re.test(reason);                 // Google's own reason code only
 
   if (has(/Access restricted to service accounts/i)) {
     return {
@@ -43,10 +46,17 @@ export function explainError(err) {
         todo: RECONNECT
       };
     }
+    if (/invalid (email|user)|account (has been )?(deleted|disabled)|no such user|subject/i.test(message)) {
+      return {
+        what: 'Google rejected the request to act as that user.',
+        cause: 'The email address is wrong, the user does not exist on this Workspace, or the account was deleted or disabled.',
+        todo: 'Check the address is a real, active user on this Workspace, then check DEPLOY.md Part 5.'
+      };
+    }
     return {
-      what: 'Google rejected the request to act as that user.',
-      cause: 'The email address is wrong or does not exist on this Workspace, or the Admin console delegation entry does not match.',
-      todo: 'Check the address is a real user on this Workspace, then check DEPLOY.md Part 5.'
+      what: 'Google rejected the server\'s sign-in request.',
+      cause: 'The robot key may be wrong or damaged, the server\'s clock may be off, or the Admin console delegation entry does not match.',
+      todo: 'Check GOOGLE_SERVICE_ACCOUNT_JSON and DEPLOY.md Part 5, and try again in a minute.'
     };
   }
   if (has(/Unauthorized operation for the given domain/i)) {
@@ -56,7 +66,7 @@ export function explainError(err) {
       todo: 'Use the customer ID from admin_get_customer_info, and in Google Cloud Console > APIs & Services confirm the API for this tool is enabled.'
     };
   }
-  if (has(/insufficientPermissions|insufficient authentication scopes|insufficient permission/i) || (status === 403 && has(/ACCESS_TOKEN_SCOPE_INSUFFICIENT/))) {
+  if (has(/insufficientPermissions|insufficient authentication scopes|insufficient permission/i) || (status === 403 && reasonIs(/ACCESS_TOKEN_SCOPE_INSUFFICIENT/))) {
     const scopes = [...message.matchAll(/https:\/\/www\.googleapis\.com\/auth\/[\w./-]+/g)].map((m) => m[0]);
     return {
       what: 'This connection was not given permission to do that.',
@@ -64,8 +74,15 @@ export function explainError(err) {
       todo: `${RECONNECT} If this is a robot-identity (delegated) tool, the permission must also be added to the Admin console entry, which needs Chris's written approval first.`
     };
   }
-  if (status === 429 || has(/rateLimitExceeded|userRateLimitExceeded|quotaExceeded|dailyLimitExceeded|RESOURCE_EXHAUSTED/i)) {
-    const daily = has(/dailyLimitExceeded/i);
+  if (reasonIs(/^storageQuotaExceeded$/) || /storage quota/i.test(message)) {
+    return {
+      what: 'The Drive storage for this account is full.',
+      cause: 'The account has used all of its storage, so Google will not save more files.',
+      todo: 'Free up space or add storage in the Admin console, then try again. Waiting will not help.'
+    };
+  }
+  if (status === 429 || reasonIs(/^(rateLimitExceeded|userRateLimitExceeded|quotaExceeded|dailyLimitExceeded|RESOURCE_EXHAUSTED)$/)) {
+    const daily = reasonIs(/^dailyLimitExceeded$/);
     const wait = retryAfter ? `${retryAfter} seconds` : 'about a minute';
     return {
       what: 'Google is limiting how fast this account can make requests.',
@@ -73,14 +90,14 @@ export function explainError(err) {
       todo: daily ? 'Try again tomorrow, or do less in one go.' : `Wait ${wait}, then try again.`
     };
   }
-  if (status === 404 || has(/notFound|not found/i)) {
+  if (status === 404 || reasonIs(/^notFound$/)) {
     return {
       what: 'Google could not find that item.',
       cause: 'The ID or address is wrong, the item was deleted, or this connection is acting as a different account from the one that owns it.',
       todo: 'Check the ID, and run workspace_whoami to confirm which account this connection acts as.'
     };
   }
-  if (status === 400 || has(/^(invalid|invalidArgument|badRequest|failedPrecondition)$/i) || /^Invalid (value|input|JSON)/i.test(message)) {
+  if (status === 400 || reasonIs(/^(invalid|invalidArgument|badRequest|failedPrecondition)$/) || /^Invalid (value|input|JSON)/i.test(message)) {
     const named = location || message.match(/Invalid (?:value|Input|argument)[^:]*:\s*([\w.\[\]]+)/i)?.[1] || message.match(/\\?"([\w.\[\]]+)\\?"/)?.[1];
     return {
       what: `Google did not accept one of the values sent${named ? `: "${named}"` : ''}.`,
@@ -88,14 +105,14 @@ export function explainError(err) {
       todo: named ? `Check "${named}" and try again.` : 'Check the values you gave (the technical detail below usually names the one that is wrong) and try again.'
     };
   }
-  if (status === 401 || has(/invalidCredentials|authError|UNAUTHENTICATED/i)) {
+  if (status === 401 || reasonIs(/^(invalidCredentials|authError|UNAUTHENTICATED)$/)) {
     return {
       what: 'Google no longer accepts the saved sign-in for this account.',
       cause: 'The sign-in expired or was revoked.',
       todo: RECONNECT
     };
   }
-  if (status === 403 || has(/forbidden|Not Authorized|PERMISSION_DENIED/i)) {
+  if (status === 403 || reasonIs(/^(forbidden|PERMISSION_DENIED)$/) || /Not Authorized/i.test(message)) {
     return {
       what: 'Google said this account is not allowed to do that.',
       cause: 'The connected account may lack the needed admin role, the setting may be locked by another admin policy, or the API may not be enabled.',
@@ -108,7 +125,9 @@ export function explainError(err) {
 /** The text shown to Claude (and Chris) for a failed tool call. */
 export function formatError(err) {
   const { message, details } = parts(err);
-  const raw = `Error: ${message}${details ? '\nDetails: ' + JSON.stringify(details) : ''}`;
+  let detailText = '';
+  if (details) { try { detailText = '\nDetails: ' + JSON.stringify(details); } catch { detailText = '\nDetails: ' + String(details); } }
+  const raw = `Error: ${message}${detailText}`;
   const known = explainError(err);
   if (!known) return raw;
   return `What happened: ${known.what}\nLikely cause: ${known.cause}\nWhat to do: ${known.todo}\n\nTechnical detail: ${raw}`;

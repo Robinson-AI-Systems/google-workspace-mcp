@@ -499,10 +499,10 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P0-6 | TODO | | |
 | P0-7 | TODO | | |
 | P1-1 | TODO | | |
-| P1-2 | IN_REVIEW | PR pending | 11 mappings + unit tests; unknown errors unchanged |
+| P1-2 | IN_REVIEW | PR pending | 12 mappings + unit tests; unknown errors and network failures unchanged |
 | P1-3 | TODO | | |
 | P1-4 | TODO | | |
-| P1-5 | IN_REVIEW | PR pending | Done as specified. Note: base64 over 64 KB (e.g. `drive_download_file` on big files) now returns the size instead of the data |
+| P1-5 | IN_REVIEW | PR pending | Done, with one deviation: `etag` is NOT stripped (contacts_update needs it). Note: file data over 64 KB (e.g. `drive_download_file` on big files) now returns the size instead of the data |
 | P2-1 | TODO | | |
 | P2-2 | TODO | | |
 | P2-3 | TODO | | Needs `VERCEL_API_TOKEN`, `VERCEL_TEAM_ID` env vars from Chris |

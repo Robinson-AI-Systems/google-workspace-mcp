@@ -11,7 +11,7 @@ describe('plain-English errors', () => {
     ['delegation needed', googleError(403, 'forbidden', 'Access restricted to service accounts that have delegation enabled'), /domain-wide delegation/i, /DEPLOY\.md Part 5/],
     ['robot rejected (unauthorized_client)', Object.assign(new Error('unauthorized_client'), { response: { status: 400, data: { error: 'unauthorized_client', error_description: 'Client is unauthorized to retrieve access tokens using this method' } } }), /rejected the server's robot identity/i, /Domain-wide delegation/],
     ['sign-in revoked (invalid_grant)', Object.assign(new Error('invalid_grant'), { response: { status: 400, data: { error: 'invalid_grant', error_description: 'Token has been expired or revoked.' } } }), /no longer accepts the saved sign-in/i, /api\/google\/authorize/],
-    ['wrong user (invalid_grant)', Object.assign(new Error('invalid_grant'), { response: { status: 400, data: { error: 'invalid_grant', error_description: 'Invalid email or User ID' } } }), /act as that user/i, /real user/],
+    ['wrong user (invalid_grant)', Object.assign(new Error('invalid_grant'), { response: { status: 400, data: { error: 'invalid_grant', error_description: 'Invalid email or User ID' } } }), /act as that user/i, /real, active user/],
     ['wrong domain operation', googleError(403, 'forbidden', 'Unauthorized operation for the given domain'), /would not run this action for this domain/i, /customer ID/],
     ['missing scope', googleError(403, 'insufficientPermissions', 'Request had insufficient authentication scopes. https://www.googleapis.com/auth/admin.directory.user'), /not given permission/i, /api\/google\/authorize/],
     ['rate limit', googleError(429, 'rateLimitExceeded', 'Rate Limit Exceeded'), /limiting how fast/i, /about a minute/],
@@ -51,6 +51,40 @@ describe('plain-English errors', () => {
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toBe('Error: something odd');
     expect(explainError(new Error('something odd'))).toBeNull();
+  });
+
+  it('does not blame a missing item for a network failure or a message that merely says "not found"', () => {
+    const dns = Object.assign(new Error('getaddrinfo ENOTFOUND www.googleapis.com'), { code: 'ENOTFOUND' });
+    expect(text(dns)).toBe('Error: getaddrinfo ENOTFOUND www.googleapis.com');
+    expect(text(googleError(403, 'forbidden', 'File not found: abc'))).toMatch(/not allowed to do that/i);
+    expect(text(googleError(400, 'invalid', 'Invalid value: label not found'))).not.toMatch(/could not find that item/i);
+  });
+
+  it('says a full Drive is full (waiting will not help), not a rate limit', () => {
+    const out = text(googleError(403, 'storageQuotaExceeded', 'The user\'s Drive storage quota has been exceeded.'));
+    expect(out).toMatch(/storage for this account is full/i);
+    expect(out).toMatch(/Waiting will not help/);
+    expect(out).not.toMatch(/Wait about a minute/);
+  });
+
+  it('does not blame the email address for a bad robot key or a clock problem', () => {
+    const jwt = (msg) => Object.assign(new Error('invalid_grant'), { response: { status: 400, data: { error: 'invalid_grant', error_description: msg } } });
+    for (const msg of ['Invalid JWT Signature.', 'Invalid JWT: Token must be a short-lived token (60 minutes) and in a reasonable timeframe.']) {
+      const out = text(jwt(msg));
+      expect(out).toMatch(/robot key may be wrong/i);
+      expect(out).not.toMatch(/email address is wrong/i);
+    }
+    expect(text(jwt('Account has been deleted'))).toMatch(/deleted or disabled/);
+  });
+
+  it('never throws while formatting, even for details that cannot be turned into text', () => {
+    const circular = {}; circular.self = circular;
+    const err = googleError(400, 'invalid', 'bad');
+    err.response.data.error.errors = [circular];
+    expect(() => text(err)).not.toThrow();
+    expect(text(err)).toContain('Technical detail');
+    expect(() => text(null)).not.toThrow();
+    expect(() => text(undefined)).not.toThrow();
   });
 
   it('keeps Google\'s details list in the technical detail', () => {
