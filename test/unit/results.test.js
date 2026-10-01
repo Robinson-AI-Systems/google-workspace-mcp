@@ -53,6 +53,13 @@ describe('ok() result shaping', () => {
     expect(longText.length).toBeGreaterThan(MAX_BASE64_CHARS);
     expect(parsed({ body: longText }).body).toBe(longText);
   });
+  it('keeps inner lists whole (rows of a sheet), cutting only a result\'s own list', () => {
+    const rows = Array.from({ length: 300 }, () => Array.from({ length: 250 }, (_, i) => i));
+    const out = parsed({ range: 'A1', values: rows });
+    expect(out.values).toHaveLength(200);
+    expect(out.values[0]).toHaveLength(250);
+    expect(out.values_truncated).toMatch(/of 300/);
+  });
   it('does not change the original object', () => {
     const original = { etag: 'e', files: Array.from({ length: 300 }, (_, i) => i) };
     compact(original);

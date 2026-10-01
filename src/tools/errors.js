@@ -46,7 +46,7 @@ export function explainError(err) {
         todo: RECONNECT
       };
     }
-    if (/invalid (email|user)|account (has been )?(deleted|disabled)|no such user|subject/i.test(message)) {
+    if (/(invalid|not a valid) (email|user)|account (has been )?(deleted|disabled|not found)|no such user|subject/i.test(message)) {
       return {
         what: 'Google rejected the request to act as that user.',
         cause: 'The email address is wrong, the user does not exist on this Workspace, or the account was deleted or disabled.',
@@ -81,7 +81,7 @@ export function explainError(err) {
       todo: 'Free up space or add storage in the Admin console, then try again. Waiting will not help.'
     };
   }
-  if (status === 429 || reasonIs(/^(rateLimitExceeded|userRateLimitExceeded|quotaExceeded|dailyLimitExceeded|RESOURCE_EXHAUSTED)$/)) {
+  if (status === 429 || reasonIs(/^(rateLimitExceeded|userRateLimitExceeded|sharingRateLimitExceeded|quotaExceeded|dailyLimitExceeded|RESOURCE_EXHAUSTED)$/)) {
     const daily = reasonIs(/^dailyLimitExceeded$/);
     const wait = retryAfter ? `${retryAfter} seconds` : 'about a minute';
     return {

@@ -75,6 +75,9 @@ describe('plain-English errors', () => {
       expect(out).not.toMatch(/email address is wrong/i);
     }
     expect(text(jwt('Account has been deleted'))).toMatch(/deleted or disabled/);
+    expect(text(jwt('Not a valid email or user ID.'))).toMatch(/real, active user/);
+    expect(text(jwt('Invalid grant: account not found'))).toMatch(/real, active user/);
+    expect(text(googleError(403, 'sharingRateLimitExceeded', 'Sharing rate limit exceeded'))).toMatch(/limiting how fast/);
   });
 
   it('never throws while formatting, even for details that cannot be turned into text', () => {

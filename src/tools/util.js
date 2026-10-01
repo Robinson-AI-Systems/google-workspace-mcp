@@ -12,31 +12,32 @@ const isPlain = (v) => v !== null && typeof v === 'object' && (Object.getPrototy
 /**
  * Keeps results small enough to be useful in a conversation:
  *  - lists longer than 200 items are cut to the first 200, with a note saying how many there were
- *    (a top-level list becomes { items, truncated }; nextPageToken fields are never touched);
+ *    (a top-level list becomes { items, truncated }; nextPageToken fields are never touched).
+ *    Only a result's own lists are cut; lists inside lists (e.g. rows of a sheet) are kept whole;
  *  - Google's `kind` labels ("drive#file") are removed. `etag` is kept: contacts_update needs it;
  *  - file data (fields named like base64Data / data / content) larger than 64 KB is replaced by its size,
- *    so big files are not pulled through chat. Open them from their Drive link instead.
+ *    so big files are not pulled through chat. Open them from their Drive link (or use the Gmail body/attachment tools) instead.
  * Anything that is not a plain object, list or string (Date, Buffer, ...) is passed through untouched.
  */
 export function compact(value) {
   const note = (len) => `Showing the first ${MAX_ITEMS} of ${len}. Narrow the search or ask for a smaller page to see the rest.`;
-  const walk = (v, key) => {
-    if (Array.isArray(v)) return (v.length > MAX_ITEMS ? v.slice(0, MAX_ITEMS) : v).map((x) => walk(x));
+  const walk = (v, key, cut = false) => {
+    if (Array.isArray(v)) return (cut && v.length > MAX_ITEMS ? v.slice(0, MAX_ITEMS) : v).map((x) => walk(x));
     if (isPlain(v)) {
       const out = {};
       for (const [k, item] of Object.entries(v)) {
         if (k === 'kind' && typeof item === 'string' && GOOGLE_KIND_RE.test(item)) continue;
-        out[k] = walk(item, k);
+        out[k] = walk(item, k, true);
         if (Array.isArray(item) && item.length > MAX_ITEMS) out[`${k}_truncated`] = note(item.length);
       }
       return out;
     }
     if (typeof v === 'string' && key && DATA_KEY_RE.test(key) && v.length > MAX_BASE64_CHARS && BASE64_RE.test(v)) {
-      return { omitted: 'data', bytes: Math.floor(v.length * 3 / 4) - (v.endsWith('==') ? 2 : v.endsWith('=') ? 1 : 0), note: 'Large file data is not sent through chat. Open the file from its Drive link (webViewLink) instead.' };
+      return { omitted: 'data', bytes: Math.floor(v.length * 3 / 4) - (v.endsWith('==') ? 2 : v.endsWith('=') ? 1 : 0), note: 'Large data is not sent through chat. For a Drive file open its link (webViewLink); for email use gmail_get_message_body or gmail_get_attachment.' };
     }
     return v;
   };
-  if (Array.isArray(value) && value.length > MAX_ITEMS) return { items: walk(value), truncated: note(value.length) };
+  if (Array.isArray(value) && value.length > MAX_ITEMS) return { items: walk(value, undefined, true), truncated: note(value.length) };
   return walk(value);
 }
 
