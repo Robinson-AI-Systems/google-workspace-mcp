@@ -54,3 +54,21 @@ To switch a connection to a different account, disconnect and reconnect it and p
 ## Notes on how the login works
 
 Claude's connector system expects your server to speak OAuth. Since this server only ever has one real user (you), the "OAuth" here is intentionally simple: a single passphrase gate rather than a full multi-user account system. Nobody without that passphrase (and access to the URL) can connect — but treat the passphrase, and the Vercel URL itself, as sensitive, since together they control your entire Workspace.
+
+## Part 5 — Let the server brand other mailboxes (optional, one time, ~15 minutes)
+
+Some Gmail settings (adding "send mail as" identities, setting a signature on a mailbox you are not signed into) are only allowed through a Google **service account** with **domain-wide delegation**: a robot identity your Workspace trusts to act as its users. This server asks for exactly two permissions for that robot, both about Gmail settings, and uses it only in `workflow_brand_mailbox` and `workspace_delegation_status`.
+
+1. Open [console.cloud.google.com](https://console.cloud.google.com/) and select the **same project** that holds this server's OAuth client (APIs & Services > Credentials shows it).
+2. **IAM & Admin > Service Accounts > Create service account.** Name it `workspace-mcp-delegate`. No roles needed. Create.
+3. Open the new service account > **Keys** > **Add key** > **Create new key** > **JSON**. A file downloads. Keep it private; it is a password.
+4. Still on the service account, copy its **Unique ID** (a long number; also called the OAuth2 client ID).
+5. Open [admin.google.com](https://admin.google.com) > **Security** > **Access and data control** > **API controls** > **Manage Domain Wide Delegation** > **Add new**. Paste the Unique ID as the Client ID. In OAuth scopes paste exactly:
+
+   `https://www.googleapis.com/auth/gmail.settings.basic,https://www.googleapis.com/auth/gmail.settings.sharing`
+
+   Authorize.
+6. In Vercel > this project > **Settings > Environment Variables**, add `GOOGLE_SERVICE_ACCOUNT_JSON` with the entire contents of the downloaded JSON file as the value (all environments). Redeploy when Vercel offers.
+7. Ask Claude to run `workspace_delegation_status` with a `testUser`. It should report `works: true`. Google can take a few minutes to apply step 5.
+
+To turn it off later: delete the environment variable, delete the key in Google Cloud, and remove the client ID from the Admin console list.

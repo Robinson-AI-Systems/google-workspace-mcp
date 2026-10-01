@@ -15,8 +15,9 @@ import * as chat from './chat.js';
 import * as extraAdminApis from './extra-admin-apis.js';
 import * as workflows from './workflows.js';
 import * as accounts from './accounts.js';
+import * as mailboxBranding from './mailbox-branding.js';
 
 export const registry = mergeNamespaces([
   gmail, drive, calendar, sheets, docs, slides, forms, tasks, people,
-  adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts
+  adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts, mailboxBranding
 ]);
