@@ -4,6 +4,13 @@ A Claude connector that gives Claude real, working control over your Google Work
 
 Built for one goal: you should be able to tell Claude what you want done in Google Workspace — in plain English — and have it actually happen, without you opening the admin console.
 
+## Roadmap and how to contribute
+
+The implementation plan lives in [`docs/plan/`](docs/plan/README.md): current
+architecture, ordered task cards with acceptance checks, the test strategy,
+and a paste-ready prompt for the implementing model (Claude Sonnet 5.5). Start
+with `docs/plan/README.md`.
+
 ## What's covered
 
 | Area | Tools | Examples |
