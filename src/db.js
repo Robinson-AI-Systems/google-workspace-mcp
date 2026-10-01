@@ -216,12 +216,12 @@ export async function createAccessToken({ accessToken, refreshToken, clientId, g
   `;
 }
 
-/** Which Google account a refresh token was issued for, so a refreshed token keeps it. */
-export async function getGoogleAccountForRefreshToken(refreshToken) {
+/** The most recent token row we issued for this refresh token, or null if we never issued it. */
+export async function getTokenByRefreshToken(refreshToken) {
   const q = db();
   if (!refreshToken) return null;
-  const rows = await q`SELECT google_account FROM oauth_tokens WHERE refresh_token = ${refreshToken} ORDER BY created_at DESC LIMIT 1`;
-  return rows[0]?.google_account || null;
+  const rows = await q`SELECT client_id, google_account FROM oauth_tokens WHERE refresh_token = ${refreshToken} ORDER BY created_at DESC LIMIT 1`;
+  return rows[0] || null;
 }
 
 export async function getAccessToken(accessToken) {
