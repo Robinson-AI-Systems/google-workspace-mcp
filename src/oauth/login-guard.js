@@ -55,7 +55,7 @@ export function lockoutKey(raw) {
 }
 
 /** Eight 16-bit numbers for a valid IPv6 string, including :: shorthand and a trailing dotted IPv4. */
-function expandIpv6(ip) {
+export function expandIpv6(ip) {
   let text = ip;
   const v4 = text.match(/^(.*:)(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
   if (v4) {
