@@ -8,9 +8,23 @@ export const tools = [
   { name: 'licensing_remove_license', description: 'Remove a license assignment from a user', inputSchema: { type: 'object', properties: { productId: { type: 'string', default: 'Google-Apps' }, skuId: { type: 'string' }, userId: { type: 'string' } }, required: ['skuId', 'userId'] } }
 ];
 
+const customerIds = new Map(); // acting account -> its real customer ID (it never changes)
+
+/** The real customer ID (C0xxxxxxx) for the account this call acts as; "my_customer" only if Google will not say. */
+export async function customerIdFor(clients) {
+  const key = clients?.actingAs || '';
+  if (customerIds.has(key)) return customerIds.get(key);
+  try {
+    const id = (await clients.admin.customers.get({ customerKey: 'my_customer' })).data?.id;
+    if (id) { customerIds.set(key, id); return id; }
+  } catch { /* fall through: the licence call itself will report a real problem */ }
+  return 'my_customer';
+}
+export const forgetCustomerIds = () => customerIds.clear(); // for tests
+
 export const handlers = {
-  licensing_list_assignments: async (args, { licensing }) => {
-    const res = await licensing.licenseAssignments.listForProductAndSku({ productId: args.productId || 'Google-Apps', skuId: args.skuId, customerId: 'my_customer' });
+  licensing_list_assignments: async (args, clients) => {
+    const res = await clients.licensing.licenseAssignments.listForProductAndSku({ productId: args.productId || 'Google-Apps', skuId: args.skuId, customerId: await customerIdFor(clients) });
     return ok(res.data.items || []);
   },
   licensing_get_assignment: async (args, { licensing }) => {

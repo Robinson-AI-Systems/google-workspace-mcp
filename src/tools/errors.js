@@ -59,6 +59,15 @@ export function explainError(err) {
       todo: 'Check GOOGLE_SERVICE_ACCOUNT_JSON and DEPLOY.md Part 5, and try again in a minute.'
     };
   }
+  if (has(/has not been used in project|accessNotConfigured|SERVICE_DISABLED|API has not been enabled|is disabled\. Enable it/i) || reasonIs(/^(accessNotConfigured|SERVICE_DISABLED)$/)) {
+    const api = message.match(/(?:^|\s)([A-Z][\w .-]*? API) has not been used/)?.[1]?.trim();
+    const url = message.match(/https:\/\/console\.(?:developers|cloud)\.google\.com\/[^\s"']+/)?.[0];
+    return {
+      what: `${api ? `The ${api}` : 'A Google API this tool needs'} is switched off for this server's Google Cloud project.`,
+      cause: 'Each Google API has to be enabled once on the Cloud project before it will answer.',
+      todo: `In Google Cloud Console > APIs & Services > Library, search for ${api ? `"${api.replace(/ API$/, '')}"` : 'the API named in the technical detail'} and press Enable${url ? ` (direct page: ${url})` : ''}. Wait a couple of minutes, then try again.`
+    };
+  }
   if (has(/Unauthorized operation for the given domain/i)) {
     return {
       what: 'Google would not run this action for this domain.',
