@@ -205,6 +205,13 @@ export function runDbContract(label, { makeDb, seedLegacy }) {
         expect(rows[0]).toMatchObject({ before: null, after: null, dry_run: true });
       });
 
+      it('can leave out previews (dry runs) so the list shows only real changes', async () => {
+        await db.recordChange({ actingAs: 'a@example.test', tool: 'real', summary: 'did it' });
+        await db.recordChange({ actingAs: 'a@example.test', tool: 'preview', summary: 'PREVIEW', dryRun: true });
+        expect((await db.listRecentChanges({ includeDryRuns: false })).map((r) => r.tool)).toEqual(['real']);
+        expect(await db.listRecentChanges({ includeDryRuns: true })).toHaveLength(2);
+      });
+
       it('filters by tool, by acting account and by time, and respects the limit', async () => {
         for (let i = 0; i < 5; i++) await db.recordChange({ actingAs: 'a@example.test', tool: 'tool_a', summary: `a${i}` });
         await db.recordChange({ actingAs: 'b@example.test', tool: 'tool_b', summary: 'b' });

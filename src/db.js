@@ -354,7 +354,7 @@ export async function recordChange({ actingAs, connection, tool, target, summary
 }
 
 /** Newest first. `since` is a date/time; omit it for "everything". */
-export async function listRecentChanges({ since, tool, actingAs, limit = 50 } = {}) {
+export async function listRecentChanges({ since, tool, actingAs, limit = 50, includeDryRuns = true } = {}) {
   const q = db();
   const n = Math.min(Math.max(Number(limit) || 50, 1), 500);
   return q`
@@ -363,6 +363,7 @@ export async function listRecentChanges({ since, tool, actingAs, limit = 50 } = 
     WHERE (${since ? new Date(since).toISOString() : null}::timestamptz IS NULL OR at >= ${since ? new Date(since).toISOString() : null}::timestamptz)
       AND (${tool || null}::text IS NULL OR tool = ${tool || null})
       AND (${actingAs ? normalizeEmail(actingAs) : null}::text IS NULL OR acting_as = ${actingAs ? normalizeEmail(actingAs) : null})
+      AND (${includeDryRuns === true}::boolean OR dry_run = false)
     ORDER BY at DESC, id DESC
     LIMIT ${n}
   `;

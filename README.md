@@ -91,6 +91,8 @@ The "workflow_*" tools are the ones worth knowing about specifically: instead of
 
 ## A few things worth knowing
 
+- **Safety on risky tools.** About 50 tools that delete, suspend, reset, sign out, change forwarding or hand out admin rights do nothing until you pass `confirm: true`, and every changing tool in that group accepts `dryRun: true` to preview exactly what would change. After a change the tool asks Google what it now holds and returns that (plus whether it could confirm), and the change goes in the change log (`workspace_recent_changes`; previews are hidden unless `includeDryRuns: true`). The full list is the table in `src/tools/guards.js`.
+
 - **Nothing here is placeholder code.** Every tool calls the real Google API method it claims to. A handful of things Google's public APIs genuinely cannot do (some settings only exist in the admin console UI) are left out rather than faked.
 - **Data Transfer API** (`datatransfer_*` tools, used by `workflow_offboard_employee`) isn't in Google's current client library, so it's implemented as a direct REST call — same effect, just built by hand instead of generated.
 - Destructive tools (delete user, delete file, revoke access, etc.) do exactly what they say — there's no confirmation step inside the tool itself. Think before calling them, the same as you would in the admin console.
