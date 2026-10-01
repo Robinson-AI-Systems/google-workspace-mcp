@@ -44,7 +44,7 @@ describe('workflow_add_staff_member', () => {
     const f = setup();
     const out = body(await run({ dryRun: true, aliases: ['dispatch@robinsonappliancerentals.com'] }, f));
     expect(out).toMatchObject({ done: false, dryRun: true });
-    expect(out.summary).toMatch(/create the account sam@.*dispatch@.*Deliveries & Service.*editor.*viewer.*2-Step/s);
+    expect(out.summary).toMatch(/create the account sam@.*dispatch@.*Deliveries & Service.*editor.*no Drive folder access.*2-Step/s);
     expect(out.before).toMatchObject({ accountExists: false, calendarRole: null, driveRole: null });
     expect(writes(f.calls)).toEqual([]);
   });
@@ -59,17 +59,19 @@ describe('workflow_add_staff_member', () => {
   });
 
   it.each([
-    ['driver', 'writer', 'reader'],
-    ['technician', 'writer', 'reader'],
+    ['driver', 'writer', null],
+    ['technician', 'writer', null],
     ['office', 'owner', 'writer'],
     ['admin', 'owner', 'writer']
   ])('%s gets calendar %s and Drive folder %s', async (role, cal, drive) => {
     const f = setup();
     const out = body(await run({ role }, f));
     expect(f.state.acl).toEqual([expect.objectContaining({ role: cal })]);
-    expect(f.state.perms).toEqual([expect.objectContaining({ role: drive, emailAddress: EMAIL })]);
+    expect(f.state.perms).toEqual(drive ? [expect.objectContaining({ role: drive, emailAddress: EMAIL })] : []);
+    if (!drive) expect(out.confirmed).toBe(true);
     expect(f.calls.find((c) => c.path === 'calendar.acl.insert').args[0]).toMatchObject({ calendarId: CAL, sendNotifications: false });
-    expect(f.calls.find((c) => c.path === 'drive.permissions.create').args[0]).toMatchObject({ fileId: FOLDER, sendNotificationEmail: false });
+    if (drive) expect(f.calls.find((c) => c.path === 'drive.permissions.create').args[0]).toMatchObject({ fileId: FOLDER, sendNotificationEmail: false });
+    else expect(f.calls.some((c) => c.path === 'drive.permissions.create')).toBe(false);
     expect(out.confirmed).toBe(true);
   });
 

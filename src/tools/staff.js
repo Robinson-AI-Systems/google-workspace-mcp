@@ -41,7 +41,7 @@ function summarize(args) {
   const parts = [`create the account ${norm(args.email)} (one-time password, must change it at first sign-in) unless it already exists`];
   if ((args.aliases || []).length) parts.push(`add the address(es) ${args.aliases.map(norm).join(', ')}`);
   parts.push(biz.calendarId ? `share "${biz.calendarName}" as ${role.calendar === 'owner' ? 'owner (make changes and manage sharing)' : 'editor (see and edit events)'}` : 'skip the calendar (none is set up for this business)');
-  parts.push(biz.driveFolderId ? `share the "${biz.driveFolderName}" folder as ${role.drive === 'writer' ? 'editor' : 'viewer'}` : 'skip the Drive folder (none is set up for this business)');
+  parts.push(!role.drive ? `give no Drive folder access (${args.role}s do not need it)` : biz.driveFolderId ? `share the "${biz.driveFolderName}" folder as ${role.drive === 'writer' ? 'editor' : 'viewer'}` : 'skip the Drive folder (none is set up for this business)');
   parts.push(args.signatureHtml || args.displayName ? 'brand the mailbox (name, signature, role addresses)' : 'leave the mailbox unbranded (no name or signature given)');
   parts.push('ask Google to require 2-Step Verification');
   if (args.emailLoginDetailsTo) parts.push(`EMAIL the login details to ${args.emailLoginDetailsTo}`);
@@ -107,6 +107,7 @@ const built = defineWrite({
     });
 
     await runStep(steps, 'share_drive_folder', async () => {
+      if (!role.drive) return { skipped: `A ${args.role} gets no Drive folder access.` };
       if (!biz.driveFolderId) return { skipped: `${biz.label} has no business Drive folder set up.` };
       if (!accountReady) return { skipped: 'The account does not exist.' };
       return { folder: biz.driveFolderName, ...(await ensureDriveAccess(drive, biz.driveFolderId, email, role.drive)) };
@@ -156,7 +157,7 @@ const built = defineWrite({
     if (!after.accountExists) return false;
     if (!(args.aliases || []).map(norm).every((a) => after.aliases.includes(a))) return false;
     if (biz.calendarId && after.calendarRole !== role.calendar) return false;
-    if (biz.driveFolderId && after.driveRole !== role.drive) return false;
+    if (biz.driveFolderId && role.drive && after.driveRole !== role.drive) return false;
     return true;
   }
 });

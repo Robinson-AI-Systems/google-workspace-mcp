@@ -71,7 +71,7 @@ const built = defineWrite({
       roleAliases: { type: 'array', items: { type: 'string' }, description: "Role addresses to add to the owner, e.g. ['support','billing','leads','no-reply']" },
       timeZone: { type: 'string', description: 'IANA name, e.g. America/Denver' },
       calendarName: { type: 'string', description: 'Optional. Default: "<businessName> Calendar".' },
-      folders: { type: 'array', items: { type: 'string' }, description: 'Optional. Replace the standard folder set (01 Business Admin ... 09 Accounting & Taxes).' },
+      folders: { type: 'array', items: { type: 'string' }, description: 'Optional. Replace the standard folder set (01 Brand Kit ... 09 Taxes & Accounting Exports).' },
       brand: {
         type: 'object', description: "Optional mailbox branding for the owner: { displayName, signatureHtml, avatarBase64Url }",
         properties: { displayName: { type: 'string' }, signatureHtml: { type: 'string' }, avatarBase64Url: { type: 'string' } }
