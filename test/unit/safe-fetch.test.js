@@ -38,6 +38,17 @@ describe('fetchLimited', () => {
     }
   });
 
+  it('never sends the token over plain http, even to the right host, including after a downgrade redirect', async () => {
+    const env = { GITHUB_TOKEN: 'fake-token-for-test' };
+    const a = scripted([() => reply(200, { body: 'x' })]);
+    await fetchLimited('http://raw.githubusercontent.com/o/r/main/f', opts({ fetchImpl: a.fetchImpl, env }));
+    expect(a.seen[0].headers.Authorization).toBeUndefined();
+    const b = scripted([() => reply(302, { headers: { location: 'http://raw.githubusercontent.com/o/r/main/g' } }), () => reply(200, { body: 'x' })]);
+    await fetchLimited('https://raw.githubusercontent.com/o/r/main/f', opts({ fetchImpl: b.fetchImpl, env }));
+    expect(b.seen[0].headers.Authorization).toBeDefined();
+    expect(b.seen[1].headers.Authorization).toBeUndefined();
+  });
+
   it('drops the token when a redirect leaves raw.githubusercontent.com', async () => {
     const env = { GITHUB_TOKEN: 'fake-token-for-test' };
     const s = scripted([
@@ -73,6 +84,11 @@ describe('fetchLimited', () => {
     await expect(fetchLimited('http://10.0.0.5/', opts({ fetchImpl: never }))).rejects.toThrow(/private/i);
     await expect(fetchLimited('http://[::1]/', opts({ fetchImpl: never }))).rejects.toThrow(/private/i);
     await expect(fetchLimited('http://sneaky.example.com/', opts({ fetchImpl: never, resolve: async () => [{ address: '192.168.1.10' }] }))).rejects.toThrow(/private/i);
+    await expect(fetchLimited('http://localhost./', opts({ fetchImpl: never }))).rejects.toThrow(/internal/i);
+    await expect(fetchLimited('http://metadata.google.internal./', opts({ fetchImpl: never }))).rejects.toThrow(/internal/i);
+    for (const odd of ['http://0x7f.1/', 'http://2130706433/', 'http://0177.0.0.1/', 'http://[::127.0.0.1]/', 'http://[64:ff9b::7f00:1]/', 'http://[2002:7f00:1::]/', 'http://[fec0::1]/', 'http://[ff02::1]/', 'http://192.0.0.192/']) {
+      await expect(fetchLimited(odd, opts({ fetchImpl: never })), odd).rejects.toThrow(/private/i);
+    }
     await expect(fetchLimited('not a url', opts({ fetchImpl: never }))).rejects.toThrow(/valid web address/i);
   });
 
@@ -96,10 +112,10 @@ describe('fetchLimited', () => {
 
 describe('isPrivateAddress', () => {
   it('flags private, loopback, link-local and mapped forms, and passes public ones', () => {
-    for (const a of ['127.0.0.1', '10.1.2.3', '172.16.0.1', '172.31.255.255', '192.168.0.1', '169.254.169.254', '0.0.0.0', '100.64.0.1', '::1', 'fd00::1', 'fe80::1', '::ffff:127.0.0.1', '::ffff:7f00:1']) {
+    for (const a of ['127.0.0.1', '10.1.2.3', '172.16.0.1', '172.31.255.255', '192.168.0.1', '169.254.169.254', '0.0.0.0', '100.64.0.1', '::1', 'fd00::1', 'fe80::1', '::ffff:127.0.0.1', '::ffff:7f00:1', '::127.0.0.1', '64:ff9b::7f00:1', '2002:7f00:1::', 'fec0::1', 'ff02::1', '192.0.0.192', '198.18.0.1']) {
       expect(isPrivateAddress(a), a).toBe(true);
     }
-    for (const a of ['93.184.216.34', '8.8.8.8', '172.32.0.1', '2606:4700::1111']) expect(isPrivateAddress(a), a).toBe(false);
+    for (const a of ['93.184.216.34', '8.8.8.8', '172.32.0.1', '2606:4700::1111', '64:ff9b::808:808', '2002:808:808::']) expect(isPrivateAddress(a), a).toBe(false);
   });
 });
 
