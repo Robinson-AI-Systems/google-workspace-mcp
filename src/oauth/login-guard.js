@@ -14,6 +14,7 @@
 // Locked-out tries are recorded too, so someone who keeps hammering stays
 // locked out; the owner just waits the 15 minutes without retrying.
 import crypto from 'node:crypto';
+import { isIP } from 'node:net';
 
 export const MAX_FAILED_LOGINS = 5;
 export const LOCKOUT_WINDOW_MINUTES = 15;
@@ -38,20 +39,34 @@ export function clientIp(req) {
  * and could otherwise pick a fresh address for every 5 guesses.
  */
 export function lockoutKey(raw) {
-  let ip = String(raw || '').trim().replace(/^\[|\]$/g, '').split('%')[0].toLowerCase();
+  let ip = String(raw || '').trim().toLowerCase();
+  const withPort = ip.match(/^\[([^\]]+)\](?::\d+)?$/); // [addr] or [addr]:port
+  if (withPort) ip = withPort[1];
+  ip = ip.split('%')[0]; // zone id
   if (!ip) return 'unknown';
-  const mapped = ip.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/);
-  if (mapped) return mapped[1];
-  if (!ip.includes(':')) return ip;
-  let head = ip;
-  let tail = '';
-  if (ip.includes('::')) [head, tail] = ip.split('::');
+  if (isIP(ip) === 4) return ip;
+  if (isIP(ip) !== 6) return ip; // not an address we understand: count it as given
+  const groups = expandIpv6(ip);
+  // IPv4-mapped (::ffff:a.b.c.d, in either spelling) is really an IPv4 client.
+  if (groups.slice(0, 5).every((g) => g === 0) && groups[5] === 0xffff) {
+    return `${groups[6] >> 8}.${groups[6] & 255}.${groups[7] >> 8}.${groups[7] & 255}`;
+  }
+  return `${groups.slice(0, 4).map((g) => g.toString(16)).join(':')}::/64`;
+}
+
+/** Eight 16-bit numbers for a valid IPv6 string, including :: shorthand and a trailing dotted IPv4. */
+function expandIpv6(ip) {
+  let text = ip;
+  const v4 = text.match(/^(.*:)(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (v4) {
+    const [, pre, a, b, c, d] = v4;
+    text = `${pre}${((+a << 8) | +b).toString(16)}:${((+c << 8) | +d).toString(16)}`;
+  }
+  const [head, tail] = text.includes('::') ? text.split('::') : [text, null];
   const left = head ? head.split(':') : [];
   const right = tail ? tail.split(':') : [];
-  if (left.length + right.length > 8 || [...left, ...right].some((g) => !/^[0-9a-f]{1,4}$/.test(g))) return ip; // not a valid address: use as given
-  const groups = ip.includes('::') ? [...left, ...Array(8 - left.length - right.length).fill('0'), ...right] : left;
-  if (groups.length !== 8) return ip;
-  return `${groups.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, '')).join(':')}::/64`;
+  const fill = tail === null ? [] : Array(8 - left.length - right.length).fill('0');
+  return [...left, ...fill, ...right].map((g) => parseInt(g, 16));
 }
 
 /**

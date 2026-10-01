@@ -110,6 +110,9 @@ describe('lockoutKey (IPv6 addresses share one bucket per /64 block)', () => {
   it('leaves IPv4 alone and unwraps IPv4-mapped IPv6', () => {
     expect(lockoutKey('203.0.113.9')).toBe('203.0.113.9');
     expect(lockoutKey('::ffff:203.0.113.9')).toBe('203.0.113.9');
+    expect(lockoutKey('::ffff:cb00:7109')).toBe('203.0.113.9'); // same address, hex spelling
+    expect(lockoutKey('0:0:0:0:0:ffff:203.0.113.9')).toBe('203.0.113.9');
+    expect(lockoutKey('::ffff:cb00:7109')).not.toBe(lockoutKey('::1')); // never collides with loopback
   });
   it('gives every address in one /64 the same key, and different blocks different keys', () => {
     const a = lockoutKey('2001:db8:abcd:12::1');
@@ -124,6 +127,9 @@ describe('lockoutKey (IPv6 addresses share one bucket per /64 block)', () => {
     expect(lockoutKey('fe80::1%eth0')).toBe('fe80:0:0:0::/64');
     expect(lockoutKey('')).toBe('unknown');
     expect(lockoutKey('not-an-ip:::')).toBe('not-an-ip:::');
+    expect(lockoutKey('1::2::3')).toBe('1::2::3'); // malformed: never merged into a real block
+    expect(lockoutKey('[2001:db8::1]:443')).toBe(lockoutKey('2001:db8::1')); // port stripped
+    expect(lockoutKey('64:ff9b::1.2.3.4')).toBe('64:ff9b:0:0::/64'); // embedded IPv4 form still bucketed
   });
   it('clientIp applies it, so switching addresses inside a block does not dodge the lockout', () => {
     const one = clientIp({ headers: { 'x-vercel-forwarded-for': '2001:db8:1:2::aaaa' } });

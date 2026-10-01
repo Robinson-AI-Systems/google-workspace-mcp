@@ -79,9 +79,9 @@ describe.skipIf(!url)('database (real Postgres)', () => {
   });
 
   describe('attempt-log housekeeping', () => {
-    it('removes that address\'s attempts older than a day when a new attempt is recorded, and nobody else\'s', async () => {
+    it('removes every attempt older than a day when a new attempt is recorded, and keeps recent ones', async () => {
       await rawQuery(`DELETE FROM login_attempts`);
-      await rawQuery(`INSERT INTO login_attempts (ip, attempted_at, success) VALUES ('7.7.7.7', now() - interval '2 days', false), ('7.7.7.7', now() - interval '2 hours', false), ('8.8.4.4', now() - interval '2 days', false)`);
+      await rawQuery(`INSERT INTO login_attempts (ip, attempted_at, success) VALUES ('7.7.7.7', now() - interval '2 days', false), ('7.7.7.7', now() - interval '2 hours', false), ('8.8.4.4', now() - interval '2 days', false), ('8.8.4.4', now() - interval '1 minute', false)`);
       await db.recordLoginAttempt('7.7.7.7');
       const rows = await rawQuery(`SELECT ip, count(*)::int AS n FROM login_attempts GROUP BY ip ORDER BY ip`);
       expect(rows).toEqual([{ ip: '7.7.7.7', n: 2 }, { ip: '8.8.4.4', n: 1 }]);
