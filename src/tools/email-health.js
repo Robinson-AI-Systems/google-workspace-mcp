@@ -26,9 +26,27 @@ async function look(fn) {
 const row = (check, status, found, fix = null) => ({ check, status, found, fix });
 const failed = (check, error) => row(check, 'WARN', `Could not look this up (${error}).`, 'Try again in a minute; DNS did not answer.');
 
-/** Rough count of the DNS lookups an SPF record causes (the limit is 10). */
+const LOOKUP_TERM = /^[+\-~?]?(include:|a(:|\/|$)|mx(:|\/|$)|ptr|exists:)/i;
+const isLookup = (t) => LOOKUP_TERM.test(t) || /^redirect=/i.test(t);
+
+/** The DNS lookups an SPF record's own terms cause (the limit is 10, counting every nested include). */
 export function spfLookupCount(spf) {
-  return String(spf).split(/\s+/).filter((t) => /^[+\-~?]?(include:|a(:|\/|$)|mx(:|\/|$)|ptr|exists:)/i.test(t) || /^redirect=/i.test(t)).length;
+  return String(spf).split(/\s+/).filter(isLookup).length;
+}
+
+/** Same, but follows each include:/redirect= through DNS so nested lookups count too. Stops early once over 10. */
+export async function spfLookupCountDeep(spf, resolveTxt, depth = 0, budget = { n: 0 }) {
+  for (const term of String(spf).split(/\s+/).filter(isLookup)) {
+    budget.n++;
+    if (budget.n > 10 || depth >= 6) return budget.n;
+    const target = /^[+\-~?]?include:(.+)$/i.exec(term)?.[1] || /^redirect=(.+)$/i.exec(term)?.[1];
+    if (!target) continue;
+    try {
+      const nested = (await resolveTxt(target)).find((t) => /^v=spf1(\s|$)/i.test(t));
+      if (nested) await spfLookupCountDeep(nested, resolveTxt, depth + 1, budget);
+    } catch { /* an include that cannot be read is not counted further */ }
+  }
+  return budget.n;
 }
 
 export function parseDmarc(record) {
@@ -47,13 +65,14 @@ export function checkMx(domain, r) {
   const hosts = r.records.map((m) => `${m.priority} ${String(m.exchange).toLowerCase().replace(/\.$/, '')}`);
   const google = r.records.some((m) => /(^|\.)(google\.com|googlemail\.com)\.?$/i.test(m.exchange));
   const fix = `Add this at your DNS host (and remove other MX records): ${domain}  MX  priority 1  smtp.google.com`;
+  if (r.records.length && r.records.every((m) => !String(m.exchange || '').replace(/\.$/, ''))) return row('MX (where mail is delivered)', 'FAIL', 'A "null MX" (0 .) says this domain receives no mail at all.', fix);
   if (!r.records.length) return row('MX (where mail is delivered)', 'FAIL', 'No MX records: nobody can email this domain.', fix);
   if (!google) return row('MX (where mail is delivered)', 'WARN', `Mail goes to ${hosts.join(', ')}, not Google.`, `If this domain's mailboxes are in Google Workspace: ${fix}`);
   if (r.records.some((m) => !/(^|\.)(google\.com|googlemail\.com)\.?$/i.test(m.exchange))) return row('MX (where mail is delivered)', 'WARN', `Google plus other hosts: ${hosts.join(', ')}.`, 'Mixed MX records make delivery unpredictable; keep only the Google ones unless this is deliberate.');
   return row('MX (where mail is delivered)', 'PASS', hosts.join(', '));
 }
 
-export function checkSpf(domain, r) {
+export function checkSpf(domain, r, lookups) {
   const name = 'SPF (who may send as this domain)';
   if (r.error) return failed(name, r.error);
   const spf = r.records.filter((t) => /^v=spf1(\s|$)/i.test(t));
@@ -62,12 +81,14 @@ export function checkSpf(domain, r) {
   if (spf.length > 1) return row(name, 'FAIL', `${spf.length} SPF records; receivers ignore all of them when there is more than one.`, `Merge them into ONE record, e.g. "v=spf1 include:_spf.google.com ~all".`);
   const rec = spf[0];
   const issues = [];
-  if (!/include:_spf\.google\.com/i.test(rec)) issues.push('does not include Google (_spf.google.com)');
+  if (!/include:_spf\.google\.com(\s|$)/i.test(rec)) issues.push('does not include Google (_spf.google.com)');
   if (/\s\+?all\s*$/.test(rec)) issues.push('ends in +all, which lets anyone send as you');
   if (/\?all\b/.test(rec)) issues.push('ends in ?all, which says nothing about unknown senders');
   if (!/[~\-?+]?all\s*$/i.test(rec) && !/redirect=/i.test(rec)) issues.push('has no ending (~all or -all)');
-  const lookups = spfLookupCount(rec);
-  if (lookups > 10) issues.push(`needs about ${lookups} DNS lookups (the limit is 10, over it SPF fails)`);
+  const afterAll = /\s[+\-~?]?all\s+\S/i.test(rec);
+  if (afterAll) issues.push('has text after the closing "all", which receivers ignore');
+  lookups = lookups ?? spfLookupCount(rec);
+  if (lookups > 10) issues.push(`needs ${lookups > 10 ? 'more than 10' : lookups} DNS lookups (the limit is 10, over it SPF fails)`);
   return issues.length ? row(name, 'WARN', `${rec}  — ${issues.join('; ')}.`, 'Edit the record: keep include:_spf.google.com, end with ~all (or -all once DMARC reports are clean), stay under 10 lookups.') : row(name, 'PASS', rec);
 }
 
@@ -75,9 +96,9 @@ export function checkResendSpf(domain, mx, txt) {
   const name = `Resend sending (send.${domain}) SPF + MX`;
   if (mx.error || txt.error) return failed(name, mx.error || txt.error);
   const spf = txt.records.find((t) => /^v=spf1/i.test(t));
-  const mxOk = mx.records.some((m) => /amazonses\.com\.?$/i.test(m.exchange));
+  const mxOk = mx.records.some((m) => /(^|\.)amazonses\.com\.?$/i.test(m.exchange));
   if (!spf && !mx.records.length) return row(name, 'INFO', 'No send. records. Only needed if you send mail through Resend.', `If you do use Resend: add exactly the MX and TXT records Resend shows for ${domain} in its dashboard (Domains > ${domain}).`);
-  if (spf && /include:amazonses\.com/i.test(spf) && mxOk) return row(name, 'PASS', `${spf}; MX ${mx.records.map((m) => m.exchange).join(', ')}`);
+  if (spf && /include:amazonses\.com(\s|$)/i.test(spf) && mxOk) return row(name, 'PASS', `${spf}; MX ${mx.records.map((m) => m.exchange).join(', ')}`);
   return row(name, 'WARN', `Partly set up: SPF ${spf ? `"${spf}"` : 'missing'}, MX ${mxOk ? 'ok' : 'missing or not Amazon SES'}.`, `Compare with the records Resend lists for ${domain} (Domains > ${domain}) and fix the missing one.`);
 }
 
@@ -101,6 +122,8 @@ export function checkDmarc(domain, r, now) {
   const p = (t.p || '').toLowerCase();
   const noReports = !t.rua;
   if (p === 'none') return row(name, 'WARN', `${rec[0]}  — policy is none: failures are only reported, not blocked.${noReports ? ' No rua= address, so no reports arrive.' : ''}`, `${noReports ? 'Add rua=mailto:<mailbox you read>. ' : ''}If the reports show only your own legitimate mail passing, change p=none to p=quarantine on or after ${dateIn(now, 14)}, then to p=reject on or after ${dateIn(now, 44)}.`);
+  const pct = t.pct === undefined ? 100 : Number(t.pct);
+  if ((p === 'quarantine' || p === 'reject') && pct < 100) return row(name, 'WARN', `${rec[0]}  — policy is ${p} but only for ${t.pct}% of failing mail.`, `Raise pct to 100 (or remove pct=) once the reports are clean.`);
   if (p === 'quarantine') return row(name, 'PASS', `${rec[0]}  — policy is quarantine.`, `Next step: if reports stay clean, move to p=reject on or after ${dateIn(now, 30)}.`);
   if (p === 'reject') return row(name, 'PASS', `${rec[0]}  — policy is reject (strongest).`);
   return row(name, 'WARN', `${rec[0]}  — no valid p= policy.`, `Set p=none (to start), p=quarantine or p=reject.`);
@@ -145,8 +168,9 @@ export async function emailHealth(domain, clients, { resolver = realResolver, no
     look(() => resolver.resolveTxt(`resend._domainkey.${d}`)),
     look(() => resolver.resolveTxt(`_dmarc.${d}`))
   ]);
+  const spfRecord = (spf.records || []).filter((t) => /^v=spf1(\s|$)/i.test(t))[0];
   const checks = [
-    checkMx(d, mx), checkSpf(d, spf), checkResendSpf(d, sendMx, sendSpf),
+    checkMx(d, mx), checkSpf(d, spf, spfRecord ? await spfLookupCountDeep(spfRecord, resolver.resolveTxt) : undefined), checkResendSpf(d, sendMx, sendSpf),
     checkDkim('google', d, dkimGoogle, { required: true }), checkDkim('resend', d, dkimResend, { required: false }),
     checkDmarc(d, dmarc, now),
     ...(await checkMailbox(d, clients))

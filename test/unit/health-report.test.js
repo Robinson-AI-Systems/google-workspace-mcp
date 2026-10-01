@@ -161,15 +161,89 @@ describe('workflow_health_report end to end', () => {
   });
 });
 
+describe('limits and edge cases', () => {
+  const base = () => {
+    const f = makeFakeClients({ actingAs: 'ops@x.test' });
+    f.when('admin.tokens.list').resolves({ data: { items: [] } });
+    f.when('admin.groups.list').resolves({ data: { groups: [] } });
+    f.when('licensing.licenseAssignments.listForProduct').resolves({ data: {} });
+    f.when('drive.files.list').resolves({ data: { files: [] } });
+    return f;
+  };
+  const opts = { delegationReady: false, now: NOW };
+  it('more than 500 users: says so, and a missing super admin is only a warning', async () => {
+    const f = base();
+    const many = Array.from({ length: 501 }, (_, i) => user(`u${i}@x.test`));
+    f.when('admin.users.list').resolves({ data: { users: many } });
+    const out = await hr.healthReport('all', f.clients, opts);
+    expect(out.report).toMatch(/Only the first 500 users were read/);
+    expect(find(out.checks, 'Super admins').status).toBe('WARN');
+  });
+  it('a second page of users that Google still has is also reported as cut short', async () => {
+    const f = base();
+    f.when('admin.users.list').resolves({ data: { users: [user('a@x.test')], nextPageToken: 'more' } });
+    expect((await hr.healthReport('all', f.clients, opts)).report).toMatch(/Only the first 500 users were read/);
+  });
+  it('groups beyond the first 100 are named as not checked, not silently passed', async () => {
+    const f = base();
+    f.when('admin.users.list').resolves({ data: { users: [user('a@x.test', { isAdmin: true })] } });
+    f.when('admin.groups.list').resolves({ data: { groups: Array.from({ length: 130 }, (_, i) => ({ email: `g${i}@x.test` })) } });
+    f.when('groupssettings.groups.get').resolves({ data: { whoCanPostMessage: 'ALL_MEMBERS_CAN_POST' } });
+    expect(find((await hr.healthReport('all', f.clients, opts)).checks, 'Groups open').found).toMatch(/30 not checked/);
+  });
+  it('one person whose apps cannot be read does not hide everyone else', async () => {
+    const f = base();
+    f.when('admin.users.list').resolves({ data: { users: [user('a@x.test', { isAdmin: true }), user('b@x.test')] } });
+    f.when('admin.tokens.list').resolves({ data: { items: [{ displayText: 'Mailer', scopes: ['https://www.googleapis.com/auth/gmail.modify'] }] } });
+    f.when('admin.tokens.list').rejects(googleError(403, 'forbidden', 'no'));
+    f.when('admin.tokens.list').resolvesOnce({ data: { items: [{ displayText: 'Mailer', scopes: ['https://www.googleapis.com/auth/gmail.modify'] }] } });
+    const r = find((await hr.healthReport('all', f.clients, opts)).checks, 'Third-party app access');
+    expect(r.status).toBe('FAIL'); // gmail.modify is whole-mailbox access
+    expect(r.found).toMatch(/Could not read the apps of 1 person/);
+  });
+  it("scope is read case-insensitively: ' ALL ' means all, '@X.test' means x.test", async () => {
+    const f = base();
+    f.when('admin.users.list').resolves({ data: { users: [user('a@x.test', { isAdmin: true })] } });
+    await hr.healthReport(' ALL ', f.clients, opts);
+    await hr.healthReport('@X.test', f.clients, opts);
+    const lists = f.calls.filter((c) => c.path === 'admin.users.list').map((c) => c.args[0]);
+    expect(lists[0]).toMatchObject({ customer: 'my_customer', domain: undefined });
+    expect(lists[1]).toMatchObject({ domain: 'x.test', customer: undefined });
+  });
+  it('a brand-new account that has not signed in yet is not called stale', () => {
+    const rows = hr.scoreUsers([user('new@x.test', { lastLoginTime: '1970-01-01T00:00:00.000Z', creationTime: '2026-09-20T00:00:00Z' }), user('old@x.test', { lastLoginTime: '1970-01-01T00:00:00.000Z', creationTime: '2025-01-01T00:00:00Z' })], NOW);
+    const found = find(rows, 'Sign-ins').found;
+    expect(found).toContain('old@x.test');
+    expect(found).not.toContain('new@x.test');
+  });
+});
+
 describe('the domain guard understands scope', () => {
-  it("scope 'all' targets no domain; a domain scope is checked against the connection's allowed domains", async () => {
-    expect(domainsTargeted({ scope: 'all' })).toEqual([]);
+  const guarded = () => applyDomainGuard({ tools: [{ name: 'workflow_health_report', description: 'd', inputSchema: { type: 'object', properties: { scope: { type: 'string' } } } }], handlers: { workflow_health_report: async () => ({ content: [{ type: 'text', text: 'ran' }] }) } });
+  const limited = { actingAs: 'ops@mine.test', allowedDomains: ['mine.test'] };
+  it('a limited connection may not use scope "all" (in any spelling) or leave scope out, unless crossDomain is true', async () => {
+    const reg = guarded();
+    for (const args of [{ scope: 'all' }, { scope: ' ALL ' }, {}, { scope: '' }]) {
+      expect((await reg.handlers.workflow_health_report(args, limited)).content[0].text, JSON.stringify(args)).toMatch(/Refused: scope "all" covers every domain/);
+    }
+    expect((await reg.handlers.workflow_health_report({ scope: 'all', crossDomain: true }, limited)).content[0].text).toBe('ran');
+  });
+  it('a connection with no limits recorded is unaffected', async () => {
+    expect((await guarded().handlers.workflow_health_report({ scope: 'all' }, { actingAs: 'x@y.test' })).content[0].text).toBe('ran');
+  });
+  it('the digest address is checked: emailTo outside the connection\'s domains is refused', async () => {
+    const reg = applyDomainGuard({ tools: [{ name: 'workflow_weekly_digest', description: 'd', inputSchema: { type: 'object', properties: { domain: { type: 'string' }, emailTo: { type: 'string' } } } }], handlers: { workflow_weekly_digest: async () => ({ content: [{ type: 'text', text: 'ran' }] }) } });
+    expect((await reg.handlers.workflow_weekly_digest({ domain: 'mine.test', emailTo: 'x@outside.test' }, limited)).content[0].text).toMatch(/Refused: x@outside\.test/);
+    expect((await reg.handlers.workflow_weekly_digest({ domain: 'mine.test', emailTo: 'boss@mine.test' }, limited)).content[0].text).toBe('ran');
+  });
+
+  it("a domain scope is checked against the connection's allowed domains", async () => {
+    expect(domainsTargeted({ scope: 'all' })).toEqual([]); // the "all" rule is enforced in applyDomainGuard, see below
     expect(domainsTargeted({ scope: 'Other.test' })).toEqual([{ arg: 'scope', value: 'other.test', domain: 'other.test' }]);
     const reg = applyDomainGuard({ tools: [{ name: 'workflow_health_report', description: 'd', inputSchema: { type: 'object', properties: { scope: { type: 'string' } } } }], handlers: { workflow_health_report: async () => ({ content: [{ type: 'text', text: 'ran' }] }) } });
     const clients = { actingAs: 'ops@mine.test', allowedDomains: ['mine.test'] };
     expect((await reg.handlers.workflow_health_report({ scope: 'other.test' }, clients)).content[0].text).toMatch(/Refused: other\.test is outside/);
     expect((await reg.handlers.workflow_health_report({ scope: 'mine.test' }, clients)).content[0].text).toBe('ran');
-    expect((await reg.handlers.workflow_health_report({ scope: 'all' }, clients)).content[0].text).toBe('ran');
   });
 });
 
@@ -220,6 +294,18 @@ describe('workflow_weekly_digest', () => {
     when('adminReports.activities.list').resolves({ data: { items: [login('login_success', 'a@x.test', '1.1.1.1')] } });
     const d = await dg.buildDigest('x.test', clients, { health: async () => ({ summary: { warn: 0 }, checks: [] }) });
     expect(d.text).toContain('Nothing needs attention');
+  });
+
+  it('keeps only the named domain: other domains\' sign-ins, admin actions and logged changes are left out', async () => {
+    const { clients, when, health } = setup();
+    when('adminReports.activities.list').resolves({ data: { items: [login('login_success', 'a@x.test', '1.1.1.1'), login('login_failure', 'z@other.test', '2.2.2.2'), login('suspicious_login', 'q@other.test', '9.9.9.9')] } });
+    await holder.db.recordChange({ actingAs: 'ops@x.test', tool: 'tool_mine', summary: 'mine' });
+    await holder.db.recordChange({ actingAs: 'ops@other.test', tool: 'tool_theirs', summary: 'theirs' });
+    const d = await dg.buildDigest('x.test', clients, { health });
+    expect(d.text).toContain('login_success 1');
+    expect(d.text).not.toMatch(/login_failure|other\.test|9\.9\.9\.9|tool_theirs/);
+    expect(d.text).toContain('tool_mine 1');
+    expect(d.needsAttention).not.toContain('1 suspicious or blocked sign-ins');
   });
 
   describe('emailing it', () => {

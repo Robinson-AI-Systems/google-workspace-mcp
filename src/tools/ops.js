@@ -5,6 +5,7 @@ import { defineWrite } from './write.js';
 import { CONSOLE_MAP, CONSOLE_HOME } from '../data/console-map.js';
 
 // ---------- P2-4: where is this setting? ----------
+const GENERIC = new Set(['email', 'mail', 'user', 'users', 'file', 'files', 'account', 'people', 'person', 'staff']); // too common to point at one page by themselves
 const STOP = new Set(['the', 'a', 'an', 'to', 'of', 'for', 'in', 'on', 'my', 'our', 'how', 'do', 'i', 'can', 'where', 'is', 'are', 'and', 'or', 'with', 'set', 'setting', 'settings', 'change', 'turn', 'find', 'what', 'it', 'up', 'google', 'workspace', 'admin', 'console']);
 const SYNONYMS = { licence: 'license', licences: 'license', licenses: 'license', emails: 'email', mails: 'mail', passwords: 'password', calendars: 'calendar', drives: 'drive', groups: 'group', users: 'user', devices: 'device', apps: 'app', rooms: 'room', 'two-factor': '2fa', mfa: '2fa', '2-step': '2sv' };
 const words = (text) => String(text || '').toLowerCase().replace(/[^a-z0-9\- ]+/g, ' ').split(/\s+/).filter(Boolean).map((w) => SYNONYMS[w] || w);
@@ -12,7 +13,9 @@ const words = (text) => String(text || '').toLowerCase().replace(/[^a-z0-9\- ]+/
 export function matchSettings(query, limit = 3) {
   const q = words(query);
   const text = ` ${q.join(' ')} `;
-  const meaningful = q.filter((w) => !STOP.has(w));
+  const nonStop = q.filter((w) => !STOP.has(w));
+  const specific = nonStop.filter((w) => !GENERIC.has(w));
+  const meaningful = specific.length ? specific : nonStop;
   if (!meaningful.length) return [];
   const scored = CONSOLE_MAP.map((entry, order) => {
     let score = 0;
@@ -20,10 +23,10 @@ export function matchSettings(query, limit = 3) {
     const titleWords = new Set(words(entry.title));
     for (const phrase of [...entry.keywords.map((k) => words(k).join(' ')), entry.id.replace(/-/g, ' ')]) {
       if (phrase.includes(' ') && text.includes(` ${phrase} `)) score += 4;       // whole multi-word phrase
-      else if (!phrase.includes(' ') && text.includes(` ${phrase} `)) score += 3; // single keyword
+      else if (!phrase.includes(' ') && !GENERIC.has(phrase) && text.includes(` ${phrase} `)) score += 3; // single keyword
     }
     for (const w of meaningful) {
-      if (keywordWords.has(w)) score += 1;
+      if (keywordWords.has(w) && !GENERIC.has(w)) score += 1;
       if (titleWords.has(w)) score += 2;
       else if (w.length >= 5 && [...titleWords, ...keywordWords].some((x) => x.length >= 5 && (x.startsWith(w) || w.startsWith(x)))) score += 1;
     }
@@ -43,7 +46,10 @@ const whereIsSetting = async (args) => {
 };
 
 // ---------- P2-1: calendar settings ----------
-const zones = () => { try { return new Set([...Intl.supportedValuesOf('timeZone'), 'UTC', 'Etc/UTC', 'GMT']); } catch { return null; } };
+// Accepts every name the runtime's time zone database knows, old and new spellings alike (Asia/Kolkata and Asia/Calcutta).
+const validZone = (name) => { try { new Intl.DateTimeFormat('en', { timeZone: name }); return typeof name === 'string' && name.trim() === name && name.length > 0; } catch { return false; } };
+const canonicalZone = (name) => { try { return new Intl.DateTimeFormat('en', { timeZone: name }).resolvedOptions().timeZone; } catch { return name; } };
+const sameZone = (a, b) => a === b || (validZone(a) && validZone(b) && canonicalZone(a) === canonicalZone(b)); // Google may store an alias of the name sent
 const CAL_FIELDS = ['summary', 'description', 'timeZone', 'location'];
 
 const calendarUpdate = defineWrite({
@@ -54,8 +60,7 @@ const calendarUpdate = defineWrite({
     const changes = CAL_FIELDS.filter((f) => args[f] !== undefined);
     if (!changes.length) throw new Error('Nothing to change: give at least one of summary, description, timeZone, location.');
     if (args.timeZone !== undefined) {
-      const known = zones();
-      if (known && !known.has(args.timeZone)) throw new Error(`"${args.timeZone}" is not a time zone name I recognise. Use an IANA name like America/Denver, America/New_York or Europe/London.`);
+      if (!validZone(args.timeZone)) throw new Error(`"${args.timeZone}" is not a time zone name I recognise. Use an IANA name like America/Denver, America/New_York or Europe/London.`);
     }
     const id = args.calendarId || 'primary';
     return { summary: `Update calendar ${id}: ${changes.map((f) => `${f} -> ${JSON.stringify(args[f])}`).join(', ')}`, target: id, readBefore: async () => pickCal((await clients.calendar.calendars.get({ calendarId: id })).data) };
@@ -65,7 +70,7 @@ const calendarUpdate = defineWrite({
     await calendar.calendars.patch({ calendarId: args.calendarId || 'primary', requestBody });
   },
   readAfter: async (args, { calendar }) => pickCal((await calendar.calendars.get({ calendarId: args.calendarId || 'primary' })).data),
-  verify: (args, _before, after) => CAL_FIELDS.every((f) => args[f] === undefined || (after?.[f] ?? '') === args[f])
+  verify: (args, _before, after) => CAL_FIELDS.every((f) => args[f] === undefined || (f === 'timeZone' ? sameZone(after?.[f], args[f]) : (after?.[f] ?? '') === args[f]))
 });
 const pickCal = (c) => ({ id: c?.id, summary: c?.summary, description: c?.description, timeZone: c?.timeZone, location: c?.location });
 
@@ -78,12 +83,23 @@ export const SKUS = {
   '1010020026': { name: 'Enterprise Standard', gemini: true },
   '1010020020': { name: 'Enterprise Plus', gemini: true },
   '1010060001': { name: 'Essentials', gemini: false },
-  '1010060003': { name: 'Essentials Starter', gemini: false },
+  '1010060003': { name: 'Enterprise Essentials', gemini: null },
+  '1010020029': { name: 'Enterprise Starter', gemini: null },
   '1010020030': { name: 'Frontline Starter', gemini: false },
   'Google-Apps-For-Business': { name: 'G Suite Basic / Business (legacy)', gemini: false },
   'Google-Apps-Unlimited': { name: 'G Suite Business (legacy)', gemini: false },
   'Google-Apps-Lite': { name: 'G Suite Lite (legacy)', gemini: false }
 };
+
+export function geminiVerdict(plans) {
+  if (!plans.length) return 'unknown (no licences found)';
+  const yes = plans.filter((p) => p.geminiIncluded === true).length;
+  const no = plans.filter((p) => p.geminiIncluded === false).length;
+  if (yes === plans.length) return 'yes';
+  if (no === plans.length) return 'not on these plans';
+  if (yes === 0) return 'unknown (plan not recognised)';
+  return 'on some plans';
+}
 
 export async function planSummary(clients, { customerId, maxPages = 20 } = {}) {
   const counts = new Map();
@@ -147,7 +163,7 @@ export const handlers = {
     const total = summary.plans.reduce((n, p) => n + p.assigned, 0);
     return ok({
       customerId, totalLicensesAssigned: total, ...summary,
-      geminiIncluded: summary.plans.length ? (summary.plans.every((p) => p.geminiIncluded === true) ? 'yes' : summary.plans.some((p) => p.geminiIncluded === true) ? 'on some plans' : 'not on these plans') : 'unknown (no licences found)',
+      geminiIncluded: geminiVerdict(summary.plans),
       note: 'Counts people holding a licence for each plan; free seats are not visible through this API (see the Admin console, Billing > Subscriptions).'
     });
   },

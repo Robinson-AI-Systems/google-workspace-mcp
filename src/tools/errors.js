@@ -59,8 +59,8 @@ export function explainError(err) {
       todo: 'Check GOOGLE_SERVICE_ACCOUNT_JSON and DEPLOY.md Part 5, and try again in a minute.'
     };
   }
-  if (has(/has not been used in project|accessNotConfigured|SERVICE_DISABLED|API has not been enabled|is disabled\. Enable it/i) || reasonIs(/^(accessNotConfigured|SERVICE_DISABLED)$/)) {
-    const api = message.match(/(?:^|\s)([A-Z][\w .-]*? API) has not been used/)?.[1]?.trim();
+  if (has(/has not been used in project|accessNotConfigured|SERVICE_DISABLED|API has not been enabled/i) || reasonIs(/^(accessNotConfigured|SERVICE_DISABLED)$/)) {
+    const api = message.match(/([^]*?\bAPI) has not been used/)?.[1]?.split(/[.:]\s+/).pop().trim();
     const url = message.match(/https:\/\/console\.(?:developers|cloud)\.google\.com\/[^\s"']+/)?.[0];
     return {
       what: `${api ? `The ${api}` : 'A Google API this tool needs'} is switched off for this server's Google Cloud project.`,

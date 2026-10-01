@@ -11,7 +11,7 @@ import { buildDelegatedAuth, isDelegationConfigured } from '../auth/service-acco
 
 const DAY = 86400000;
 const BASIC_SCOPES = new Set(['openid', 'email', 'profile', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']);
-const FULL_ACCESS = /^https:\/\/mail\.google\.com\/?$|\/auth\/admin\.|\/auth\/drive$|\/auth\/cloud-platform$/;
+const FULL_ACCESS = /^https:\/\/mail\.google\.com\/?$|\/auth\/gmail\.modify$|\/auth\/admin\.|\/auth\/drive$|\/auth\/cloud-platform$/;
 export const MAX_USERS = 500;       // users read
 export const MAX_DEEP_CHECKS = 100; // users checked one by one (apps, forwarding)
 export const STALE_DAYS = 90;
@@ -20,7 +20,7 @@ const item = (check, status, found, fix = null) => ({ check, status, found, fix 
 const list = (names, n = 8) => names.slice(0, n).join(', ') + (names.length > n ? ` and ${names.length - n} more` : '');
 
 // ---------- scoring rules (pure; unit tested) ----------
-export function scoreUsers(users, now = Date.now()) {
+export function scoreUsers(users, now = Date.now(), { partial = false } = {}) {
   const active = users.filter((u) => !u.suspended && !u.archived);
   const out = [];
   const no2sv = active.filter((u) => !u.isEnrolledIn2Sv);
@@ -32,7 +32,7 @@ export function scoreUsers(users, now = Date.now()) {
   out.push(notEnforced.length ? item('2-Step enforcement', 'WARN', `Not enforced for ${notEnforced.length} of ${active.length} active people.`, 'Once everyone is enrolled, set enforcement for the top org unit (admin_set_2sv_enforcement or Security > 2-step verification).') : item('2-Step enforcement', 'PASS', 'Enforced for everyone active.'));
 
   const admins = active.filter((u) => u.isAdmin);
-  out.push(admins.length === 0 ? item('Super admins', 'FAIL', 'No active super admin found.', 'Make sure at least two trusted people are super admins.')
+  out.push(admins.length === 0 ? (partial ? item('Super admins', 'WARN', 'None among the first people read (the list was cut short, so this may be wrong).', 'Run the report for one domain at a time.') : item('Super admins', 'FAIL', 'No active super admin found.', 'Make sure at least two trusted people are super admins.'))
     : admins.length === 1 ? item('Super admins', 'WARN', `Only one: ${admins[0].primaryEmail}. If that account is locked out, nobody can fix things.`, 'Add a second super admin with their own 2-Step Verification.')
       : admins.length > 4 ? item('Super admins', 'WARN', `${admins.length} super admins: ${list(admins.map((u) => u.primaryEmail))}.`, 'Keep it to 2 to 4; give everyone else a narrower admin role.')
         : item('Super admins', 'PASS', list(admins.map((u) => u.primaryEmail))));
@@ -41,7 +41,7 @@ export function scoreUsers(users, now = Date.now()) {
   out.push(noRecovery.length ? item('Recovery email or phone', 'WARN', `${noRecovery.length} without either: ${list(noRecovery.map((u) => u.primaryEmail))}.`, 'Set a recovery email or phone (admin_update_user) so a locked-out person can get back in.') : item('Recovery email or phone', 'PASS', 'Everyone active has one.'));
 
   const cutoff = now - STALE_DAYS * DAY;
-  const stale = active.filter((u) => { const t = Date.parse(u.lastLoginTime); return !t || t < Date.parse('1971-01-01') || t < cutoff; });
+  const stale = active.filter((u) => { const t = Date.parse(u.lastLoginTime); const created = Date.parse(u.creationTime); if (created && created > cutoff) return false; return !t || t < Date.parse('1971-01-01') || t < cutoff; }); // a new account has had no time to go stale
   out.push(stale.length ? item(`Sign-ins in the last ${STALE_DAYS} days`, 'WARN', `${stale.length} active accounts have not signed in: ${list(stale.map((u) => u.primaryEmail))}.`, 'Suspend or delete accounts nobody uses (they cost a licence and are an easy way in).') : item(`Sign-ins in the last ${STALE_DAYS} days`, 'PASS', 'Everyone active has signed in recently.'));
 
   const suspended = users.filter((u) => u.suspended);
@@ -78,12 +78,13 @@ export function scoreForwarding(byUser, workspaceDomains, skipped = 0) {
     outside.length ? 'Mail leaving the company is a classic sign of a taken-over account. Confirm each is intended; if not, turn it off with gmail_update_forwarding_settings and reset that password.' : 'Make sure each is intended.');
 }
 
-export function scoreGroups(settingsByGroup) {
+export function scoreGroups(settingsByGroup, notChecked = 0) {
+  const tail = notChecked ? ` (only the first ${Object.keys(settingsByGroup).length} groups were checked; ${notChecked} not checked)` : '';
   const open = Object.entries(settingsByGroup).filter(([, s]) => s?.whoCanPostMessage === 'ANYONE_CAN_POST');
   const external = Object.entries(settingsByGroup).filter(([, s]) => String(s?.allowExternalMembers) === 'true');
   const names = (rows) => list(rows.map(([g]) => g));
-  if (!open.length && !external.length) return item('Groups open to outsiders', 'PASS', 'No group accepts posts from anyone or has outside members.');
-  return item('Groups open to outsiders', 'WARN', `${open.length ? `Anyone on the internet can post to: ${names(open)}. ` : ''}${external.length ? `Outside members allowed in: ${names(external)}.` : ''}`.trim(),
+  if (!open.length && !external.length) return item('Groups open to outsiders', 'PASS', `No group accepts posts from anyone or has outside members${tail}.`);
+  return item('Groups open to outsiders', 'WARN', `${open.length ? `Anyone on the internet can post to: ${names(open)}. ` : ''}${external.length ? `Outside members allowed in: ${names(external)}.` : ''}${tail}`.trim(),
     'Fine for a public inbox like support@ (but expect spam). For anything else: admin_update_group_settings, set whoCanPostMessage to ALL_IN_DOMAIN_CAN_POST.');
 }
 
@@ -116,6 +117,7 @@ async function allPages(fn, key, { pages = 10 } = {}) {
     pageToken = res.data.nextPageToken;
     if (!pageToken) break;
   }
+  rows.more = Boolean(pageToken); // true when Google had still more pages than we read
   return rows;
 }
 
@@ -131,23 +133,30 @@ const unavailable = (check, err) => item(check, 'WARN', `Could not check: ${trou
 const realGmailFor = (email) => google.gmail({ version: 'v1', auth: buildDelegatedAuth(email) });
 
 export async function healthReport(scope, clients, { gmailFor = realGmailFor, delegationReady = isDelegationConfigured(), now = Date.now() } = {}) {
-  const domain = scope && scope !== 'all' ? String(scope).trim().toLowerCase() : null;
+  const wanted = String(scope || 'all').trim().toLowerCase().replace(/^@/, '');
+  const domain = wanted && wanted !== 'all' ? wanted : null;
   const results = [];
   const note = [];
 
-  const rawUsers = await allPages((pageToken) => clients.admin.users.list({ domain: domain || undefined, customer: domain ? undefined : 'my_customer', maxResults: 500, pageToken, projection: 'full', fields: 'nextPageToken,users(primaryEmail,isAdmin,isEnrolledIn2Sv,isEnforcedIn2Sv,suspended,archived,lastLoginTime,recoveryEmail,recoveryPhone,orgUnitPath)' }), 'users', { pages: Math.ceil(MAX_USERS / 500) });
+  const rawUsers = await allPages((pageToken) => clients.admin.users.list({ domain: domain || undefined, customer: domain ? undefined : 'my_customer', maxResults: 500, pageToken, projection: 'full', fields: 'nextPageToken,users(primaryEmail,creationTime,isAdmin,isEnrolledIn2Sv,isEnforcedIn2Sv,suspended,archived,lastLoginTime,recoveryEmail,recoveryPhone,orgUnitPath)' }), 'users', { pages: Math.ceil(MAX_USERS / 500) + 1 });
   const users = rawUsers.slice(0, MAX_USERS);
+  const partial = rawUsers.length > MAX_USERS || rawUsers.more;
   if (!users.length) return { scope: domain || 'all', summary: { pass: 0, warn: 0, fail: 0, info: 0 }, checks: [item('Users', 'WARN', 'Google returned no users for this scope.', 'Check the domain name, and that this account is an admin.')], report: 'No users found.' };
-  if (rawUsers.length > MAX_USERS) note.push(`Only the first ${MAX_USERS} users were read.`);
-  results.push(...scoreUsers(users, now));
+  if (partial) note.push(`Only the first ${MAX_USERS} users were read; run the report for one domain at a time to cover the rest.`);
+  results.push(...scoreUsers(users, now, { partial }));
 
   const active = users.filter((u) => !u.suspended && !u.archived);
   const deep = active.slice(0, MAX_DEEP_CHECKS);
   const skipped = active.length - deep.length;
 
   try {
-    const apps = await inBatches(deep, 5, async (u) => [u.primaryEmail, (await clients.admin.tokens.list({ userKey: u.primaryEmail, fields: 'items(displayText,clientId,scopes)' })).data.items || []]);
-    results.push(scoreApps(Object.fromEntries(apps), skipped));
+    const apps = await inBatches(deep, 5, async (u) => { try { return [u.primaryEmail, (await clients.admin.tokens.list({ userKey: u.primaryEmail, fields: 'items(displayText,clientId,scopes)' })).data.items || []]; } catch (err) { return [u.primaryEmail, { error: trouble(err) }]; } });
+    const readable = apps.filter(([, a]) => Array.isArray(a));
+    const broken = apps.filter(([, a]) => !Array.isArray(a));
+    if (broken.length === apps.length) throw new Error(broken[0][1].error);
+    const r = scoreApps(Object.fromEntries(readable), skipped);
+    if (broken.length) r.found += ` Could not read the apps of ${broken.length} ${broken.length === 1 ? 'person' : 'people'}: ${list(broken.map(([u]) => u), 3)}.`;
+    results.push(r);
   } catch (err) { results.push(unavailable('Third-party app access', err)); }
 
   if (!delegationReady) {
@@ -164,9 +173,9 @@ export async function healthReport(scope, clients, { gmailFor = realGmailFor, de
   }
 
   try {
-    const groups = await allPages((pageToken) => clients.admin.groups.list({ domain: domain || undefined, customer: domain ? undefined : 'my_customer', maxResults: 200, pageToken, fields: 'nextPageToken,groups(email)' }), 'groups', { pages: 1 });
+    const groups = await allPages((pageToken) => clients.admin.groups.list({ domain: domain || undefined, customer: domain ? undefined : 'my_customer', maxResults: 200, pageToken, fields: 'nextPageToken,groups(email)' }), 'groups', { pages: 2 });
     const settings = await inBatches(groups.slice(0, MAX_DEEP_CHECKS), 5, async (g) => [g.email, (await clients.groupssettings.groups.get({ groupUniqueId: g.email })).data]);
-    results.push(scoreGroups(Object.fromEntries(settings)));
+    results.push(scoreGroups(Object.fromEntries(settings), Math.max(groups.length - MAX_DEEP_CHECKS, 0) + (groups.more ? 1 : 0)));
   } catch (err) { results.push(unavailable('Groups open to outsiders', err)); }
 
   try {

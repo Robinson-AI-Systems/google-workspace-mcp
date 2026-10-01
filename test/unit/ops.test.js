@@ -8,7 +8,7 @@ vi.mock('../../src/db.js', async (importActual) => {
   const real = await importActual();
   return Object.fromEntries(Object.keys(real).map((name) => [name, (...args) => holder.db[name](...args)]));
 });
-const { handlers, matchSettings, planSummary, checkVerification } = await import('../../src/tools/ops.js');
+const { handlers, matchSettings, planSummary, checkVerification, geminiVerdict } = await import('../../src/tools/ops.js');
 const { CONSOLE_MAP } = await import('../../src/data/console-map.js');
 const licensing = await import('../../src/tools/licensing.js');
 
@@ -48,6 +48,65 @@ describe('calendar_update_calendar', () => {
     const { clients, calls } = setup();
     await handlers.calendar_update_calendar({ timeZone: 'America/Denver', dryRun: true }, clients);
     expect(calls.some((c) => c.path === 'calendar.calendars.patch')).toBe(false);
+  });
+});
+
+describe('calendar time zones', () => {
+  it('accepts current and older spellings of real zones, rejects made-up ones', async () => {
+    for (const zone of ['Asia/Kolkata', 'Asia/Calcutta', 'Europe/Kyiv', 'Europe/Kiev', 'America/Argentina/Buenos_Aires', 'Asia/Ho_Chi_Minh', 'Pacific/Kanton', 'Etc/GMT+5', 'US/Mountain', 'UTC']) {
+      const f = makeFakeClients();
+      f.when('calendar.calendars.get').resolves({ data: { id: 'primary', timeZone: zone } });
+      expect(body(await handlers.calendar_update_calendar({ timeZone: zone, dryRun: true }, f.clients)).dryRun, zone).toBe(true);
+    }
+    for (const zone of ['Mountain Time', ' America/Denver', 'America/Denverr', '']) {
+      await expect(handlers.calendar_update_calendar({ timeZone: zone }, makeFakeClients().clients), JSON.stringify(zone)).rejects.toThrow();
+    }
+  });
+  it('is confirmed when Google stores an alias of the zone that was sent', async () => {
+    const f = makeFakeClients();
+    f.when('calendar.calendars.get').resolvesOnce({ data: { id: 'primary', timeZone: 'America/Denver' } });
+    f.when('calendar.calendars.get').resolves({ data: { id: 'primary', timeZone: 'Asia/Calcutta' } });
+    expect(body(await handlers.calendar_update_calendar({ timeZone: 'Asia/Kolkata' }, f.clients)).confirmed).toBe(true);
+  });
+  it('clearing the description to empty is allowed and confirmed', async () => {
+    const f = makeFakeClients();
+    f.when('calendar.calendars.get').resolvesOnce({ data: { id: 'primary', description: 'old' } });
+    f.when('calendar.calendars.get').resolves({ data: { id: 'primary' } });
+    const out = body(await handlers.calendar_update_calendar({ description: '' }, f.clients));
+    expect(f.calls.find((c) => c.path === 'calendar.calendars.patch').args[0].requestBody).toEqual({ description: '' });
+    expect(out.confirmed).toBe(true);
+  });
+});
+
+describe('Gemini verdict', () => {
+  it('only claims what it knows', () => {
+    expect(geminiVerdict([])).toMatch(/unknown/);
+    expect(geminiVerdict([{ geminiIncluded: true }])).toBe('yes');
+    expect(geminiVerdict([{ geminiIncluded: false }])).toBe('not on these plans');
+    expect(geminiVerdict([{ geminiIncluded: null }])).toMatch(/unknown/);
+    expect(geminiVerdict([{ geminiIncluded: true }, { geminiIncluded: null }])).toBe('on some plans');
+  });
+});
+
+describe('workspace_where_is_setting: questions people actually ask', () => {
+  const top = (q) => matchSettings(q)[0]?.id;
+  it('lands on the right page', () => {
+    expect(top('stop people sharing files externally')).toBe('drive-sharing');
+    expect(top('forward email')).toBe('email-forwarding');
+    expect(top('email forwarding')).toBe('email-forwarding');
+    expect(top('who is admin')).toBe('admin-roles');
+    expect(top('out of office')).toBe('out-of-office');
+    expect(top('vacation responder')).toBe('out-of-office');
+    expect(top('signature')).toBe('signature');
+    expect(top('set up SPF')).toBe('spf-dmarc');
+    expect(top('set up DMARC')).toBe('spf-dmarc');
+    expect(top('reset a user password')).toBe('password-policy');
+    expect(top('email allowlist')).toBe('gmail-spam');
+  });
+  it('the old email-allowlist entry is merged into the spam page, not duplicated', () => {
+    expect(CONSOLE_MAP.filter((e) => /allowlist/.test(e.title) && /spam|allow/.test(e.id)).length).toBeLessThanOrEqual(2);
+    expect(CONSOLE_MAP.some((e) => e.id === 'email-allowlist')).toBe(false);
+    expect(JSON.stringify(CONSOLE_MAP)).not.toMatch(/Chris/);
   });
 });
 
@@ -125,7 +184,7 @@ describe('licensing: real customer ID and the plan summary', () => {
     when('licensing.licenseAssignments.listForProduct').resolves({ data: { items: [{ skuId: '999' }, { skuId: '1010060001' }] } });
     const out = body(await handlers.workspace_plan_summary({}, clients));
     expect(out.plans.find((p) => p.skuId === '999')).toMatchObject({ plan: 'Unrecognised plan (999)', geminiIncluded: null });
-    expect(out.geminiIncluded).toBe('not on these plans');
+    expect(out.geminiIncluded).toBe('unknown (plan not recognised)');
   });
   it('follows every page of assignments', async () => {
     const { clients, when } = makeFakeClients();
@@ -139,6 +198,11 @@ describe('licensing: real customer ID and the plan summary', () => {
     expect(e.what).toMatch(/Enterprise License Manager API/);
     expect(e.todo).toContain('Enterprise License Manager');
     expect(e.todo).toContain('https://console.developers.google.com/apis/api/licensing.googleapis.com');
+  });
+  it('only the API name is taken from the message, not a sentence in front of it; and other "disabled" text is left alone', () => {
+    const e = explainError(googleError(403, 'accessNotConfigured', 'Request failed. Admin SDK API has not been used in project 1 before or it is disabled.'));
+    expect(e.what).toMatch(/The Admin SDK API is switched off/);
+    expect(explainError(googleError(403, 'forbidden', 'The calendar is disabled. Enable it in settings.')).what).toMatch(/not allowed/);
   });
   it('a plain permission error is still not mistaken for a switched-off API', () => {
     expect(explainError(googleError(403, 'forbidden', 'Not Authorized to access this resource/api')).what).toMatch(/not allowed/);

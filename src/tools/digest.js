@@ -5,6 +5,7 @@ import { ok } from './util.js';
 import { emailHealth } from './email-health.js';
 import { recordChange } from '../changelog.js';
 import { listRecentChanges } from '../db.js';
+import { domainOfEmail } from '../domains.js';
 
 const DAY = 86400000;
 const DEFAULT_LABELS = ['Leads', 'Support', 'Billing'];
@@ -22,6 +23,8 @@ async function activities(clients, applicationName, startTime) {
   }
   return { rows, more: Boolean(pageToken) };
 }
+/** Reports are domain-wide; keep only what the named domain's own people did. */
+const ofDomain = (rows, domain) => rows.filter((r) => domainOfEmail(r.actor?.email) === domain);
 const eventNames = (rows) => rows.flatMap((r) => (r.events || []).map((e) => e.name));
 
 export async function buildDigest(domain, clients, { now = Date.now(), labels = DEFAULT_LABELS, health = emailHealth } = {}) {
@@ -30,7 +33,9 @@ export async function buildDigest(domain, clients, { now = Date.now(), labels = 
   const problems = [];
 
   try {
-    const [login, admin] = await Promise.all([activities(clients, 'login', since), activities(clients, 'admin', since)]);
+    const [loginAll, adminAll] = await Promise.all([activities(clients, 'login', since), activities(clients, 'admin', since)]);
+    const login = { ...loginAll, rows: ofDomain(loginAll.rows, domain) };
+    const admin = { ...adminAll, rows: ofDomain(adminAll.rows, domain) };
     const logins = tally(eventNames(login.rows));
     const suspicious = login.rows.filter((r) => (r.events || []).some((e) => /suspicious|blocked/i.test(e.name)));
     const adminActions = tally(eventNames(admin.rows));
@@ -43,7 +48,7 @@ export async function buildDigest(domain, clients, { now = Date.now(), labels = 
   } catch (err) { sections.push({ title: 'Sign-ins and admin actions', lines: [`Could not read the Reports: ${trouble(err)}`] }); problems.push('Admin Reports unavailable'); }
 
   try {
-    const rows = await listRecentChanges({ since, includeDryRuns: false, limit: 200 });
+    const rows = (await listRecentChanges({ since, includeDryRuns: false, limit: 500 })).filter((r) => domainOfEmail(r.acting_as) === domain);
     sections.push({ title: 'Changes made through this server', lines: rows.length
       ? [`${rows.length} changes: ${tally(rows.map((r) => r.tool)).slice(0, 8).map(([n, c]) => `${n} ${c}`).join(', ')}.`, ...rows.slice(0, 10).map((r) => `- ${new Date(r.at).toISOString().slice(0, 10)} ${r.acting_as || ''}: ${r.summary || r.tool}`)]
       : ['None.'] });

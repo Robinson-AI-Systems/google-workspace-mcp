@@ -9,7 +9,7 @@
 import { ok } from './util.js';
 import { domainOfEmail } from '../domains.js';
 
-const EMAIL_ARGS = ['userKey', 'userId', 'primaryEmail', 'email', 'groupKey', 'groupEmail', 'memberEmail', 'alias', 'userEmail', 'fromUserId', 'toUserId', 'managerEmail', 'transferDriveAndCalendarTo', 'assignedToUserKey', 'recoveryEmail'];
+const EMAIL_ARGS = ['emailTo', 'userKey', 'userId', 'primaryEmail', 'email', 'groupKey', 'groupEmail', 'memberEmail', 'alias', 'userEmail', 'fromUserId', 'toUserId', 'managerEmail', 'transferDriveAndCalendarTo', 'assignedToUserKey', 'recoveryEmail'];
 const EMAIL_LIST_ARGS = ['groupEmails', 'aliases', 'accountEmails'];
 const DOMAIN_ARGS = ['domainName', 'domainAliasName', 'parentDomainName', 'domain', 'scope']; // scope: a domain, or the word "all" (which targets no domain)
 const TOOL_FAMILY = /^(admin|licensing|datatransfer|workflow|identity|reports|vault)_/;
@@ -49,6 +49,9 @@ export function applyDomainGuard(registry) {
     registry.handlers[tool.name] = async (args = {}, clients) => {
       const { crossDomain, ...rest } = args;
       if (crossDomain !== true && Array.isArray(clients?.allowedDomains)) {
+        if ('scope' in props && (!String(rest.scope ?? '').trim() || clean(rest.scope) === 'all')) {
+          return ok(`Refused: scope "all" covers every domain in the Workspace, but this connection acts as ${clients.actingAs}, which is limited to ${clients.allowedDomains.join(', ')}. Nothing was read. Give one of those domains as the scope, or run it again with crossDomain: true (ask the person first).`);
+        }
         const bad = outsideDomains(rest, clients.allowedDomains);
         if (bad.length) return ok(refusal(bad, clients));
       }
