@@ -3,6 +3,7 @@
 // between calls -- your Google login tokens, and the connector's own OAuth
 // state -- lives in Postgres (Neon) instead.
 import { neon } from '@neondatabase/serverless';
+import { loadKey, encryptJson, decryptJson } from './crypto.js';
 
 let sql;
 function db() {
@@ -86,6 +87,10 @@ export async function initSchema() {
   `;
   await q`CREATE INDEX IF NOT EXISTS login_attempts_ip_time ON login_attempts (ip, attempted_at)`;
   await q`CREATE INDEX IF NOT EXISTS login_attempts_time ON login_attempts (attempted_at)`;
+  // Encrypted copy of google_accounts.tokens (see src/crypto.js). The plaintext
+  // column stays in step until a later cleanup removes it, so older code that
+  // only knows `tokens` keeps working during a deploy.
+  await q`ALTER TABLE google_accounts ADD COLUMN IF NOT EXISTS tokens_enc TEXT`;
 }
 
 // ---------- Google accounts (one row per mailbox the server can act as) ----------
@@ -111,10 +116,45 @@ export async function getDefaultGoogleAccount() {
   return rows[0]?.email || null;
 }
 
+// Same content regardless of key order, so two copies of the same tokens compare equal.
+function canonical(value) {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+  if (value && typeof value === 'object') return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;
+  return JSON.stringify(value);
+}
+
 export async function getGoogleTokensFor(email) {
   const q = db();
-  const rows = await q`SELECT tokens FROM google_accounts WHERE email = ${normalizeEmail(email)}`;
-  return rows[0]?.tokens || null;
+  const e = normalizeEmail(email);
+  const rows = await q`SELECT tokens, tokens_enc FROM google_accounts WHERE email = ${e}`;
+  if (!rows[0]) return null;
+  const { tokens, tokens_enc } = rows[0];
+  if (!tokens) return null;
+  const key = loadKey();
+  if (!key) return tokens;
+  // The plain copy is always written by every version of the code, so it is the authority. The encrypted
+  // copy is used only when it says exactly the same thing; a stale, damaged or wrong-key copy (older code
+  // saved a refresh without knowing about it, or the key was changed) is replaced from the plain copy.
+  if (tokens_enc) {
+    try {
+      const decrypted = decryptJson(tokens_enc, key);
+      if (canonical(decrypted) === canonical(tokens)) return decrypted;
+    } catch {
+      console.warn('[crypto] Could not decrypt the stored tokens for an account; using the plain copy and re-encrypting it. If this repeats, check TOKEN_ENCRYPTION_KEY.');
+    }
+  }
+  await storeEncryptedCopy(q, e, tokens, key); // first read after turning encryption on, or healing a stale/damaged copy
+  return tokens;
+}
+
+/** Write the encrypted copy, but only if the plain copy is still the one we encrypted (a newer save writes its own). */
+async function storeEncryptedCopy(q, email, tokens, key) {
+  try {
+    const enc = encryptJson(tokens, key);
+    await q`UPDATE google_accounts SET tokens_enc = ${enc} WHERE email = ${email} AND tokens = ${JSON.stringify(tokens)}::jsonb`;
+  } catch {
+    console.warn('[crypto] Could not store the encrypted copy of an account\'s tokens; the plain copy is still correct.');
+  }
 }
 
 /**
@@ -127,14 +167,19 @@ export async function saveGoogleTokensFor(email, tokens, { label } = {}) {
   const e = normalizeEmail(email);
   const count = await q`SELECT count(*)::int AS n FROM google_accounts`;
   const makeDefault = count[0].n === 0; // the first account ever added is the default
-  await q`
+  const rows = await q`
     INSERT INTO google_accounts (email, label, tokens, is_default, updated_at)
     VALUES (${e}, ${label || null}, ${JSON.stringify(tokens)}::jsonb, ${makeDefault}, now())
     ON CONFLICT (email) DO UPDATE SET
       tokens = google_accounts.tokens || EXCLUDED.tokens,
+      tokens_enc = NULL,
       label = COALESCE(EXCLUDED.label, google_accounts.label),
       updated_at = now()
+    RETURNING tokens
   `;
+  // The upsert above cleared the encrypted copy, so a failure below only means "not encrypted yet", never "stale".
+  const key = loadKey();
+  if (key) await storeEncryptedCopy(q, e, rows[0].tokens, key);
 }
 
 export async function setDefaultGoogleAccount(email) {
