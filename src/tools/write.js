@@ -85,7 +85,7 @@ export function defineWrite({ name, description, inputSchema, destructive = fals
     if (after && after.exists === true) confirmed = false; // asked for a deleted thing and Google still has it
     let mismatch = false;
     if (confirmed === true && verify) {
-      try { mismatch = verify(callArgs, before, after, details) === false; } catch { mismatch = false; }
+      try { mismatch = verify(callArgs, before, after, details) === false; } catch { mismatch = true; } // a check that cannot run is not a pass
       if (mismatch) confirmed = false;                       // Google answered, but not with what was asked for
     }
     const logged = await recordChange(clients, { tool: name, target: p.target, summary: p.summary + (confirmed === false ? (mismatch ? ' (asked, but Google does not show the requested result)' : ' (changed, but could not confirm it by reading it back)') : ''), before, after });

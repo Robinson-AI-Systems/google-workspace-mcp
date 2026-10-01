@@ -14,8 +14,12 @@ const data = async (promise) => (await promise).data;
 const orgPath = (p) => String(p || '').replace(/^\//, '');
 
 const D = true; // destructive
+// Google leaves out a field that is false, so compare true/false loosely but everything else exactly.
+const same = (got, wanted) => (typeof wanted === 'boolean' ? !!got === wanted : got === wanted);
 const SCALARS = new Set(['string', 'boolean', 'number']);
-const RISKY_USER_FIELDS = new Set(['suspended', 'password', 'archived', 'isAdmin', 'isDelegatedAdmin', 'changePasswordAtNextLogin', 'hashFunction']);
+// Only these profile details can be changed in a general update without confirm. Anything else (login name, recovery email/phone,
+// suspension, password, admin rights, org unit, ...) is treated as risky and needs confirm: true.
+const SAFE_USER_FIELDS = new Set(['name', 'phones', 'addresses', 'organizations', 'relations', 'externalIds', 'locations', 'gender', 'websites', 'notes', 'customSchemas', 'includeInGlobalAddressList', 'keywords', 'languages']);
 const DELETING_REQUEST = (requests) => (Array.isArray(requests) ? requests : []).some((r) => Object.keys(r || {}).some((k) => /^delete/i.test(k)));
 
 // name -> { destructive, describe(args), before(args, clients), after(args, clients, details) }
@@ -25,7 +29,7 @@ export const GUARDS = {
     describe: (a) => ({ target: a.userKey, summary: `PERMANENTLY delete the Workspace user ${a.userKey} (their data goes with them after 20 days)` }),
     before: (a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,name/fullName,suspended,isAdmin,orgUnitPath,lastLoginTime' })),
     after: gone((a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail' }))) },
-  admin_suspend_user: { destructive: D, verify: (a, b, after) => after?.suspended === true,
+  admin_suspend_user: { destructive: D, verify: (a, b, after) => !!after?.suspended === true,
     describe: (a) => ({ target: a.userKey, summary: `Suspend ${a.userKey}: they cannot sign in until unsuspended` }),
     before: (a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,suspended,lastLoginTime' })),
     after: (a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,suspended' })) },
@@ -37,14 +41,14 @@ export const GUARDS = {
     describe: (a) => ({ target: a.userKey, summary: `Sign ${a.userKey} out of every device and session` }),
     before: (a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,lastLoginTime' })),
     after: async () => ({ note: 'Google does not report open sessions; the sign-out request was accepted.' }) },
-  admin_make_super_admin: { destructive: D, verify: (a, b, after) => after?.isAdmin === !!a.isAdmin,
+  admin_make_super_admin: { destructive: D, verify: (a, b, after) => !!after?.isAdmin === !!a.isAdmin,
     describe: (a) => ({ target: a.userKey, summary: `${a.isAdmin ? 'GRANT' : 'REMOVE'} super admin ${a.isAdmin ? 'to' : 'from'} ${a.userKey}` }),
     before: (a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,isAdmin' })),
     after: (a, { admin }) => data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,isAdmin' })) },
   admin_update_user: { destructive: false,
     // Suspending, resetting a password, archiving or changing admin rights through a general update is the same as using the dedicated tool, so it needs the same confirm.
-    confirmWhen: (a) => Object.keys(a.updates || {}).some((k) => RISKY_USER_FIELDS.has(k)),
-    verify: (a, before, after) => Object.entries(a.updates || {}).every(([k, v]) => !SCALARS.has(typeof v) || k === 'password' || after?.[k] === v),
+    confirmWhen: (a) => Object.keys(a.updates || {}).some((k) => !SAFE_USER_FIELDS.has(k)),
+    verify: (a, before, after) => Object.entries(a.updates || {}).every(([k, v]) => !SCALARS.has(typeof v) || k === 'password' || same(after?.[k], v)),
     describe: (a) => ({ target: a.userKey, summary: `Update ${a.userKey}: ${Object.keys(a.updates || {}).join(', ') || 'nothing given'}` }),
     before: async (a, { admin }) => pick(await data(admin.users.get({ userKey: a.userKey, projection: 'full' })), Object.keys(a.updates || {}).filter((k) => k !== 'password')),
     after: async (a, { admin }) => pick(await data(admin.users.get({ userKey: a.userKey, projection: 'full' })), Object.keys(a.updates || {}).filter((k) => k !== 'password')) },
@@ -136,7 +140,7 @@ export const GUARDS = {
     after: gone((a, { licensing }) => data(licensing.licenseAssignments.get({ productId: a.productId || 'Google-Apps', skuId: a.skuId, userId: a.userId }))) },
   workflow_offboard_employee: { destructive: D,
     // The old handler records each step's failure inside the result instead of throwing; any failed step means the offboarding is not complete.
-    verify: (a, before, after, details) => !(details?.steps || []).some((st) => st.status === 'failed') && (a.deleteAccount || after?.suspended === true),
+    verify: (a, before, after, details) => !(details?.steps || []).some((st) => st.status === 'failed') && (a.deleteAccount || !!after?.suspended === true),
     describe: (a) => ({ target: a.userKey, summary: `OFFBOARD ${a.userKey}: suspend, sign out everywhere, revoke app access and app passwords${a.transferDriveAndCalendarTo ? `, transfer their Drive and Calendar to ${a.transferDriveAndCalendarTo}` : ''}${a.deleteAccount ? ', then PERMANENTLY DELETE the account' : ''}` }),
     before: async (a, { admin }) => {
       const user = await data(admin.users.get({ userKey: a.userKey, fields: 'primaryEmail,suspended,isAdmin,orgUnitPath' }));
@@ -190,19 +194,19 @@ export const GUARDS = {
     describe: (a) => ({ target: a.sendAsEmail, summary: `Remove the "send mail as" address ${a.sendAsEmail}` }),
     before: (a, { gmail }) => data(gmail.users.settings.sendAs.get({ userId: 'me', sendAsEmail: a.sendAsEmail })).then((s) => pick(s, ['sendAsEmail', 'displayName', 'isDefault', 'verificationStatus'])),
     after: gone((a, { gmail }) => data(gmail.users.settings.sendAs.get({ userId: 'me', sendAsEmail: a.sendAsEmail }))) },
-  gmail_update_forwarding_settings: { destructive: D, verify: (a, b, after) => after?.enabled === !!a.enabled,
+  gmail_update_forwarding_settings: { destructive: D, verify: (a, b, after) => !!after?.enabled === !!a.enabled,
     describe: (a) => ({ target: 'auto-forwarding', summary: `${a.enabled ? `Forward ALL new mail to ${a.emailAddress || '(address not given)'}` : 'Turn off automatic forwarding'}` }),
     before: (a, { gmail }) => data(gmail.users.settings.getAutoForwarding({ userId: 'me' })),
     after: (a, { gmail }) => data(gmail.users.settings.getAutoForwarding({ userId: 'me' })) },
-  gmail_update_vacation_settings: { destructive: D, verify: (a, b, after) => after?.enableAutoReply === !!a.enableAutoReply,
+  gmail_update_vacation_settings: { destructive: D, verify: (a, b, after) => !!after?.enableAutoReply === !!a.enableAutoReply,
     describe: (a) => ({ target: 'vacation responder', summary: `${a.enableAutoReply ? 'Turn ON the automatic reply' : 'Turn OFF the automatic reply'}${a.responseSubject ? ` ("${a.responseSubject}")` : ''}` }),
     before: (a, { gmail }) => data(gmail.users.settings.getVacation({ userId: 'me' })).then((v) => pick(v, ['enableAutoReply', 'responseSubject', 'startTime', 'endTime', 'restrictToContacts', 'restrictToDomain'])),
     after: (a, { gmail }) => data(gmail.users.settings.getVacation({ userId: 'me' })).then((v) => pick(v, ['enableAutoReply', 'responseSubject', 'startTime', 'endTime', 'restrictToContacts', 'restrictToDomain'])) },
-  gmail_update_send_as: { destructive: false, verify: (a, b, after) => ['displayName', 'isDefault'].every((k) => a[k] === undefined || after?.[k] === a[k]),
+  gmail_update_send_as: { destructive: false, verify: (a, b, after) => ['displayName', 'isDefault'].every((k) => a[k] === undefined || same(after?.[k], a[k])),
     describe: (a) => ({ target: a.sendAsEmail, summary: `Change the "send mail as" address ${a.sendAsEmail}: ${Object.keys(a).filter((k) => k !== 'sendAsEmail').join(', ') || 'nothing given'}` }),
     before: (a, { gmail }) => data(gmail.users.settings.sendAs.get({ userId: 'me', sendAsEmail: a.sendAsEmail })).then((s) => ({ ...pick(s, ['sendAsEmail', 'displayName', 'isDefault', 'verificationStatus']), hasSignature: !!s.signature })),
     after: (a, { gmail }) => data(gmail.users.settings.sendAs.get({ userId: 'me', sendAsEmail: a.sendAsEmail })).then((s) => ({ ...pick(s, ['sendAsEmail', 'displayName', 'isDefault', 'verificationStatus']), hasSignature: !!s.signature })) },
-  gmail_create_filter: { destructive: false, confirmWhen: (a) => !!a.forward,
+  gmail_create_filter: { destructive: false, confirmWhen: (a) => !!a.forward || (a.addLabelIds || []).some((l) => /^(TRASH|SPAM)$/i.test(l)) || (a.removeLabelIds || []).some((l) => /^INBOX$/i.test(l)),
     describe: (a) => ({ target: 'new Gmail filter', summary: `Create a Gmail filter (${[a.from && `from ${a.from}`, a.to && `to ${a.to}`, a.subject && `subject "${a.subject}"`, a.query && `matching "${a.query}"`].filter(Boolean).join(', ') || 'any mail'})${a.forward ? ` that FORWARDS to ${a.forward}` : ''}` }),
     after: (a, { gmail }, details) => (details?.id ? data(gmail.users.settings.filters.get({ userId: 'me', id: details.id })) : { note: 'Google did not return the new filter\'s id.' }) },
 
@@ -283,6 +287,10 @@ export const GUARDS = {
     describe: (a) => ({ target: `${a.memberEmail} in ${a.groupKey}`, summary: `Remove ${a.memberEmail} from the group ${a.groupKey} (they stop getting its mail and access)` }),
     before: (a, { admin }) => data(admin.members.get({ groupKey: a.groupKey, memberKey: a.memberEmail })).then((m) => pick(m, ['email', 'role', 'status'])),
     after: gone((a, { admin }) => data(admin.members.get({ groupKey: a.groupKey, memberKey: a.memberEmail }))) },
+  calendar_share_calendar: { destructive: false, confirmWhen: (a) => a.scopeType === 'default' || a.scopeType === 'domain',
+    describe: (a) => ({ target: a.calendarId, summary: `Share the calendar ${a.calendarId} with ${a.scopeType === 'default' ? 'ANYONE (public)' : a.scopeType === 'domain' ? 'the WHOLE domain' : (a.scopeValue || 'a user')} as ${a.role}` }),
+    before: async (a, { calendar }) => ({ rules: ((await data(calendar.acl.list({ calendarId: a.calendarId }))).items || []).map((r) => pick(r, ['id', 'role', 'scope'])) }),
+    after: async (a, { calendar }, details) => (details?.id ? pick(await data(calendar.acl.get({ calendarId: a.calendarId, ruleId: details.id })), ['id', 'role', 'scope']) : { note: 'Google did not return the new rule\'s id.' }) },
   drive_remove_permission: { destructive: D,
     describe: (a) => ({ target: `${a.permissionId} on ${a.fileId}`, summary: `Stop sharing the Drive file ${a.fileId} with permission ${a.permissionId}` }),
     before: (a, { drive }) => data(drive.permissions.get({ fileId: a.fileId, permissionId: a.permissionId, fields: 'id,type,role,emailAddress', supportsAllDrives: true })),

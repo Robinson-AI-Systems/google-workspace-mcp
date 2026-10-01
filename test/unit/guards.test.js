@@ -79,18 +79,40 @@ describe('risky uses of general-purpose tools need confirm too', () => {
     return { out, calls };
   };
   it('admin_update_user cannot suspend, reset a password, archive or make an admin without confirm', async () => {
-    for (const updates of [{ suspended: true }, { password: 'x1y2z3' }, { archived: true }, { isAdmin: true }, { name: { givenName: 'Q' }, suspended: true }]) {
+    for (const updates of [{ suspended: true }, { password: 'x1y2z3' }, { archived: true }, { isAdmin: true }, { name: { givenName: 'Q' }, suspended: true }, { primaryEmail: 'new@example.test' }, { recoveryEmail: 'x@y.test' }, { recoveryPhone: '+15550100' }, { orgUnitPath: '/Other' }, { someFutureField: 1 }]) {
       const { out, calls } = await unconfirmed('admin_update_user', { userKey: 'sam@example.test', updates });
       expect(out, JSON.stringify(updates)).toMatchObject({ done: false, needsConfirmation: true });
       expect(mutations(calls)).toEqual([]);
     }
   });
-  it('admin_update_user with ordinary fields still just works, and a requested change Google does not show is flagged', async () => {
+  it('admin_update_user with ordinary profile fields still just works, and a requested change Google does not show is flagged', async () => {
     const { clients, when } = makeFakeClients();
-    when('admin.users.get').resolves({ data: { primaryEmail: 'sam@example.test', recoveryEmail: 'old@example.test' } });
-    const out = body(await registry.handlers.admin_update_user({ userKey: 'sam@example.test', updates: { recoveryEmail: 'new@example.test' } }, clients));
-    expect(out).toMatchObject({ done: true, confirmed: false });
-    expect(out.warning).toMatch(/does not show/);
+    when('admin.users.get').resolves({ data: { primaryEmail: 'sam@example.test', gender: { type: 'other' } } });
+    const out = body(await registry.handlers.admin_update_user({ userKey: 'sam@example.test', updates: { gender: { type: 'female' } } }, clients));
+    expect(out.done).toBe(true); // no confirm needed
+    const flagged = body(await registry.handlers.admin_update_user({ userKey: 'sam@example.test', confirm: true, updates: { recoveryEmail: 'new@example.test' } }, clients));
+    expect(flagged).toMatchObject({ done: true, confirmed: false });
+    expect(flagged.warning).toMatch(/does not show/);
+  });
+  it('a request that turns something OFF is confirmed even though Google leaves the field out when it is false', async () => {
+    const { clients, when } = makeFakeClients();
+    when('gmail.users.settings.getAutoForwarding').resolves({ data: {} });
+    expect(body(await registry.handlers.gmail_update_forwarding_settings({ enabled: false, confirm: true }, clients)).confirmed).toBe(true);
+    when('admin.users.get').resolves({ data: { primaryEmail: 'k@example.test' } });
+    expect(body(await registry.handlers.admin_make_super_admin({ userKey: 'k@example.test', isAdmin: false, confirm: true }, clients)).confirmed).toBe(true);
+  });
+  it('a check that itself cannot run is never reported as success', async () => {
+    const { defineWrite } = await import('../../src/tools/write.js');
+    const { handler } = defineWrite({ name: 't', description: 'd', inputSchema: { type: 'object', properties: {} }, plan: () => ({ summary: 's' }), apply: async () => ({ content: [{ type: 'text', text: '{}' }] }), readAfter: async () => ({}), verify: () => { throw new Error('bug'); } });
+    expect(body(await handler({}, makeFakeClients().clients)).confirmed).toBe(false);
+  });
+  it('sharing a calendar publicly or domain-wide, and a filter that trashes or skips the inbox, need confirm', async () => {
+    expect((await unconfirmed('calendar_share_calendar', { calendarId: 'c', scopeType: 'default', role: 'reader' })).out.needsConfirmation).toBe(true);
+    expect((await unconfirmed('calendar_share_calendar', { calendarId: 'c', scopeType: 'domain', role: 'reader' })).out.needsConfirmation).toBe(true);
+    expect((await unconfirmed('calendar_share_calendar', { calendarId: 'c', scopeType: 'user', scopeValue: 'a@b.test', role: 'reader' })).out.done).toBe(true);
+    expect((await unconfirmed('gmail_create_filter', { from: 'a@b.test', addLabelIds: ['TRASH'] })).out.needsConfirmation).toBe(true);
+    expect((await unconfirmed('gmail_create_filter', { from: 'a@b.test', removeLabelIds: ['INBOX'] })).out.needsConfirmation).toBe(true);
+    expect((await unconfirmed('gmail_create_filter', { from: 'a@b.test', addLabelIds: ['Label_1'] })).out.done).toBe(true);
   });
   it('a public or domain-wide share, and a filter that forwards, need confirm; ordinary ones do not', async () => {
     expect((await unconfirmed('drive_share_file', { fileId: 'f', type: 'anyone', role: 'reader' })).out.needsConfirmation).toBe(true);
