@@ -9,9 +9,9 @@
 import { ok } from './util.js';
 import { domainOfEmail } from '../domains.js';
 
-const EMAIL_ARGS = ['userKey', 'userId', 'primaryEmail', 'email', 'groupKey', 'groupEmail', 'memberEmail', 'alias', 'userEmail', 'fromUserId', 'toUserId', 'managerEmail', 'transferDriveAndCalendarTo', 'assignedToUserKey', 'recoveryEmail'];
+const EMAIL_ARGS = ['emailTo', 'userKey', 'userId', 'primaryEmail', 'email', 'groupKey', 'groupEmail', 'memberEmail', 'alias', 'userEmail', 'fromUserId', 'toUserId', 'managerEmail', 'transferDriveAndCalendarTo', 'assignedToUserKey', 'recoveryEmail'];
 const EMAIL_LIST_ARGS = ['groupEmails', 'aliases', 'accountEmails'];
-const DOMAIN_ARGS = ['domainName', 'domainAliasName', 'parentDomainName', 'domain'];
+const DOMAIN_ARGS = ['domainName', 'domainAliasName', 'parentDomainName', 'domain', 'scope']; // scope: a domain, or the word "all" (which targets no domain)
 const TOOL_FAMILY = /^(admin|licensing|datatransfer|workflow|identity|reports|vault)_/;
 const CROSS_DOMAIN_FIELD = { type: 'boolean', description: 'Set to true only when you really mean to act on an address or domain outside the domains this connection is limited to.' };
 
@@ -23,7 +23,7 @@ export function domainsTargeted(args = {}) {
   const addEmail = (arg, value) => { const d = domainOfEmail(value); if (d) found.push({ arg, value: clean(value), domain: d }); };
   for (const arg of EMAIL_ARGS) if (typeof args[arg] === 'string') addEmail(arg, args[arg]);
   for (const arg of EMAIL_LIST_ARGS) if (Array.isArray(args[arg])) for (const v of args[arg]) if (typeof v === 'string') addEmail(arg, v);
-  for (const arg of DOMAIN_ARGS) if (typeof args[arg] === 'string' && args[arg].trim()) found.push({ arg, value: clean(args[arg]), domain: clean(args[arg]).replace(/^@/, '') });
+  for (const arg of DOMAIN_ARGS) if (typeof args[arg] === 'string' && args[arg].trim() && !(arg === 'scope' && clean(args[arg]) === 'all')) found.push({ arg, value: clean(args[arg]), domain: clean(args[arg]).replace(/^@/, '') });
   return found;
 }
 
@@ -34,7 +34,7 @@ export function outsideDomains(args, allowed) {
 }
 
 export function refusal(violations, clients) {
-  const list = violations.map((v) => `${v.value}${v.arg === 'domainName' || v.arg === 'domain' ? '' : ` (domain ${v.domain})`}`).join(', ');
+  const list = violations.map((v) => `${v.value}${['domainName', 'domain', 'scope'].includes(v.arg) ? '' : ` (domain ${v.domain})`}`).join(', ');
   return `Refused: ${list} is outside what this connection may manage. It acts as ${clients.actingAs}, which is limited to ${clients.allowedDomains.join(', ')}. Nothing was changed. If you really mean to, run it again with crossDomain: true (ask the person first), or switch to the connection for that business.`;
 }
 
@@ -49,6 +49,9 @@ export function applyDomainGuard(registry) {
     registry.handlers[tool.name] = async (args = {}, clients) => {
       const { crossDomain, ...rest } = args;
       if (crossDomain !== true && Array.isArray(clients?.allowedDomains)) {
+        if ('scope' in props && (!String(rest.scope ?? '').trim() || clean(rest.scope) === 'all')) {
+          return ok(`Refused: scope "all" covers every domain in the Workspace, but this connection acts as ${clients.actingAs}, which is limited to ${clients.allowedDomains.join(', ')}. Nothing was read. Give one of those domains as the scope, or run it again with crossDomain: true (ask the person first).`);
+        }
         const bad = outsideDomains(rest, clients.allowedDomains);
         if (bad.length) return ok(refusal(bad, clients));
       }

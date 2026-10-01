@@ -17,9 +17,13 @@ import * as extraAdminApis from './extra-admin-apis.js';
 import * as workflows from './workflows.js';
 import * as accounts from './accounts.js';
 import * as mailboxBranding from './mailbox-branding.js';
+import * as ops from './ops.js';
+import * as emailHealth from './email-health.js';
+import * as healthReport from './health-report.js';
+import * as digest from './digest.js';
 import { applyDomainGuard } from './domain-guard.js';
 
 export const registry = applyDomainGuard(applyGuards(mergeNamespaces([
   gmail, drive, calendar, sheets, docs, slides, forms, tasks, people,
-  adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts, mailboxBranding
+  adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts, mailboxBranding, ops, emailHealth, healthReport, digest
 ])));

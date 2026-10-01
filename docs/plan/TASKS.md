@@ -500,17 +500,17 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P0-7 | IN_REVIEW | #7 | Developing section added; tool count now 334 |
 | P1-1 | IN_REVIEW | #10 | Table, helper, 3 tools, last-used tracking; explicit logging added to brand_mailbox, make_super_admin, set_2sv_enforcement, move_user_orgunit, set_user_photo. Last-used is written at most once a minute per token (not every request). Manual check (brand a test alias, see one row) needs Chris's go-ahead: it changes a real mailbox |
 | P1-2 | IN_REVIEW | #9 | 12 mappings + unit tests; unknown errors and network failures unchanged |
-| P1-3 | IN_REVIEW | #11 | `defineWrite` plus `guard()` (wraps an existing tool: its old handler is the apply step) applied from one table, `src/tools/guards.js`, to 68 tools: every `_delete` tool, the other dangerous ones in the card, and the six exemplars. Dry runs are logged as previews and hidden from `workspace_recent_changes` unless `includeDryRuns`. Added a test that loads every source file. Remaining write tools: P5-1 |
-| P1-4 | IN_REVIEW | PR pending | `allowed_domains` column (default = the account's own domain), `crossDomain` flag on every admin/licensing/datatransfer/workflow/identity/reports/vault tool, new `workspace_set_allowed_domains` (needs confirm, logged). Checks addresses and domain names in the arguments only; IDs, `me`, `all` and list-everything calls are not checked. Manual rentals-connection check needs Chris's go-ahead |
-| P1-5 | IN_REVIEW | PR pending | Done, with one deviation: `etag` is NOT stripped (contacts_update needs it). Note: file data over 64 KB (e.g. `drive_download_file` on big files) now returns the size instead of the data |
-| P2-1 | TODO | | |
-| P2-2 | TODO | | |
+| P1-3 | MERGED | #13 | Shipped with P1-4 in one PR. |
+| P1-4 | MERGED | #13 | Shipped with P1-3. |
+| P1-5 | MERGED | #9 | Etag is kept (contacts_update needs it). |
+| P2-1 | IN_REVIEW | PR pending | `calendar_update_calendar` via defineWrite (dry run, read-back, change log), time zone checked against the IANA list. Manual Denver check on the rentals calendar still to do: it changes a real calendar |
+| P2-2 | IN_REVIEW | PR pending | `workflow_email_health`: unit tests with a stubbed resolver. Deviation: adds an INFO result (Resend records are optional). Manual runs on both domains and the committed examples need live DNS, which this sandbox cannot reach |
 | P2-3 | TODO | | Needs `VERCEL_API_TOKEN`, `VERCEL_TEAM_ID` env vars from Chris |
-| P2-4 | TODO | | |
-| P2-5 | TODO | | |
-| P2-6 | TODO | | May need Enterprise License Manager API enabled by Chris |
-| P2-7 | TODO | | |
-| P2-8 | TODO | | |
+| P2-4 | IN_REVIEW | PR pending | `workspace_where_is_setting`, 47 settings (card said ~60). Deviation: a .js file, not .json, so the serverless bundle always includes it. Direct links are from memory of Google's URL patterns: spot-check of 10 by Chris still to do; entries without a link give click paths only |
+| P2-5 | IN_REVIEW | PR pending | `workflow_health_report`: scoring rules unit tested. Deviation: "unused licences" means licences held by suspended or 90-day-inactive accounts, because the API cannot show purchased seats. Deep checks (apps, forwarding) cover the first 100 active users. Manual runs and committed examples still to do |
+| P2-6 | IN_REVIEW | PR pending | Real customer ID in `licensing_list_assignments`; switched-off-API errors now name the API to enable; `workspace_plan_summary` added. Manual run on both domains still to do |
+| P2-7 | IN_REVIEW | PR pending | `workflow_search_presence_check` (read-only). Manual report still to do |
+| P2-8 | IN_REVIEW | PR pending | `workflow_weekly_digest`: emailing needs confirm:true. Manual run and committed sample still to do |
 | P3-1 | TODO | | |
 | P3-2 | TODO | | |
 | P3-3 | TODO | | |
