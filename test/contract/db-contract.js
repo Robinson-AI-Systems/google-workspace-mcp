@@ -1,6 +1,7 @@
 // One set of behavior checks for the database layer, run against BOTH the
 // in-memory fake (npm test) and a real Postgres (npm run test:db). If the fake
 // ever disagrees with the real thing, one of the two runs fails.
+import crypto from 'node:crypto';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 /**
@@ -161,6 +162,11 @@ export function runDbContract(label, { makeDb, seedLegacy }) {
         expect(rows[0]).toMatchObject({ client_id: 'cx', client_name: 'Claude (rentals)' });
         expect(new Set(rows.map((r) => r.connection_id)).size).toBe(3); // a distinct short label per token, safe to store
         for (const r of rows) expect(r.connection_id).toMatch(/^[0-9a-f]{8}$/);
+        // The label in this list is the same one the change log stores (connectionId), computed independently here.
+        const sha = (t) => crypto.createHash('sha256').update(t, 'utf8').digest('hex').slice(0, 8);
+        const tokens = ['AAAAAAAA-first-secret-tail', 'AAAAAAAA-renewed-secret-tail', 'BBBBBBBB-other-secret-tail'];
+        expect(rows.map((r) => r.connection_id).sort()).toEqual(tokens.map(sha).sort());
+        for (const t of tokens) expect(db.connectionId(t)).toBe(sha(t));
         expect(JSON.stringify(rows)).not.toMatch(/secret-tail/);
       });
 

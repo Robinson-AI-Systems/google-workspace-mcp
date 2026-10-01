@@ -3,6 +3,7 @@
 // between calls -- your Google login tokens, and the connector's own OAuth
 // state -- lives in Postgres (Neon) instead.
 import { neon } from '@neondatabase/serverless';
+import crypto from 'node:crypto';
 
 let sql;
 function db() {
