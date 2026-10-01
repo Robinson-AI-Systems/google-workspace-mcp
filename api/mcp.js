@@ -8,7 +8,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { registry } from '../src/tools/index.js';
 import { errorResult } from '../src/tools/util.js';
 import { buildHostedApiClients, ensureMigrated } from '../src/auth/google-auth-hosted.js';
-import { getAccessToken, initSchema, touchAccessToken } from '../src/db.js';
+import { getAccessToken, initSchema, touchAccessToken, connectionId } from '../src/db.js';
 
 export const config = { api: { bodyParser: true } };
 
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
   // Every tool call on this connection acts as the Google account chosen at
   // login time (NULL = the server's default account, for older connections).
   try { await touchAccessToken(token); } catch { /* "last used" is informational; never fail a request over it */ }
-  const server = buildServer(tokenRecord.google_account || undefined, `${String(tokenRecord.client_id).slice(0, 12)}/${token.slice(0, 8)}`);
+  const server = buildServer(tokenRecord.google_account || undefined, `${String(tokenRecord.client_id).slice(0, 12)}/${connectionId(token)}`);
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   res.on('close', () => {
     transport.close();

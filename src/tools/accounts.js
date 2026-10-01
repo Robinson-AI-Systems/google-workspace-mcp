@@ -33,7 +33,7 @@ export const tools = [
   },
   {
     name: 'workspace_list_connections',
-    description: 'Which Claude connections can use this server, which Google account each one acts as, when each was created, when it expires and when it was last used. Tokens are never shown, only their first 8 characters (use that to revoke one).',
+    description: 'Which Claude connections can use this server, which Google account each one acts as, when each was created, when it expires and when it was last used. Tokens are never shown: token_prefix (first 8 characters) is what you use to revoke one, and connection_id is the short label that appears in the change log for that connection.',
     inputSchema: { type: 'object', properties: {} }
   },
   {

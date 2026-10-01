@@ -159,6 +159,8 @@ export function runDbContract(label, { makeDb, seedLegacy }) {
         expect(rows).toHaveLength(3);
         expect(rows.map((r) => r.token_prefix).sort()).toEqual(['AAAAAAAA', 'AAAAAAAA', 'BBBBBBBB']);
         expect(rows[0]).toMatchObject({ client_id: 'cx', client_name: 'Claude (rentals)' });
+        expect(new Set(rows.map((r) => r.connection_id)).size).toBe(3); // a distinct short label per token, safe to store
+        for (const r of rows) expect(r.connection_id).toMatch(/^[0-9a-f]{8}$/);
         expect(JSON.stringify(rows)).not.toMatch(/secret-tail/);
       });
 

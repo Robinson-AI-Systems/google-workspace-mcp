@@ -181,9 +181,13 @@ export const handlers = {
     const { admin } = clients;
     const before = (await admin.users.get({ userKey: args.userKey, fields: 'primaryEmail,isAdmin' })).data;
     await admin.users.makeAdmin({ userKey: args.userKey, requestBody: { status: args.isAdmin } });
-    const after = (await admin.users.get({ userKey: args.userKey, fields: 'primaryEmail,isAdmin' })).data; // what Google holds now
-    await recordChange(clients, { tool: 'admin_make_super_admin', target: after.primaryEmail || args.userKey, summary: `Super admin for ${after.primaryEmail || args.userKey}: ${before.isAdmin ? 'yes' : 'no'} -> ${after.isAdmin ? 'yes' : 'no'}`, before: { isAdmin: !!before.isAdmin }, after: { isAdmin: !!after.isAdmin } });
-    return ok({ userKey: args.userKey, requested: args.isAdmin, isAdmin: !!after.isAdmin });
+    // The change has happened. Read back what Google holds now; if that read fails, still record the change and say it is unconfirmed.
+    let after = null;
+    try { after = (await admin.users.get({ userKey: args.userKey, fields: 'primaryEmail,isAdmin' })).data; } catch { /* reported below */ }
+    const who = after?.primaryEmail || before.primaryEmail || args.userKey;
+    const now = after ? !!after.isAdmin : !!args.isAdmin;
+    await recordChange(clients, { tool: 'admin_make_super_admin', target: who, summary: `Super admin for ${who}: ${before.isAdmin ? 'yes' : 'no'} -> ${now ? 'yes' : 'no'}${after ? '' : ' (requested; could not read it back to confirm)'}`, before: { isAdmin: !!before.isAdmin }, after: { isAdmin: now, confirmed: !!after } });
+    return ok({ userKey: args.userKey, requested: args.isAdmin, isAdmin: now, confirmed: !!after });
   },
   admin_undelete_user: async (args, { admin }) => {
     await admin.users.undelete({ userKey: args.userId, requestBody: { orgUnitPath: args.orgUnitPath || '/' } });

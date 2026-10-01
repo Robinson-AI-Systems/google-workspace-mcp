@@ -6,6 +6,7 @@
 // `createFakeDb({ clock })` makes a fresh, empty database. The clock is a
 // function returning the current time in milliseconds, so tests can move time
 // forward (for lockout windows and token expiry) without waiting.
+import crypto from 'node:crypto';
 const norm = (email) => String(email || '').trim().toLowerCase();
 
 export function createFakeDb({ clock = () => Date.now() } = {}) {
@@ -24,6 +25,7 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
   const afterSeconds = (s) => new Date(clock() + s * 1000);
 
   const api = {
+    connectionId: (accessToken) => crypto.createHash('sha256').update(String(accessToken), 'utf8').digest('hex').slice(0, 8),
     async initSchema() {},
 
     async listGoogleAccounts() {
@@ -126,7 +128,7 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       return state.tokens.filter((t) => t.expires_at > at())
         .sort((a, b) => b.created_at - a.created_at)
         .map((t) => ({
-          token_prefix: t.access_token.slice(0, 8), client_id: t.client_id, client_name: state.clients.get(t.client_id)?.client_name ?? null,
+          token_prefix: t.access_token.slice(0, 8), connection_id: crypto.createHash('sha256').update(t.access_token, 'utf8').digest('hex').slice(0, 8), client_id: t.client_id, client_name: state.clients.get(t.client_id)?.client_name ?? null,
           google_account: t.google_account, created_at: t.created_at, expires_at: t.expires_at, last_used_at: t.last_used_at, revoked_at: t.revoked_at
         }));
     },

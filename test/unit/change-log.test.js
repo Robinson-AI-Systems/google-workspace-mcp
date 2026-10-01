@@ -32,11 +32,11 @@ describe('redact', () => {
 describe('recordChange', () => {
   it('stores who acted, which connection asked, and never a credential', async () => {
     const { clients } = makeFakeClients({ actingAs: 'ops@example.test' });
-    clients.connection = 'client123456/AAAAAAAA';
+    clients.connection = 'client123456/ab12cd34';
     const result = await recordChange(clients, { tool: 't', target: 'x', summary: 's', before: { api_key: 'SECRET-VALUE' }, after: { v: 1 } });
     expect(result.logged).toBe(true);
     const [row] = await holder.db.listRecentChanges();
-    expect(row).toMatchObject({ acting_as: 'ops@example.test', connection: 'client123456/AAAAAAAA', tool: 't', after: { v: 1 } });
+    expect(row).toMatchObject({ acting_as: 'ops@example.test', connection: 'client123456/ab12cd34', tool: 't', after: { v: 1 } });
     expect(JSON.stringify(row)).not.toContain('SECRET-VALUE');
   });
   it('never throws when the log cannot be written, and says so', async () => {
@@ -92,6 +92,19 @@ describe('admin tools that now log', () => {
     when('admin.users.update').rejects(googleError(400, 'invalid', 'Invalid Ou Id'));
     await expect(admin.admin_move_user_orgunit({ userKey: 'sam@example.test', orgUnitPath: '/Nope' }, clients)).rejects.toThrow();
     expect(await holder.db.listRecentChanges()).toEqual([]);
+  });
+});
+
+describe('admin_make_super_admin when the read-back fails', () => {
+  it('still records the change, says it is unconfirmed, and does not report an error', async () => {
+    const { clients, when } = makeFakeClients();
+    when('admin.users.get').resolvesOnce({ data: { primaryEmail: 'kim@example.test', isAdmin: false } });
+    when('admin.users.get').rejects(googleError(503, 'backendError', 'Backend Error'));
+    const result = body(await admin.admin_make_super_admin({ userKey: 'kim@example.test', isAdmin: true }, clients));
+    expect(result).toMatchObject({ requested: true, isAdmin: true, confirmed: false });
+    const [row] = await holder.db.listRecentChanges();
+    expect(row.summary).toMatch(/could not read it back/);
+    expect(row.after).toEqual({ isAdmin: true, confirmed: false });
   });
 });
 

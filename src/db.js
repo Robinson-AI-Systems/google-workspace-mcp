@@ -294,6 +294,11 @@ export async function countRecentFailedLogins(ip, minutes) {
 }
 
 // ---------- Connections (Claude connectors that hold a token) ----------
+/** A short label for a connection that is safe to store and show: a hash of its token, never the token itself. */
+export function connectionId(accessToken) {
+  return crypto.createHash('sha256').update(String(accessToken), 'utf8').digest('hex').slice(0, 8);
+}
+
 /** Note that a connection was just used. At most once a minute per token, to keep writes down. */
 export async function touchAccessToken(accessToken) {
   const q = db();
@@ -304,7 +309,7 @@ export async function touchAccessToken(accessToken) {
 export async function listConnections() {
   const q = db();
   return q`
-    SELECT left(t.access_token, 8) AS token_prefix, t.client_id, c.client_name, t.google_account,
+    SELECT left(t.access_token, 8) AS token_prefix, left(encode(sha256(convert_to(t.access_token, 'UTF8')), 'hex'), 8) AS connection_id, t.client_id, c.client_name, t.google_account,
            t.created_at, t.expires_at, t.last_used_at, t.revoked_at
     FROM oauth_tokens t LEFT JOIN oauth_clients c ON c.client_id = t.client_id
     WHERE t.expires_at > now()
@@ -330,7 +335,9 @@ export async function revokeConnection(prefix) {
     WHERE revoked_at IS NULL AND (access_token = ${access_token} OR (${refresh_token}::text IS NOT NULL AND refresh_token = ${refresh_token}))
     RETURNING access_token
   `;
-  return { revoked: done.length };
+  // A renewal that slipped in between the lookup and the update would otherwise survive; sweep once more.
+  const late = refresh_token ? await q`UPDATE oauth_tokens SET revoked_at = now() WHERE revoked_at IS NULL AND refresh_token = ${refresh_token} RETURNING access_token` : [];
+  return { revoked: done.length + late.length };
 }
 
 // ---------- Change log ----------
