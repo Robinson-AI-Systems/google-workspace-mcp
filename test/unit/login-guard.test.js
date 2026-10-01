@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createFakeDb } from '../helpers/fake-db.js';
-import { clientIp, passphraseMatches, evaluateLogin, MAX_FAILED_LOGINS, LOCKOUT_WINDOW_MINUTES } from '../../src/oauth/login-guard.js';
+import { clientIp, lockoutKey, passphraseMatches, evaluateLogin, MAX_FAILED_LOGINS, LOCKOUT_WINDOW_MINUTES } from '../../src/oauth/login-guard.js';
 
 const MINUTE = 60 * 1000;
 const setup = () => {
@@ -103,5 +103,31 @@ describe('evaluateLogin', () => {
     const burst = await Promise.all(Array.from({ length: 50 }, () => attempt(db, 'wrong')));
     expect(burst.filter((r) => r.status !== 'locked').length).toBeLessThanOrEqual(MAX_FAILED_LOGINS);
     expect(burst.filter((r) => r.status === 'locked').length).toBeGreaterThanOrEqual(50 - MAX_FAILED_LOGINS);
+  });
+});
+
+describe('lockoutKey (IPv6 addresses share one bucket per /64 block)', () => {
+  it('leaves IPv4 alone and unwraps IPv4-mapped IPv6', () => {
+    expect(lockoutKey('203.0.113.9')).toBe('203.0.113.9');
+    expect(lockoutKey('::ffff:203.0.113.9')).toBe('203.0.113.9');
+  });
+  it('gives every address in one /64 the same key, and different blocks different keys', () => {
+    const a = lockoutKey('2001:db8:abcd:12::1');
+    expect(lockoutKey('2001:0db8:abcd:0012:ffff:ffff:ffff:ffff')).toBe(a);
+    expect(lockoutKey('2001:db8:abcd:12:1:2:3:4')).toBe(a);
+    expect(a).toBe('2001:db8:abcd:12::/64');
+    expect(lockoutKey('2001:db8:abcd:13::1')).not.toBe(a);
+  });
+  it('handles shorthand, brackets and zone ids; never returns an empty key', () => {
+    expect(lockoutKey('::1')).toBe('0:0:0:0::/64');
+    expect(lockoutKey('[2001:db8::5]')).toBe('2001:db8:0:0::/64');
+    expect(lockoutKey('fe80::1%eth0')).toBe('fe80:0:0:0::/64');
+    expect(lockoutKey('')).toBe('unknown');
+    expect(lockoutKey('not-an-ip:::')).toBe('not-an-ip:::');
+  });
+  it('clientIp applies it, so switching addresses inside a block does not dodge the lockout', () => {
+    const one = clientIp({ headers: { 'x-vercel-forwarded-for': '2001:db8:1:2::aaaa' } });
+    const two = clientIp({ headers: { 'x-vercel-forwarded-for': '2001:db8:1:2:9:9:9:9' } });
+    expect(one).toBe(two);
   });
 });

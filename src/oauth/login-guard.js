@@ -27,7 +27,31 @@ export const LOCKOUT_WINDOW_MINUTES = 15;
 export function clientIp(req) {
   const h = req?.headers || {};
   const pick = (v) => String(Array.isArray(v) ? v[0] : v || '').split(',')[0].trim();
-  return pick(h['x-vercel-forwarded-for']) || pick(h['x-real-ip']) || pick(h['x-forwarded-for']) || req?.socket?.remoteAddress || 'unknown';
+  const raw = pick(h['x-vercel-forwarded-for']) || pick(h['x-real-ip']) || pick(h['x-forwarded-for']) || req?.socket?.remoteAddress || '';
+  return lockoutKey(raw);
+}
+
+/**
+ * The bucket an address is counted in. IPv4 is used as-is (IPv4-mapped IPv6
+ * like ::ffff:1.2.3.4 becomes plain IPv4). An IPv6 address is reduced to its
+ * /64 block, because one home or mobile connection controls the whole block
+ * and could otherwise pick a fresh address for every 5 guesses.
+ */
+export function lockoutKey(raw) {
+  let ip = String(raw || '').trim().replace(/^\[|\]$/g, '').split('%')[0].toLowerCase();
+  if (!ip) return 'unknown';
+  const mapped = ip.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/);
+  if (mapped) return mapped[1];
+  if (!ip.includes(':')) return ip;
+  let head = ip;
+  let tail = '';
+  if (ip.includes('::')) [head, tail] = ip.split('::');
+  const left = head ? head.split(':') : [];
+  const right = tail ? tail.split(':') : [];
+  if (left.length + right.length > 8 || [...left, ...right].some((g) => !/^[0-9a-f]{1,4}$/.test(g))) return ip; // not a valid address: use as given
+  const groups = ip.includes('::') ? [...left, ...Array(8 - left.length - right.length).fill('0'), ...right] : left;
+  if (groups.length !== 8) return ip;
+  return `${groups.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, '')).join(':')}::/64`;
 }
 
 /**

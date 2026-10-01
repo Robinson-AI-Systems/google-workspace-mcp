@@ -250,6 +250,9 @@ export async function deleteAccessToken(accessToken) {
 /** Write down a sign-in attempt (as a failure until proven otherwise) and return its id. */
 export async function recordLoginAttempt(ip) {
   const q = db();
+  // Housekeeping: this address's attempts older than a day no longer matter (the lockout window is minutes),
+  // so the table cannot grow forever from one address.
+  await q`DELETE FROM login_attempts WHERE ip = ${ip} AND attempted_at < now() - interval '1 day'`;
   const rows = await q`INSERT INTO login_attempts (ip, success) VALUES (${ip}, false) RETURNING id`;
   return rows[0].id;
 }
