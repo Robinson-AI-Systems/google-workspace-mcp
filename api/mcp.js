@@ -8,11 +8,11 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { registry } from '../src/tools/index.js';
 import { errorResult } from '../src/tools/util.js';
 import { buildHostedApiClients, ensureMigrated } from '../src/auth/google-auth-hosted.js';
-import { getAccessToken, initSchema } from '../src/db.js';
+import { getAccessToken, initSchema, touchAccessToken } from '../src/db.js';
 
 export const config = { api: { bodyParser: true } };
 
-function buildServer(googleAccount) {
+function buildServer(googleAccount, connection) {
   const server = new Server(
     { name: 'robinson-google-workspace-mcp', version: '1.0.0' },
     { capabilities: { tools: {} } }
@@ -28,6 +28,7 @@ function buildServer(googleAccount) {
     }
     try {
       const clients = await buildHostedApiClients(googleAccount);
+      clients.connection = connection; // which Claude connection is asking, for the change log
       return await toolHandler(args || {}, clients);
     } catch (err) {
       return errorResult(err);
@@ -62,7 +63,8 @@ export default async function handler(req, res) {
 
   // Every tool call on this connection acts as the Google account chosen at
   // login time (NULL = the server's default account, for older connections).
-  const server = buildServer(tokenRecord.google_account || undefined);
+  try { await touchAccessToken(token); } catch { /* "last used" is informational; never fail a request over it */ }
+  const server = buildServer(tokenRecord.google_account || undefined, `${String(tokenRecord.client_id).slice(0, 12)}/${token.slice(0, 8)}`);
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   res.on('close', () => {
     transport.close();

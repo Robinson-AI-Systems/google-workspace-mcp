@@ -48,6 +48,8 @@ describe.skipIf(!url)('database (real Postgres)', () => {
 
       expect(afterSecond).toEqual(afterFirst);
       expect(afterFirst.tokens).toContain('google_account');
+      expect(afterFirst.tokens).toEqual(expect.arrayContaining(['last_used_at', 'revoked_at']));
+      expect(await columnsOf('change_log')).toEqual(['acting_as', 'after', 'at', 'before', 'connection', 'dry_run', 'id', 'summary', 'target', 'tool']);
       expect(afterFirst.codes).toContain('google_account');
       expect(afterFirst.attempts).toEqual(['attempted_at', 'id', 'ip', 'success']);
 
@@ -90,7 +92,7 @@ describe.skipIf(!url)('database (real Postgres)', () => {
 
   runDbContract('real Postgres', {
     makeDb: async () => {
-      await rawQuery(`TRUNCATE google_accounts, google_auth, oauth_clients, oauth_codes, oauth_tokens, login_attempts`);
+      await rawQuery(`TRUNCATE google_accounts, google_auth, oauth_clients, oauth_codes, oauth_tokens, login_attempts, change_log`);
       return db;
     },
     seedLegacy: async (_db, tokens) => { await rawQuery(`INSERT INTO google_auth (id, tokens) VALUES (1, $1::jsonb)`, [JSON.stringify(tokens)]); }

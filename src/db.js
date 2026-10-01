@@ -86,6 +86,26 @@ export async function initSchema() {
   `;
   await q`CREATE INDEX IF NOT EXISTS login_attempts_ip_time ON login_attempts (ip, attempted_at)`;
   await q`CREATE INDEX IF NOT EXISTS login_attempts_time ON login_attempts (attempted_at)`;
+  // Connection bookkeeping: when a Claude connection last did something, and whether it was switched off by hand.
+  await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMPTZ`;
+  await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ`;
+  // A record of changes made to Workspace through this server (what, to whom, as which account, before/after).
+  // Never holds credentials; see src/changelog.js.
+  await q`
+    CREATE TABLE IF NOT EXISTS change_log (
+      id BIGSERIAL PRIMARY KEY,
+      at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      acting_as TEXT,
+      connection TEXT,
+      tool TEXT NOT NULL,
+      target TEXT,
+      summary TEXT,
+      before JSONB,
+      after JSONB,
+      dry_run BOOLEAN NOT NULL DEFAULT false
+    )
+  `;
+  await q`CREATE INDEX IF NOT EXISTS change_log_at ON change_log (at)`;
 }
 
 // ---------- Google accounts (one row per mailbox the server can act as) ----------
@@ -232,13 +252,13 @@ export async function createAccessToken({ accessToken, refreshToken, clientId, g
 export async function getTokenByRefreshToken(refreshToken) {
   const q = db();
   if (!refreshToken) return null;
-  const rows = await q`SELECT client_id, google_account FROM oauth_tokens WHERE refresh_token = ${refreshToken} ORDER BY created_at DESC LIMIT 1`;
+  const rows = await q`SELECT client_id, google_account FROM oauth_tokens WHERE refresh_token = ${refreshToken} AND revoked_at IS NULL ORDER BY created_at DESC LIMIT 1`;
   return rows[0] || null;
 }
 
 export async function getAccessToken(accessToken) {
   const q = db();
-  const rows = await q`SELECT * FROM oauth_tokens WHERE access_token = ${accessToken} AND expires_at > now()`;
+  const rows = await q`SELECT * FROM oauth_tokens WHERE access_token = ${accessToken} AND expires_at > now() AND revoked_at IS NULL`;
   return rows[0] || null;
 }
 
@@ -271,4 +291,71 @@ export async function countRecentFailedLogins(ip, minutes) {
     WHERE ip = ${ip} AND success = false AND attempted_at > now() - (${minutes} || ' minutes')::interval
   `;
   return rows[0].n;
+}
+
+// ---------- Connections (Claude connectors that hold a token) ----------
+/** Note that a connection was just used. At most once a minute per token, to keep writes down. */
+export async function touchAccessToken(accessToken) {
+  const q = db();
+  await q`UPDATE oauth_tokens SET last_used_at = now() WHERE access_token = ${accessToken} AND (last_used_at IS NULL OR last_used_at < now() - interval '1 minute')`;
+}
+
+/** Every connection token that has not expired, newest first. Only the first 8 characters of a token are ever returned. */
+export async function listConnections() {
+  const q = db();
+  return q`
+    SELECT left(t.access_token, 8) AS token_prefix, t.client_id, c.client_name, t.google_account,
+           t.created_at, t.expires_at, t.last_used_at, t.revoked_at
+    FROM oauth_tokens t LEFT JOIN oauth_clients c ON c.client_id = t.client_id
+    WHERE t.expires_at > now()
+    ORDER BY t.created_at DESC
+  `;
+}
+
+/**
+ * Switch a connection off. `prefix` is the start of its token (at least 8 characters, from listConnections).
+ * Also switches off any other token issued for the same refresh token, so it cannot simply renew itself.
+ * Returns { revoked: <count> } or { revoked: 0, reason: 'not_found' | 'ambiguous' }.
+ */
+export async function revokeConnection(prefix) {
+  const q = db();
+  const p = String(prefix || '');
+  if (p.length < 8) return { revoked: 0, reason: 'too_short' };
+  const found = await q`SELECT access_token, refresh_token FROM oauth_tokens WHERE left(access_token, ${p.length}) = ${p}`;
+  if (found.length === 0) return { revoked: 0, reason: 'not_found' };
+  if (found.length > 1) return { revoked: 0, reason: 'ambiguous' };
+  const { access_token, refresh_token } = found[0];
+  const done = await q`
+    UPDATE oauth_tokens SET revoked_at = now()
+    WHERE revoked_at IS NULL AND (access_token = ${access_token} OR (${refresh_token}::text IS NOT NULL AND refresh_token = ${refresh_token}))
+    RETURNING access_token
+  `;
+  return { revoked: done.length };
+}
+
+// ---------- Change log ----------
+export async function recordChange({ actingAs, connection, tool, target, summary, before, after, dryRun }) {
+  const q = db();
+  const j = (v) => (v === undefined || v === null ? null : JSON.stringify(v));
+  const rows = await q`
+    INSERT INTO change_log (acting_as, connection, tool, target, summary, before, after, dry_run)
+    VALUES (${actingAs || null}, ${connection || null}, ${tool}, ${target || null}, ${summary || null}, ${j(before)}::jsonb, ${j(after)}::jsonb, ${!!dryRun})
+    RETURNING id
+  `;
+  return rows[0].id;
+}
+
+/** Newest first. `since` is a date/time; omit it for "everything". */
+export async function listRecentChanges({ since, tool, actingAs, limit = 50 } = {}) {
+  const q = db();
+  const n = Math.min(Math.max(Number(limit) || 50, 1), 500);
+  return q`
+    SELECT id, at, acting_as, connection, tool, target, summary, before, after, dry_run
+    FROM change_log
+    WHERE (${since ? new Date(since).toISOString() : null}::timestamptz IS NULL OR at >= ${since ? new Date(since).toISOString() : null}::timestamptz)
+      AND (${tool || null}::text IS NULL OR tool = ${tool || null})
+      AND (${actingAs ? normalizeEmail(actingAs) : null}::text IS NULL OR acting_as = ${actingAs ? normalizeEmail(actingAs) : null})
+    ORDER BY at DESC, id DESC
+    LIMIT ${n}
+  `;
 }

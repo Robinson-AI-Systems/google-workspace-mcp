@@ -16,7 +16,9 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     codes: new Map(),
     tokens: [],
     attempts: [],
-    nextAttemptId: 1
+    nextAttemptId: 1,
+    changes: [],
+    nextChangeId: 1
   };
   const at = () => new Date(clock());
   const afterSeconds = (s) => new Date(clock() + s * 1000);
@@ -100,20 +102,61 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       state.tokens.push({
         access_token: accessToken, refresh_token: refreshToken || null, client_id: clientId,
         google_account: googleAccount ? norm(googleAccount) : null,
-        expires_at: afterSeconds(ttlSeconds), created_at: at()
+        expires_at: afterSeconds(ttlSeconds), created_at: at(), last_used_at: null, revoked_at: null
       });
     },
     async getTokenByRefreshToken(refreshToken) {
       if (!refreshToken) return null;
-      const rows = state.tokens.filter((t) => t.refresh_token === refreshToken).sort((a, b) => b.created_at - a.created_at);
+      const rows = state.tokens.filter((t) => t.refresh_token === refreshToken && !t.revoked_at).sort((a, b) => b.created_at - a.created_at);
       return rows[0] ? { client_id: rows[0].client_id, google_account: rows[0].google_account } : null;
     },
     async getAccessToken(accessToken) {
-      const row = state.tokens.find((t) => t.access_token === accessToken && t.expires_at > at());
+      const row = state.tokens.find((t) => t.access_token === accessToken && t.expires_at > at() && !t.revoked_at);
       return row ? { ...row } : null;
     },
     async deleteAccessToken(accessToken) {
       state.tokens = state.tokens.filter((t) => t.access_token !== accessToken);
+    },
+
+    async touchAccessToken(accessToken) {
+      const row = state.tokens.find((t) => t.access_token === accessToken);
+      if (row && (!row.last_used_at || row.last_used_at.getTime() < clock() - 60 * 1000)) row.last_used_at = at();
+    },
+    async listConnections() {
+      return state.tokens.filter((t) => t.expires_at > at())
+        .sort((a, b) => b.created_at - a.created_at)
+        .map((t) => ({
+          token_prefix: t.access_token.slice(0, 8), client_id: t.client_id, client_name: state.clients.get(t.client_id)?.client_name ?? null,
+          google_account: t.google_account, created_at: t.created_at, expires_at: t.expires_at, last_used_at: t.last_used_at, revoked_at: t.revoked_at
+        }));
+    },
+    async revokeConnection(prefix) {
+      const p = String(prefix || '');
+      if (p.length < 8) return { revoked: 0, reason: 'too_short' };
+      const found = state.tokens.filter((t) => t.access_token.startsWith(p));
+      if (found.length === 0) return { revoked: 0, reason: 'not_found' };
+      if (found.length > 1) return { revoked: 0, reason: 'ambiguous' };
+      const { access_token, refresh_token } = found[0];
+      let n = 0;
+      for (const t of state.tokens) {
+        if (!t.revoked_at && (t.access_token === access_token || (refresh_token && t.refresh_token === refresh_token))) { t.revoked_at = at(); n++; }
+      }
+      return { revoked: n };
+    },
+
+    async recordChange({ actingAs, connection, tool, target, summary, before, after, dryRun }) {
+      const id = state.nextChangeId++;
+      const copy = (v) => (v === undefined || v === null ? null : JSON.parse(JSON.stringify(v)));
+      state.changes.push({ id, at: at(), acting_as: actingAs || null, connection: connection || null, tool, target: target || null, summary: summary || null, before: copy(before), after: copy(after), dry_run: !!dryRun });
+      return id;
+    },
+    async listRecentChanges({ since, tool, actingAs, limit = 50 } = {}) {
+      const n = Math.min(Math.max(Number(limit) || 50, 1), 500);
+      const from = since ? new Date(since).getTime() : null;
+      return state.changes
+        .filter((c) => (from === null || c.at.getTime() >= from) && (!tool || c.tool === tool) && (!actingAs || c.acting_as === norm(actingAs)))
+        .sort((a, b) => (b.at - a.at) || (b.id - a.id))
+        .slice(0, n);
     },
 
     async recordLoginAttempt(ip) {

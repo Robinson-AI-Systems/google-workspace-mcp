@@ -498,7 +498,7 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P0-5 | IN_REVIEW | #6 | Lockout + constant-time compare + tests. Manual 5-wrong-tries check on the preview still to do |
 | P0-6 | TODO | | |
 | P0-7 | IN_REVIEW | PR pending | Developing section added; tool count now 334 |
-| P1-1 | TODO | | |
+| P1-1 | IN_REVIEW | PR pending | Table, helper, 3 tools, last-used tracking; explicit logging added to brand_mailbox, make_super_admin, set_2sv_enforcement, move_user_orgunit, set_user_photo. Last-used is written at most once a minute per token (not every request). Manual check (brand a test alias, see one row) needs Chris's go-ahead: it changes a real mailbox |
 | P1-2 | TODO | | |
 | P1-3 | TODO | | |
 | P1-4 | TODO | | |
