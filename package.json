@@ -11,7 +11,9 @@
   "scripts": {
     "start": "node src/index.js",
     "authorize": "node src/auth/cli-authorize.js",
-    "check": "node --check src/index.js && for f in src/**/*.js api/**/*.js; do node --check \"$f\"; done"
+    "check": "node --check src/index.js && for f in src/**/*.js api/**/*.js; do node --check \"$f\"; done",
+    "test": "vitest run",
+    "test:db": "vitest run --config vitest.db.config.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -22,5 +24,9 @@
     "node": ">=18"
   },
   "author": "Robinson AI Systems",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "pg": "^8.23.1",
+    "vitest": "^3.2.7"
+  }
 }

@@ -8,7 +8,11 @@
 // Claude receives, so one Claude project can be "Appliance Rentals" and
 // another "AI Systems" without either seeing the other's inbox.
 import { randomToken, parseBody } from '../../src/oauth/helpers.js';
-import { getOAuthClient, createAuthCode, initSchema, listGoogleAccounts } from '../../src/db.js';
+import {
+  getOAuthClient, createAuthCode, initSchema, listGoogleAccounts,
+  recordLoginAttempt, countRecentFailedLogins, markLoginAttemptSucceeded
+} from '../../src/db.js';
+import { clientIp, evaluateLogin, LOCKOUT_WINDOW_MINUTES } from '../../src/oauth/login-guard.js';
 import { ensureMigrated } from '../../src/auth/google-auth-hosted.js';
 
 function renderLoginPage({ error, hidden, accounts, selected }) {
@@ -87,13 +91,27 @@ export default async function handler(req, res) {
     res.status(500).send('Server misconfigured: ADMIN_PASSPHRASE is not set.');
     return;
   }
-  if (params.passphrase !== process.env.ADMIN_PASSPHRASE) {
+  const keptAccount = String(params.google_account || '').trim().toLowerCase();
+  const verdict = await evaluateLogin({
+    ip: clientIp(req),
+    supplied: params.passphrase,
+    expected: process.env.ADMIN_PASSPHRASE,
+    store: { recordLoginAttempt, countRecentFailedLogins, markLoginAttemptSucceeded }
+  });
+  if (verdict.status === 'locked') {
     res.setHeader('Content-Type', 'text/html');
-    // Keep the account they picked so a passphrase typo doesn't silently flip it back to the default.
-    res.status(401).send(renderLoginPage({ error: 'Incorrect passphrase. Your account choice was kept.', hidden, accounts, selected: String(params.google_account || '').trim().toLowerCase() }));
+    res.setHeader('Retry-After', String(LOCKOUT_WINDOW_MINUTES * 60));
+    res.status(429).send(renderLoginPage({ error: `Too many wrong passphrases from this connection. Wait ${LOCKOUT_WINDOW_MINUTES} minutes before trying again.`, hidden, accounts, selected: keptAccount }));
     return;
   }
-  const chosen = String(params.google_account || '').trim().toLowerCase();
+  if (verdict.status === 'wrong') {
+    res.setHeader('Content-Type', 'text/html');
+    // Keep the account they picked so a passphrase typo doesn't silently flip it back to the default.
+    const left = verdict.attemptsLeft > 0 ? ` ${verdict.attemptsLeft} ${verdict.attemptsLeft === 1 ? 'try' : 'tries'} left before a ${LOCKOUT_WINDOW_MINUTES}-minute lockout.` : ` The next wrong try starts a ${LOCKOUT_WINDOW_MINUTES}-minute lockout.`;
+    res.status(401).send(renderLoginPage({ error: `Incorrect passphrase. Your account choice was kept.${left}`, hidden, accounts, selected: keptAccount }));
+    return;
+  }
+  const chosen = keptAccount;
   if (!accounts.some((a) => a.email === chosen)) {
     // (passphrase check below happens first in practice; this guards a tampered form)
     res.setHeader('Content-Type', 'text/html');
