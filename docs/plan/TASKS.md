@@ -498,8 +498,8 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P0-5 | IN_REVIEW | #6 | Lockout + constant-time compare + tests. Manual 5-wrong-tries check on the preview still to do |
 | P0-6 | IN_REVIEW | #8 | Code + tests done (crypto round-trip/tamper; DB tests on real Postgres). Needs Chris to set `TOKEN_ENCRYPTION_KEY` in Vercel (DEPLOY.md Part 6) before it takes effect; the Neon-branch check on both real accounts happens after that. Plain copy still written until P5-2 |
 | P0-7 | IN_REVIEW | #7 | Developing section added; tool count now 334 |
-| P1-1 | TODO | | |
-| P1-2 | IN_REVIEW | PR pending | 12 mappings + unit tests; unknown errors and network failures unchanged |
+| P1-1 | IN_REVIEW | #10 | Table, helper, 3 tools, last-used tracking; explicit logging added to brand_mailbox, make_super_admin, set_2sv_enforcement, move_user_orgunit, set_user_photo. Last-used is written at most once a minute per token (not every request). Manual check (brand a test alias, see one row) needs Chris's go-ahead: it changes a real mailbox |
+| P1-2 | IN_REVIEW | #9 | 12 mappings + unit tests; unknown errors and network failures unchanged |
 | P1-3 | TODO | | |
 | P1-4 | TODO | | |
 | P1-5 | IN_REVIEW | PR pending | Done, with one deviation: `etag` is NOT stripped (contacts_update needs it). Note: file data over 64 KB (e.g. `drive_download_file` on big files) now returns the size instead of the data |

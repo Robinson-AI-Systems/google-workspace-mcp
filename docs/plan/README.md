@@ -10,7 +10,7 @@ question to him is written in plain English, with no jargon unexplained.
 
 ## What this plan delivers
 
-Today the server is a wide set of Google buttons (334 tools) that knows which
+Today the server is a wide set of Google buttons (337 tools) that knows which
 business it is acting for. When this plan is complete it will also:
 
 1. **Be safe to leave running.** Tests on every change, lockout on the

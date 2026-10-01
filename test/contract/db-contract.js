@@ -1,6 +1,7 @@
 // One set of behavior checks for the database layer, run against BOTH the
 // in-memory fake (npm test) and a real Postgres (npm run test:db). If the fake
 // ever disagrees with the real thing, one of the two runs fails.
+import crypto from 'node:crypto';
 import { describe, it, expect, beforeEach } from 'vitest';
 
 /**
@@ -143,6 +144,75 @@ export function runDbContract(label, { makeDb, seedLegacy }) {
         expect(await db.getAccessToken('live')).not.toBeNull();
         await db.deleteAccessToken('live');
         expect(await db.getAccessToken('live')).toBeNull();
+      });
+    });
+
+    describe('connections', () => {
+      beforeEach(async () => {
+        await db.createOAuthClient({ clientId: 'cx', clientSecret: 's', redirectUris: ['https://example.test/cb'], clientName: 'Claude (rentals)' });
+        await db.createAccessToken({ accessToken: 'AAAAAAAA-first-secret-tail', refreshToken: 'rt-A', clientId: 'cx', googleAccount: 'rentals@example.test' });
+        await db.createAccessToken({ accessToken: 'AAAAAAAA-renewed-secret-tail', refreshToken: 'rt-A', clientId: 'cx', googleAccount: 'rentals@example.test' });
+        await db.createAccessToken({ accessToken: 'BBBBBBBB-other-secret-tail', refreshToken: 'rt-B', clientId: 'cx' });
+      });
+
+      it('lists live connections with only the first 8 characters of each token, and never the full token', async () => {
+        const rows = await db.listConnections();
+        expect(rows).toHaveLength(3);
+        expect(rows.map((r) => r.token_prefix).sort()).toEqual(['AAAAAAAA', 'AAAAAAAA', 'BBBBBBBB']);
+        expect(rows[0]).toMatchObject({ client_id: 'cx', client_name: 'Claude (rentals)' });
+        expect(new Set(rows.map((r) => r.connection_id)).size).toBe(3); // a distinct short label per token, safe to store
+        for (const r of rows) expect(r.connection_id).toMatch(/^[0-9a-f]{8}$/);
+        // The label in this list is the same one the change log stores (connectionId), computed independently here.
+        const sha = (t) => crypto.createHash('sha256').update(t, 'utf8').digest('hex').slice(0, 8);
+        const tokens = ['AAAAAAAA-first-secret-tail', 'AAAAAAAA-renewed-secret-tail', 'BBBBBBBB-other-secret-tail'];
+        expect(rows.map((r) => r.connection_id).sort()).toEqual(tokens.map(sha).sort());
+        for (const t of tokens) expect(db.connectionId(t)).toBe(sha(t));
+        expect(JSON.stringify(rows)).not.toMatch(/secret-tail/);
+      });
+
+      it('records when a connection was used', async () => {
+        expect((await db.listConnections()).every((r) => r.last_used_at == null)).toBe(true);
+        await db.touchAccessToken('BBBBBBBB-other-secret-tail');
+        const used = (await db.listConnections()).filter((r) => r.last_used_at != null);
+        expect(used).toHaveLength(1);
+        expect(used[0].token_prefix).toBe('BBBBBBBB');
+      });
+
+      it('refuses a prefix that is too short, unknown, or matches more than one token', async () => {
+        expect(await db.revokeConnection('BBBB')).toEqual({ revoked: 0, reason: 'too_short' });
+        expect(await db.revokeConnection('ZZZZZZZZ')).toEqual({ revoked: 0, reason: 'not_found' });
+        expect(await db.revokeConnection('AAAAAAAA')).toEqual({ revoked: 0, reason: 'ambiguous' });
+        expect(await db.getAccessToken('BBBBBBBB-other-secret-tail')).not.toBeNull();
+      });
+
+      it('switches a connection off: its token stops working, it cannot renew itself, and a sibling token for the same refresh token goes too', async () => {
+        expect(await db.revokeConnection('AAAAAAAA-f')).toEqual({ revoked: 2 });
+        expect(await db.getAccessToken('AAAAAAAA-first-secret-tail')).toBeNull();
+        expect(await db.getAccessToken('AAAAAAAA-renewed-secret-tail')).toBeNull();
+        expect(await db.getTokenByRefreshToken('rt-A')).toBeNull();
+        expect(await db.getAccessToken('BBBBBBBB-other-secret-tail')).not.toBeNull();
+        expect(await db.getTokenByRefreshToken('rt-B')).not.toBeNull();
+      });
+    });
+
+    describe('change log', () => {
+      it('stores a change with before and after, newest first', async () => {
+        await db.recordChange({ actingAs: 'a@example.test', connection: 'cx/AAAAAAAA', tool: 'admin_move_user_orgunit', target: 'sam@example.test', summary: 'Moved sam', before: { orgUnitPath: '/' }, after: { orgUnitPath: '/Staff' } });
+        await db.recordChange({ actingAs: 'b@example.test', tool: 'admin_set_2sv_enforcement', target: 'kim@example.test', summary: 'Turned on 2SV', dryRun: true });
+        const rows = await db.listRecentChanges();
+        expect(rows.map((r) => r.tool)).toEqual(['admin_set_2sv_enforcement', 'admin_move_user_orgunit']);
+        expect(rows[1]).toMatchObject({ acting_as: 'a@example.test', connection: 'cx/AAAAAAAA', target: 'sam@example.test', before: { orgUnitPath: '/' }, after: { orgUnitPath: '/Staff' }, dry_run: false });
+        expect(rows[0]).toMatchObject({ before: null, after: null, dry_run: true });
+      });
+
+      it('filters by tool, by acting account and by time, and respects the limit', async () => {
+        for (let i = 0; i < 5; i++) await db.recordChange({ actingAs: 'a@example.test', tool: 'tool_a', summary: `a${i}` });
+        await db.recordChange({ actingAs: 'b@example.test', tool: 'tool_b', summary: 'b' });
+        expect(await db.listRecentChanges({ tool: 'tool_b' })).toHaveLength(1);
+        expect(await db.listRecentChanges({ actingAs: 'A@Example.test' })).toHaveLength(5);
+        expect(await db.listRecentChanges({ limit: 2 })).toHaveLength(2);
+        expect(await db.listRecentChanges({ since: new Date(Date.now() + 3600 * 1000).toISOString() })).toHaveLength(0);
+        expect(await db.listRecentChanges({ since: new Date(Date.now() - 3600 * 1000).toISOString() })).toHaveLength(6);
       });
     });
 

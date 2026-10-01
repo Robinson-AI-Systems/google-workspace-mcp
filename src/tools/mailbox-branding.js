@@ -3,6 +3,7 @@
 // settings (display name, signature, send-as identities) because the robot
 // identity is granted nothing else; see src/auth/service-account.js.
 import { google } from 'googleapis';
+import { recordChange } from '../changelog.js';
 import { ok } from './util.js';
 import { buildDelegatedAuth, describeServiceAccount, isDelegationConfigured } from '../auth/service-account.js';
 
@@ -61,7 +62,7 @@ export const handlers = {
     }
   },
 
-  async workflow_brand_mailbox(args) {
+  async workflow_brand_mailbox(args, clients) {
     if (!isDelegationConfigured()) {
       return ok({ done: false, reason: 'Domain-wide delegation is not set up. Run workspace_delegation_status for the steps.' });
     }
@@ -69,36 +70,47 @@ export const handlers = {
     const gmail = gmailFor(user);
     const report = { user, primary: null, aliases: [], skipped: [], defaultSender: null };
 
-    // 1. Primary address: name + signature
-    const primaryPatch = {};
-    if (args.displayName !== undefined) primaryPatch.displayName = args.displayName;
-    if (args.signatureHtml !== undefined) primaryPatch.signature = args.signatureHtml;
-    if (Object.keys(primaryPatch).length) {
-      await gmail.users.settings.sendAs.patch({ userId: 'me', sendAsEmail: user, requestBody: primaryPatch });
-    }
-
-    // 2. Each alias: create if missing, then name + signature
+    // What the mailbox looks like before we touch it (for the change log). Alias existence is not affected by the
+    // primary-address patch below, so the same list also tells step 2 which aliases are missing.
     const existing = (await gmail.users.settings.sendAs.list({ userId: 'me' })).data.sendAs || [];
-    for (const alias of args.aliases || []) {
-      const email = norm(alias.email);
-      if (!email || email === user) { report.skipped.push({ email, why: 'same as the primary address or empty' }); continue; }
-      const already = existing.find((s) => norm(s.sendAsEmail) === email);
-      if (!already) {
-        await gmail.users.settings.sendAs.create({
-          userId: 'me',
-          requestBody: { sendAsEmail: email, displayName: alias.displayName || args.displayName || '', replyToAddress: alias.replyTo || '', treatAsAlias: true }
-        });
-      }
-      const patch = { treatAsAlias: true };
-      if (alias.displayName || args.displayName) patch.displayName = alias.displayName || args.displayName;
-      if (args.signatureHtml !== undefined) patch.signature = args.signatureHtml;
-      if (alias.replyTo) patch.replyToAddress = alias.replyTo;
-      await gmail.users.settings.sendAs.patch({ userId: 'me', sendAsEmail: email, requestBody: patch });
-    }
+    const summarize = (s) => ({ email: s.sendAsEmail, displayName: s.displayName || '', hasSignature: !!s.signature, isDefault: !!s.isDefault, isPrimary: !!s.isPrimary });
 
-    // 3. Optional default sender
-    if (args.makeDefault) {
-      await gmail.users.settings.sendAs.patch({ userId: 'me', sendAsEmail: norm(args.makeDefault), requestBody: { isDefault: true } });
+    // Steps 1-3 change the mailbox. If one fails part-way, the earlier ones have already happened, so say so in the log.
+    try {
+      // 1. Primary address: name + signature
+      const primaryPatch = {};
+      if (args.displayName !== undefined) primaryPatch.displayName = args.displayName;
+      if (args.signatureHtml !== undefined) primaryPatch.signature = args.signatureHtml;
+      if (Object.keys(primaryPatch).length) {
+        await gmail.users.settings.sendAs.patch({ userId: 'me', sendAsEmail: user, requestBody: primaryPatch });
+      }
+
+      // 2. Each alias: create if missing, then name + signature
+      for (const alias of args.aliases || []) {
+        const email = norm(alias.email);
+        if (!email || email === user) { report.skipped.push({ email, why: 'same as the primary address or empty' }); continue; }
+        const already = existing.find((s) => norm(s.sendAsEmail) === email);
+        if (!already) {
+          await gmail.users.settings.sendAs.create({
+            userId: 'me',
+            requestBody: { sendAsEmail: email, displayName: alias.displayName || args.displayName || '', replyToAddress: alias.replyTo || '', treatAsAlias: true }
+          });
+        }
+        const patch = { treatAsAlias: true };
+        if (alias.displayName || args.displayName) patch.displayName = alias.displayName || args.displayName;
+        if (args.signatureHtml !== undefined) patch.signature = args.signatureHtml;
+        if (alias.replyTo) patch.replyToAddress = alias.replyTo;
+        await gmail.users.settings.sendAs.patch({ userId: 'me', sendAsEmail: email, requestBody: patch });
+      }
+
+      // 3. Optional default sender
+      if (args.makeDefault) {
+        await gmail.users.settings.sendAs.patch({ userId: 'me', sendAsEmail: norm(args.makeDefault), requestBody: { isDefault: true } });
+      }
+    } catch (err) {
+      const why = String(err?.response?.data?.error?.message || err?.message || err).slice(0, 200);
+      await recordChange(clients, { tool: 'workflow_brand_mailbox', target: user, summary: `Branding ${user} stopped part-way and may be partly applied (${why})`, before: existing.map(summarize), after: null });
+      throw err;
     }
 
     // 4. Read back so the caller sees what Google now holds, not what we sent
@@ -115,6 +127,11 @@ export const handlers = {
       if (s.isDefault) report.defaultSender = s.sendAsEmail;
     }
     report.done = true;
+    await recordChange(clients, {
+      tool: 'workflow_brand_mailbox', target: user,
+      summary: `Branded ${user}: ${[args.displayName !== undefined && 'display name', args.signatureHtml !== undefined && 'signature', (args.aliases || []).length && `${args.aliases.length} alias(es)`, args.makeDefault && 'default sender'].filter(Boolean).join(', ') || 'no changes requested'}`,
+      before: existing.map(summarize), after: after.map(summarize)
+    });
     return ok(report);
   }
 };

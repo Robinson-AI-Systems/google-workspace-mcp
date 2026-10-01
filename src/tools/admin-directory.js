@@ -1,3 +1,4 @@
+import { recordChange } from '../changelog.js';
 import { ok } from './util.js';
 
 const CUSTOMER = 'my_customer'; // Directory API shorthand for "your own Workspace customer"
@@ -165,17 +166,28 @@ export const handlers = {
     const res = await admin.users.update({ userKey: args.userKey, requestBody: { password: args.newPassword, changePasswordAtNextLogin: args.changePasswordAtNextLogin !== false } });
     return ok({ userKey: args.userKey, status: 'password updated' });
   },
-  admin_move_user_orgunit: async (args, { admin }) => {
+  admin_move_user_orgunit: async (args, clients) => {
+    const { admin } = clients;
+    const before = (await admin.users.get({ userKey: args.userKey, fields: 'primaryEmail,orgUnitPath' })).data;
     const res = await admin.users.update({ userKey: args.userKey, requestBody: { orgUnitPath: args.orgUnitPath } });
+    await recordChange(clients, { tool: 'admin_move_user_orgunit', target: before.primaryEmail || args.userKey, summary: `Moved ${before.primaryEmail || args.userKey} from ${before.orgUnitPath} to ${res.data.orgUnitPath}`, before: { orgUnitPath: before.orgUnitPath }, after: { orgUnitPath: res.data.orgUnitPath } });
     return ok(res.data);
   },
   admin_sign_out_user: async (args, { admin }) => {
     await admin.users.signOut({ userKey: args.userKey });
     return ok({ userKey: args.userKey, status: 'all sessions signed out' });
   },
-  admin_make_super_admin: async (args, { admin }) => {
+  admin_make_super_admin: async (args, clients) => {
+    const { admin } = clients;
+    const before = (await admin.users.get({ userKey: args.userKey, fields: 'primaryEmail,isAdmin' })).data;
     await admin.users.makeAdmin({ userKey: args.userKey, requestBody: { status: args.isAdmin } });
-    return ok({ userKey: args.userKey, isAdmin: args.isAdmin });
+    // The change has happened. Read back what Google holds now; if that read fails, still record the change and say it is unconfirmed.
+    let after = null;
+    try { after = (await admin.users.get({ userKey: args.userKey, fields: 'primaryEmail,isAdmin' })).data; } catch { /* reported below */ }
+    const who = after?.primaryEmail || before.primaryEmail || args.userKey;
+    const now = after ? !!after.isAdmin : !!args.isAdmin;
+    await recordChange(clients, { tool: 'admin_make_super_admin', target: who, summary: `Super admin for ${who}: ${before.isAdmin ? 'yes' : 'no'} -> ${now ? 'yes' : 'no'}${after ? '' : ' (requested; could not read it back to confirm)'}`, before: { isAdmin: !!before.isAdmin }, after: { isAdmin: now, confirmed: !!after } });
+    return ok({ userKey: args.userKey, requested: args.isAdmin, isAdmin: now, confirmed: !!after });
   },
   admin_undelete_user: async (args, { admin }) => {
     await admin.users.undelete({ userKey: args.userId, requestBody: { orgUnitPath: args.orgUnitPath || '/' } });
@@ -185,16 +197,23 @@ export const handlers = {
     const res = await admin.users.get({ userKey: args.userKey, projection: 'full', fields: 'isEnrolledIn2Sv,isEnforcedIn2Sv,primaryEmail' });
     return ok(res.data);
   },
-  admin_set_2sv_enforcement: async (args, { admin }) => {
+  admin_set_2sv_enforcement: async (args, clients) => {
+    const { admin } = clients;
+    const before = (await admin.users.get({ userKey: args.userKey, projection: 'full', fields: 'primaryEmail,isEnforcedIn2Sv' })).data;
     const res = await admin.users.update({ userKey: args.userKey, requestBody: { isEnforcedIn2Sv: args.enforce } });
+    await recordChange(clients, { tool: 'admin_set_2sv_enforcement', target: before.primaryEmail || args.userKey, summary: `2-Step Verification enforcement for ${before.primaryEmail || args.userKey}: ${before.isEnforcedIn2Sv ? 'on' : 'off'} -> ${res.data.isEnforcedIn2Sv ? 'on' : 'off'}`, before: { isEnforcedIn2Sv: !!before.isEnforcedIn2Sv }, after: { isEnforcedIn2Sv: !!res.data.isEnforcedIn2Sv } });
     return ok(res.data);
   },
   admin_get_user_photo: async (args, { admin }) => {
     const res = await admin.users.photos.get({ userKey: args.userKey });
     return ok(res.data);
   },
-  admin_set_user_photo: async (args, { admin }) => {
+  admin_set_user_photo: async (args, clients) => {
+    const { admin } = clients;
+    let before = null;
+    try { const b = (await admin.users.photos.get({ userKey: args.userKey })).data; before = { mimeType: b.mimeType, width: b.width, height: b.height }; } catch { /* no photo yet */ }
     const res = await admin.users.photos.update({ userKey: args.userKey, requestBody: { photoData: Buffer.from(args.base64Data, 'base64').toString('base64url') } });
+    await recordChange(clients, { tool: 'admin_set_user_photo', target: args.userKey, summary: `Changed the profile photo of ${args.userKey}`, before, after: { mimeType: res.data.mimeType, width: res.data.width, height: res.data.height } });
     return ok(res.data);
   },
 
