@@ -496,7 +496,7 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P0-3 | IN_REVIEW | #6 | Fix + unit test done. Manual Drive upload check needs Chris's go-ahead (writes to his Drive) |
 | P0-4 | TODO | | |
 | P0-5 | IN_REVIEW | #6 | Lockout + constant-time compare + tests. Manual 5-wrong-tries check on the preview still to do |
-| P0-6 | TODO | | |
+| P0-6 | IN_REVIEW | PR pending | Code + tests done (crypto round-trip/tamper; DB tests on real Postgres). Needs Chris to set `TOKEN_ENCRYPTION_KEY` in Vercel (DEPLOY.md Part 6) before it takes effect; the Neon-branch check on both real accounts happens after that. Plain copy still written until P5-2 |
 | P0-7 | TODO | | |
 | P1-1 | TODO | | |
 | P1-2 | TODO | | |

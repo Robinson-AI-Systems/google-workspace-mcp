@@ -4,7 +4,8 @@
 // throwaway schema and drops it at the end, so existing tables and data are
 // never read or changed. Without TEST_DATABASE_URL the tests are reported as
 // SKIPPED (visible in the summary), not silently passed.
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import crypto from 'node:crypto';
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { runDbContract } from '../contract/db-contract.js';
 import { openIsolatedSchema, closeIsolatedSchema, rawQuery, neonShapedQuery } from '../helpers/pg-neon-adapter.js';
 
@@ -75,6 +76,74 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       await rawQuery(`INSERT INTO login_attempts (ip, attempted_at, success) VALUES ('9.9.9.9', now() - interval '16 minutes', false), ('9.9.9.9', now() - interval '14 minutes', false)`);
       expect(await db.countRecentFailedLogins('9.9.9.9', 15)).toBe(1);
       expect(await db.countRecentFailedLogins('9.9.9.9', 20)).toBe(2);
+    });
+  });
+
+  describe('encrypted Google tokens', () => {
+    const tokens = { access_token: 'fake-access-1', refresh_token: 'fake-refresh-1' };
+    const row = async (email) => (await rawQuery(`SELECT tokens, tokens_enc FROM google_accounts WHERE email = $1`, [email]))[0];
+    const reset = async () => { await rawQuery(`DELETE FROM google_accounts`); };
+    afterEach(() => { delete process.env.TOKEN_ENCRYPTION_KEY; });
+
+    it('adds the encrypted column additively and keeps writing the plain copy for older code', async () => {
+      await db.initSchema();
+      expect(await columnsOf('google_accounts')).toContain('tokens_enc');
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test', tokens);
+      const r = await row('a@example.test');
+      expect(r.tokens).toEqual(tokens);               // older code reading only `tokens` still works
+      expect(r.tokens_enc).toMatch(/^v1:/);
+      expect(r.tokens_enc).not.toContain('fake-refresh-1');
+      expect(await db.getGoogleTokensFor('a@example.test')).toEqual(tokens);
+    });
+
+    it('merges a later refresh into both copies and the encrypted copy follows', async () => {
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test', tokens);
+      await db.saveGoogleTokensFor('a@example.test', { access_token: 'fake-access-2' });
+      const merged = { access_token: 'fake-access-2', refresh_token: 'fake-refresh-1' };
+      expect((await row('a@example.test')).tokens).toEqual(merged);
+      expect(await db.getGoogleTokensFor('a@example.test')).toEqual(merged);
+    });
+
+    it('fills in the encrypted copy for existing accounts on first read once a key is set', async () => {
+      await reset();
+      await db.saveGoogleTokensFor('old@example.test', tokens);       // saved before encryption existed
+      await db.saveGoogleTokensFor('old2@example.test', tokens);
+      expect((await row('old@example.test')).tokens_enc).toBeNull();
+      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
+      expect(await db.getGoogleTokensFor('old@example.test')).toEqual(tokens);
+      expect(await db.getGoogleTokensFor('old2@example.test')).toEqual(tokens);
+      expect((await row('old@example.test')).tokens_enc).toMatch(/^v1:/);
+      expect((await row('old2@example.test')).tokens_enc).toMatch(/^v1:/);
+    });
+
+    it('without a key it behaves as before, and clears a stale encrypted copy instead of serving it', async () => {
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test', tokens);
+      delete process.env.TOKEN_ENCRYPTION_KEY;
+      await db.saveGoogleTokensFor('a@example.test', { access_token: 'fake-access-3' });
+      expect((await row('a@example.test')).tokens_enc).toBeNull();
+      expect((await db.getGoogleTokensFor('a@example.test')).access_token).toBe('fake-access-3');
+    });
+
+    it('a damaged or wrong-key encrypted copy never crashes a read: it warns and uses the plain copy', async () => {
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test', tokens);
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await rawQuery(`UPDATE google_accounts SET tokens_enc = 'v1:AAAA:AAAA:AAAA' WHERE email = 'a@example.test'`);
+      expect(await db.getGoogleTokensFor('a@example.test')).toEqual(tokens);
+      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64'); // a different key
+      await db.saveGoogleTokensFor('b@example.test', tokens);
+      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
+      expect(await db.getGoogleTokensFor('b@example.test')).toEqual(tokens);
+      expect(warn).toHaveBeenCalled();
+      expect(JSON.stringify(warn.mock.calls)).not.toContain('fake-');
+      warn.mockRestore();
     });
   });
 

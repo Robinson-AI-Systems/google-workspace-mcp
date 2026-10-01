@@ -110,7 +110,7 @@ API controls → Domain-wide delegation.
 
 `DATABASE_URL`, `ADMIN_PASSPHRASE`, `GOOGLE_OAUTH_CLIENT_ID`,
 `GOOGLE_OAUTH_CLIENT_SECRET`, `PUBLIC_BASE_URL`, `GOOGLE_SERVICE_ACCOUNT_JSON`.
-P0-6 adds `TOKEN_ENCRYPTION_KEY`. P2-3 adds `VERCEL_API_TOKEN` and
+P0-6 adds `TOKEN_ENCRYPTION_KEY` (optional; DEPLOY.md Part 6). P2-3 adds `VERCEL_API_TOKEN` and
 `VERCEL_TEAM_ID` (for DNS). Never print any of them.
 
 ## Tool module convention
