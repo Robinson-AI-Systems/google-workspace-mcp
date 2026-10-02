@@ -485,31 +485,97 @@ deprecated in README and remove the `bin` entries. Recommendation: deprecate.
 
 **Acceptance.** `npm run gen:catalog` produces no diff on a clean tree.
 
+## Phase 6: Extensions (after the core plan; optional)
+
+Added 2026-10-02 from a backlog Chris reviewed. Only P6-1 is planned. The rest of
+that backlog is recorded under "Considered and not planned" so it is not
+proposed again by accident.
+
+### P6-1 · Full group settings (S)
+
+**Goal.** Let Chris run shared inboxes (support@, billing@, leads@) as Google
+Groups and control who can post, where replies go and how mail is moderated,
+without opening the Admin console.
+
+**Today.** `admin_get_group_settings` and `admin_update_group_settings` exist
+(`src/tools/admin-directory.js`, safety wrapper in `src/tools/guards-admin.js`),
+but the update tool accepts only six fields: `whoCanJoin`, `whoCanPostMessage`,
+`whoCanViewMembership`, `whoCanViewGroup`, `allowExternalMembers`, `isArchived`.
+
+**Build.**
+- Extend the schema and handler of `admin_update_group_settings`. Do **not** add
+  a new tool. New fields, to be confirmed against Google's current Groups
+  Settings API reference before use (check each name, its allowed values and
+  whether Google has retired it; drop or flag any that are retired): `replyTo`,
+  `customReplyTo`, `messageModerationLevel`, `spamModerationLevel`,
+  `whoCanModerateContent`, `whoCanModerateMembers`, `whoCanContactOwner`,
+  `whoCanDiscoverGroup`, `showInGroupDirectory`, `includeInGlobalAddressList`,
+  `allowWebPosting`, `membersCanPostAsTheGroup`, `enableCollaborativeInbox`,
+  `sendMessageDenyNotification`, `defaultMessageDenyNotificationText`,
+  `includeCustomFooter`, `customFooterText`.
+- Keep the existing six fields working exactly as they do today.
+- Refuse an unknown value with a plain message that lists the allowed ones.
+- Safety (reuse the existing guard entry and read-back; extend how it decides a
+  call is risky, the same way it does today): require `confirm: true` when a
+  call opens the group to outsiders or removes moderation, namely
+  `whoCanPostMessage`, `whoCanJoin` or `whoCanViewGroup` set to an
+  `ANYONE_CAN_*` value, `allowExternalMembers: true`,
+  `messageModerationLevel: MODERATE_NONE`, or `spamModerationLevel: ALLOW`.
+  The guard entry (`guards-admin.js`) already requires `confirm` for the
+  `ANYONE_CAN_*` and external-members cases through `confirmWhen`; add the two
+  moderation cases there, and add every new field to `SETTING_KEYS` and to
+  `settingsView` so the preview text and the read-back cover it. The read-back
+  must check every field that was asked for.
+- The domain guard already checks `groupEmail`; keep it that way.
+- Same PR: update README (what `admin_update_group_settings` can set), add an
+  OWNER-GUIDE row ("Set up support@ as a shared inbox", with what it asks first),
+  and the ledger.
+
+**Acceptance.** Unit tests with the fakes: every new field reaches
+`groups.patch`; a bad value is refused with the plain message; each risky
+setting refuses without `confirm`; `dryRun` changes nothing; the read-back is
+what is returned. Manual (needs Chris's go-ahead, it changes a real group): on a
+throwaway group in the rentals domain, preview, then set `replyTo` and a
+moderation level, read it back, then delete the group.
+
+### Considered and not planned (reviewed with Chris, 2026-10-02)
+
+| Idea | Decision | Why |
+| --- | --- | --- |
+| Meeting rooms and buildings tools | Not planned | Buildings, rooms and feature tags already exist (`admin_create_building`, `admin_create_calendar_resource`, `admin_create_feature` and their update/delete tools) |
+| Device management through Cloud Identity | Not planned | `admin_action_mobile_device` already approves, blocks and wipes phones; the new API adds laptops and desktops and needs a plan with advanced device management |
+| Security alerts (list, resolve) | On hold | The tools exist but Google's sign-in screen refuses the Alert Center permission, so a new tool would hit the same wall. Revisit if Google allows it or the robot identity is given the permission (needs Chris's written approval) |
+| Google Voice | Not planned | Seats are ordinary licences (`licensing_assign_license` works with the Voice plan ID); choosing phone numbers has no public API. A console-link entry in `workspace_where_is_setting` is a possible small extra, not scheduled |
+| Google Meet transcripts, recordings, attendance | On hold | Real API, but it needs new read-only permissions (every account signs in again), works only for meetings that were recorded, and handles sensitive content. Revisit when Chris holds recorded meetings |
+| Google Sites creation and copy | Not possible | New Google Sites has no public API to create or copy a site |
+
 ---
 
 ## Status ledger
 
 Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
-`MERGED` (code shipped but acceptance may still be outstanding), `DONE`, and
-`BLOCKED (reason)`.
+`MERGED` (code shipped but acceptance may still be outstanding), `DONE` (every
+acceptance check proven), and `BLOCKED (reason)`. Audited against the code on
+2026-10-02, at the merge of PR #23: statuses that said `IN_REVIEW` for work that
+is already on `main` were moved to `MERGED` or `DONE`.
 
 | Card | Status | PR | Notes |
 | --- | --- | --- | --- |
-| P0-1 | IN_REVIEW | #6 | Tests, fakes, DB tests, CI added. CI runs DB tests on a throwaway Postgres on every PR (no secret needed). Not yet proven: red-on-failure demo (do once on the PR) |
-| P0-2 | TODO | | |
-| P0-3 | IN_REVIEW | #6 | Fix + unit test done. Manual Drive upload check needs Chris's go-ahead (writes to his Drive) |
+| P0-1 | MERGED | #6 | Tests, fakes, DB tests, CI added (on `main`; 993 unit tests pass in the 2026-10-02 audit). CI runs DB tests on a throwaway Postgres on every PR (no secret needed). Not yet proven: red-on-failure demo (do once on the PR) |
+| P0-2 | TODO | | `scripts/smoke-readonly.mjs` does not exist. Until it does, tools that never worked against real Google are not found |
+| P0-3 | MERGED | #6 | Fix + unit test done. Manual Drive upload check needs Chris's go-ahead (writes to his Drive) |
 | P0-4 | MERGED | #7 | Tool + unit tests done (token host check, size/redirect/timeout/private-address limits). Manual copy of the brand PDF needs Chris's go-ahead (writes to his Drive) |
 | P0-5 | MERGED | #6 | Lockout + constant-time compare + tests. Manual 5-wrong-tries check on the preview still to do |
-| P0-6 | MERGED | #8 | Code + tests done (crypto round-trip/tamper; DB tests on real Postgres). Needs Chris to set `TOKEN_ENCRYPTION_KEY` in Vercel (DEPLOY.md Part 6) before it takes effect; the Neon-branch check on both real accounts happens after that. Plain copy still written until P5-2 |
-| P0-7 | IN_REVIEW | #7, #19 | Developing section added; hard-coded README tool count corrected to 348 in #19. Generated catalog remains P5-4. |
+| P0-6 | MERGED | #8 | Code + tests done (crypto round-trip/tamper; DB tests on real Postgres). Needs Chris to set `TOKEN_ENCRYPTION_KEY` in Vercel (DEPLOY.md Part 6) before it takes effect; the Neon-branch check on both real accounts happens after that. Plain copy still written until P5-2. Chris set `TOKEN_ENCRYPTION_KEY` in Vercel and redeployed on 2026-10-02 (earliest date for P5-2: 2026-11-01); the check that `tokens_enc` is filled for both accounts has not been run yet |
+| P0-7 | DONE | #7, #19 | Developing section added; README tool count and table now match the registry (354, 2026-10-02 audit). Acceptance proven: `npm ci`, `npm run check` and `npm test` ran from the README alone in the audit. Generated catalog remains P5-4. |
 | P1-1 | MERGED | #10 | Table, helper, 3 tools, last-used tracking; explicit logging added to brand_mailbox, make_super_admin, set_2sv_enforcement, move_user_orgunit, set_user_photo. Last-used is written at most once a minute per token (not every request). Manual check (brand a test alias, see one row) needs Chris's go-ahead: it changes a real mailbox |
-| P1-2 | MERGED | #9 | 12 mappings + unit tests; unknown errors and network failures unchanged |
+| P1-2 | DONE | #9 | 12 mappings + unit tests; unknown errors and network failures unchanged |
 | P1-3 | MERGED | #13 | Shipped with P1-4 in one PR. |
 | P1-4 | MERGED | #13 | Shipped with P1-3. |
-| P1-5 | MERGED | #9 | Etag is kept (contacts_update needs it). |
+| P1-5 | DONE | #9 | Etag is kept (contacts_update needs it). |
 | P2-1 | MERGED | #14 | `calendar_update_calendar` via defineWrite (dry run, read-back, change log), time zone checked against the IANA list. Manual Denver check on the rentals calendar still to do: it changes a real calendar |
 | P2-2 | MERGED | #14 | `workflow_email_health`: unit tests with a stubbed resolver. Deviation: adds an INFO result (Resend records are optional). Manual runs on both domains and the committed examples need live DNS, which this sandbox cannot reach |
-| P2-3 | IN_REVIEW | #20 | `dns_list_records`, `dns_add_record`, `dns_delete_record` via Vercel's API; only domains whose real nameservers are Vercel's; add is idempotent, refuses CNAME clashes, always confirms, reads back. Chris set `VERCEL_API_TOKEN` (sensitive, Production only) and `VERCEL_TEAM_ID` in Vercel on 2026-10-02; takes effect on the next production deploy. Manual check still to do: `dns_list_records` on the domain whose `_dmarc` record Chris added by hand. Endpoints checked against Vercel's docs on 2026-10-02: list is `GET /v5/domains/{domain}/records` (the card said v2), add is `POST /v2/domains/{domain}/records`, delete is `DELETE /v2/domains/{domain}/records/{id}` (the card left out the domain). SRV is not offered until proven live. Review fixes: case-exact TXT compare, trailing-dot-safe hostnames, all pages read (stops rather than guess past 5000 records) |
+| P2-3 | MERGED | #20 | `dns_list_records`, `dns_add_record`, `dns_delete_record` via Vercel's API; only domains whose real nameservers are Vercel's; add is idempotent, refuses CNAME clashes, always confirms, reads back. Chris set `VERCEL_API_TOKEN` (sensitive, Production only) and `VERCEL_TEAM_ID` in Vercel on 2026-10-02; takes effect on the next production deploy. Manual check still to do: `dns_list_records` on the domain whose `_dmarc` record Chris added by hand. Endpoints checked against Vercel's docs on 2026-10-02: list is `GET /v5/domains/{domain}/records` (the card said v2), add is `POST /v2/domains/{domain}/records`, delete is `DELETE /v2/domains/{domain}/records/{id}` (the card left out the domain). SRV is not offered until proven live. Review fixes: case-exact TXT compare, trailing-dot-safe hostnames, all pages read (stops rather than guess past 5000 records) |
 | P2-4 | MERGED | #14 | `workspace_where_is_setting`, 47 settings (card said ~60). Deviation: a .js file, not .json, so the serverless bundle always includes it. Direct links are from memory of Google's URL patterns: spot-check of 10 by Chris still to do; entries without a link give click paths only |
 | P2-5 | MERGED | #14 | `workflow_health_report`: scoring rules unit tested. Deviation: "unused licences" means licences held by suspended or 90-day-inactive accounts, because the API cannot show purchased seats. Deep checks (apps, forwarding) cover the first 100 active users. Manual runs and committed examples still to do |
 | P2-6 | MERGED | #14 | Real customer ID in `licensing_list_assignments`; switched-off-API errors now name the API to enable; `workspace_plan_summary` added. Manual run on both domains still to do |
@@ -519,17 +585,56 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P3-2 | MERGED | #15, #18 | Offboarding already had dryRun/confirm/read-back/logging from P1-3. Added: removes send-as aliases and sets the out-of-office reply (the old description promised the reply but the code never did it) before suspending, via delegation; each is skipped with a reason when delegation is off. Also removes the calendar/Drive shares granted by P3-1. #18 hardened failed-step/read-back behavior. Left as the guard wrapper rather than direct `defineWrite` (same safety behavior). |
 | P3-3 | MERGED | #17, #18 | `workflow_set_up_business`. Deviations: (1) the nine folder names are exactly the real Appliance Rentals folders (read from the live Drive, 2026-10-01); override with `folders`; (2) always needs `confirm` (adds a domain and a paid account) and `crossDomain` on a limited connection; (3) stops at the DNS step on an unverified domain; (4) labels/filters only when the connection IS the owner; (5) calendar and folder are created under the connection's own account then shared with the owner. Fictional-domain preview proven by test; manual run against a throwaway domain still to do. |
 | P3-4 | MERGED | #15 | Added `avatarBase64`, `labels` (+`filterTo`), `vacation`, `dryRun`. Deviation: labels are only created when the connection IS that mailbox, because the delegated robot identity may not create labels (that needs a wider scope, which needs Chris's written approval). Manual no-op/read-back check on the rentals mailbox still to do. |
-| P3-5 | MERGED | #15 | `gmail_inbox_summary`, `gmail_find_unanswered`; read-only; looks at up to 100 conversations and says when it stopped. #18 hardened inbox classification accuracy. |
+| P3-5 | DONE | #15 | `gmail_inbox_summary`, `gmail_find_unanswered`; read-only; looks at up to 100 conversations and says when it stopped. #18 hardened inbox classification accuracy. |
 | P3-6 | MERGED | #15 | `docs/OWNER-GUIDE.md` is shipped and now lists add-a-staff-member and set-up-a-business; Chris still needs to read it and confirm it makes sense. |
-| P4-1 | IN_REVIEW | #21 | Chris approved `calendar` and `drive.file` by name on 2026-10-02 ("I approve calendar and drive.file for the robot identity"). `DELEGATED_SCOPES` is now exactly the Gmail pair plus those two. Each call requests only the subset it needs, so Gmail branding keeps working before the Admin console entry is updated. `workspace_delegation_status` tries each permission on its own, names any that fail and says what to type. Chris still has to edit the Admin console entry (DEPLOY.md Part 5), then run the status tool: needs `allScopesWork: true` |
-| P4-2 | IN_REVIEW | #21 | `delegatedClients(userEmail, scopes)` returns only the clients for the scopes asked; anything outside `DELEGATED_SCOPES` throws (tested). Nothing uses it yet beyond the status tool: the business tools act as the connection's own account, so the robot's new permissions are held in reserve |
-| P4-3 | IN_REVIEW | #20 | `workspace_business_calendar`, `workspace_business_folders` + `business_resources` table (contract-tested on the in-memory fake and on a real Postgres 16, 44 DB tests passing). Acts as the connection's own account, so it needs no delegation. Idempotent; a remembered ID that no longer exists is not trusted; the main folder is searched across all of Drive and two matches stop it rather than guess; the preview and the read-back look at Drive itself. Manual check still to do: returns the existing `c_dd214eeb…` calendar and `13yNQodb…` folder tree |
-| P4-4 | IN_REVIEW | #21 | DEPLOY.md Part 5 updated and Part 8 added (the app's own service account, its four scopes, the Vercel variables, how it finds the IDs). Cross-linked to APPLIANCE-DESK-INTEGRATION.md. Chris can follow it in about 15 minutes |
-| P5-1 | IN_REVIEW | | Safety table now covers every changing tool (dryRun, confirm where risky, read-back, change log); `scripts/check-writes.mjs` runs in `npm run check`/CI. |
-| P5-2 | TODO | | Not before 30 days after P0-6 ships |
-| P5-3 | IN_REVIEW | | Chris decided to retire local mode (2026-10-02). Local files, scripts and README sections removed; hosted only. |
+| P4-1 | DONE | #21 | Chris approved `calendar` and `drive.file` by name on 2026-10-02 ("I approve calendar and drive.file for the robot identity"). `DELEGATED_SCOPES` is now exactly the Gmail pair plus those two. Each call requests only the subset it needs, so Gmail branding keeps working before the Admin console entry is updated. `workspace_delegation_status` tries each permission on its own, names any that fail and says what to type. Acceptance proven 2026-10-02: Chris updated the Admin console entry and `workspace_delegation_status` (tested against ops@robinsonappliancerentals.com) returned `allScopesWork: true` with Gmail settings, Calendar and Drive each working |
+| P4-2 | DONE | #21 | `delegatedClients(userEmail, scopes)` returns only the clients for the scopes asked; anything outside `DELEGATED_SCOPES` throws (tested). Nothing uses it yet beyond the status tool: the business tools act as the connection's own account, so the robot's new permissions are held in reserve |
+| P4-3 | MERGED | #20 | `workspace_business_calendar`, `workspace_business_folders` + `business_resources` table (contract-tested on the in-memory fake and on a real Postgres 16, 44 DB tests passing). Acts as the connection's own account, so it needs no delegation. Idempotent; a remembered ID that no longer exists is not trusted; the main folder is searched across all of Drive and two matches stop it rather than guess; the preview and the read-back look at Drive itself. Manual check still to do: returns the existing `c_dd214eeb…` calendar and `13yNQodb…` folder tree |
+| P4-4 | MERGED | #21 | DEPLOY.md Part 5 updated and Part 8 added (the app's own service account, its four scopes, the Vercel variables, how it finds the IDs). Cross-linked to APPLIANCE-DESK-INTEGRATION.md. Chris can follow it in about 15 minutes |
+| P5-1 | IN_PROGRESS | #23 | Safety table covers 191 tools with `dryRun` (120 also with `confirm`); `scripts/check-writes.mjs` runs in `npm run check`/CI. Not finished: eleven changing tools have no safety layer and the name-based check does not catch them (`gmail_untrash_message`, `gmail_untrash_thread`, `sheets_duplicate_sheet`, `sheets_format_cells`, `sheets_freeze_rows`, `sheets_autoresize_columns`, `sheets_sort_range`, `sheets_merge_cells`, `sheets_unmerge_cells`, `sheets_protect_range`, `domain_confirm_verification`). Done when those are wrapped and the check's verb list covers them. (The earlier note here said every changing tool was covered; the 2026-10-02 audit found it was not.) |
+| P5-2 | TODO | | Not before 30 days after encryption went live (key set 2026-10-02, so not before 2026-11-01) |
+| P5-3 | DONE | | Chris decided to retire local mode (2026-10-02). Local files, scripts and README sections removed; hosted only. README, DEPLOY and ARCHITECTURE checked against the code in the 2026-10-02 audit and match. |
 | P5-4 | TODO | | #19 corrects README drift; generated catalog/version/changelog work remains TODO. |
+| P6-1 | TODO | | Added 2026-10-02 (Chris: "go with #1"). Extends the existing `admin_update_group_settings`; no new tool. Start only after the docs-audit PR (#24) is merged |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 (PR #1), account-choice fix (PR #2), domain-wide delegation + mailbox branding
 (PR #3), refresh-token security fix (PR #4).
+
+---
+
+## Audit, 2026-10-02: how much of the plan is complete
+
+Method. Every card was checked against `main` (PR #23 merged): the code exists,
+`npm run check` passes, and `npm test` passes (993 tests, 34 files). Each card
+is weighted by effort, taking the middle of the size key (S = 0.5 day, M = 1.5
+days, L = 4 days), for 37 days across the 35 cards (P6-1 was added the same day, which moved the estimate from 84% to 83%). A card counts 100% when
+every acceptance check is proven (`DONE`), 90% when it is built and tested but
+its live check by Chris is still outstanding (the live check is about a tenth of
+the work), and 0% when it is not built. This is an estimate of effort, not a
+measurement.
+
+| State | Cards | Effort (days) | Share |
+| --- | --- | --- | --- |
+| Done, acceptance proven | P0-7, P1-2, P1-5, P3-5, P4-1, P4-2, P5-3 | 3.5 | 9% |
+| Built and tested, live check outstanding | 23 cards marked `MERGED`, plus P5-1 (about 90% built) | 30.1 | 81% |
+| Not built | P0-2, P5-2 (time-blocked), P5-4, P6-1, and the last tenth of P5-1 | 3.4 | 9% |
+
+**Complete: about 83%. Remaining: about 17%** (roughly 9% still to build and 8%
+to prove with live checks; shares are rounded). By code alone, about 91% is built.
+
+Left to build: P0-2 (read-only smoke test, 1.5 days), P5-4 (version 2.0,
+changelog, generated tool catalog), finishing P5-1 (eleven tools), P6-1 (full
+group settings), and P5-2 (only after 2026-11-01).
+
+Left to prove (all need Chris's go-ahead because they touch real accounts): the
+manual checks listed in the ledger notes above, for example upload a test file to
+Drive (P0-3), copy the brand PDF (P0-4), five wrong passphrases (P0-5), confirm
+`tokens_enc` is filled for both accounts (P0-6), brand a test alias and see one
+change-log row (P1-1), set the rentals calendar to Denver (P2-1), run the email
+health and health reports on both domains and commit them (P2-2, P2-5), add and
+delete a disposable test employee (P3-1), and so on. Also not recorded anywhere:
+the phase-gate reviews (one per phase, by a stronger model).
+
+Not counted: the app-side half of the Appliance Desk integration
+(`APPLIANCE-DESK-INTEGRATION.md`), which lives in the appliance-desk repository.

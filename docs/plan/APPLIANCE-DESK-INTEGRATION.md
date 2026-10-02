@@ -24,13 +24,18 @@ reply from there.
 - **A separate service account for the app** (not the connector's). Name:
   `appliance-desk-google`. JSON key in Vercel env `GOOGLE_SERVICE_ACCOUNT_JSON`
   on the appliance-desk project (never committed).
-- Domain-wide delegation entry in Admin console for its client ID with exactly:
-  `https://www.googleapis.com/auth/calendar`,
-  `https://www.googleapis.com/auth/drive.file`,
-  `https://www.googleapis.com/auth/gmail.readonly`,
-  `https://www.googleapis.com/auth/gmail.send`.
-  (`drive.file` sees only files the app created; `gmail.readonly` + `gmail.send`
-  instead of `gmail.modify` so the app can never delete or relabel mail.)
+- Domain-wide delegation entry in Admin console for its client ID. **Today
+  only these two are approved** (DEPLOY.md Part 8):
+  `https://www.googleapis.com/auth/calendar` and
+  `https://www.googleapis.com/auth/drive.file`
+  (`drive.file` sees only files the app created).
+  Feature 3 (email) needs two more,
+  `https://www.googleapis.com/auth/gmail.readonly` and
+  `https://www.googleapis.com/auth/gmail.send` (instead of `gmail.modify` so the
+  app can never delete or relabel mail). **Those two are not approved.** A
+  delegation scope applies to every mailbox in the domain, so Chris must approve
+  them in writing, by name, before the email PRs (5 and 6) ship; add them to the
+  entry only then.
 - The app always impersonates `ops@robinsonappliancerentals.com`. Setting
   `GOOGLE_IMPERSONATE_USER` env var; refuse to start sync if unset.
 - All Google calls go through one module `src/lib/google.ts` that builds the
@@ -44,8 +49,8 @@ reply from there.
 `googleSyncedAt DateTime?`, `googleEtag String?`. Business setting
 `googleCalendarId` (default: the "Deliveries & Service" calendar
 `c_dd214eeba2ec27ed60d341f7aed60beb32c7a883034f39be4153111ce846996d@group.calendar.google.com`,
-discoverable via the connector's `workspace_business_calendar` tool or by
-name).
+returned by the connector's `workspace_business_calendar` tool, which also
+stores it in the shared `business_resources` table).
 
 **App → Calendar (authoritative for existence).** On job create/update/cancel
 (server action), enqueue a sync: create or patch the event with
@@ -146,7 +151,9 @@ and the delegation entry.
    create service account `appliance-desk-google`, download JSON key, copy
    its Unique ID.
 2. Admin console → Security → API controls → Domain-wide delegation → Add new:
-   that client ID with the four scopes above, comma-separated.
+   that client ID with the two approved scopes (`calendar`, `drive.file`),
+   comma-separated. Add the two Gmail scopes later, only after written approval
+   (see Identity and permissions).
 3. Vercel → appliance-desk → Environment Variables: `GOOGLE_SERVICE_ACCOUNT_JSON`
    (file contents), `GOOGLE_IMPERSONATE_USER=ops@robinsonappliancerentals.com`.
 4. Merge PR 1; open Settings → Google in the desk; it should show the mailbox
