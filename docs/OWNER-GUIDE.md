@@ -10,7 +10,7 @@ You do not need tool names. Say what you want in a sentence. This page lists the
 - Every real change is written down. Ask "what did you change this week?" any time.
 - Each Claude connection can only manage its own business's domains. Asking about another domain gets a refusal unless you say you really mean it.
 
-## Fifteen things to ask for
+## Sixteen things to ask for
 
 | Say this | What happens | What it asks you first |
 |---|---|---|
@@ -28,6 +28,7 @@ You do not need tool names. Say what you want in a sentence. This page lists the
 | **"What are the DNS records for robinsonappliancerentals.com?"** / **"Add this TXT record"** | Works only for domains whose DNS is hosted at Vercel; for any other domain it says where the DNS actually lives instead. Adding a record always asks first, never duplicates one that is already there, refuses a record that would clash with an existing one (a CNAME next to other records), and reads it back. Deleting a record shows exactly which one it will remove and asks first. | Adding or deleting a record **always asks first**. Listing records asks nothing. |
 | **"Give me the business calendar and folder IDs for Appliance Rentals"** | Finds (or, only if missing, creates) the "Deliveries & Service" calendar and the nine standard Drive folders, and remembers their IDs so your apps can look them up. Asking twice gives the same IDs. | Nothing is asked: it only creates something that is truly missing (it never makes a second copy), and a preview shows what it would create. |
 | **"Make support@ a shared inbox: replies go to the whole group, outsiders can email it, and new senders wait for approval"** | Changes the settings of one of your Google Groups: who can post to it, view it, find it and email its owners; where replies go (the sender, the whole group, the owners or an address you give); which messages wait for approval and what happens to suspected spam; who may moderate; the shared-inbox view; the footer and the rejection notice. You name only the settings you want changed. Afterwards it asks Google what the group holds now and tells you that. The group has to exist already ("create a group called support@..." does that). | A preview if you ask. It **asks first** when a change would open the group to outsiders or the whole internet, turn message approval off, or let suspected spam straight through. A value Google does not accept is refused with the list of allowed ones, and nothing is changed. |
+| **"Create a shared drive called Finance and add Sam as an editor"** (also: list, rename, hide, delete, change someone's role) | Makes the shared drive, then adds people with the sharing tool using the drive's id. Your existing file tools (search, share, copy) now also work on files inside shared drives. | A preview if you ask. Deleting a drive, making someone an organizer or turning a restriction off asks first; Google only lets a drive be deleted when it holds no files. |
 | **"What's waiting in my inbox / the Leads label?"** | Counts conversations (the newest 100), who is waiting longest for a reply, and the oldest unanswered one per label. Bounces, no-reply and mailing-list mail are not counted as waiting. "Which leads have waited over a day?" lists them oldest first (it looks at the newest 500 and says so if older ones may be missing). Changes nothing. | Nothing. |
 
 ## Also useful

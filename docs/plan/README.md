@@ -11,7 +11,7 @@ question to him is written in plain English, with no jargon unexplained.
 ## What this plan delivers
 
 **Status (audited 2026-10-02):** most of this plan is built and on `main`. The
-server now loads 354 tools, has 1014 passing unit tests plus database tests in CI,
+server now loads 360 tools, has 1050 passing unit tests plus database tests in CI,
 and has every item below in place except the last proofs described in
 `TASKS.md` (the status ledger and the "Audit" section at its end say exactly what
 is built, what is waiting on a live check by Chris, and what is not started).

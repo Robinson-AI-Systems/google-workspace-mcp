@@ -2,6 +2,7 @@ import { mergeNamespaces } from './util.js';
 import { applyGuards } from './guards.js';
 import * as gmail from './gmail.js';
 import * as drive from './drive.js';
+import * as sharedDrives from './shared-drives.js';
 import * as calendar from './calendar.js';
 import * as sheets from './sheets.js';
 import * as docs from './docs.js';
@@ -29,6 +30,6 @@ import * as businessResources from './business-resources.js';
 import { applyDomainGuard } from './domain-guard.js';
 
 export const registry = applyDomainGuard(applyGuards(mergeNamespaces([
-  gmail, drive, calendar, sheets, docs, slides, forms, tasks, people,
+  gmail, drive, sharedDrives, calendar, sheets, docs, slides, forms, tasks, people,
   adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts, mailboxBranding, ops, emailHealth, healthReport, digest, inbox, staff, business, dnsTools, businessResources
 ])));

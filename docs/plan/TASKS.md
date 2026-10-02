@@ -606,7 +606,7 @@ allow-list. Link each finding to the console page through `workspace_where_is_se
 
 **Permission.** A new read-only permission (`cloud-identity.policies.readonly`)
 must be added in the sign-in scopes and in the Admin console; every connected
-account signs in again once. Needs Chris's written approval before the scope is added.
+account signs in again once. **Approved by Chris in writing, 2026-10-02** ("I approve both permissions"); the scope may be added when this card is built.
 
 **Acceptance.** Unit tests with a fake of the API; the report names a setting that
 is off its target and stays quiet when everything matches. Manual (deferred): run
@@ -635,8 +635,8 @@ a single tool, whichever keeps the tool menu smaller. Read-only.
 **Build.** Read-only tools: list the domains Postmaster Tools knows, and read
 spam rate, authentication results and delivery errors for a domain over a date range.
 
-**Permission.** New read-only permission (`postmaster.readonly`); needs Chris's
-approval, and each domain must already be verified in Postmaster Tools (a one-time
+**Permission.** New read-only permission (`postmaster.readonly`); **approved by Chris
+in writing, 2026-10-02**. Each domain must already be verified in Postmaster Tools (a one-time
 step by Chris; the tool says so plainly when it is not).
 
 **Acceptance.** Unit tests; the "domain not verified" case gives a plain message.
@@ -756,10 +756,10 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P5-3 | DONE | | Chris decided to retire local mode (2026-10-02). Local files, scripts and README sections removed; hosted only. README, DEPLOY and ARCHITECTURE checked against the code in the 2026-10-02 audit and match. |
 | P5-4 | TODO | | #19 corrects README drift; generated catalog/version/changelog work remains TODO. |
 | P6-1 | IN_REVIEW | #25 | `admin_update_group_settings` now sets 16 more settings (reply-to, customReplyTo, message and spam moderation, who moderates content and members, who can contact the owners and discover the group, web posting, post-as-group, collaborative inbox, address-book listing, rejection notice and text, footer and text), with the allowed values checked against Google's reference on 2026-10-02. Values are checked before anything is read or changed, in a preview too, and a bad one is refused with the allowed list. Needs `confirm` for the old outsider/internet cases plus `messageModerationLevel: MODERATE_NONE` and `spamModerationLevel: ALLOW`. Read-back checks every setting asked for. Deviations: `showInGroupDirectory` left out (Google marks it deprecated); a choice may be typed in any letter case; the original six fields are still passed through unchecked, exactly as before. Manual check still to do: it changes a real group |
-| P7-1 | TODO | | Shared drives: list, create, rename, delete, members |
-| P7-2 | TODO | | Settings auditor (read-only, Cloud Identity Policy API); needs Chris's approval for a new read-only permission |
+| P7-1 | IN_REVIEW | | Six tools: `drive_list_shared_drives`, `drive_get_shared_drive`, `drive_create_shared_drive`, `drive_update_shared_drive` (rename, hide/show, five restrictions; turning a restriction off needs `confirm`), `drive_delete_shared_drive` (`confirm`; never deletes files inside) and `drive_update_permission` (changes a member's role; `organizer` needs `confirm`). Members are added, listed and removed with the existing sharing tools using the drive id. Every existing file tool now passes `supportsAllDrives`, and `drive_list_files`/`drive_search_files` take a `driveId`. 36 tests. `asAdmin` lets an administrator see or change drives they are not in. Manual check deferred: create a test shared drive, add a member, read it back, delete it
+| P7-2 | TODO | | Settings auditor (read-only, Cloud Identity Policy API); new read-only permission approved by Chris 2026-10-02 |
 | P7-3 | TODO | | Wider activity logs (more Reports applications) |
-| P7-4 | TODO | | Gmail Postmaster Tools (deliverability); needs Chris's approval for a new read-only permission |
+| P7-4 | TODO | | Gmail Postmaster Tools (deliverability); new read-only permission approved by Chris 2026-10-02 |
 | P7-5 | TODO | | Undo built on the change log |
 | P7-6 | TODO | | Read-only connection mode |
 | P7-7 | TODO | | Tool profiles (smaller tool menu) |
@@ -805,9 +805,10 @@ delete a disposable test employee (P3-1), and so on. Also not recorded anywhere:
 the phase-gate reviews (one per phase, by a stronger model).
 
 **After Phase 7 was added (2026-10-02):** the plan grows by 8 cards, about 12 days
-(P7-1 M, P7-2 M, P7-3 S, P7-4 S, P7-5 M, P7-6 S, P7-7 M, P7-8 L), none built. On the
-original 36 cards the estimate above still stands (about 84%); on the expanded
-plan (49 days) it is about 63% complete and 37% remaining.
+(P7-1 M, P7-2 M, P7-3 S, P7-4 S, P7-5 M, P7-6 S, P7-7 M, P7-8 L), P7-1 is now built
+(awaiting its live check, counted at 90%). On the original 36 cards the estimate
+above still stands (about 84%); on the expanded plan (49 days) it is about 66%
+complete and 34% remaining.
 
 Not counted: the app-side half of the Appliance Desk integration
 (`APPLIANCE-DESK-INTEGRATION.md`), which lives in the appliance-desk repository.
