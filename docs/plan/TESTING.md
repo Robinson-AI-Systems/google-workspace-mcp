@@ -43,7 +43,7 @@ exercise real control flow without Postgres.
 `GOOGLE_SERVICE_ACCOUNT_JSON` to a **generated** key (`crypto.generateKeyPairSync
 ('rsa', { modulusLength: 2048 })`), never a real one, and mock
 `google.auth.JWT` to return a stub auth. Scope checks are tested by asserting
-the JWT constructor received exactly `DELEGATED_SCOPES`.
+the JWT constructor received exactly the scopes that call asked for (the Gmail pair by default; never anything outside `DELEGATED_SCOPES`).
 
 ## Database tests
 

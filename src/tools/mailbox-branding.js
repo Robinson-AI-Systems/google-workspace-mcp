@@ -17,7 +17,7 @@ function gmailFor(userEmail) {
 export const tools = [
   {
     name: 'workspace_delegation_status',
-    description: "Is domain-wide delegation set up, so the server can brand other users' mailboxes? Returns the service account's email and client ID (what gets authorized in the Admin console), the exact permission list to authorize, and, if testUser is given, proves it works by reading that user's Gmail send-as settings.",
+    description: "Is domain-wide delegation set up, so the server can brand other users' mailboxes? Returns the service account's email and client ID (what gets authorized in the Admin console), the exact permission list to authorize, and, if testUser is given, proves each permission works by trying it on its own with a read-only call (Gmail send-as settings, the calendar list, the Drive file list). testUser must be on a domain this connection manages.",
     inputSchema: { type: 'object', properties: { testUser: { type: 'string', description: 'A Workspace user email to test against (read-only check).' } } }
   },
   {
@@ -104,6 +104,7 @@ export const handlers = {
     }
     if (!args.testUser) return ok({ ...info, test: 'Pass testUser to prove it works end to end. Every permission in scopesToAuthorize is tried on its own, so a missing Admin console entry is named.' });
     const user = norm(args.testUser);
+    if (!mailboxAllowed(clients, user)) return ok({ ...info, test: { user, works: false, error: `${user} is outside the domains this connection manages (${(clients?.allowedDomains || []).join(', ')}), so nothing was tried. Use the connection for that business.` } });
     const explain = (err) => {
       const message = err?.response?.data?.error?.message || err?.message || String(err);
       const hint = /unauthorized_client|Not Authorized|invalid_grant/i.test(message)
@@ -130,7 +131,8 @@ export const handlers = {
       test: { user, works: gmailProbe.works, ...(gmailProbe.works ? { sendAsCount: gmailProbe.sendAsCount } : { error: gmailProbe.error, hint: gmailProbe.hint }) },
       scopeChecks: scopes,
       allScopesWork: missing.length === 0,
-      ...(missing.length ? { notWorkingYet: missing, nextStep: `Not working yet: ${missing.join('; ')}. In Admin console > Security > API controls > Domain-wide delegation, edit the entry for client ID ${info.clientId || '(see clientId above)'} so its scope list is exactly: ${info.scopesToAuthorize.join(', ')}. Then run this again in a few minutes.` } : {})
+      ...(missing.length ? { notWorkingYet: missing } : {}),
+      ...(scopes.some((s) => !s.works && s.hint) ? { nextStep: `Not working yet: ${missing.join('; ')}. In Admin console > Security > API controls > Domain-wide delegation, edit the entry for client ID ${info.clientId || '(see clientId above)'} so its scope list is exactly: ${info.scopesToAuthorize.join(', ')}. Then run this again in a few minutes.` } : {})
     });
   },
 

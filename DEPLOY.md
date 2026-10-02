@@ -57,7 +57,7 @@ Claude's connector system expects your server to speak OAuth. Since this server 
 
 ## Part 5 — Let the server brand other mailboxes (optional, one time, ~15 minutes)
 
-Some Gmail settings (adding "send mail as" identities, setting a signature on a mailbox you are not signed into) are only allowed through a Google **service account** with **domain-wide delegation**: a robot identity your Workspace trusts to act as its users. This server may ask for exactly four permissions for that robot: two about Gmail settings, plus `calendar` and `drive.file` (added 2026-10-02 at Chris's written approval, for the business calendar and folder tools). Each action asks only for the ones it needs, so Gmail branding keeps working even if you have not added the last two yet.
+Some Gmail settings (adding "send mail as" identities, setting a signature on a mailbox you are not signed into) are only allowed through a Google **service account** with **domain-wide delegation**: a robot identity your Workspace trusts to act as its users. This server may ask for exactly four permissions for that robot: two about Gmail settings, plus `calendar` and `drive.file` (added 2026-10-02 at Chris's written approval, for the business calendar and folder tools). Each action asks only for the ones it needs, so Gmail branding keeps working even if you have not added the last two yet. The robot is used by the mailbox tools (branding, offboarding, the health report) and by `workspace_delegation_status`.
 
 1. Open [console.cloud.google.com](https://console.cloud.google.com/) and select the **same project** that holds this server's OAuth client (APIs & Services > Credentials shows it).
 2. **IAM & Admin > Service Accounts > Create service account.** Name it `workspace-mcp-delegate`. No roles needed. Create.
@@ -67,7 +67,7 @@ Some Gmail settings (adding "send mail as" identities, setting a signature on a 
 
    `https://www.googleapis.com/auth/gmail.settings.basic,https://www.googleapis.com/auth/gmail.settings.sharing,https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive.file`
 
-   If you set this up earlier with only the two Gmail permissions: open the existing entry, **Edit**, and replace its scope list with the line above (the Client ID stays the same). Authorize.
+   If you set this up earlier with only the two Gmail permissions: open the existing entry, **Edit**, and replace its scope list with the line above (the Client ID stays the same). Authorize it.
 
    Authorize.
 6. In Vercel > this project > **Settings > Environment Variables**, add `GOOGLE_SERVICE_ACCOUNT_JSON` with the entire contents of the downloaded JSON file as the value (all environments). Redeploy when Vercel offers.
@@ -106,7 +106,9 @@ The appliance desk app must **not** borrow the connector's robot. It gets its ow
 1. In Google Cloud (the same project as the connector is fine): **IAM & Admin > Service Accounts > Create service account**, name it `appliance-desk-google`, no roles. Under **Keys** create a **JSON** key and keep it private. Copy the service account's **Unique ID**.
 2. Admin console > **Security > Access and data control > API controls > Manage Domain Wide Delegation > Add new**. Client ID: that Unique ID. OAuth scopes, exactly:
 
-   `https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive.file,https://www.googleapis.com/auth/gmail.readonly,https://www.googleapis.com/auth/gmail.send`
+   `https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive.file`
+
+   Those two are enough for the calendar and Drive features. The plan also lists `gmail.readonly` and `gmail.send` for the app's email features; **do not add them yet.** Unlike the two above they are not approved, and a delegation scope applies to *every* mailbox in the domain (the `GOOGLE_IMPERSONATE_USER` variable is only a setting, not a limit). They need your separate written approval when the app's email features ship.
 
 3. In Vercel > the **appliance-desk** project > Environment Variables: `GOOGLE_SERVICE_ACCOUNT_JSON` (the file's contents, Sensitive) and `GOOGLE_IMPERSONATE_USER=ops@robinsonappliancerentals.com`. Production only until it has been tested.
 4. The app finds the business calendar and folders by asking this connector: ask Claude for `workspace_business_calendar` and `workspace_business_folders` for Appliance Rentals. They return the IDs and remember them in the shared database table `business_resources`, which the app can read.

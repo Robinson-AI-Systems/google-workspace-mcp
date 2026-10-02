@@ -73,9 +73,11 @@ that omits `refresh_token` keeps the old one.
 
 `src/auth/service-account.js` loads `GOOGLE_SERVICE_ACCOUNT_JSON` (raw or
 base64) and builds a `google.auth.JWT` with `subject = userEmail` and
-**exactly** `DELEGATED_SCOPES` = Gmail settings basic + sharing. Only
-`src/tools/mailbox-branding.js` uses it (`workspace_delegation_status`,
-`workflow_brand_mailbox`). A broader "act as any user on any tool" design was
+a subset of `DELEGATED_SCOPES` = Gmail settings basic + sharing, plus `calendar`
+and `drive.file` (added 2026-10-02 at Chris's written approval). The default
+request is the Gmail pair only; calendar/drive.file are requested only by
+`delegatedClients` and the status tool's probes. It is used by the mailbox
+tools (`workflow_brand_mailbox`, offboarding, health report) and the status tool. A broader "act as any user on any tool" design was
 considered and rejected as too wide a grant. P4 adds Calendar and Drive scopes
 for the Appliance Desk integration, each one approved by Chris and mirrored in
 the Admin console's domain-wide delegation entry.

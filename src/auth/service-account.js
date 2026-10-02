@@ -52,7 +52,7 @@ export const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar';
 export const DRIVE_FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 // Everything the robot identity may ever be authorized for in the Admin console. Chris approved adding the last
 // two on 2026-10-02 ("I approve calendar and drive.file for the robot identity") for the business apps:
-// calendar = the business calendar; drive.file = only files and folders the robot itself created or opened.
+// calendar = the business calendar; drive.file = only files and folders the robot itself created.
 // Nothing asks for all of them at once: each call requests only the subset it needs (see buildDelegatedAuth), so
 // Gmail branding keeps working even before the two new entries are added in the Admin console.
 export const DELEGATED_SCOPES = [...GMAIL_SETTINGS_SCOPES, CALENDAR_SCOPE, DRIVE_FILE_SCOPE];
@@ -88,7 +88,7 @@ export function buildDelegatedAuth(userEmail, scopes = GMAIL_SETTINGS_SCOPES) {
 }
 
 /** Calendar and Drive clients acting as `userEmail` with only the requested subset of DELEGATED_SCOPES. A client whose scope was not requested is absent. */
-export function delegatedClients(userEmail, scopes) {
+export function delegatedClients(userEmail, scopes = []) {
   const auth = buildDelegatedAuth(userEmail, scopes);
   const out = {};
   if (scopes.includes(CALENDAR_SCOPE)) out.calendar = google.calendar({ version: 'v3', auth });

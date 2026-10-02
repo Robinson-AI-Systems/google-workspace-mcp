@@ -91,3 +91,32 @@ describe('workspace_delegation_status', () => {
     expect(out.scopesToAuthorize).toEqual([...GMAIL, CAL, DRV]);
   });
 });
+
+describe('guards around the status tool and the default request', () => {
+  it('the existing Gmail paths still ask for the Gmail pair only', async () => {
+    const { delegatedGmail } = await import('../../src/tools/delegated.js');
+    const gmail = delegatedGmail(undefined, 'a@x.test');
+    expect(gmail.context._options.auth.scopes).toEqual(GMAIL);
+  });
+  it('delegatedClients with no scopes is refused cleanly', async () => {
+    const sa = await import('../../src/auth/service-account.js');
+    expect(() => sa.delegatedClients('a@x.test')).toThrow(/None were requested/);
+  });
+  it('a test user outside the connection\'s domains is not impersonated at all', async () => {
+    const { handlers } = await import('../../src/tools/mailbox-branding.js');
+    const tried = [];
+    const clients = { allowedDomains: ['x.test'], actingAs: 'ops@x.test', gmailFor: () => { tried.push('gmail'); return {}; }, delegatedClientsFor: () => { tried.push('other'); return {}; } };
+    const out = JSON.parse((await handlers.workspace_delegation_status({ testUser: 'boss@other-business.test' }, clients)).content[0].text);
+    expect(out.test).toMatchObject({ works: false });
+    expect(out.test.error).toMatch(/outside the domains this connection manages/);
+    expect(tried).toEqual([]);
+  });
+  it('a failure that is not a missing Admin console entry does not send you to the Admin console', async () => {
+    const { handlers } = await import('../../src/tools/mailbox-branding.js');
+    const gone = async () => { throw new Error('Resource Not Found: userKey'); };
+    const clients = { allowedDomains: ['x.test'], actingAs: 'ops@x.test', gmailFor: () => ({ users: { settings: { sendAs: { list: gone } } } }), delegatedClientsFor: () => ({ calendar: { calendarList: { list: gone } }, drive: { files: { list: gone } } }) };
+    const out = JSON.parse((await handlers.workspace_delegation_status({ testUser: 'nobody@x.test' }, clients)).content[0].text);
+    expect(out.allScopesWork).toBe(false);
+    expect(out.nextStep).toBeUndefined();
+  });
+});
