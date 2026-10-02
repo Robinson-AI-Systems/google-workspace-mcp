@@ -128,7 +128,7 @@ const blockValues = async (sheets, a) => {
   const title = (await tabInfo(sheets, a)).properties?.title;
   if (!title) return [];
   const range = `'${String(title).replace(/'/g, "''")}'!${colLetter(a.startColumn)}${Number(a.startRow) + 1}:${colLetter(Number(a.endColumn) - 1)}${a.endRow}`;
-  return (await data(sheets.spreadsheets.values.get({ spreadsheetId: a.spreadsheetId, range }))).values || [];
+  return (await data(sheets.spreadsheets.values.get({ spreadsheetId: a.spreadsheetId, range, valueRenderOption: 'UNFORMATTED_VALUE' }))).values || [];
 };
 const cornerFormat = async (sheets, a) => {
   const title = (await tabInfo(sheets, a)).properties?.title;
@@ -140,18 +140,32 @@ const cornerFormat = async (sheets, a) => {
 /** true when every field in `want` is present with the same value in `got` (Google drops fields it holds as false/default). */
 function coversDeep(got, want) {
   if (want && typeof want === 'object' && !Array.isArray(want)) return Object.entries(want).every(([k, v]) => coversDeep(got?.[k], v));
-  if (typeof want === 'number' && typeof got === 'number') return Math.abs(want - got) < 0.001;
+  if (typeof want === 'number' && (typeof got === 'number' || got === undefined)) return Math.abs(want - (got ?? 0)) < 0.001; // Google leaves out a 0 colour channel
   if (typeof want === 'boolean') return !!got === want;
   return JSON.stringify(got) === JSON.stringify(want);
 }
 const sameBlock = (r, a) => (r?.sheetId ?? 0) === a.sheetId && (r?.startRowIndex ?? 0) === a.startRow && r?.endRowIndex === a.endRow && (r?.startColumnIndex ?? 0) === a.startColumn && r?.endColumnIndex === a.endColumn;
-const mergeCovers = (merges, a) => (merges || []).some((m) => (m.startRowIndex ?? 0) <= a.startRow && m.endRowIndex >= a.endRow && (m.startColumnIndex ?? 0) <= a.startColumn && m.endColumnIndex >= a.endColumn);
+const cellMerged = (merges, r, c) => (merges || []).some((m) => (m.startRowIndex ?? 0) <= r && r < m.endRowIndex && (m.startColumnIndex ?? 0) <= c && c < m.endColumnIndex);
+const mergeCovers = (merges, a) => {
+  // every cell of the block must sit inside some merge (MERGE_COLUMNS / MERGE_ROWS make one merge per column / row)
+  if ((a.endRow - a.startRow) * (a.endColumn - a.startColumn) > 20000) return (merges || []).some((m) => (m.startRowIndex ?? 0) <= a.startRow && m.endRowIndex >= a.endRow && (m.startColumnIndex ?? 0) <= a.startColumn && m.endColumnIndex >= a.endColumn);
+  for (let r = a.startRow; r < a.endRow; r += 1) for (let c = a.startColumn; c < a.endColumn; c += 1) if (!cellMerged(merges, r, c)) return false;
+  return true;
+};
+const mergesTouch = (merges, a) => (merges || []).some((m) => (m.startRowIndex ?? 0) < a.endRow && m.endRowIndex > a.startRow && (m.startColumnIndex ?? 0) < a.endColumn && m.endColumnIndex > a.startColumn);
+// Sheets orders numbers, then text, then true/false, and always puts blanks last. Compared the way Sheets does it.
+const rank = (v) => (v === '' || v === undefined || v === null ? 9 : typeof v === 'number' ? 0 : typeof v === 'string' ? 1 : 2);
+const order = (x, y) => (rank(x) !== rank(y) ? rank(x) - rank(y) : typeof x === 'number' ? x - y : typeof x === 'string' ? x.toLowerCase().localeCompare(y.toLowerCase()) : Number(x) - Number(y));
 const isSorted = (rows, a) => {
   const col = Number(a.sortColumnIndex) - Number(a.startColumn);
-  const vals = rows.map((r) => r[col] ?? '');
-  const asNum = vals.every((v) => v === '' || !Number.isNaN(Number(v)));
-  const cmp = (x, y) => (asNum ? Number(x || 0) - Number(y || 0) : String(x).localeCompare(String(y)));
-  return vals.every((v, i) => i === 0 || (a.ascending === false ? cmp(vals[i - 1], v) >= 0 : cmp(vals[i - 1], v) <= 0));
+  if (!(col >= 0 && col < Number(a.endColumn) - Number(a.startColumn))) return false; // the sort column is not inside the block: nothing to check it against
+  const vals = rows.map((r) => r[col]);
+  return vals.every((v, i) => {
+    if (i === 0) return true;
+    const p = vals[i - 1];
+    if (rank(v) === 9 || rank(p) === 9) return !(rank(p) === 9 && rank(v) !== 9); // blanks last, whichever direction
+    return a.ascending === false ? order(p, v) >= 0 : order(p, v) <= 0;
+  });
 };
 
 export const GUARDS_FILES = {
@@ -387,7 +401,7 @@ export const GUARDS_FILES = {
 
   // ---------- Sheets: layout and formatting tools ----------
   sheets_duplicate_sheet: { destructive: false,
-    verify: (a, b, after) => after?.count === (b?.count ?? -1) + 1 && (!a.newSheetName || after.titles.includes(a.newSheetName)),
+    verify: (a, b, after) => (b?.count === undefined || after?.count === b.count + 1) && (!a.newSheetName || (after?.titles || []).includes(a.newSheetName)),
     describe: (a) => ({ target: a.spreadsheetId, summary: `Duplicate tab ${a.sheetId} of the spreadsheet ${a.spreadsheetId}${a.newSheetName ? ` as "${a.newSheetName}"` : ''}` }),
     before: (a, { sheets }) => tabList(sheets, a.spreadsheetId),
     after: (a, { sheets }) => tabList(sheets, a.spreadsheetId) },
@@ -414,13 +428,13 @@ export const GUARDS_FILES = {
     before: async (a, { sheets }) => ({ nonEmptyCells: (await blockValues(sheets, a)).flat().filter((v) => v !== '' && v !== undefined).length }),
     after: async (a, { sheets }) => ({ merged: mergeCovers(await tabMerges(sheets, a), a) }) },
   sheets_unmerge_cells: { destructive: false,
-    verify: (a, b, after) => after?.merged === false,
+    verify: (a, b, after) => after?.stillMerged === false,
     describe: (a) => ({ target: a.spreadsheetId, summary: `Unmerge ${blockText(a)} in tab ${a.sheetId} of ${a.spreadsheetId}` }),
-    before: async (a, { sheets }) => ({ merged: mergeCovers(await tabMerges(sheets, a), a) }),
-    after: async (a, { sheets }) => ({ merged: mergeCovers(await tabMerges(sheets, a), a) }) },
+    before: async (a, { sheets }) => ({ stillMerged: mergesTouch(await tabMerges(sheets, a), a) }),
+    after: async (a, { sheets }) => ({ stillMerged: mergesTouch(await tabMerges(sheets, a), a) }) },
   sheets_protect_range: { destructive: D, // decides who is allowed to edit
-    verify: (a, b, after) => after?.protectedNow === true,
+    verify: (a, b, after) => after?.protectedNow === true && (b?.protectedRanges === undefined || after.count === b.protectedRanges + 1),
     describe: (a) => ({ target: a.spreadsheetId, summary: `PROTECT ${blockText(a)} in tab ${a.sheetId} of ${a.spreadsheetId}: ${a.warningOnly ? 'editors only get a warning' : `only ${(a.editorEmails || []).join(', ') || 'the owner'} can edit it`}` }),
     before: async (a, { sheets }) => ({ protectedRanges: (await tabInfo(sheets, a)).protectedRanges?.length || 0 }),
-    after: async (a, { sheets }) => ({ protectedNow: ((await tabInfo(sheets, a)).protectedRanges || []).some((r) => sameBlock(r.range, a)) }) }
+    after: async (a, { sheets }) => { const pr = (await tabInfo(sheets, a)).protectedRanges || []; return { count: pr.length, protectedNow: pr.some((r) => sameBlock(r.range, a)) }; } }
 };

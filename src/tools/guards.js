@@ -261,7 +261,7 @@ const CORE = {
   calendar_create_event: { destructive: false,
     // Guests get an email invitation unless sendUpdates is 'none'.
     confirmWhen: (a) => (a.attendees || []).length > 0 && a.sendUpdates !== 'none',
-    verify: (a, b, after) => after?.summary === a.summary && after?.status !== 'cancelled' && ((a.attendees || []).length === 0 || (after?.attendees || []).length >= (a.attendees || []).length),
+    verify: (a, b, after) => after?.summary === a.summary && after?.status !== 'cancelled' && ((a.attendees || []).length === 0 || (after?.attendees || []).length >= new Set((a.attendees || []).map((x) => String(x).toLowerCase())).size),
     describe: (a) => ({ target: a.summary, summary: `Create the calendar event "${a.summary}" from ${a.start} to ${a.end}${(a.attendees || []).length ? `, inviting ${(a.attendees || []).join(', ')}` : ''}` }),
     after: (a, { calendar }, details) => (details?.id ? data(calendar.events.get({ calendarId: a.calendarId || 'primary', eventId: details.id })).then((e) => ({ ...pick(e, ['id', 'summary', 'start', 'end', 'status', 'htmlLink']), attendees: (e.attendees || []).map((x) => x.email) })) : { note: 'Google did not return the new event\'s id.' }) },
 

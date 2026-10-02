@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { makeFakeClients } from '../helpers/fake-google.js';
+import { findMissing } from '../../scripts/check-writes-lib.mjs';
 import { createFakeDb } from '../helpers/fake-db.js';
 
 const holder = vi.hoisted(() => ({ db: null }));
@@ -150,5 +151,78 @@ describe('other tools the review flagged', () => {
 describe('the write-coverage checker', () => {
   it('passes on the real registry', () => {
     expect(() => execFileSync('node', ['scripts/check-writes.mjs'], { stdio: 'pipe' })).not.toThrow();
+  });
+});
+
+describe('read-back checks that must be able to fail (and not fail wrongly)', () => {
+  const sortArgs = { ...BLOCK, sortColumnIndex: 0, confirm: true };
+  const sortWith = (values, extra = {}) => run('sheets_sort_range', { ...sortArgs, ...extra }, (w) => { w('sheets.spreadsheets.get').resolves(tab()); w('sheets.spreadsheets.values.get').resolves({ data: { values } }); });
+
+  it('a sort with blanks last, mixed text and numbers in Sheets order, or descending is confirmed', async () => {
+    expect((await sortWith([[1], [2], ['']])).out.confirmed).toBe(true);
+    expect((await sortWith([[2], [10], ['abc']])).out.confirmed).toBe(true);
+    expect((await sortWith([[3], [2], [1]], { ascending: false })).out.confirmed).toBe(true);
+    expect((await sortWith([[''], [1], [2]])).out.confirmed).toBe(false); // blanks must be last
+    expect((await sortWith([[1], [2]], { sortColumnIndex: 5 })).out.confirmed).toBe(false); // sort column outside the block
+  });
+  it('the sort read-back asks for raw (unformatted) values', async () => {
+    const f = makeFakeClients();
+    f.when('sheets.spreadsheets.get').resolves(tab());
+    f.when('sheets.spreadsheets.values.get').resolves({ data: { values: [[1]] } });
+    await registry.handlers.sheets_sort_range({ ...sortArgs }, f.clients);
+    expect(f.calls.filter((c) => c.path === 'sheets.spreadsheets.values.get').every((c) => c.args[0].valueRenderOption === 'UNFORMATTED_VALUE')).toBe(true);
+  });
+
+  const fmt = (got) => run('sheets_format_cells', { ...BLOCK, format: { backgroundColor: { red: 1, green: 0, blue: 0 }, textFormat: { bold: true } } }, (w) => w('sheets.spreadsheets.get').resolves({ data: { sheets: [{ properties: { sheetId: 7, title: 'Data' }, data: [{ rowData: [{ values: [{ userEnteredFormat: got }] }] }] }] } }));
+  it('formatting is confirmed when it reads back (Google omits zero colour channels) and not when it differs', async () => {
+    expect((await fmt({ backgroundColor: { red: 1 }, textFormat: { bold: true } })).out.confirmed).toBe(true);
+    expect((await fmt({ backgroundColor: { red: 0.5 }, textFormat: { bold: true } })).out.confirmed).toBe(false);
+    expect((await fmt({})).out.confirmed).toBe(false);
+  });
+
+  it('a merge by columns is confirmed when each column is merged', async () => {
+    const merges = [0, 1].map((c) => ({ sheetId: 7, startRowIndex: 0, endRowIndex: 3, startColumnIndex: c, endColumnIndex: c + 1 }));
+    const ok = await run('sheets_merge_cells', { ...BLOCK, mergeType: 'MERGE_COLUMNS', confirm: true }, (w) => w('sheets.spreadsheets.get').resolves(tab({ merges })));
+    expect(ok.out.confirmed).toBe(true);
+    const part = await run('sheets_merge_cells', { ...BLOCK, mergeType: 'MERGE_COLUMNS', confirm: true }, (w) => w('sheets.spreadsheets.get').resolves(tab({ merges: merges.slice(0, 1) })));
+    expect(part.out.confirmed).toBe(false);
+  });
+
+  it('unmerge is not confirmed while any merge still touches the block', async () => {
+    const small = { sheetId: 7, startRowIndex: 1, endRowIndex: 2, startColumnIndex: 0, endColumnIndex: 1 };
+    expect((await run('sheets_unmerge_cells', BLOCK, (w) => w('sheets.spreadsheets.get').resolves(tab({ merges: [small] })))).out.confirmed).toBe(false);
+    expect((await run('sheets_unmerge_cells', BLOCK, (w) => w('sheets.spreadsheets.get').resolves(tab()))).out.confirmed).toBe(true);
+  });
+
+  it('protect is confirmed only when a new protection with those bounds appears', async () => {
+    const pr = { range: { sheetId: 7, startRowIndex: 0, endRowIndex: 3, startColumnIndex: 0, endColumnIndex: 2 } };
+    const args = { ...BLOCK, editorEmails: ['a@example.test'], confirm: true };
+    const added = await run('sheets_protect_range', args, (w) => { const f = w('sheets.spreadsheets.get'); f.resolvesOnce(tab()); f.resolves(tab({ protectedRanges: [pr] })); });
+    expect(added.out.confirmed).toBe(true);
+    const never = await run('sheets_protect_range', args, (w) => w('sheets.spreadsheets.get').resolves(tab()));
+    expect(never.out.confirmed).toBe(false);
+    const already = await run('sheets_protect_range', args, (w) => w('sheets.spreadsheets.get').resolves(tab({ protectedRanges: [pr] })));
+    expect(already.out.confirmed).toBe(false); // it was there before, so this call did not add it
+  });
+
+  it('thread restore, calendar sharing, calendar create and domain verification can report not confirmed', async () => {
+    const th = (labels) => (w) => w('gmail.users.threads.get').resolves({ data: { id: 't1', messages: [{ labelIds: labels }] } });
+    expect((await run('gmail_untrash_thread', { threadId: 't1' }, th(['TRASH']))).out.confirmed).toBe(false);
+    expect((await run('gmail_untrash_thread', { threadId: 't1' }, th(['INBOX']))).out.confirmed).toBe(true);
+    const share = (role) => (w) => { w('calendar.acl.insert').resolves({ data: { id: 'r1' } }); w('calendar.acl.get').resolves({ data: { id: 'r1', role, scope: { type: 'user', value: 'x@example.test' } } }); };
+    expect((await run('calendar_share_calendar', { calendarId: 'primary', scopeType: 'user', scopeValue: 'x@example.test', role: 'writer', confirm: true }, share('reader'))).out.confirmed).toBe(false);
+    expect((await run('calendar_share_calendar', { calendarId: 'primary', scopeType: 'user', scopeValue: 'x@example.test', role: 'writer', confirm: true }, share('writer'))).out.confirmed).toBe(true);
+    const ev = (e) => (w) => { w('calendar.events.insert').resolves({ data: { id: 'e1' } }); w('calendar.events.get').resolves({ data: { id: 'e1', ...e } }); };
+    const a = { summary: 'Delivery', start: '2026-10-05T09:00:00Z', end: '2026-10-05T10:00:00Z', attendees: ['A@x.org', 'a@x.org'], sendUpdates: 'none' };
+    expect((await run('calendar_create_event', a, ev({ summary: 'Other' }))).out.confirmed).toBe(false);
+    expect((await run('calendar_create_event', a, ev({ summary: 'Delivery', attendees: [{ email: 'a@x.org' }] }))).out.confirmed).toBe(true); // duplicates collapse to one guest
+    expect((await run('domain_confirm_verification', { domainName: 'example.test' }, (w) => w('siteVerification.webResource.list').resolves({ data: { items: [] } }))).out.confirmed).toBe(false);
+  });
+});
+
+describe('the checker rule fails closed', () => {
+  const tool = (name, props = {}) => ({ name, inputSchema: { properties: props } });
+  it('flags an unknown-verb tool without dryRun, and accepts reads and wrapped tools', () => {
+    expect(findMissing([tool('sheets_shuffle_rows'), tool('gmail_get_message'), tool('reports_login_activity'), tool('drive_zap_file', { dryRun: {} })])).toEqual(['sheets_shuffle_rows']);
   });
 });
