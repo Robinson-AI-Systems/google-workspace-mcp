@@ -496,18 +496,18 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P0-1 | IN_REVIEW | #6 | Tests, fakes, DB tests, CI added. CI runs DB tests on a throwaway Postgres on every PR (no secret needed). Not yet proven: red-on-failure demo (do once on the PR) |
 | P0-2 | TODO | | |
 | P0-3 | IN_REVIEW | #6 | Fix + unit test done. Manual Drive upload check needs Chris's go-ahead (writes to his Drive) |
-| P0-4 | IN_REVIEW | #7 | Tool + unit tests done (token host check, size/redirect/timeout/private-address limits). Manual copy of the brand PDF needs Chris's go-ahead (writes to his Drive) |
-| P0-5 | IN_REVIEW | #6 | Lockout + constant-time compare + tests. Manual 5-wrong-tries check on the preview still to do |
-| P0-6 | IN_REVIEW | #8 | Code + tests done (crypto round-trip/tamper; DB tests on real Postgres). Needs Chris to set `TOKEN_ENCRYPTION_KEY` in Vercel (DEPLOY.md Part 6) before it takes effect; the Neon-branch check on both real accounts happens after that. Plain copy still written until P5-2 |
+| P0-4 | MERGED | #7 | Tool + unit tests done (token host check, size/redirect/timeout/private-address limits). Manual copy of the brand PDF needs Chris's go-ahead (writes to his Drive) |
+| P0-5 | MERGED | #6 | Lockout + constant-time compare + tests. Manual 5-wrong-tries check on the preview still to do |
+| P0-6 | MERGED | #8 | Code + tests done (crypto round-trip/tamper; DB tests on real Postgres). Needs Chris to set `TOKEN_ENCRYPTION_KEY` in Vercel (DEPLOY.md Part 6) before it takes effect; the Neon-branch check on both real accounts happens after that. Plain copy still written until P5-2 |
 | P0-7 | IN_REVIEW | #7, #19 | Developing section added; hard-coded README tool count corrected to 348 in #19. Generated catalog remains P5-4. |
-| P1-1 | IN_REVIEW | #10 | Table, helper, 3 tools, last-used tracking; explicit logging added to brand_mailbox, make_super_admin, set_2sv_enforcement, move_user_orgunit, set_user_photo. Last-used is written at most once a minute per token (not every request). Manual check (brand a test alias, see one row) needs Chris's go-ahead: it changes a real mailbox |
-| P1-2 | IN_REVIEW | #9 | 12 mappings + unit tests; unknown errors and network failures unchanged |
+| P1-1 | MERGED | #10 | Table, helper, 3 tools, last-used tracking; explicit logging added to brand_mailbox, make_super_admin, set_2sv_enforcement, move_user_orgunit, set_user_photo. Last-used is written at most once a minute per token (not every request). Manual check (brand a test alias, see one row) needs Chris's go-ahead: it changes a real mailbox |
+| P1-2 | MERGED | #9 | 12 mappings + unit tests; unknown errors and network failures unchanged |
 | P1-3 | MERGED | #13 | Shipped with P1-4 in one PR. |
 | P1-4 | MERGED | #13 | Shipped with P1-3. |
 | P1-5 | MERGED | #9 | Etag is kept (contacts_update needs it). |
 | P2-1 | MERGED | #14 | `calendar_update_calendar` via defineWrite (dry run, read-back, change log), time zone checked against the IANA list. Manual Denver check on the rentals calendar still to do: it changes a real calendar |
 | P2-2 | MERGED | #14 | `workflow_email_health`: unit tests with a stubbed resolver. Deviation: adds an INFO result (Resend records are optional). Manual runs on both domains and the committed examples need live DNS, which this sandbox cannot reach |
-| P2-3 | TODO | | Needs `VERCEL_API_TOKEN`, `VERCEL_TEAM_ID` env vars from Chris |
+| P2-3 | IN_REVIEW | #20 | `dns_list_records`, `dns_add_record`, `dns_delete_record` via Vercel's API; only domains whose real nameservers are Vercel's; add is idempotent, refuses CNAME clashes, always confirms, reads back. Chris set `VERCEL_API_TOKEN` (sensitive, Production only) and `VERCEL_TEAM_ID` in Vercel on 2026-10-02; takes effect on the next production deploy. Manual check still to do: `dns_list_records` on the domain whose `_dmarc` record Chris added by hand. Deviation: Vercel's delete endpoint is `DELETE /v2/domains/{domain}/records/{id}` (the card had the path without the domain) |
 | P2-4 | MERGED | #14 | `workspace_where_is_setting`, 47 settings (card said ~60). Deviation: a .js file, not .json, so the serverless bundle always includes it. Direct links are from memory of Google's URL patterns: spot-check of 10 by Chris still to do; entries without a link give click paths only |
 | P2-5 | MERGED | #14 | `workflow_health_report`: scoring rules unit tested. Deviation: "unused licences" means licences held by suspended or 90-day-inactive accounts, because the API cannot show purchased seats. Deep checks (apps, forwarding) cover the first 100 active users. Manual runs and committed examples still to do |
 | P2-6 | MERGED | #14 | Real customer ID in `licensing_list_assignments`; switched-off-API errors now name the API to enable; `workspace_plan_summary` added. Manual run on both domains still to do |
@@ -519,10 +519,10 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P3-4 | MERGED | #15 | Added `avatarBase64`, `labels` (+`filterTo`), `vacation`, `dryRun`. Deviation: labels are only created when the connection IS that mailbox, because the delegated robot identity may not create labels (that needs a wider scope, which needs Chris's written approval). Manual no-op/read-back check on the rentals mailbox still to do. |
 | P3-5 | MERGED | #15 | `gmail_inbox_summary`, `gmail_find_unanswered`; read-only; looks at up to 100 conversations and says when it stopped. #18 hardened inbox classification accuracy. |
 | P3-6 | MERGED | #15 | `docs/OWNER-GUIDE.md` is shipped and now lists add-a-staff-member and set-up-a-business; Chris still needs to read it and confirm it makes sense. |
-| P4-1 | TODO | | Needs Chris's written approval of two scopes |
-| P4-2 | TODO | | |
-| P4-3 | TODO | | |
-| P4-4 | TODO | | |
+| P4-1 | BLOCKED (needs Chris's explicit approval of the two named scopes) | | Not started on purpose: widening the robot identity by `calendar` and `drive.file` needs Chris to approve those two scopes by name, then update the Admin console entry. Design agreed so far: each call requests only the subset it needs, so Gmail branding keeps working before the Admin console is updated |
+| P4-2 | BLOCKED (after P4-1) | | |
+| P4-3 | IN_REVIEW | #20 | `workspace_business_calendar`, `workspace_business_folders` + `business_resources` table (contract-tested on the fake and real Postgres). Acts as the connection's own account, so it needs no delegation. Idempotent; a remembered ID that no longer exists is not trusted. Manual check still to do: returns the existing `c_dd214eeb…` calendar and `13yNQodb…` folder tree |
+| P4-4 | BLOCKED (after P4-1) | | Depends on the approved scope list |
 | P5-1 | TODO | | #19 hardens the hosted runtime and tests, but the actual remaining-write conversion and CI checker are still TODO. |
 | P5-2 | TODO | | Not before 30 days after P0-6 ships |
 | P5-3 | TODO | | Needs Chris's decision: deprecate local mode? |

@@ -20,6 +20,7 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     attempts: [],
     nextAttemptId: 1,
     changes: [],
+    resources: [],
     nextChangeId: 1
   };
   const at = () => new Date(clock());
@@ -186,6 +187,14 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     async countRecentFailedLogins(ip, minutes) {
       const since = clock() - minutes * 60 * 1000;
       return state.attempts.filter((a) => a.ip === ip && !a.success && a.attempted_at.getTime() > since).length;
+    },
+
+    async listBusinessResources(business, kind) {
+      return state.resources.filter((r) => r.business === business && (!kind || r.kind === kind)).sort((a, b) => (a.kind + a.key).localeCompare(b.kind + b.key)).map((r) => ({ ...r }));
+    },
+    async saveBusinessResource({ business, kind, key, googleId }) {
+      const row = state.resources.find((r) => r.business === business && r.kind === kind && r.key === key);
+      if (row) { row.google_id = googleId; row.updated_at = at(); } else state.resources.push({ business, kind, key, google_id: googleId, updated_at: at() });
     },
 
     // Test-only helper: put a pre-multi-account sign-in in place.

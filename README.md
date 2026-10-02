@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/workflows/ci.yml)
 
-A Claude connector that gives Claude real, working control over your Google Workspace — not just email and calendar, but the admin side too: creating/suspending users, managing groups, adding domains and aliases, pushing Chrome policies, running security audits, and more. **348 tools** across every major Google Workspace service, and it can hold sign-ins for more than one mailbox (e.g. one per business on the same Workspace), with each Claude connection bound to the one you pick.
+A Claude connector that gives Claude real, working control over your Google Workspace — not just email and calendar, but the admin side too: creating/suspending users, managing groups, adding domains and aliases, pushing Chrome policies, running security audits, and more. **354 tools** across every major Google Workspace service, and it can hold sign-ins for more than one mailbox (e.g. one per business on the same Workspace), with each Claude connection bound to the one you pick.
 
 Built for one goal: you should be able to tell Claude what you want done in Google Workspace — in plain English — and have it actually happen, without you opening the admin console.
 
@@ -100,4 +100,4 @@ For a plain-English list of what to ask Claude for, see [docs/OWNER-GUIDE.md](do
 
 - **Nothing here is placeholder code.** Every tool calls the real Google API method it claims to. A handful of things Google's public APIs genuinely cannot do (some settings only exist in the admin console UI) are left out rather than faked.
 - **Data Transfer API** (`datatransfer_*` tools, used by `workflow_offboard_employee`) isn't in Google's current client library, so it's implemented as a direct REST call — same effect, just built by hand instead of generated.
-- **Mutating tools must use the safety model.** Destructive operations are not intentionally shipped as raw one-step calls: they use the dry-run/confirmation/read-back/change-log layer described above, and new mutating tools must receive equivalent coverage before release.
+- **The safety layer covers the destructive tools, not yet every write.** Deletes, suspensions, revocations, transfers and the other risky changes use the dry-run/confirmation/read-back/change-log layer described above, and every new changing tool is built with it. Roughly a hundred older create/update tools (for example sending email, creating roles, changing Chrome policy or the company profile) still run in one step; converting them is card P5-1.

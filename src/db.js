@@ -115,6 +115,17 @@ export async function initSchema() {
   await q`ALTER TABLE google_accounts ADD COLUMN IF NOT EXISTS tokens_enc TEXT`;
   // Which email domains this account's connections may manage through the admin tools. NULL means "only the account's own domain" (see src/tools/domain-guard.js).
   await q`ALTER TABLE google_accounts ADD COLUMN IF NOT EXISTS allowed_domains TEXT[]`;
+  // Google IDs (calendars, folders) the business apps look up by name instead of hard-coding. Additive only.
+  await q`
+    CREATE TABLE IF NOT EXISTS business_resources (
+      business TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      key TEXT NOT NULL,
+      google_id TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (business, kind, key)
+    )
+  `;
 }
 
 // ---------- Google accounts (one row per mailbox the server can act as) ----------
@@ -442,5 +453,26 @@ export async function listRecentChanges({ since, tool, actingAs, limit = 50, inc
       AND (${includeDryRuns === true}::boolean OR dry_run = false)
     ORDER BY at DESC, id DESC
     LIMIT ${n}
+  `;
+}
+
+// ---------- Business resources (Google IDs the business apps look up by name) ----------
+
+/** Every stored resource for a business, optionally only one kind ('calendar', 'folder'). */
+export async function listBusinessResources(business, kind) {
+  const q = db();
+  const rows = kind
+    ? await q`SELECT business, kind, key, google_id, updated_at FROM business_resources WHERE business = ${business} AND kind = ${kind} ORDER BY key`
+    : await q`SELECT business, kind, key, google_id, updated_at FROM business_resources WHERE business = ${business} ORDER BY kind, key`;
+  return rows;
+}
+
+/** Remember (or correct) one Google ID. Running it twice with the same values changes nothing but the timestamp. */
+export async function saveBusinessResource({ business, kind, key, googleId }) {
+  const q = db();
+  await q`
+    INSERT INTO business_resources (business, kind, key, google_id)
+    VALUES (${business}, ${kind}, ${key}, ${googleId})
+    ON CONFLICT (business, kind, key) DO UPDATE SET google_id = EXCLUDED.google_id, updated_at = now()
   `;
 }

@@ -30,7 +30,9 @@ describe('the safety table', () => {
     const OWN_CONFIRM = new Set(['workspace_revoke_connection']);
     const dangerous = registry.tools.map((t) => t.name).filter((n) => /_(delete|remove|clear|unshare|revoke|empty)(_|$)|transfer_ownership|start_transfer/.test(n));
     expect(dangerous.length).toBeGreaterThan(40);
-    expect(dangerous.filter((n) => !GUARDS[n] && !OWN_CONFIRM.has(n))).toEqual([]);
+    // Tools built directly with defineWrite (dryRun + confirm in their schema) carry the safety layer themselves.
+    const built = (n) => { const p = registry.tools.find((t) => t.name === n).inputSchema.properties || {}; return !!(p.dryRun && p.confirm); };
+    expect(dangerous.filter((n) => !GUARDS[n] && !OWN_CONFIRM.has(n) && !built(n))).toEqual([]);
   });
 
   it('covers the other dangerous tools too', () => {
