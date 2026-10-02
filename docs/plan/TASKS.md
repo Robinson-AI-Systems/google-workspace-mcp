@@ -473,6 +473,8 @@ drop the column.
 multi-account/db layer (local SQLite via `better-sqlite3`), or mark it
 deprecated in README and remove the `bin` entries. Recommendation: deprecate.
 
+**Decision (Chris, 2026-10-02): retire.** Local files, `bin` entries and the README setup were removed.
+
 **Acceptance.** README matches reality.
 
 ### P5-4 · Final docs and version 2.0 (S) `[H]`
@@ -525,7 +527,7 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P4-4 | IN_REVIEW | #21 | DEPLOY.md Part 5 updated and Part 8 added (the app's own service account, its four scopes, the Vercel variables, how it finds the IDs). Cross-linked to APPLIANCE-DESK-INTEGRATION.md. Chris can follow it in about 15 minutes |
 | P5-1 | TODO | | #19 hardens the hosted runtime and tests, but the actual remaining-write conversion and CI checker are still TODO. |
 | P5-2 | TODO | | Not before 30 days after P0-6 ships |
-| P5-3 | TODO | | Needs Chris's decision: deprecate local mode? |
+| P5-3 | IN_REVIEW | | Chris decided to retire local mode (2026-10-02). Local files, scripts and README sections removed; hosted only. |
 | P5-4 | TODO | | #19 corrects README drift; generated catalog/version/changelog work remains TODO. |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support

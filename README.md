@@ -61,36 +61,14 @@ The "workflow_*" tools are the ones worth knowing about specifically: instead of
 
 For a plain-English list of what to ask Claude for, see [docs/OWNER-GUIDE.md](docs/OWNER-GUIDE.md).
 
-## Two ways to run this
+## How it runs
 
-1. **Hosted (recommended, matches "custom connector" usage from claude.ai on any device)** — see `DEPLOY.md`. Runs on Vercel, stores your login token in Neon (Postgres), reachable from claude.ai on your phone, browser, anywhere.
-2. **Local (simpler, one computer only)** — runs on your machine, launched automatically by the Claude desktop app. See below.
+It runs hosted, on Vercel, with your login token stored in Neon (Postgres), so claude.ai can reach it from your phone, browser, anywhere. Setup is in `DEPLOY.md`. (The old "run on one computer" mode was retired; nothing in the hosted setup needed it.)
 
-### Local setup
+## How it signs in to Google
 
-1. `npm install`
-2. Create a Google Cloud project and OAuth client (see "Google Cloud setup" in `DEPLOY.md` — same steps apply, just skip the Vercel/Neon parts).
-3. Copy `config.example.json` to `config.json` and fill in your OAuth client ID/secret.
-4. Run `npm run authorize` — this opens a Google sign-in link. Sign in as your Workspace **super admin** account (this is what unlocks the admin tools, not just your own mailbox).
-5. Add this to your Claude Desktop config (`claude_desktop_config.json`):
-
-```json
-{
-  "mcpServers": {
-    "google-workspace": {
-      "command": "node",
-      "args": ["/full/path/to/google-workspace-mcp/src/index.js"]
-    }
-  }
-}
-```
-
-6. Restart Claude Desktop.
-
-## Two auth modes (either setup)
-
-- **OAuth (default)** — you log in once as yourself. If that account is a Workspace super admin, every admin tool works too.
-- **Service account + domain-wide delegation** — for acting as *other* users automatically without them each logging in. Set `authMode: "service_account"` in config.json (or `GWS_AUTH_MODE=service_account`), plus `serviceAccountKeyFile` and `impersonateUser`. Needs the extra Workspace Admin Console step of authorizing the service account's Client ID under Security > API Controls > Domain-wide Delegation with the scopes listed in `src/auth/scopes.js`.
+- **Your own sign-in (OAuth)** — you log in once as yourself. If that account is a Workspace super admin, every admin tool works too.
+- **A separate robot identity (service account with domain-wide delegation)** — lets a few tools act *inside other people's* mailboxes, calendars and Drive without each person logging in. Setup, including the exact permission list to paste into the Admin console, is in `DEPLOY.md` (Part 5).
 
 ## A few things worth knowing
 

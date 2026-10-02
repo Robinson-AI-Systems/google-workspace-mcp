@@ -11,12 +11,10 @@ const files = (dir) => readdirSync(join(root, dir)).flatMap((f) => {
   return statSync(join(root, rel)).isDirectory() ? files(rel) : rel.endsWith('.js') ? [rel] : [];
 });
 
-// These two are programs that start running (a local sign-in server, the stdio server) the moment they are loaded.
-const PROGRAMS = new Set(['src/auth/cli-authorize.js', 'src/index.js']);
 
 describe('every source file loads', () => {
   process.env.DATABASE_URL ||= 'postgres://user:pass@localhost/none';
-  for (const file of [...files('src'), ...files('api')].filter((f) => !PROGRAMS.has(f))) {
+  for (const file of [...files('src'), ...files('api')]) {
     it(file, async () => { await expect(import(pathToFileURL(join(root, file)).href)).resolves.toBeTruthy(); });
   }
 });
