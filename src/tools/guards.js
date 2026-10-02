@@ -9,22 +9,18 @@
 import { guard, gone } from './write.js';
 import { delegatedGmail, delegationReady, mailboxAllowed } from './delegated.js';
 
-const CUSTOMER = 'my_customer';
-const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj?.[k] !== undefined).map((k) => [k, obj[k]]));
-const data = async (promise) => (await promise).data;
-const orgPath = (p) => String(p || '').replace(/^\//, '');
+import { CUSTOMER, pick, data, orgPath, D, same, SCALARS } from './guard-helpers.js';
+import { GUARDS_MAIL } from './guards-mail.js';
+import { GUARDS_FILES } from './guards-files.js';
+import { GUARDS_ADMIN } from './guards-admin.js';
 
-const D = true; // destructive
-// Google leaves out a field that is false, so compare true/false loosely but everything else exactly.
-const same = (got, wanted) => (typeof wanted === 'boolean' ? !!got === wanted : got === wanted);
-const SCALARS = new Set(['string', 'boolean', 'number']);
 // Only these profile details can be changed in a general update without confirm. Anything else (login name, recovery email/phone,
 // suspension, password, admin rights, org unit, ...) is treated as risky and needs confirm: true.
 const SAFE_USER_FIELDS = new Set(['name', 'phones', 'addresses', 'organizations', 'relations', 'externalIds', 'locations', 'gender', 'websites', 'notes', 'customSchemas', 'includeInGlobalAddressList', 'keywords', 'languages']);
 const DELETING_REQUEST = (requests) => (Array.isArray(requests) ? requests : []).some((r) => Object.keys(r || {}).some((k) => /^delete/i.test(k)));
 
 // name -> { destructive, describe(args), before(args, clients), after(args, clients, details) }
-export const GUARDS = {
+const CORE = {
   // ---------- Directory: users ----------
   admin_delete_user: { destructive: D,
     describe: (a) => ({ target: a.userKey, summary: `PERMANENTLY delete the Workspace user ${a.userKey} (their data goes with them after 20 days)` }),
@@ -359,6 +355,9 @@ export const GUARDS = {
     before: async (a) => { const { listGoogleAccounts } = await import('../db.js'); return (await listGoogleAccounts()).find((x) => x.email === String(a.email || '').trim().toLowerCase()) || { note: 'No such account is connected.' }; },
     after: async (a) => { const { listGoogleAccounts } = await import('../db.js'); return { exists: (await listGoogleAccounts()).some((x) => x.email === String(a.email || '').trim().toLowerCase()) }; } }
 };
+
+// The table is split by area so each part stays readable: this file (admin deletes and other destructive tools), then mail/calendar/tasks/chat, files and documents, and admin/security/server tools.
+export const GUARDS = { ...CORE, ...GUARDS_MAIL, ...GUARDS_FILES, ...GUARDS_ADMIN };
 
 async function slideText(slides, a) {
   const p = await data(slides.presentations.get({ presentationId: a.presentationId }));
