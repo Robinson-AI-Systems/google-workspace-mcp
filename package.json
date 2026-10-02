@@ -5,7 +5,7 @@
   "type": "module",
   "main": "api/mcp.js",
   "scripts": {
-    "check": "find src api -name '*.js' -exec node --check {} \\;",
+    "check": "find src api -name '*.js' -exec node --check {} \\; && node scripts/check-writes.mjs",
     "test": "vitest run",
     "test:db": "vitest run --config vitest.db.config.js"
   },
