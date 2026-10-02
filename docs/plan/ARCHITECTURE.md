@@ -198,6 +198,7 @@ export const handlers = { [name]: async (args, clients) => ok(...) };
   of every wrapped tool, with how to describe it and how to read before/after,
   is `src/tools/guards*.js`. `test/unit/guards.test.js` fails if a tool with
   `_delete` in its name has no entry.
+- **Group settings** have one source of truth, `src/tools/group-settings.js`: every setting `admin_update_group_settings` can change, the values Google accepts, and the check that turns a request into the body Google wants. The tool and its guard entry (`guards-admin.js`) both import it, so the preview text, the confirmation rules and the read-back cannot disagree about which settings exist.
 - **`scripts/check-writes.mjs`** runs in `npm run check` and CI. It fails when
   a tool whose name matches its list of changing verbs has no `dryRun`. It
   matches on names only, which is why the gap below exists.
@@ -209,7 +210,6 @@ export const handlers = { [name]: async (args, clients) => ok(...) };
 | Where | What | Card |
 | --- | --- | --- |
 | `gmail_untrash_message`, `gmail_untrash_thread`, `sheets_duplicate_sheet`, `sheets_format_cells`, `sheets_freeze_rows`, `sheets_autoresize_columns`, `sheets_sort_range`, `sheets_merge_cells`, `sheets_unmerge_cells`, `sheets_protect_range`, `domain_confirm_verification` | Change things with no `dryRun`, read-back or change-log row, and `check-writes.mjs` does not catch them because their verbs are not in its list. None deletes anything | P5-1 (finish) |
-| `admin_update_group_settings` | Sets only six fields (who can join, post, view, external members, archived); reply-to routing, moderation and the other group settings are not reachable | P6-1 |
 | `admin_list_alerts`, `admin_get_alert`, `admin_delete_alert` | Cannot work: the Alert Center permission is not requested at sign-in (Google refuses it) | None; waits on Google |
 | `src/auth/scopes.js` `classroom` group | The sign-in asks for four Classroom permissions but no tool uses Classroom | Cleanup, needs every account to re-authorize if removed |
 | Read-only smoke test (`scripts/smoke-readonly.mjs`) | Does not exist yet, so tools that never worked against a real account are not yet found | P0-2 |
@@ -218,7 +218,7 @@ export const handlers = { [name]: async (args, clients) => ok(...) };
 
 Fixed since the first version of this page (kept so old PR text still makes
 sense): `drive_upload_file` Buffer bug (P0-3), licensing customer ID and
-plain error when the API is off (P2-6), no tool to set the calendar time zone
+plain error when the API is off (P2-6), group settings limited to six fields (P6-1: reply-to routing, moderation and more now reachable), no tool to set the calendar time zone
 (P2-1), no safe single DNS record tool (P2-3), no lockout or constant-time
 passphrase compare (P0-5), no connection list or revocation (P1-1).
 

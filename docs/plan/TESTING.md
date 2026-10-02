@@ -1,6 +1,6 @@
 # Testing strategy
 
-As of 2026-10-02 the unit suite is 34 files and 993 tests, all passing, and the
+As of 2026-10-02 the unit suite is 35 files and 1014 tests, all passing, and the
 database suite runs in CI on every pull request. The read-only smoke test
 against the real accounts (P0-2) is the one layer not built yet.
 

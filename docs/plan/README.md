@@ -11,7 +11,7 @@ question to him is written in plain English, with no jargon unexplained.
 ## What this plan delivers
 
 **Status (audited 2026-10-02):** most of this plan is built and on `main`. The
-server now loads 354 tools, has 993 passing unit tests plus database tests in CI,
+server now loads 354 tools, has 1014 passing unit tests plus database tests in CI,
 and has every item below in place except the last proofs described in
 `TASKS.md` (the status ledger and the "Audit" section at its end say exactly what
 is built, what is waiting on a live check by Chris, and what is not started).
@@ -81,7 +81,7 @@ contains the design decisions and the cheaper model should execute them.
 
 Phases are sequential. P0 came first because there were no tests; there are
 now, and every later card relies on them to prove it did not break something.
-Only P0-2 (the live read-only smoke test), P5-2, P5-4 and the new P6-1 (full group settings, an optional extension) are not built; see the
+Only P0-2 (the live read-only smoke test), P5-2 and P5-4 are not built (P6-1, full group settings, is an optional extension and is built, awaiting a live check); see the
 ledger in `TASKS.md` for the exact state of every card.
 
 ## Rules that never bend

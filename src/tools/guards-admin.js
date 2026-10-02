@@ -9,6 +9,7 @@
 import { isNotFound } from './write.js';
 import { CUSTOMER, pick, data, orgPath, D, same, SCALARS } from './guard-helpers.js';
 import { normalizeDomains, domainOfEmail } from '../domains.js';
+import { SETTING_KEYS, buildSettingsBody } from './group-settings.js';
 
 const lower = (v) => String(v ?? '').trim().toLowerCase();
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -47,12 +48,13 @@ const aliasList = async (a, { admin }) => ({ aliases: (await data(admin.groups.a
 const sku = (a) => ({ productId: a.productId || 'Google-Apps', skuId: a.skuId, userId: a.userId });
 const privs = (rolePrivileges) => list(rolePrivileges).map((p) => `${p?.serviceId}:${p?.privilegeName}`).sort();
 const roleView = (r) => ({ ...pick(r, ['roleId', 'roleName', 'roleDescription', 'isSystemRole']), privileges: privs(r?.rolePrivileges) });
-const SETTING_KEYS = ['whoCanJoin', 'whoCanPostMessage', 'whoCanViewMembership', 'whoCanViewGroup', 'allowExternalMembers', 'isArchived'];
 const settingsView = (s) => pick(s, SETTING_KEYS);
 const ELEVATED_ROLE = (role) => /^(OWNER|MANAGER)$/i.test(String(role || ''));
 // A member from another domain than the group's own is "external". If the group is given by ID we cannot tell, so we ask.
 const outsideGroupDomain = (a) => { const m = domainOfEmail(a.memberEmail); if (!m) return false; const g = domainOfEmail(a.groupKey); return !g || g !== m; };
 const OPEN_TO_ANYONE = (v) => /^ANYONE/i.test(String(v || ''));
+const upper = (v) => String(v ?? '').trim().toUpperCase();
+const shortText = (v) => { const t = String(v); return t.length > 60 ? `${t.slice(0, 57)}...` : t; };
 const RESOURCE_FIELDS = ['resourceId', 'resourceName', 'resourceType', 'capacity', 'buildingId', 'floorName', 'resourceEmail'];
 const matchingConnections = async (prefix) => {
   const { listConnections } = await import('../db.js');
@@ -116,10 +118,18 @@ export const GUARDS_ADMIN = {
     before: (a, c) => aliasList(a, c),
     after: (a, c) => aliasList(a, c) },
   admin_update_group_settings: { destructive: false,
-    // Opening a group to anyone on the internet or to outside members changes who can read or send into it.
-    confirmWhen: (a) => a.allowExternalMembers === true || OPEN_TO_ANYONE(a.whoCanJoin) || OPEN_TO_ANYONE(a.whoCanPostMessage) || OPEN_TO_ANYONE(a.whoCanViewGroup),
-    verify: (a, b, after) => SETTING_KEYS.every((k) => !a[k] && typeof a[k] !== 'boolean' ? true : String(after?.[k]) === String(a[k])),
-    describe: (a) => ({ target: a.groupEmail, summary: `Change the settings of the group ${a.groupEmail}: ${SETTING_KEYS.filter((k) => a[k] !== undefined && a[k] !== '').map((k) => `${k} = ${a[k]}`).join(', ') || 'nothing given'}` }),
+    // Needs confirm when the call opens the group to anyone on the internet or to outside members, or switches off
+    // the approval of messages or the spam filter: each changes who can read or send into the group unchecked.
+    confirmWhen: (a) => a.allowExternalMembers === true || OPEN_TO_ANYONE(a.whoCanJoin) || OPEN_TO_ANYONE(a.whoCanPostMessage) || OPEN_TO_ANYONE(a.whoCanViewGroup)
+      || upper(a.messageModerationLevel) === 'MODERATE_NONE' || upper(a.spamModerationLevel) === 'ALLOW',
+    // Every setting that was asked for must now read back as asked (booleans compare as Google's "true"/"false").
+    verify: (a, b, after) => Object.entries(buildSettingsBody(a)).every(([k, v]) => String(after?.[k]) === String(v)),
+    // Checks the values first, so a preview refuses a bad value too, before anything is read or changed.
+    describe: (a) => {
+      const body = buildSettingsBody(a);
+      const shown = SETTING_KEYS.filter((k) => body[k] !== undefined).map((k) => `${k} = ${shortText(body[k])}`);
+      return { target: a.groupEmail, summary: `Change the settings of the group ${a.groupEmail}: ${shown.join(', ') || 'nothing given'}` };
+    },
     before: (a, { groupssettings }) => data(groupssettings.groups.get({ groupUniqueId: a.groupEmail })).then(settingsView),
     after: (a, { groupssettings }) => data(groupssettings.groups.get({ groupUniqueId: a.groupEmail })).then(settingsView) },
 
