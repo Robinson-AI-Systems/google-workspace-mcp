@@ -1,5 +1,5 @@
 // Every OAuth scope this server can use, grouped by the Google service it unlocks.
-// The authorize script requests ALL of these at once so you only ever log in once.
+// The sign-in page requests ALL of these at once so you only ever log in once.
 // If you don't use a service (e.g. Classroom), Google simply never gets asked to use it.
 
 export const SCOPE_GROUPS = {

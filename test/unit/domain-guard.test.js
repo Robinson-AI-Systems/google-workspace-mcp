@@ -76,7 +76,7 @@ describe('the admin tools, called from the rentals connection', () => {
     expect(t.description).toMatch(/crossDomain/);
     expect(registry.tools.find((x) => x.name === 'gmail_search').inputSchema.properties.crossDomain).toBeUndefined();
   });
-  it('a connection with no limit set (no limit configured) is unrestricted', async () => {
+  it('a connection with no limit configured is unrestricted', async () => {
     const { clients, when } = makeFakeClients({ actingAs: 'ops@rentals.test' });
     when('admin.users.get').resolves({ data: { primaryEmail: 'sam@ai-systems.test' } });
     expect(text(await registry.handlers.admin_get_user({ userKey: 'sam@ai-systems.test' }, clients))).not.toMatch(/Refused/);
