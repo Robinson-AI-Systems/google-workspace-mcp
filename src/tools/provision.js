@@ -98,7 +98,7 @@ const q = (s) => String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
 /** The folder with this name under `parentId`, created if it is missing. */
 export async function ensureFolder(drive, name, parentId = 'root') {
-  const found = (await drive.files.list({ q: `name = '${q(name)}' and mimeType = '${FOLDER}' and '${q(parentId)}' in parents and trashed = false`, fields: 'files(id,name)', supportsAllDrives: true, includeItemsFromAllDrives: true })).data.files || [];
+  const found = (await drive.files.list({ q: `name = '${q(name)}' and mimeType = '${FOLDER}' and '${q(parentId)}' in parents and trashed = false`, fields: 'files(id,name)', orderBy: 'createdTime', supportsAllDrives: true, includeItemsFromAllDrives: true })).data.files || [];
   if (found.length) return { id: found[0].id, name, created: false };
   const made = (await drive.files.create({ supportsAllDrives: true, requestBody: { name, mimeType: FOLDER, parents: [parentId] }, fields: 'id,name' })).data;
   return { id: made.id, name, created: true };

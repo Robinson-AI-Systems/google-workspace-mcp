@@ -21,8 +21,8 @@ function setup({ calendars = [RENTALS.calendarId], folders = [RENTALS.driveFolde
   f.when('calendar.calendars.get').resolves((a) => { const c = s.calendars.find((x) => x.id === a.calendarId); if (!c) throw googleError(404, 'notFound', 'Not Found'); return { data: c }; });
   f.when('calendar.calendarList.list').resolves(() => ({ data: { items: s.calendars } }));
   f.when('calendar.calendars.insert').resolves((a) => { const c = { id: `cal-${s.calendars.length + 1}`, summary: a.requestBody.summary, timeZone: a.requestBody.timeZone, accessRole: 'owner' }; s.calendars.push(c); return { data: c }; });
-  f.when('drive.files.get').resolves((a) => { const x = s.folders.find((y) => y.id === a.fileId); if (!x) throw googleError(404, 'notFound', 'File not found'); return { data: { id: x.id, name: x.name, trashed: false } }; });
-  f.when('drive.files.list').resolves((a) => { const name = /name = '((?:[^'\\]|\\.)*)'/.exec(a.q)[1]; const parent = /'([^']+)' in parents/.exec(a.q)[1]; return { data: { files: s.folders.filter((x) => x.name === name && x.parent === parent) } }; });
+  f.when('drive.files.get').resolves((a) => { const x = s.folders.find((y) => y.id === a.fileId); if (!x) throw googleError(404, 'notFound', 'File not found'); return { data: { id: x.id, name: x.name, trashed: false, mimeType: x.mimeType || 'application/vnd.google-apps.folder' } }; });
+  f.when('drive.files.list').resolves((a) => { const name = /name = '((?:[^'\\]|\\.)*)'/.exec(a.q)[1]; const parent = /'([^']+)' in parents/.exec(a.q)?.[1]; return { data: { files: s.folders.filter((x) => x.name === name && (!parent || x.parent === parent)) } }; });
   f.when('drive.files.create').resolves((a) => { const x = { id: `fold-${s.folders.length + 1}`, name: a.requestBody.name, parent: a.requestBody.parents[0] }; s.folders.push(x); return { data: x }; });
   return { ...f, s };
 }
@@ -69,7 +69,7 @@ describe('workspace_business_calendar', () => {
   it('refuses a connection limited to another business, and a business with no calendar defined', async () => {
     const f = setup();
     f.clients.allowedDomains = ['robinsonaisystems.com'];
-    await expect(cal(f)).rejects.toThrow(/not allowed to manage/);
+    await expect(cal(f)).rejects.toThrow(/not allowed to manage.*Use the connection for that business/s);
     const g = setup();
     await expect(registry.handlers.workspace_business_calendar({ business: 'ai-systems' }, g.clients)).rejects.toThrow(/no business calendar defined/);
     expect(writes(g.calls)).toEqual([]);
@@ -97,6 +97,37 @@ describe('workspace_business_folders', () => {
     expect(second.details.folders).toEqual(first.details.folders);
     expect(second.details.created).toEqual([]);
     expect(f.calls.filter((c) => c.path === 'drive.files.create')).toHaveLength(before);
+  });
+  it('finds a main folder that lives inside another folder instead of creating a second one', async () => {
+    const f = setup({ folders: [] });
+    f.s.folders.push({ id: 'nested-root', name: 'Robinson Appliance Rentals', parent: 'some-other-folder' });
+    const out = body(await fold(f));
+    expect(out.details.rootFolderId).toBe('nested-root');
+    expect(out.details.rootCreated).toBe(false);
+    expect(f.s.folders.filter((x) => x.name === 'Robinson Appliance Rentals')).toHaveLength(1);
+  });
+  it('two folders with the main name stop it: it will not guess', async () => {
+    const f = setup({ folders: [] });
+    f.s.folders.push({ id: 'a', name: 'Robinson Appliance Rentals', parent: 'root' }, { id: 'b', name: 'Robinson Appliance Rentals', parent: 'x' });
+    await expect(fold(f)).rejects.toThrow(/2 folders named/);
+    expect(writes(f.calls)).toEqual([]);
+  });
+  it('the preview says which folders are missing, from Drive itself', async () => {
+    const f = setup();
+    f.s.folders.push({ id: 'c', name: '02 Customers', parent: RENTALS.driveFolderId });
+    const out = body(await fold(f, { dryRun: true }));
+    expect(out.before.mainFolder).toEqual({ id: RENTALS.driveFolderId, exists: true });
+    expect(out.before.standardFolders.present).toEqual({ '02 Customers': 'c' });
+    expect(out.before.standardFolders.missing).toHaveLength(8);
+  });
+  it('is not called confirmed when a remembered folder has since disappeared from Drive', async () => {
+    const f = setup();
+    const out = body(await fold(f));
+    expect(out.confirmed).toBe(true);
+    f.s.folders = f.s.folders.filter((x) => x.name !== '05 Receipts & Expenses');
+    const again = body(await fold(f));
+    expect(again.details.created).toEqual(['05 Receipts & Expenses']); // made again, and the table corrected
+    expect(again.confirmed).toBe(true);
   });
   it('creates the main folder when it does not exist', async () => {
     const f = setup({ folders: [] });

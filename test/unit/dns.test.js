@@ -24,7 +24,14 @@ function setup({ ns = ['ns1.vercel-dns.com', 'ns2.vercel-dns.com'], token = 'tok
       const u = new URL(url); const method = init.method;
       state.requests.push({ method, path: u.pathname, search: u.search, body: init.body ? JSON.parse(init.body) : undefined, auth: init.headers.Authorization });
       if (failStatus) return { ok: false, status: failStatus, text: async () => JSON.stringify({ error: { message: 'bad token' } }) };
-      if (method === 'GET') return { ok: true, status: 200, text: async () => JSON.stringify({ records: state.records.map((r) => ({ ...r })) }) };
+      if (method === 'GET') {
+        const limit = Number(u.searchParams.get('limit')); const until = u.searchParams.get('until');
+        const size = state.pageSize || limit;
+        const start = until ? Number(until) : 0;
+        const page = state.records.slice(start, start + size);
+        const next = start + size < state.records.length ? start + size : null;
+        return { ok: true, status: 200, text: async () => state.rawList ?? JSON.stringify({ records: page.map((r) => ({ ...r })), pagination: { count: page.length, next, prev: null } }) };
+      }
       if (method === 'POST') { const r = { id: `rec_${state.records.length + 1}`, ...JSON.parse(init.body) }; state.records.push(r); return { ok: true, status: 200, text: async () => JSON.stringify({ uid: r.id }) }; }
       if (method === 'DELETE') { const id = decodeURIComponent(u.pathname.split('/').pop()); state.records = state.records.filter((r) => r.id !== id); return { ok: true, status: 200, text: async () => '{}' }; }
     }
@@ -36,7 +43,6 @@ const changing = (state) => state.requests.filter((r) => r.method !== 'GET');
 
 describe('relativeName', () => {
   it('turns every way of writing a name into what Vercel expects', () => {
-    expect(['@', '', D, `${D}.`, `_dmarc.${D}`, '_dmarc', 'MAIL']).toEqual(['@', '', D, `${D}.`, `_dmarc.${D}`, '_dmarc', 'MAIL']);
     expect(relativeName('@', D)).toBe('');
     expect(relativeName(D, D)).toBe('');
     expect(relativeName(`_dmarc.${D}.`, D)).toBe('_dmarc');
@@ -50,6 +56,7 @@ describe('dns_list_records', () => {
     const out = body(await registry.handlers.dns_list_records({ domain: D }, f.clients));
     expect(out).toMatchObject({ hostedAtVercel: true, count: 1, records: [{ id: 'r1', name: '_dmarc', type: 'TXT' }] });
     expect(f.state.requests[0]).toMatchObject({ method: 'GET', auth: 'Bearer tok' });
+    expect(f.state.requests[0].path).toBe(`/v5/domains/${D}/records`);
     expect(f.state.requests[0].search).toContain('teamId=team_x');
   });
   it('says where DNS actually lives for a domain hosted elsewhere, and calls nothing', async () => {
@@ -122,6 +129,61 @@ describe('dns_add_record', () => {
   it('a missing token says how to set it; a rejected token says so', async () => {
     await expect(add({ confirm: true }, setup({ token: '' }))).rejects.toThrow(/VERCEL_API_TOKEN/);
     await expect(add({ confirm: true }, setup({ failStatus: 403 }))).rejects.toThrow(/refused the token/);
+  });
+});
+
+describe('reading long record lists and odd values', () => {
+  it('reads every page, so a record on page three is found and not added again', async () => {
+    const records = Array.from({ length: 5 }, (_, i) => ({ id: `r${i}`, name: `n${i}`, type: 'TXT', value: `v${i}`, ttl: 60 }));
+    records.push({ id: 'r9', name: '_dmarc', type: 'TXT', value: 'v=DMARC1; p=none', ttl: 60 });
+    const f = setup({ records }); f.state.pageSize = 2;
+    const out = body(await add({ confirm: true }, f));
+    expect(out.details.changed).toBe(false);
+    expect(changing(f.state)).toEqual([]);
+    expect(f.state.requests.filter((r) => r.method === 'GET').length).toBeGreaterThanOrEqual(3);
+  });
+  it('a TXT value that differs only in capital letters is a different record and is added', async () => {
+    const f = setup({ records: [{ id: 'r1', name: 'sel._domainkey', type: 'TXT', value: 'v=DKIM1; p=ABCdef', ttl: 60 }] });
+    const out = body(await add({ confirm: true, name: 'sel._domainkey', value: 'v=DKIM1; p=abcDEF' }, f));
+    expect(out.details.changed).toBe(true);
+    expect(changing(f.state)).toHaveLength(1);
+  });
+  it('a CNAME or MX that Vercel returns with a trailing dot or other case is still recognised as the same record', async () => {
+    const f = setup({ records: [{ id: 'r1', name: 'www', type: 'CNAME', value: 'Cname.Vercel-DNS.com.', ttl: 60 }, { id: 'r2', name: '', type: 'MX', value: 'mx.example.test.', mxPriority: 10, ttl: 60 }] });
+    expect(body(await add({ confirm: true, type: 'CNAME', name: 'www', value: 'cname.vercel-dns.com' }, f)).details.changed).toBe(false);
+    expect(body(await add({ confirm: true, type: 'MX', name: '@', value: 'MX.example.test', mxPriority: 10 }, f)).details.changed).toBe(false);
+    expect(changing(f.state)).toEqual([]);
+  });
+  it('an existing record with a different ttl counts as there, and says its ttl was not changed', async () => {
+    const f = setup({ records: [{ id: 'r1', name: '_dmarc', type: 'TXT', value: 'v=DMARC1; p=none', ttl: 3600 }] });
+    expect(body(await add({ confirm: true }, f)).details.note).toMatch(/ttl 3600; its ttl was not changed/);
+  });
+  it('stops instead of guessing when there are too many records, and when Vercel answers with something that is not a list', async () => {
+    const many = setup({ records: Array.from({ length: 5200 }, (_, i) => ({ id: `r${i}`, name: `n${i}`, type: 'TXT', value: `v${i}`, ttl: 60 })) });
+    await expect(add({ confirm: true }, many)).rejects.toThrow(/more DNS records than this tool will read/);
+    const odd = setup(); odd.state.rawList = JSON.stringify('nope');
+    await expect(add({ confirm: true }, odd)).rejects.toThrow(/something other than a list/);
+    expect(changing(many.state).concat(changing(odd.state))).toEqual([]);
+  });
+  it('SRV is not offered, and a failing add reports Vercel\'s reason and is not logged as done', async () => {
+    const f = setup();
+    await expect(add({ confirm: true, type: 'SRV' }, f)).rejects.toThrow(/must be one of/);
+    const g = setup();
+    const real = g.clients.vercel.fetch;
+    g.clients.vercel.fetch = async (url, init) => init.method === 'POST' ? { ok: false, status: 400, text: async () => JSON.stringify({ error: { message: 'Invalid value' } }) } : real(url, init);
+    await expect(add({ confirm: true }, g)).rejects.toThrow(/Vercel said: Invalid value/);
+    expect(await holder.db.listRecentChanges({ includeDryRuns: false })).toEqual([]);
+  });
+  it('the token never appears in a result or in the change log', async () => {
+    const f = setup({ token: 'vcp_SECRET_TOKEN_VALUE' });
+    const out = await add({ confirm: true }, f);
+    expect(JSON.stringify(out) + JSON.stringify(await holder.db.listRecentChanges())).not.toContain('vcp_SECRET_TOKEN_VALUE');
+  });
+  it('crossDomain: true lets a limited connection through, and nothing else about it changes', async () => {
+    const f = setup();
+    f.clients.allowedDomains = ['robinsonaisystems.com'];
+    const out = body(await registry.handlers.dns_list_records({ domain: D, crossDomain: true }, f.clients));
+    expect(out.hostedAtVercel).toBe(true);
   });
 });
 

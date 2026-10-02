@@ -6,7 +6,8 @@ import { ok } from './util.js';
 import { defineWrite } from './write.js';
 
 const API = 'https://api.vercel.com';
-const TYPES = ['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'SRV', 'CAA'];
+// SRV is left out on purpose: Vercel takes it in a different shape from the others and it has not been proven against the live service.
+const TYPES = ['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'CAA'];
 const clean = (s) => String(s ?? '').trim().toLowerCase();
 
 /** "@", "", the bare domain, or "name.domain" all become the part Vercel wants: "" for the apex, otherwise "name". */
@@ -60,25 +61,40 @@ async function requireVercelDns(domain, clients) {
 
 const pick = (r) => ({ id: r.id, name: r.name ?? '', type: r.type, value: r.value, ttl: r.ttl, ...(r.mxPriority != null ? { mxPriority: r.mxPriority } : {}) });
 async function listRecords(domain, clients) {
-  const out = [];
+  const seen = new Map();
   let until;
-  for (let page = 0; page < 20; page += 1) {
-    const d = await call(clients, 'GET', `/v4/domains/${encodeURIComponent(domain)}/records?limit=100${until ? `&until=${until}` : ''}`);
-    out.push(...(d.records || []));
+  for (let page = 0; ; page += 1) {
+    if (page >= 50) throw new Error(`${domain} has more DNS records than this tool will read (5000), so it cannot tell what is already there. Nothing was changed.`);
+    const d = await call(clients, 'GET', `/v5/domains/${encodeURIComponent(domain)}/records?limit=100${until ? `&until=${until}` : ''}`);
+    if (typeof d !== 'object' || !Array.isArray(d.records)) throw new Error('Vercel answered with something other than a list of records, so nothing was changed.');
+    for (const r of d.records) seen.set(r.id, r);
     until = d.pagination?.next;
-    if (!until) break;
+    if (!until || d.records.length === 0) break;
   }
-  return out.map(pick);
+  return [...seen.values()].map(pick);
 }
-const sameValue = (a, b) => clean(a).replace(/^"|"$/g, '') === clean(b).replace(/^"|"$/g, '');
+// Host names compare without case or a trailing dot; text values (TXT, CAA) compare exactly, apart from the outer quotes.
+const HOSTNAME_TYPES = ['CNAME', 'MX'];
+const sameValue = (type, a, b) => {
+  const s = (v) => String(v ?? '').trim();
+  if (HOSTNAME_TYPES.includes(type)) return clean(a).replace(/\.$/, '') === clean(b).replace(/\.$/, '');
+  if (type === 'A' || type === 'AAAA') return clean(a) === clean(b);
+  return s(a).replace(/^"|"$/g, '') === s(b).replace(/^"|"$/g, '');
+};
+const sameRecord = (x, r) => x.type === r.type && sameValue(r.type, x.value, r.value) && (r.type !== 'MX' || Number(x.mxPriority) === r.mxPriority);
+
+function checkDomain(value) {
+  const domain = clean(value);
+  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain) || domain.includes('..')) throw new Error(`"${value}" is not a domain name.`);
+  return domain;
+}
 
 function checkRecord(args) {
-  const domain = clean(args.domain);
-  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) throw new Error(`"${args.domain}" is not a domain name.`);
+  const domain = checkDomain(args.domain);
   const type = String(args.type || '').toUpperCase();
   if (!TYPES.includes(type)) throw new Error(`Record type must be one of ${TYPES.join(', ')}.`);
   const name = relativeName(args.name, domain);
-  if (!/^(|[a-z0-9_*]([a-z0-9_.*-]*[a-z0-9_*])?)$/.test(name)) throw new Error(`"${args.name}" is not a valid record name. Use @ for the bare domain, or a name like _dmarc or mail.`);
+  if (!/^(|[a-z0-9_*]([a-z0-9_.*-]*[a-z0-9_*])?)$/.test(name) || name.includes('..')) throw new Error(`"${args.name}" is not a valid record name. Use @ for the bare domain, or a name like _dmarc or mail.`);
   const value = String(args.value ?? '').trim();
   if (!value) throw new Error('A record needs a value.');
   if (/[\r\n]/.test(value)) throw new Error('A record value cannot contain line breaks.');
@@ -107,15 +123,15 @@ export const addRecord = defineWrite({
     const r = checkRecord(args);
     await requireVercelDns(r.domain, clients);
     const atName = (await listRecords(r.domain, clients)).filter((x) => x.name === r.name);
-    const existing = atName.find((x) => x.type === r.type && sameValue(x.value, r.value) && (r.type !== 'MX' || Number(x.mxPriority) === r.mxPriority));
-    if (existing) return ok({ changed: false, note: 'That exact record is already there; nothing was added.', id: existing.id });
+    const existing = atName.find((x) => sameRecord(x, r));
+    if (existing) return ok({ changed: false, note: `That record is already there${existing.ttl !== r.ttl ? ` (with ttl ${existing.ttl}; its ttl was not changed)` : ''}; nothing was added.`, id: existing.id });
     if (r.type === 'CNAME' && atName.length) throw new Error(`${display(r.name, r.domain)} already has ${atName.map((x) => x.type).join(', ')} record(s); a CNAME cannot share a name with other records. Nothing was changed.`);
     if (r.type !== 'CNAME' && atName.some((x) => x.type === 'CNAME')) throw new Error(`${display(r.name, r.domain)} is a CNAME, which cannot share its name with a ${r.type} record. Nothing was changed.`);
     const created = await call(clients, 'POST', `/v2/domains/${encodeURIComponent(r.domain)}/records`, { name: r.name, type: r.type, value: r.value, ttl: r.ttl, ...(r.mxPriority != null ? { mxPriority: r.mxPriority } : {}) });
     return ok({ changed: true, id: created.uid || created.id });
   },
   readAfter: async (args, clients) => { const r = checkRecord(args); return { recordsAtName: (await listRecords(r.domain, clients)).filter((x) => x.name === r.name) }; },
-  verify: (args, _before, after) => { const r = checkRecord(args); return after.recordsAtName.some((x) => x.type === r.type && sameValue(x.value, r.value) && (r.type !== 'MX' || Number(x.mxPriority) === r.mxPriority)); }
+  verify: (args, _before, after) => { const r = checkRecord(args); return after.recordsAtName.some((x) => sameRecord(x, r)); }
 });
 
 export const deleteRecord = defineWrite({
@@ -124,18 +140,18 @@ export const deleteRecord = defineWrite({
   inputSchema: { type: 'object', properties: { domain: { type: 'string' }, recordId: { type: 'string' } }, required: ['domain', 'recordId'] },
   destructive: true,
   plan: (args, clients) => {
-    const domain = clean(args.domain);
+    const domain = checkDomain(args.domain);
     return { summary: `Delete DNS record ${args.recordId} from ${domain}`, target: domain, readBefore: async () => { await requireVercelDns(domain, clients); return { record: (await listRecords(domain, clients)).find((x) => x.id === args.recordId) || null }; } };
   },
   async apply(args, clients) {
-    const domain = clean(args.domain);
+    const domain = checkDomain(args.domain);
     await requireVercelDns(domain, clients);
     const rec = (await listRecords(domain, clients)).find((x) => x.id === args.recordId);
     if (!rec) throw new Error(`No record with id ${args.recordId} on ${domain}. Nothing was deleted; list the records again for the current ids.`);
     await call(clients, 'DELETE', `/v2/domains/${encodeURIComponent(domain)}/records/${encodeURIComponent(args.recordId)}`);
     return ok({ changed: true, deleted: rec });
   },
-  readAfter: async (args, clients) => ({ exists: (await listRecords(clean(args.domain), clients)).some((x) => x.id === args.recordId) })
+  readAfter: async (args, clients) => ({ exists: (await listRecords(checkDomain(args.domain), clients)).some((x) => x.id === args.recordId) })
 });
 
 export const tools = [
