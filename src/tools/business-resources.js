@@ -15,7 +15,7 @@ const norm = (e) => String(e || '').trim().toLowerCase();
 function problemWith(args, clients) {
   const biz = BUSINESSES[args.business];
   if (!biz) return `Unknown business "${args.business}". Use one of: ${Object.keys(BUSINESSES).join(', ')}.`;
-  if (Array.isArray(clients?.allowedDomains) && clients.crossDomain !== true && !clients.allowedDomains.includes(biz.domain)) {
+  if (Array.isArray(clients?.allowedDomains) && !clients.allowedDomains.includes(biz.domain)) {
     return `Refused: ${biz.label} is on ${biz.domain}, which this connection (${clients.actingAs}) is not allowed to manage (it is limited to ${clients.allowedDomains.join(', ')}). Nothing was changed. Use the connection for that business.`;
   }
   return null;
@@ -82,7 +82,7 @@ async function rootFolder(biz, businessKey, clients, { createIfMissing = true } 
   const known = (await stored(businessKey, 'folder'))['(root)'];
   for (const id of [known, biz.driveFolderId]) if (id && await isLiveFolder(drive, id)) return { id, created: false };
   const esc = biz.driveFolderName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  const found = (await drive.files.list({ q: `name = '${esc}' and mimeType = '${FOLDER_MIME}' and trashed = false`, fields: 'files(id,name)', orderBy: 'createdTime', supportsAllDrives: true, includeItemsFromAllDrives: true, pageSize: 10 })).data.files || [];
+  const found = (await drive.files.list({ q: `name = '${esc}' and mimeType = '${FOLDER_MIME}' and 'me' in owners and trashed = false`, fields: 'files(id,name)', orderBy: 'createdTime', supportsAllDrives: true, includeItemsFromAllDrives: true, pageSize: 10 })).data.files || [];
   if (found.length > 1) throw new Error(`There are ${found.length} folders named "${biz.driveFolderName}" in Drive (${found.map((f) => f.id).join(', ')}), so I will not guess which is the business folder. Delete or rename the extras, or put the right ID in src/businesses.js. Nothing was changed.`);
   if (found.length === 1) return { id: found[0].id, created: false };
   if (!createIfMissing) return null;

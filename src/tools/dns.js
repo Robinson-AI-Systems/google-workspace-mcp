@@ -66,7 +66,7 @@ async function listRecords(domain, clients) {
   for (let page = 0; ; page += 1) {
     if (page >= 50) throw new Error(`${domain} has more DNS records than this tool will read (5000), so it cannot tell what is already there. Nothing was changed.`);
     const d = await call(clients, 'GET', `/v5/domains/${encodeURIComponent(domain)}/records?limit=100${until ? `&until=${until}` : ''}`);
-    if (typeof d !== 'object' || !Array.isArray(d.records)) throw new Error('Vercel answered with something other than a list of records, so nothing was changed.');
+    if (!d || typeof d !== 'object' || !Array.isArray(d.records)) throw new Error('Vercel answered with something other than a list of records, so nothing was changed.');
     for (const r of d.records) seen.set(r.id, r);
     until = d.pagination?.next;
     if (!until || d.records.length === 0) break;
