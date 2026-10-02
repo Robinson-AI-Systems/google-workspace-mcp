@@ -209,6 +209,7 @@ export const handlers = { [name]: async (args, clients) => ok(...) };
 | Where | What | Card |
 | --- | --- | --- |
 | `gmail_untrash_message`, `gmail_untrash_thread`, `sheets_duplicate_sheet`, `sheets_format_cells`, `sheets_freeze_rows`, `sheets_autoresize_columns`, `sheets_sort_range`, `sheets_merge_cells`, `sheets_unmerge_cells`, `sheets_protect_range`, `domain_confirm_verification` | Change things with no `dryRun`, read-back or change-log row, and `check-writes.mjs` does not catch them because their verbs are not in its list. None deletes anything | P5-1 (finish) |
+| `admin_update_group_settings` | Sets only six fields (who can join, post, view, external members, archived); reply-to routing, moderation and the other group settings are not reachable | P6-1 |
 | `admin_list_alerts`, `admin_get_alert`, `admin_delete_alert` | Cannot work: the Alert Center permission is not requested at sign-in (Google refuses it) | None; waits on Google |
 | `src/auth/scopes.js` `classroom` group | The sign-in asks for four Classroom permissions but no tool uses Classroom | Cleanup, needs every account to re-authorize if removed |
 | Read-only smoke test (`scripts/smoke-readonly.mjs`) | Does not exist yet, so tools that never worked against a real account are not yet found | P0-2 |

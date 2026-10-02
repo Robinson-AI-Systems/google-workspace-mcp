@@ -77,10 +77,11 @@ contains the design decisions and the cheaper model should execute them.
 | P3 | Workflows in Chris's language | P3-1 … P3-6 | 1–2 weeks |
 | P4 | Appliance Desk integration support | P4-1 … P4-4 (+ app-side spec) | 1 week here, more in the app repo |
 | P5 | Structure and documentation | P5-1 … P5-4 | 1 week |
+| P6 | Optional extensions (added 2026-10-02) | P6-1 | under a day |
 
 Phases are sequential. P0 came first because there were no tests; there are
 now, and every later card relies on them to prove it did not break something.
-Only P0-2 (the live read-only smoke test), P5-2 and P5-4 are not built; see the
+Only P0-2 (the live read-only smoke test), P5-2, P5-4 and the new P6-1 (full group settings, an optional extension) are not built; see the
 ledger in `TASKS.md` for the exact state of every card.
 
 ## Rules that never bend

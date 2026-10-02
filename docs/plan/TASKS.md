@@ -485,6 +485,70 @@ deprecated in README and remove the `bin` entries. Recommendation: deprecate.
 
 **Acceptance.** `npm run gen:catalog` produces no diff on a clean tree.
 
+## Phase 6: Extensions (after the core plan; optional)
+
+Added 2026-10-02 from a backlog Chris reviewed. Only P6-1 is planned. The rest of
+that backlog is recorded under "Considered and not planned" so it is not
+proposed again by accident.
+
+### P6-1 · Full group settings (S)
+
+**Goal.** Let Chris run shared inboxes (support@, billing@, leads@) as Google
+Groups and control who can post, where replies go and how mail is moderated,
+without opening the Admin console.
+
+**Today.** `admin_get_group_settings` and `admin_update_group_settings` exist
+(`src/tools/admin-directory.js`, safety wrapper in `src/tools/guards-admin.js`),
+but the update tool accepts only six fields: `whoCanJoin`, `whoCanPostMessage`,
+`whoCanViewMembership`, `whoCanViewGroup`, `allowExternalMembers`, `isArchived`.
+
+**Build.**
+- Extend the schema and handler of `admin_update_group_settings`. Do **not** add
+  a new tool. New fields, to be confirmed against Google's current Groups
+  Settings API reference before use (check each name, its allowed values and
+  whether Google has retired it; drop or flag any that are retired): `replyTo`,
+  `customReplyTo`, `messageModerationLevel`, `spamModerationLevel`,
+  `whoCanModerateContent`, `whoCanModerateMembers`, `whoCanContactOwner`,
+  `whoCanDiscoverGroup`, `showInGroupDirectory`, `includeInGlobalAddressList`,
+  `allowWebPosting`, `membersCanPostAsTheGroup`, `enableCollaborativeInbox`,
+  `sendMessageDenyNotification`, `defaultMessageDenyNotificationText`,
+  `includeCustomFooter`, `customFooterText`.
+- Keep the existing six fields working exactly as they do today.
+- Refuse an unknown value with a plain message that lists the allowed ones.
+- Safety (reuse the existing guard entry and read-back; extend how it decides a
+  call is risky, the same way it does today): require `confirm: true` when a
+  call opens the group to outsiders or removes moderation, namely
+  `whoCanPostMessage`, `whoCanJoin` or `whoCanViewGroup` set to an
+  `ANYONE_CAN_*` value, `allowExternalMembers: true`,
+  `messageModerationLevel: MODERATE_NONE`, or `spamModerationLevel: ALLOW`.
+  The guard entry (`guards-admin.js`) already requires `confirm` for the
+  `ANYONE_CAN_*` and external-members cases through `confirmWhen`; add the two
+  moderation cases there, and add every new field to `SETTING_KEYS` and to
+  `settingsView` so the preview text and the read-back cover it. The read-back
+  must check every field that was asked for.
+- The domain guard already checks `groupEmail`; keep it that way.
+- Same PR: update README (what `admin_update_group_settings` can set), add an
+  OWNER-GUIDE row ("Set up support@ as a shared inbox", with what it asks first),
+  and the ledger.
+
+**Acceptance.** Unit tests with the fakes: every new field reaches
+`groups.patch`; a bad value is refused with the plain message; each risky
+setting refuses without `confirm`; `dryRun` changes nothing; the read-back is
+what is returned. Manual (needs Chris's go-ahead, it changes a real group): on a
+throwaway group in the rentals domain, preview, then set `replyTo` and a
+moderation level, read it back, then delete the group.
+
+### Considered and not planned (reviewed with Chris, 2026-10-02)
+
+| Idea | Decision | Why |
+| --- | --- | --- |
+| Meeting rooms and buildings tools | Not planned | Buildings, rooms and feature tags already exist (`admin_create_building`, `admin_create_calendar_resource`, `admin_create_feature` and their update/delete tools) |
+| Device management through Cloud Identity | Not planned | `admin_action_mobile_device` already approves, blocks and wipes phones; the new API adds laptops and desktops and needs a plan with advanced device management |
+| Security alerts (list, resolve) | On hold | The tools exist but Google's sign-in screen refuses the Alert Center permission, so a new tool would hit the same wall. Revisit if Google allows it or the robot identity is given the permission (needs Chris's written approval) |
+| Google Voice | Not planned | Seats are ordinary licences (`licensing_assign_license` works with the Voice plan ID); choosing phone numbers has no public API. A console-link entry in `workspace_where_is_setting` is a possible small extra, not scheduled |
+| Google Meet transcripts, recordings, attendance | On hold | Real API, but it needs new read-only permissions (every account signs in again), works only for meetings that were recorded, and handles sensitive content. Revisit when Chris holds recorded meetings |
+| Google Sites creation and copy | Not possible | New Google Sites has no public API to create or copy a site |
+
 ---
 
 ## Status ledger
@@ -531,6 +595,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P5-2 | TODO | | Not before 30 days after encryption went live (key set 2026-10-02, so not before 2026-11-01) |
 | P5-3 | DONE | | Chris decided to retire local mode (2026-10-02). Local files, scripts and README sections removed; hosted only. README, DEPLOY and ARCHITECTURE checked against the code in the 2026-10-02 audit and match. |
 | P5-4 | TODO | | #19 corrects README drift; generated catalog/version/changelog work remains TODO. |
+| P6-1 | TODO | | Added 2026-10-02 (Chris: "go with #1"). Extends the existing `admin_update_group_settings`; no new tool. Start only after the docs-audit PR (#24) is merged |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 (PR #1), account-choice fix (PR #2), domain-wide delegation + mailbox branding
@@ -543,7 +608,7 @@ Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 Method. Every card was checked against `main` (PR #23 merged): the code exists,
 `npm run check` passes, and `npm test` passes (993 tests, 34 files). Each card
 is weighted by effort, taking the middle of the size key (S = 0.5 day, M = 1.5
-days, L = 4 days), for 36.5 days across the 34 cards. A card counts 100% when
+days, L = 4 days), for 37 days across the 35 cards (P6-1 was added the same day, which moved the estimate from 84% to 83%). A card counts 100% when
 every acceptance check is proven (`DONE`), 90% when it is built and tested but
 its live check by Chris is still outstanding (the live check is about a tenth of
 the work), and 0% when it is not built. This is an estimate of effort, not a
@@ -551,16 +616,16 @@ measurement.
 
 | State | Cards | Effort (days) | Share |
 | --- | --- | --- | --- |
-| Done, acceptance proven | P0-7, P1-2, P1-5, P3-5, P4-1, P4-2, P5-3 | 3.5 | 10% |
-| Built and tested, live check outstanding | 23 cards marked `MERGED`, plus P5-1 (about 90% built) | 30.1 | 82% |
-| Not built | P0-2, P5-2 (time-blocked), P5-4, and the last tenth of P5-1 | 2.9 | 8% |
+| Done, acceptance proven | P0-7, P1-2, P1-5, P3-5, P4-1, P4-2, P5-3 | 3.5 | 9% |
+| Built and tested, live check outstanding | 23 cards marked `MERGED`, plus P5-1 (about 90% built) | 30.1 | 81% |
+| Not built | P0-2, P5-2 (time-blocked), P5-4, P6-1, and the last tenth of P5-1 | 3.4 | 9% |
 
-**Complete: about 84%. Remaining: about 16%** (roughly 8% still to build and 8%
-to prove with live checks). By code alone, about 92% is built.
+**Complete: about 83%. Remaining: about 17%** (roughly 9% still to build and 8%
+to prove with live checks; shares are rounded). By code alone, about 91% is built.
 
 Left to build: P0-2 (read-only smoke test, 1.5 days), P5-4 (version 2.0,
-changelog, generated tool catalog), finishing P5-1 (eleven tools), and P5-2
-(only after 2026-11-01).
+changelog, generated tool catalog), finishing P5-1 (eleven tools), P6-1 (full
+group settings), and P5-2 (only after 2026-11-01).
 
 Left to prove (all need Chris's go-ahead because they touch real accounts): the
 manual checks listed in the ledger notes above, for example upload a test file to
