@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/workflows/ci.yml)
 
-A Claude connector that gives Claude real, working control over your Google Workspace — not just email and calendar, but the admin side too: creating/suspending users, managing groups, adding domains and aliases, pushing Chrome policies, running security audits, and more. **347 tools** across every major Google Workspace service, and it can hold sign-ins for more than one mailbox (e.g. one per business on the same Workspace), with each Claude connection bound to the one you pick.
+A Claude connector that gives Claude real, working control over your Google Workspace — not just email and calendar, but the admin side too: creating/suspending users, managing groups, adding domains and aliases, pushing Chrome policies, running security audits, and more. **348 tools** across every major Google Workspace service, and it can hold sign-ins for more than one mailbox (e.g. one per business on the same Workspace), with each Claude connection bound to the one you pick.
 
 Built for one goal: you should be able to tell Claude what you want done in Google Workspace — in plain English — and have it actually happen, without you opening the admin console.
 
@@ -27,7 +27,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at any Post
 - Tests never call Google or the real database. `test/helpers/fake-google.js` stands in for the Google clients and `test/helpers/fake-db.js` for `src/db.js`; `test/contract/db-contract.js` runs the same checks against both so the fake cannot drift from the real thing. Database tests work inside their own temporary schema and clean up after themselves.
 - Never put a real token, passphrase or key in a test or a log. Tests use obviously fake values.
 - Database changes must be additive (`IF NOT EXISTS`); old and new code run against the same database at once.
-- One task card per pull request, branch `ai/<model>/<card>-<slug>`, ledger row in `docs/plan/TASKS.md` updated in the same PR. The full rules are in [`docs/plan/`](docs/plan/README.md).
+- Keep pull requests coherent and keep the ledger row in `docs/plan/TASKS.md` current in the same PR. Tightly related cards may be grouped when that reduces CI churn without weakening review or acceptance checks. The full rules are in [`docs/plan/`](docs/plan/README.md).
 - GitHub runs check, unit tests and database tests (on a throwaway Postgres) on every pull request.
 
 ## What's covered
@@ -100,4 +100,4 @@ For a plain-English list of what to ask Claude for, see [docs/OWNER-GUIDE.md](do
 
 - **Nothing here is placeholder code.** Every tool calls the real Google API method it claims to. A handful of things Google's public APIs genuinely cannot do (some settings only exist in the admin console UI) are left out rather than faked.
 - **Data Transfer API** (`datatransfer_*` tools, used by `workflow_offboard_employee`) isn't in Google's current client library, so it's implemented as a direct REST call — same effect, just built by hand instead of generated.
-- Destructive tools (delete user, delete file, revoke access, etc.) do exactly what they say — there's no confirmation step inside the tool itself. Think before calling them, the same as you would in the admin console.
+- **Mutating tools must use the safety model.** Destructive operations are not intentionally shipped as raw one-step calls: they use the dry-run/confirmation/read-back/change-log layer described above, and new mutating tools must receive equivalent coverage before release.
