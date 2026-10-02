@@ -1,7 +1,6 @@
-// The actual MCP endpoint Claude talks to. Stateless by design (a fresh
-// Server + transport per request) because Vercel serverless functions don't
-// keep anything in memory between calls -- this is the officially supported
-// pattern for running MCP over HTTP on a serverless platform.
+// The actual MCP endpoint Claude talks to. A fresh Server + transport is built
+// for each HTTP request, but Vercel can reuse a warm function instance. Expensive
+// one-time initialization is therefore cached after it succeeds (see src/once.js).
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
@@ -9,8 +8,15 @@ import { registry } from '../src/tools/index.js';
 import { errorResult } from '../src/tools/util.js';
 import { buildHostedApiClients, ensureMigrated } from '../src/auth/google-auth-hosted.js';
 import { getAccessToken, initSchema, touchAccessToken, connectionId, getAllowedDomains } from '../src/db.js';
+import { onceSuccessful } from '../src/once.js';
 
 export const config = { api: { bodyParser: true } };
+
+// DDL and the legacy-account migration do not need to run on every request in
+// the same warm function instance. A failure clears the cache so the next
+// request retries instead of leaving the instance permanently broken.
+const ensureSchemaReady = onceSuccessful(initSchema);
+const ensureLegacyMigration = onceSuccessful(ensureMigrated);
 
 function buildServer(googleAccount, connection) {
   const server = new Server(
@@ -40,7 +46,7 @@ function buildServer(googleAccount, connection) {
 }
 
 export default async function handler(req, res) {
-  await initSchema();
+  await ensureSchemaReady();
 
   const authHeader = req.headers['authorization'] || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -59,8 +65,9 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Upgrade older deployments (one shared Google login) in place, once.
-  await ensureMigrated();
+  // Upgrade older deployments (one shared Google login) in place, once per
+  // warm instance. The migration itself remains idempotent for cold starts.
+  await ensureLegacyMigration();
 
   // Every tool call on this connection acts as the Google account chosen at
   // login time (NULL = the server's default account, for older connections).
