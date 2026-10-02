@@ -82,6 +82,8 @@ export const handlers = {
     const wanted = normalizeDomains(args.domains || []); // throws a plain message on something that is not a domain
     if (args.confirm !== true) return ok({ done: false, needsConfirmation: true, account: email, allowedNow: before, wouldBecome: wanted.length ? wanted : 'own domain only', note: 'Nothing was changed. Ask the person, then run it again with confirm: true.' });
     const now = await setAllowedDomains(email, wanted);
+    // Called through the safety wrapper (guards-admin.js), which writes the change-log row itself: do not write a second one.
+    if (args[Symbol.for('gws.writeGuarded')] === true) return ok({ done: true, account: email, allowedDomains: now });
     const logged = await recordChange(clients, { tool: 'workspace_set_allowed_domains', target: email, summary: `Allowed domains for ${email}: ${before.join(', ')} -> ${now.join(', ')}`, before: { allowedDomains: before }, after: { allowedDomains: now } });
     return ok({ done: true, account: email, allowedDomains: now, logged: logged.logged });
   },
