@@ -1,4 +1,4 @@
-// Same job as google-auth.js, but for the hosted (Vercel) deployment: reads
+// Builds the Google clients for the hosted (Vercel) deployment: reads
 // and persists Google tokens from Postgres (Neon) instead of a local file,
 // since serverless functions don't keep a filesystem between invocations.
 //

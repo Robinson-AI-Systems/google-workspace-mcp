@@ -13,9 +13,8 @@ itself issued. It holds Google sign-ins for one or more mailboxes
 (`google_accounts`); each Claude connection is bound to one of them at login.
 Tool calls act as that mailbox through the Google APIs. A separate, narrowly
 scoped service account lets two tools act *inside* other users' Gmail
-settings. A local stdio mode (`src/index.js`) exists for Claude Desktop and
-uses a file-based token; it has not been maintained alongside the hosted mode
-and is out of scope for this plan except where a card says otherwise.
+settings. (The old local stdio mode was retired on Chris's decision; the
+server is hosted-only.)
 
 ## Request path (hosted)
 
