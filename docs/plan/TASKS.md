@@ -1,8 +1,9 @@
 # Task cards
 
-Work the cards in order. One card per PR unless "may group with" says
-otherwise. Every card has acceptance checks; a card is done only when all of
-them pass and the ledger at the bottom is updated in the same PR.
+Work the cards in order. Prefer one card per PR, but tightly related cards may
+be grouped when doing so reduces CI churn without weakening review or acceptance
+checks. Every card has acceptance checks; a card is done only when all of them
+pass and the ledger at the bottom is updated in the same PR.
 
 Size key: **S** under a day, **M** one to two days, **L** three to five days.
 Model key: default Sonnet 5.5; `[H]` = Haiku 4.5 is enough.
@@ -487,7 +488,8 @@ deprecated in README and remove the `bin` entries. Recommendation: deprecate.
 ## Status ledger
 
 Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
-`DONE`, `BLOCKED (reason)`.
+`MERGED` (code shipped but acceptance may still be outstanding), `DONE`, and
+`BLOCKED (reason)`.
 
 | Card | Status | PR | Notes |
 | --- | --- | --- | --- |
@@ -497,7 +499,7 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P0-4 | IN_REVIEW | #7 | Tool + unit tests done (token host check, size/redirect/timeout/private-address limits). Manual copy of the brand PDF needs Chris's go-ahead (writes to his Drive) |
 | P0-5 | IN_REVIEW | #6 | Lockout + constant-time compare + tests. Manual 5-wrong-tries check on the preview still to do |
 | P0-6 | IN_REVIEW | #8 | Code + tests done (crypto round-trip/tamper; DB tests on real Postgres). Needs Chris to set `TOKEN_ENCRYPTION_KEY` in Vercel (DEPLOY.md Part 6) before it takes effect; the Neon-branch check on both real accounts happens after that. Plain copy still written until P5-2 |
-| P0-7 | IN_REVIEW | #7 | Developing section added; tool count now 334 |
+| P0-7 | IN_REVIEW | #7, #19 | Developing section added; hard-coded README tool count corrected to 348 in #19. Generated catalog remains P5-4. |
 | P1-1 | IN_REVIEW | #10 | Table, helper, 3 tools, last-used tracking; explicit logging added to brand_mailbox, make_super_admin, set_2sv_enforcement, move_user_orgunit, set_user_photo. Last-used is written at most once a minute per token (not every request). Manual check (brand a test alias, see one row) needs Chris's go-ahead: it changes a real mailbox |
 | P1-2 | IN_REVIEW | #9 | 12 mappings + unit tests; unknown errors and network failures unchanged |
 | P1-3 | MERGED | #13 | Shipped with P1-4 in one PR. |
@@ -511,20 +513,20 @@ Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
 | P2-6 | MERGED | #14 | Real customer ID in `licensing_list_assignments`; switched-off-API errors now name the API to enable; `workspace_plan_summary` added. Manual run on both domains still to do |
 | P2-7 | MERGED | #14 | `workflow_search_presence_check` (read-only). Manual report still to do |
 | P2-8 | MERGED | #14 | `workflow_weekly_digest`: emailing needs confirm:true. Manual run and committed sample still to do |
-| P3-1 | MERGED | #17, follow-up hardening PR | `workflow_add_staff_member`: roles map to calendar/Drive levels (driver/technician: edit calendar, no Drive access (Chris, 2026-10-01); office/admin: manage calendar, edit folder). Safe to run twice. Deviations: Chris said drivers/technicians need no Drive access; the nine standard folders were read from the live Drive; emailing needs `confirm` (login to an address, or welcome to `personalEmail`); 2-step: Google's API cannot require it for one person (the field is read-only), so the tool reports enrolment status and points to the org-unit policy (Admin console > Security). Hardening PR after review also: a failed step is no longer "confirmed", a driver who already has Drive access is flagged (never silently removed), owners are never downgraded, mailbox branding is skipped when already applied, sharing lists are read to the end, and offboarding now verifies the shares are gone and respects the domain limit. `ai-systems` has no calendar/folder listed so those steps are skipped. Manual run against a disposable test user (Chris deletes it) still to do: it creates a real account |
-| P3-2 | MERGED | #15 | Offboarding already had dryRun/confirm/read-back/logging from P1-3. Added: removes send-as aliases and sets the out-of-office reply (the old description promised the reply but the code never did it) before suspending, via delegation; each is skipped with a reason when delegation is off. Also removes the calendar/Drive shares granted by P3-1 (added with P3-1). Left as the guard wrapper rather than `defineWrite` (same behaviour) |
-| P3-3 | MERGED | #17, follow-up hardening PR | `workflow_set_up_business`. Deviations: (1) the nine folder names are exactly the real Appliance Rentals folders (read from the live Drive, 2026-10-01); override with `folders`; (2) always needs `confirm` (adds a domain and a paid account) and `crossDomain` on a limited connection; (3) stops at the DNS step on an unverified domain; (4) labels/filters only when the connection IS the owner; (5) calendar and folder are created under the connection's own account then shared with the owner. Fictional-domain preview proven by test; manual run against a throwaway domain still to do |
-| P3-4 | IN_REVIEW | #16 | Added `avatarBase64`, `labels` (+`filterTo`), `vacation`, `dryRun`. Deviation: labels are only created when the connection IS that mailbox, because the delegated robot identity may not create labels (that needs a wider scope, which needs Chris's written approval). Manual check on the rentals mailbox still to do |
-| P3-5 | IN_REVIEW | #16 | `gmail_inbox_summary`, `gmail_find_unanswered`; read-only; looks at up to 100 conversations and says when it stopped |
-| P3-6 | IN_REVIEW | #16 | docs/OWNER-GUIDE.md written; needs Chris to read it and say it makes sense. Now also lists add-a-staff-member and set-up-a-business |
+| P3-1 | MERGED | #17, #18 | `workflow_add_staff_member`: roles map to calendar/Drive levels (driver/technician: edit calendar, no Drive access (Chris, 2026-10-01); office/admin: manage calendar, edit folder). Safe to run twice. Deviations: Chris said drivers/technicians need no Drive access; the nine standard folders were read from the live Drive; emailing needs `confirm` (login to an address, or welcome to `personalEmail`); 2-step: Google's API cannot require it for one person (the field is read-only), so the tool reports enrolment status and points to the org-unit policy (Admin console > Security). Hardening #18 also: a failed step is no longer "confirmed", a driver who already has Drive access is flagged (never silently removed), owners are never downgraded, mailbox branding is skipped when already applied, sharing lists are read to the end, and offboarding now verifies the shares are gone and respects the domain limit. `ai-systems` has no calendar/folder listed so those steps are skipped. Manual run against a disposable test user (Chris deletes it) still to do: it creates a real account |
+| P3-2 | MERGED | #15, #18 | Offboarding already had dryRun/confirm/read-back/logging from P1-3. Added: removes send-as aliases and sets the out-of-office reply (the old description promised the reply but the code never did it) before suspending, via delegation; each is skipped with a reason when delegation is off. Also removes the calendar/Drive shares granted by P3-1. #18 hardened failed-step/read-back behavior. Left as the guard wrapper rather than direct `defineWrite` (same safety behavior). |
+| P3-3 | MERGED | #17, #18 | `workflow_set_up_business`. Deviations: (1) the nine folder names are exactly the real Appliance Rentals folders (read from the live Drive, 2026-10-01); override with `folders`; (2) always needs `confirm` (adds a domain and a paid account) and `crossDomain` on a limited connection; (3) stops at the DNS step on an unverified domain; (4) labels/filters only when the connection IS the owner; (5) calendar and folder are created under the connection's own account then shared with the owner. Fictional-domain preview proven by test; manual run against a throwaway domain still to do. |
+| P3-4 | MERGED | #15 | Added `avatarBase64`, `labels` (+`filterTo`), `vacation`, `dryRun`. Deviation: labels are only created when the connection IS that mailbox, because the delegated robot identity may not create labels (that needs a wider scope, which needs Chris's written approval). Manual no-op/read-back check on the rentals mailbox still to do. |
+| P3-5 | MERGED | #15 | `gmail_inbox_summary`, `gmail_find_unanswered`; read-only; looks at up to 100 conversations and says when it stopped. #18 hardened inbox classification accuracy. |
+| P3-6 | MERGED | #15 | `docs/OWNER-GUIDE.md` is shipped and now lists add-a-staff-member and set-up-a-business; Chris still needs to read it and confirm it makes sense. |
 | P4-1 | TODO | | Needs Chris's written approval of two scopes |
 | P4-2 | TODO | | |
 | P4-3 | TODO | | |
 | P4-4 | TODO | | |
-| P5-1 | TODO | | |
+| P5-1 | TODO | | #19 hardens the hosted runtime and tests, but the actual remaining-write conversion and CI checker are still TODO. |
 | P5-2 | TODO | | Not before 30 days after P0-6 ships |
 | P5-3 | TODO | | Needs Chris's decision: deprecate local mode? |
-| P5-4 | TODO | | |
+| P5-4 | TODO | | #19 corrects README drift; generated catalog/version/changelog work remains TODO. |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 (PR #1), account-choice fix (PR #2), domain-wide delegation + mailbox branding

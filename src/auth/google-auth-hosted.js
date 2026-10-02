@@ -72,8 +72,8 @@ export async function handleGoogleCallback(code, { label } = {}) {
 }
 
 /**
- * Upgrade a pre-multi-account deployment in place. Runs on every request
- * and costs one cheap query once the legacy row is gone.
+ * Upgrade a pre-multi-account deployment in place. The migration is idempotent;
+ * api/mcp.js caches a successful run for the life of a warm function instance.
  */
 export async function ensureMigrated() {
   return migrateLegacyGoogleAuth(whichMailbox);
@@ -109,31 +109,63 @@ export async function getHostedAuthClient(account) {
   return client;
 }
 
+function lazyClient(target, name, factory) {
+  Object.defineProperty(target, name, {
+    enumerable: true,
+    configurable: true,
+    get() {
+      // Only construct the Google service a tool actually touches. If a
+      // factory ever throws, leave the getter in place so a later access can
+      // retry rather than caching a broken value.
+      const value = factory();
+      Object.defineProperty(target, name, {
+        value,
+        enumerable: true,
+        configurable: false,
+        writable: false
+      });
+      return value;
+    }
+  });
+}
+
+/**
+ * Build the service bag used by tool handlers. Service clients are lazy: a
+ * Gmail call no longer constructs Drive, Calendar, Vault, Admin, Chat, etc.
+ * This matters on the hosted request path where a new tool call otherwise paid
+ * the construction cost for every Google API whether it used it or not.
+ */
+export function buildApiClients(auth) {
+  const clients = { auth, actingAs: auth.actingAs };
+  const services = {
+    gmail: () => google.gmail({ version: 'v1', auth }),
+    drive: () => google.drive({ version: 'v3', auth }),
+    calendar: () => google.calendar({ version: 'v3', auth }),
+    sheets: () => google.sheets({ version: 'v4', auth }),
+    docs: () => google.docs({ version: 'v1', auth }),
+    slides: () => google.slides({ version: 'v1', auth }),
+    forms: () => google.forms({ version: 'v1', auth }),
+    tasks: () => google.tasks({ version: 'v1', auth }),
+    people: () => google.people({ version: 'v1', auth }),
+    chat: () => google.chat({ version: 'v1', auth }),
+    classroom: () => google.classroom({ version: 'v1', auth }),
+    admin: () => google.admin({ version: 'directory_v1', auth }),
+    adminReports: () => google.admin({ version: 'reports_v1', auth }),
+    groupssettings: () => google.groupssettings({ version: 'v1', auth }),
+    licensing: () => google.licensing({ version: 'v1', auth }),
+    datatransfer: () => buildDataTransferClient(auth),
+    alertcenter: () => google.alertcenter({ version: 'v1beta1', auth }),
+    chromepolicy: () => google.chromepolicy({ version: 'v1', auth }),
+    cloudidentity: () => google.cloudidentity({ version: 'v1', auth }),
+    siteVerification: () => google.siteVerification({ version: 'v1', auth }),
+    vault: () => google.vault({ version: 'v1', auth })
+  };
+
+  for (const [name, factory] of Object.entries(services)) lazyClient(clients, name, factory);
+  return clients;
+}
+
 export async function buildHostedApiClients(account) {
   const auth = await getHostedAuthClient(account);
-  return {
-    auth,
-    actingAs: auth.actingAs,
-    gmail: google.gmail({ version: 'v1', auth }),
-    drive: google.drive({ version: 'v3', auth }),
-    calendar: google.calendar({ version: 'v3', auth }),
-    sheets: google.sheets({ version: 'v4', auth }),
-    docs: google.docs({ version: 'v1', auth }),
-    slides: google.slides({ version: 'v1', auth }),
-    forms: google.forms({ version: 'v1', auth }),
-    tasks: google.tasks({ version: 'v1', auth }),
-    people: google.people({ version: 'v1', auth }),
-    chat: google.chat({ version: 'v1', auth }),
-    classroom: google.classroom({ version: 'v1', auth }),
-    admin: google.admin({ version: 'directory_v1', auth }),
-    adminReports: google.admin({ version: 'reports_v1', auth }),
-    groupssettings: google.groupssettings({ version: 'v1', auth }),
-    licensing: google.licensing({ version: 'v1', auth }),
-    datatransfer: buildDataTransferClient(auth),
-    alertcenter: google.alertcenter({ version: 'v1beta1', auth }),
-    chromepolicy: google.chromepolicy({ version: 'v1', auth }),
-    cloudidentity: google.cloudidentity({ version: 'v1', auth }),
-    siteVerification: google.siteVerification({ version: 'v1', auth }),
-    vault: google.vault({ version: 'v1', auth })
-  };
+  return buildApiClients(auth);
 }
