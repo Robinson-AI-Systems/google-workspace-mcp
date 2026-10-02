@@ -78,6 +78,7 @@ contains the design decisions and the cheaper model should execute them.
 | P4 | Appliance Desk integration support | P4-1 … P4-4 (+ app-side spec) | 1 week here, more in the app repo |
 | P5 | Structure and documentation | P5-1 … P5-4 | 1 week |
 | P6 | Optional extensions (added 2026-10-02) | P6-1 | under a day |
+| P7 | God Mode expansion (proposed 2026-10-02) | P7-1 to P7-8 | about 12 days, none built |
 
 Phases are sequential. P0 came first because there were no tests; there are
 now, and every later card relies on them to prove it did not break something.
