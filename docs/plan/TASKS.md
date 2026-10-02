@@ -549,6 +549,166 @@ moderation level, read it back, then delete the group.
 | Google Meet transcripts, recordings, attendance | On hold | Real API, but it needs new read-only permissions (every account signs in again), works only for meetings that were recorded, and handles sensitive content. Revisit when Chris holds recorded meetings |
 | Google Sites creation and copy | Not possible | New Google Sites has no public API to create or copy a site |
 
+## Phase 7: God Mode expansion (proposed 2026-10-02, order agreed by Chris)
+
+Chris asked how to make this toolset "God Mode". Google's current official API
+documentation was checked on 2026-10-02 (Drive, Cloud Identity Policy API, Reports,
+Gmail Postmaster Tools, Meet, Search Console, Business Profile, Apps Script,
+Workspace Events). Finding: breadth is already wide (354 tools). The gaps are
+shared drives, blind spots in what the connector can *see*, and power features on
+top of the tools. Chris agreed to the order below on 2026-10-02. Nothing here is
+built. All live testing is saved for project completion or when strictly necessary
+(Chris, 2026-10-02): every card is proven with the unit fakes, and its manual check
+joins the end-of-project list.
+
+Honest limit: Google's API does not let any outside tool change every Admin
+console setting. The Policy API (P7-2) is read-only for every setting it covers,
+so that card audits and reports; it never changes.
+
+Build in this order. P7-1 to P7-4 need no change to how the robot identity works.
+
+### P7-1 · Shared drives (M)
+
+**Goal.** Create, list, rename, hide and delete shared drives, and manage who is
+in them (company files usually live there).
+
+**Today.** The Drive tools cover files, folders, permissions, revisions, trash and
+changes, but nothing for shared drives themselves.
+
+**Build.** Tools over the Drive API `drives.*` methods and the shared-drive
+membership calls on `permissions.*`: `drive_list_shared_drives`,
+`drive_get_shared_drive`, `drive_create_shared_drive`,
+`drive_update_shared_drive` (name, theme, restrictions), `drive_delete_shared_drive`
+(only when empty; Google refuses otherwise), and member tools that add, change
+and remove a person's role. Built with `defineWrite`: `dryRun` on every change,
+`confirm` on delete and on any change that adds someone outside the allowed
+domains or lets non-members in, read-back after. Existing file tools must also
+work inside shared drives (`supportsAllDrives`): check and fix.
+
+**Permission.** The full `drive` permission is already requested at sign-in, so
+nobody signs in again. The robot's `drive.file` is not widened.
+
+**Acceptance.** Unit tests for each tool, the guards and the shared-drive flag on
+the existing file tools; `npm run check` passes. Manual (deferred): create a test
+shared drive, add a member, read it back, delete it.
+
+### P7-2 · Settings auditor, read-only (M)
+
+**Goal.** "Show me every Admin console setting that differs from best practice, per
+domain", for Gmail, Drive and Docs sharing, Calendar, Meet, Chat, Groups, devices,
+API controls, Marketplace and more.
+
+**Build.** Read-only tools over the Cloud Identity Policy API: list a domain's
+settings by area, and one report tool that compares them against a short
+best-practice list kept in the repository (so Chris can read and change it). Every
+tool is read-only, so no `dryRun` is needed; they must be on the read-only
+allow-list. Link each finding to the console page through `workspace_where_is_setting`.
+
+**Permission.** A new read-only permission (`cloud-identity.policies.readonly`)
+must be added in the sign-in scopes and in the Admin console; every connected
+account signs in again once. Needs Chris's written approval before the scope is added.
+
+**Acceptance.** Unit tests with a fake of the API; the report names a setting that
+is off its target and stays quiet when everything matches. Manual (deferred): run
+it on both domains and read the report.
+
+### P7-3 · Wider activity logs (S)
+
+**Goal.** Who did what, when, across everything.
+
+**Today.** Reports tools cover admin, drive, groups, login, mobile and oauth token
+activity, plus usage.
+
+**Build.** Add the missing Reports application names, checked against Google's
+current list before use (for example Meet, Calendar, Chat, SAML/SSO, user accounts,
+rules and access transparency), either as new tools or as a `application` choice on
+a single tool, whichever keeps the tool menu smaller. Read-only.
+
+**Permission.** None new (`admin.reports.audit.readonly` is already requested).
+
+**Acceptance.** Unit tests; unknown application names are refused with the allowed list.
+
+### P7-4 · Email deliverability, Gmail Postmaster Tools (S)
+
+**Goal.** See whether each domain's mail is landing in spam or being flagged.
+
+**Build.** Read-only tools: list the domains Postmaster Tools knows, and read
+spam rate, authentication results and delivery errors for a domain over a date range.
+
+**Permission.** New read-only permission (`postmaster.readonly`); needs Chris's
+approval, and each domain must already be verified in Postmaster Tools (a one-time
+step by Chris; the tool says so plainly when it is not).
+
+**Acceptance.** Unit tests; the "domain not verified" case gives a plain message.
+
+### P7-5 · Undo (M)
+
+**Goal.** "Undo that change."
+
+**Today.** The safety layer already records what each change was before it ran
+(`change_log`, read through `workspace_recent_changes`).
+
+**Build.** One tool that takes a change-log entry and puts the saved "before" back
+for the kinds of change that can be reversed safely (settings, labels, aliases,
+group settings, calendar and file details). Changes that cannot be reversed
+(sent mail, permanent deletes, sign-outs) are listed and refused with the reason.
+Goes through the same `dryRun` and `confirm`, and is itself logged.
+
+**Acceptance.** Unit tests for each reversible kind, for the refusal of the
+others, and for undoing an undo.
+
+### P7-6 · Read-only connection mode (S)
+
+**Goal.** A connection that physically cannot change anything, for safe browsing.
+
+**Build.** A per-connection setting (next to the allowed-domains setting) that
+blocks every changing tool before it runs, and says so plainly. Managed by a
+tool like `workspace_set_allowed_domains`, and shown in `workspace_list_connections`.
+Database change must be additive and idempotent, with a database test.
+
+**Acceptance.** Unit and database tests: every changing tool is refused in
+read-only mode, every read tool still works.
+
+### P7-7 · Tool profiles, a smaller menu (M)
+
+**Goal.** Claude loads faster and cheaper. All 354 tool descriptions are about
+54,000 tokens if loaded at once.
+
+**Build.** Optional per-connection profiles (for example mail only, files only,
+admin only, everything) that limit which tools the server lists. Default stays
+"everything", so nothing changes unless Chris chooses a profile. Shorter
+descriptions on the largest families (admin about 16k, Gmail about 7k) where it
+does not lose meaning.
+
+**Acceptance.** Unit tests: each profile lists exactly its tools; the default
+lists all; a tool outside the profile is refused if called anyway.
+
+### P7-8 · Bulk and cross-domain operations (L, last)
+
+**Goal.** One request that acts on many users, or on all domains, with a single
+preview and a single confirmation.
+
+**Build.** Bulk wrappers for the jobs Chris repeats (for example set the same
+signature or vacation reply, add or remove a group member, change a licence, for a
+list of users), reusing the existing tools and guards, one combined `dryRun`
+preview, one `confirm`, a per-user result and a cap on how many at once. Design
+first (a short note on limits and partial failure) and have Chris review it
+before building.
+
+**Acceptance.** Unit tests: preview changes nothing, partial failure is reported
+per user and does not stop the rest, the cap is enforced.
+
+### Tier 3, considered (not scheduled)
+
+| Idea | Decision | Why |
+| --- | --- | --- |
+| Meet records (transcripts, attendance) | On hold | Already on hold above |
+| Search Console, Business Profile | Not scheduled | Useful for the businesses' search presence. Business Profile needs Google's approval first, so apply early if Chris wants it |
+| Classroom tools | Not scheduled | Permission is requested but unused; only worth it if Chris uses Classroom |
+| Apps Script control | Not planned | Google does not allow it with a service account |
+| Live change notifications (Workspace Events) | Not planned | Needs extra Google Cloud plumbing (Pub/Sub) for little gain |
+| Chat bots, Alert Center | Not planned | Alert Center cannot work with the permissions we deliberately do not request |
+
 ---
 
 ## Status ledger
@@ -596,6 +756,14 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P5-3 | DONE | | Chris decided to retire local mode (2026-10-02). Local files, scripts and README sections removed; hosted only. README, DEPLOY and ARCHITECTURE checked against the code in the 2026-10-02 audit and match. |
 | P5-4 | TODO | | #19 corrects README drift; generated catalog/version/changelog work remains TODO. |
 | P6-1 | IN_REVIEW | #25 | `admin_update_group_settings` now sets 16 more settings (reply-to, customReplyTo, message and spam moderation, who moderates content and members, who can contact the owners and discover the group, web posting, post-as-group, collaborative inbox, address-book listing, rejection notice and text, footer and text), with the allowed values checked against Google's reference on 2026-10-02. Values are checked before anything is read or changed, in a preview too, and a bad one is refused with the allowed list. Needs `confirm` for the old outsider/internet cases plus `messageModerationLevel: MODERATE_NONE` and `spamModerationLevel: ALLOW`. Read-back checks every setting asked for. Deviations: `showInGroupDirectory` left out (Google marks it deprecated); a choice may be typed in any letter case; the original six fields are still passed through unchecked, exactly as before. Manual check still to do: it changes a real group |
+| P7-1 | TODO | | Shared drives: list, create, rename, delete, members |
+| P7-2 | TODO | | Settings auditor (read-only, Cloud Identity Policy API); needs Chris's approval for a new read-only permission |
+| P7-3 | TODO | | Wider activity logs (more Reports applications) |
+| P7-4 | TODO | | Gmail Postmaster Tools (deliverability); needs Chris's approval for a new read-only permission |
+| P7-5 | TODO | | Undo built on the change log |
+| P7-6 | TODO | | Read-only connection mode |
+| P7-7 | TODO | | Tool profiles (smaller tool menu) |
+| P7-8 | TODO | | Bulk and cross-domain operations; design note first |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 (PR #1), account-choice fix (PR #2), domain-wide delegation + mailbox branding
@@ -635,6 +803,11 @@ change-log row (P1-1), set the rentals calendar to Denver (P2-1), run the email
 health and health reports on both domains and commit them (P2-2, P2-5), add and
 delete a disposable test employee (P3-1), and so on. Also not recorded anywhere:
 the phase-gate reviews (one per phase, by a stronger model).
+
+**After Phase 7 was added (2026-10-02):** the plan grows by 8 cards, about 12 days
+(P7-1 M, P7-2 M, P7-3 S, P7-4 S, P7-5 M, P7-6 S, P7-7 M, P7-8 L), none built. On the
+original 36 cards the estimate above still stands (about 84%); on the expanded
+plan (49 days) it is about 63% complete and 37% remaining.
 
 Not counted: the app-side half of the Appliance Desk integration
 (`APPLIANCE-DESK-INTEGRATION.md`), which lives in the appliance-desk repository.
