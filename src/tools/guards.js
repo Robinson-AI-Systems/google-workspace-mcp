@@ -13,6 +13,7 @@ import { CUSTOMER, pick, data, orgPath, D, same, SCALARS } from './guard-helpers
 import { GUARDS_MAIL } from './guards-mail.js';
 import { GUARDS_FILES } from './guards-files.js';
 import { GUARDS_ADMIN } from './guards-admin.js';
+import { GUARDS_SHARED_DRIVES } from './shared-drives.js';
 
 // Only these profile details can be changed in a general update without confirm. Anything else (login name, recovery email/phone,
 // suspension, password, admin rights, org unit, ...) is treated as risky and needs confirm: true.
@@ -357,7 +358,7 @@ const CORE = {
 };
 
 // The table is split by area so each part stays readable: this file (admin deletes and other destructive tools), then mail/calendar/tasks/chat, files and documents, and admin/security/server tools.
-export const GUARDS = { ...CORE, ...GUARDS_MAIL, ...GUARDS_FILES, ...GUARDS_ADMIN };
+export const GUARDS = { ...CORE, ...GUARDS_MAIL, ...GUARDS_FILES, ...GUARDS_ADMIN, ...GUARDS_SHARED_DRIVES };
 
 async function slideText(slides, a) {
   const p = await data(slides.presentations.get({ presentationId: a.presentationId }));
