@@ -170,7 +170,7 @@ export const handlers = {
     const { admin } = clients;
     const before = (await admin.users.get({ userKey: args.userKey, fields: 'primaryEmail,orgUnitPath' })).data;
     const res = await admin.users.update({ userKey: args.userKey, requestBody: { orgUnitPath: args.orgUnitPath } });
-    await recordChange(clients, { tool: 'admin_move_user_orgunit', target: before.primaryEmail || args.userKey, summary: `Moved ${before.primaryEmail || args.userKey} from ${before.orgUnitPath} to ${res.data.orgUnitPath}`, before: { orgUnitPath: before.orgUnitPath }, after: { orgUnitPath: res.data.orgUnitPath } });
+    if (args[Symbol.for('gws.writeGuarded')] !== true) await recordChange(clients, { tool: 'admin_move_user_orgunit', target: before.primaryEmail || args.userKey, summary: `Moved ${before.primaryEmail || args.userKey} from ${before.orgUnitPath} to ${res.data.orgUnitPath}`, before: { orgUnitPath: before.orgUnitPath }, after: { orgUnitPath: res.data.orgUnitPath } });
     return ok(res.data);
   },
   admin_sign_out_user: async (args, { admin }) => {
@@ -194,7 +194,7 @@ export const handlers = {
     const { admin } = clients;
     const before = (await admin.users.get({ userKey: args.userKey, projection: 'full', fields: 'primaryEmail,isEnforcedIn2Sv' })).data;
     const res = await admin.users.update({ userKey: args.userKey, requestBody: { isEnforcedIn2Sv: args.enforce } });
-    await recordChange(clients, { tool: 'admin_set_2sv_enforcement', target: before.primaryEmail || args.userKey, summary: `2-Step Verification enforcement for ${before.primaryEmail || args.userKey}: ${before.isEnforcedIn2Sv ? 'on' : 'off'} -> ${res.data.isEnforcedIn2Sv ? 'on' : 'off'}`, before: { isEnforcedIn2Sv: !!before.isEnforcedIn2Sv }, after: { isEnforcedIn2Sv: !!res.data.isEnforcedIn2Sv } });
+    if (args[Symbol.for('gws.writeGuarded')] !== true) await recordChange(clients, { tool: 'admin_set_2sv_enforcement', target: before.primaryEmail || args.userKey, summary: `2-Step Verification enforcement for ${before.primaryEmail || args.userKey}: ${before.isEnforcedIn2Sv ? 'on' : 'off'} -> ${res.data.isEnforcedIn2Sv ? 'on' : 'off'}`, before: { isEnforcedIn2Sv: !!before.isEnforcedIn2Sv }, after: { isEnforcedIn2Sv: !!res.data.isEnforcedIn2Sv } });
     return ok(res.data);
   },
   admin_get_user_photo: async (args, { admin }) => {
@@ -206,7 +206,7 @@ export const handlers = {
     let before = null;
     try { const b = (await admin.users.photos.get({ userKey: args.userKey })).data; before = { mimeType: b.mimeType, width: b.width, height: b.height }; } catch { /* no photo yet */ }
     const res = await admin.users.photos.update({ userKey: args.userKey, requestBody: { photoData: Buffer.from(args.base64Data, 'base64').toString('base64url') } });
-    await recordChange(clients, { tool: 'admin_set_user_photo', target: args.userKey, summary: `Changed the profile photo of ${args.userKey}`, before, after: { mimeType: res.data.mimeType, width: res.data.width, height: res.data.height } });
+    if (args[Symbol.for('gws.writeGuarded')] !== true) await recordChange(clients, { tool: 'admin_set_user_photo', target: args.userKey, summary: `Changed the profile photo of ${args.userKey}`, before, after: { mimeType: res.data.mimeType, width: res.data.width, height: res.data.height } });
     return ok(res.data);
   },
 

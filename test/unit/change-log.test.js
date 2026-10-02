@@ -49,6 +49,14 @@ describe('recordChange', () => {
 });
 
 describe('admin tools that now log', () => {
+  it('through the registry, a guarded admin tool writes exactly one change-log row (not two)', async () => {
+    const { clients, when } = makeFakeClients({ actingAs: 'ops@example.test' });
+    when('admin.users.get').resolves({ data: { primaryEmail: 'sam@example.test', orgUnitPath: '/Staff' } });
+    when('admin.users.update').resolves({ data: { primaryEmail: 'sam@example.test', orgUnitPath: '/Staff' } });
+    await registry.handlers.admin_move_user_orgunit({ userKey: 'sam@example.test', orgUnitPath: '/Staff' }, clients);
+    const rows = (await holder.db.listRecentChanges()).filter((r) => r.tool === 'admin_move_user_orgunit');
+    expect(rows).toHaveLength(1);
+  });
   it('admin_move_user_orgunit logs before and after', async () => {
     const { clients, when } = makeFakeClients({ actingAs: 'ops@example.test' });
     when('admin.users.get').resolves({ data: { primaryEmail: 'sam@example.test', orgUnitPath: '/' } });
