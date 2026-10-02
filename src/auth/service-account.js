@@ -44,10 +44,18 @@ export function isDelegationConfigured() {
  * ALL_SCOPES list. Widen this on purpose, one scope at a time, if a future
  * tool genuinely needs more, and authorize the same list in the Admin console.
  */
-export const DELEGATED_SCOPES = [
+export const GMAIL_SETTINGS_SCOPES = [
   'https://www.googleapis.com/auth/gmail.settings.basic',
   'https://www.googleapis.com/auth/gmail.settings.sharing'
 ];
+export const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar';
+export const DRIVE_FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+// Everything the robot identity may ever be authorized for in the Admin console. Chris approved adding the last
+// two on 2026-10-02 ("I approve calendar and drive.file for the robot identity") for the business apps:
+// calendar = the business calendar; drive.file = only files and folders the robot itself created or opened.
+// Nothing asks for all of them at once: each call requests only the subset it needs (see buildDelegatedAuth), so
+// Gmail branding keeps working even before the two new entries are added in the Admin console.
+export const DELEGATED_SCOPES = [...GMAIL_SETTINGS_SCOPES, CALENDAR_SCOPE, DRIVE_FILE_SCOPE];
 
 /** Non-secret facts about the service account, for status tools and setup pages. */
 export function describeServiceAccount() {
@@ -63,21 +71,27 @@ export function describeServiceAccount() {
 }
 
 /**
- * An auth client that acts as `userEmail`, limited to DELEGATED_SCOPES.
- * Throws a plain-English error when delegation isn't set up, so tools can
- * surface it instead of a bare 403.
+ * An auth client that acts as `userEmail`, limited to `scopes` (default: the Gmail settings pair, which is what
+ * every existing tool uses). Asking for anything outside DELEGATED_SCOPES throws. Throws a plain-English error
+ * when delegation isn't set up, so tools can surface it instead of a bare 403.
  */
-export function buildDelegatedAuth(userEmail) {
+export function buildDelegatedAuth(userEmail, scopes = GMAIL_SETTINGS_SCOPES) {
   const key = loadServiceAccount();
   if (!key) {
     throw new Error('Acting inside another mailbox needs domain-wide delegation, which is not set up yet (GOOGLE_SERVICE_ACCOUNT_JSON is missing). See DEPLOY.md, Part 5.');
   }
+  const bad = scopes.filter((s) => !DELEGATED_SCOPES.includes(s));
+  if (!scopes.length || bad.length) throw new Error(`The robot identity may only be asked for these permissions: ${DELEGATED_SCOPES.join(', ')}.${bad.length ? ` Refused: ${bad.join(', ')}.` : ' None were requested.'}`);
   const subject = String(userEmail || '').trim().toLowerCase();
   if (!subject.includes('@')) throw new Error(`userEmail must be a full email address, got "${userEmail}".`);
-  return new google.auth.JWT({
-    email: key.client_email,
-    key: key.private_key,
-    scopes: DELEGATED_SCOPES,
-    subject
-  });
+  return new google.auth.JWT({ email: key.client_email, key: key.private_key, scopes, subject });
+}
+
+/** Calendar and Drive clients acting as `userEmail` with only the requested subset of DELEGATED_SCOPES. A client whose scope was not requested is absent. */
+export function delegatedClients(userEmail, scopes) {
+  const auth = buildDelegatedAuth(userEmail, scopes);
+  const out = {};
+  if (scopes.includes(CALENDAR_SCOPE)) out.calendar = google.calendar({ version: 'v3', auth });
+  if (scopes.includes(DRIVE_FILE_SCOPE)) out.drive = google.drive({ version: 'v3', auth });
+  return out;
 }

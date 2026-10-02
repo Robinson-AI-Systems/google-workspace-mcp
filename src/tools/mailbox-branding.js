@@ -5,8 +5,8 @@
 import { google } from 'googleapis';
 import { recordChange } from '../changelog.js';
 import { ok } from './util.js';
-import { delegatedGmail, delegationReady, mailboxAllowed } from './delegated.js';
-import { buildDelegatedAuth, describeServiceAccount, isDelegationConfigured } from '../auth/service-account.js';
+import { delegatedGmail, delegationReady, delegatedServices, mailboxAllowed } from './delegated.js';
+import { buildDelegatedAuth, describeServiceAccount, isDelegationConfigured, GMAIL_SETTINGS_SCOPES, CALENDAR_SCOPE, DRIVE_FILE_SCOPE } from '../auth/service-account.js';
 
 const norm = (e) => String(e || '').trim().toLowerCase();
 
@@ -94,7 +94,7 @@ export async function brandingMatches(clients, { email, displayName, signatureHt
 }
 
 export const handlers = {
-  async workspace_delegation_status(args) {
+  async workspace_delegation_status(args, clients) {
     const info = describeServiceAccount();
     if (!info.configured) {
       return ok({
@@ -102,17 +102,36 @@ export const handlers = {
         nextStep: 'Create a service account key in Google Cloud, authorize its client ID in Admin console > Security > API controls > Domain-wide delegation with the scopes listed, then set GOOGLE_SERVICE_ACCOUNT_JSON in Vercel. DEPLOY.md Part 5 has the clicks.'
       });
     }
-    if (!args.testUser) return ok({ ...info, test: 'Pass testUser to prove it works end to end.' });
-    try {
-      const res = await gmailFor(args.testUser).users.settings.sendAs.list({ userId: 'me' });
-      return ok({ ...info, test: { user: norm(args.testUser), works: true, sendAsCount: res.data.sendAs?.length || 0 } });
-    } catch (err) {
+    if (!args.testUser) return ok({ ...info, test: 'Pass testUser to prove it works end to end. Every permission in scopesToAuthorize is tried on its own, so a missing Admin console entry is named.' });
+    const user = norm(args.testUser);
+    const explain = (err) => {
       const message = err?.response?.data?.error?.message || err?.message || String(err);
       const hint = /unauthorized_client|Not Authorized|invalid_grant/i.test(message)
-        ? 'Google rejected the robot identity. Usually the client ID or the scope list in Admin console > Domain-wide delegation does not match exactly, or it was saved less than a few minutes ago (Google takes time to apply it).'
+        ? 'Google rejected the robot identity for this permission. Usually this permission is missing from (or spelled differently in) the Admin console > Domain-wide delegation entry, or the entry was saved less than a few minutes ago (Google takes time to apply it).'
         : undefined;
-      return ok({ ...info, test: { user: norm(args.testUser), works: false, error: message, hint } });
+      return { works: false, error: message, hint };
+    };
+    // Each group is tried with its own token, so one missing Admin console entry never hides the others.
+    const probes = [
+      { label: 'Gmail settings (name, signature, send-as)', scopes: GMAIL_SETTINGS_SCOPES, run: async () => ({ sendAsCount: ((await delegatedGmail(clients, user).users.settings.sendAs.list({ userId: 'me' })).data.sendAs || []).length }) },
+      { label: 'Calendar', scopes: [CALENDAR_SCOPE], run: async () => { await delegatedServices(clients, user, [CALENDAR_SCOPE]).calendar.calendarList.list({ maxResults: 1 }); return {}; } },
+      { label: 'Drive (files the robot itself creates)', scopes: [DRIVE_FILE_SCOPE], run: async () => { await delegatedServices(clients, user, [DRIVE_FILE_SCOPE]).drive.files.list({ pageSize: 1, fields: 'files(id)' }); return {}; } }
+    ];
+    const scopes = [];
+    for (const p of probes) {
+      let r;
+      try { r = { works: true, ...(await p.run()) }; } catch (err) { r = explain(err); }
+      scopes.push({ what: p.label, scopes: p.scopes, ...r });
     }
+    const gmailProbe = scopes[0];
+    const missing = scopes.filter((s) => !s.works).map((s) => s.what);
+    return ok({
+      ...info,
+      test: { user, works: gmailProbe.works, ...(gmailProbe.works ? { sendAsCount: gmailProbe.sendAsCount } : { error: gmailProbe.error, hint: gmailProbe.hint }) },
+      scopeChecks: scopes,
+      allScopesWork: missing.length === 0,
+      ...(missing.length ? { notWorkingYet: missing, nextStep: `Not working yet: ${missing.join('; ')}. In Admin console > Security > API controls > Domain-wide delegation, edit the entry for client ID ${info.clientId || '(see clientId above)'} so its scope list is exactly: ${info.scopesToAuthorize.join(', ')}. Then run this again in a few minutes.` } : {})
+    });
   },
 
   async workflow_brand_mailbox(args, clients) {

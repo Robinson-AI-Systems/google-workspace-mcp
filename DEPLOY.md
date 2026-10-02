@@ -57,7 +57,7 @@ Claude's connector system expects your server to speak OAuth. Since this server 
 
 ## Part 5 — Let the server brand other mailboxes (optional, one time, ~15 minutes)
 
-Some Gmail settings (adding "send mail as" identities, setting a signature on a mailbox you are not signed into) are only allowed through a Google **service account** with **domain-wide delegation**: a robot identity your Workspace trusts to act as its users. This server asks for exactly two permissions for that robot, both about Gmail settings, and uses it only in `workflow_brand_mailbox` and `workspace_delegation_status`.
+Some Gmail settings (adding "send mail as" identities, setting a signature on a mailbox you are not signed into) are only allowed through a Google **service account** with **domain-wide delegation**: a robot identity your Workspace trusts to act as its users. This server may ask for exactly four permissions for that robot: two about Gmail settings, plus `calendar` and `drive.file` (added 2026-10-02 at Chris's written approval, for the business calendar and folder tools). Each action asks only for the ones it needs, so Gmail branding keeps working even if you have not added the last two yet.
 
 1. Open [console.cloud.google.com](https://console.cloud.google.com/) and select the **same project** that holds this server's OAuth client (APIs & Services > Credentials shows it).
 2. **IAM & Admin > Service Accounts > Create service account.** Name it `workspace-mcp-delegate`. No roles needed. Create.
@@ -65,11 +65,15 @@ Some Gmail settings (adding "send mail as" identities, setting a signature on a 
 4. Still on the service account, copy its **Unique ID** (a long number; also called the OAuth2 client ID).
 5. Open [admin.google.com](https://admin.google.com) > **Security** > **Access and data control** > **API controls** > **Manage Domain Wide Delegation** > **Add new**. Paste the Unique ID as the Client ID. In OAuth scopes paste exactly:
 
-   `https://www.googleapis.com/auth/gmail.settings.basic,https://www.googleapis.com/auth/gmail.settings.sharing`
+   `https://www.googleapis.com/auth/gmail.settings.basic,https://www.googleapis.com/auth/gmail.settings.sharing,https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive.file`
+
+   If you set this up earlier with only the two Gmail permissions: open the existing entry, **Edit**, and replace its scope list with the line above (the Client ID stays the same). Authorize.
 
    Authorize.
 6. In Vercel > this project > **Settings > Environment Variables**, add `GOOGLE_SERVICE_ACCOUNT_JSON` with the entire contents of the downloaded JSON file as the value (all environments). Redeploy when Vercel offers.
-7. Ask Claude to run `workspace_delegation_status` with a `testUser`. It should report `works: true`. Google can take a few minutes to apply step 5.
+7. Ask Claude to run `workspace_delegation_status` with a `testUser`. It tries each permission on its own and should report `allScopesWork: true`. If one is missing it names it and says exactly what to type in the Admin console. Google can take a few minutes to apply step 5.
+
+`drive.file` is deliberately narrow: the robot can only see files and folders it created itself, not the rest of anyone's Drive.
 
 To turn it off later: delete the environment variable, delete the key in Google Cloud, and remove the client ID from the Admin console list.
 
@@ -94,3 +98,16 @@ The `dns_list_records`, `dns_add_record` and `dns_delete_record` tools talk to V
 4. Never paste the token into a chat, a commit or a document. If it ever is, delete it on the tokens page and make a new one.
 
 To turn it off: delete the token on that page; the tools then say the token is missing or refused.
+
+## Part 8 — The business app's own robot identity (when the appliance desk app needs Google, ~15 minutes)
+
+The appliance desk app must **not** borrow the connector's robot. It gets its own service account, so each can be switched off separately and each has only the permissions it needs. The app's design is in `docs/plan/APPLIANCE-DESK-INTEGRATION.md`.
+
+1. In Google Cloud (the same project as the connector is fine): **IAM & Admin > Service Accounts > Create service account**, name it `appliance-desk-google`, no roles. Under **Keys** create a **JSON** key and keep it private. Copy the service account's **Unique ID**.
+2. Admin console > **Security > Access and data control > API controls > Manage Domain Wide Delegation > Add new**. Client ID: that Unique ID. OAuth scopes, exactly:
+
+   `https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive.file,https://www.googleapis.com/auth/gmail.readonly,https://www.googleapis.com/auth/gmail.send`
+
+3. In Vercel > the **appliance-desk** project > Environment Variables: `GOOGLE_SERVICE_ACCOUNT_JSON` (the file's contents, Sensitive) and `GOOGLE_IMPERSONATE_USER=ops@robinsonappliancerentals.com`. Production only until it has been tested.
+4. The app finds the business calendar and folders by asking this connector: ask Claude for `workspace_business_calendar` and `workspace_business_folders` for Appliance Rentals. They return the IDs and remember them in the shared database table `business_resources`, which the app can read.
+5. Never reuse one key for both identities, and never paste a key into a chat or commit it. If one is exposed, delete that key in Google Cloud and make a new one.
