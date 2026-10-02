@@ -12,7 +12,7 @@ import { domainOfEmail } from '../domains.js';
 const EMAIL_ARGS = ['emailTo', 'userKey', 'userId', 'primaryEmail', 'email', 'groupKey', 'groupEmail', 'memberEmail', 'alias', 'userEmail', 'fromUserId', 'toUserId', 'managerEmail', 'transferDriveAndCalendarTo', 'assignedToUserKey', 'recoveryEmail'];
 const EMAIL_LIST_ARGS = ['groupEmails', 'aliases', 'accountEmails'];
 const DOMAIN_ARGS = ['domainName', 'domainAliasName', 'parentDomainName', 'domain', 'scope']; // scope: a domain, or the word "all" (which targets no domain)
-const TOOL_FAMILY = /^(admin|licensing|datatransfer|workflow|identity|reports|vault)_/;
+const TOOL_FAMILY = /^(admin|licensing|datatransfer|workflow|identity|reports|vault|dns)_/;
 const CROSS_DOMAIN_FIELD = { type: 'boolean', description: 'Set to true only when you really mean to act on an address or domain outside the domains this connection is limited to.' };
 
 const clean = (v) => String(v ?? '').trim().toLowerCase();
@@ -55,7 +55,7 @@ export function applyDomainGuard(registry) {
         const bad = outsideDomains(rest, clients.allowedDomains);
         if (bad.length) return ok(refusal(bad, clients));
       }
-      return inner(rest, crossDomain === true ? Object.assign(Object.create(Object.getPrototypeOf(clients || {})), clients, { crossDomain: true }) : clients);
+      return inner(rest, crossDomain === true ? Object.create(clients || {}, { crossDomain: { value: true, enumerable: true } }) : clients);
     };
     return { ...tool, description: `${tool.description} Limited to this connection's own business domains unless crossDomain: true.`, inputSchema: { ...tool.inputSchema, properties: { ...props, crossDomain: CROSS_DOMAIN_FIELD } } };
   });

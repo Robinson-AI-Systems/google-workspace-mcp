@@ -83,3 +83,14 @@ By default the server keeps your Google sign-in tokens in the database as plain 
 4. Keep a copy of the key somewhere safe (a password manager). If the key is lost or changed, the server notices it cannot read the encrypted copy, says so in the logs, and falls back to the plain copy and re-encrypts it with the new key, so nothing breaks.
 
 If the setting is missing or wrong, the server keeps working exactly as before and logs one warning.
+
+## Part 7 — Let Claude change DNS records for domains hosted at Vercel (optional, ~3 minutes)
+
+The `dns_list_records`, `dns_add_record` and `dns_delete_record` tools talk to Vercel's DNS service. They only work for domains whose nameservers are Vercel's (`ns1.vercel-dns.com`, `ns2.vercel-dns.com`); for any other domain they say where the DNS actually lives and change nothing.
+
+1. Go to vercel.com/account/tokens, create a token (name it e.g. "Workspace DNS"), and set its scope to your team (Robinson AI Systems). Copy it once; Vercel will not show it again.
+2. In Vercel > this project > **Settings > Environment Variables**, add `VERCEL_API_TOKEN` (mark it **Sensitive**) and `VERCEL_TEAM_ID` (your team's ID, shown under Team Settings > General). Use the **Production** environment only: preview builds do not need the power to change DNS.
+3. Redeploy when Vercel offers. Environment variables only apply to deployments made after they were added.
+4. Never paste the token into a chat, a commit or a document. If it ever is, delete it on the tokens page and make a new one.
+
+To turn it off: delete the token on that page; the tools then say the token is missing or refused.

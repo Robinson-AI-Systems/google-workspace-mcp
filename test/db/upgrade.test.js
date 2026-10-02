@@ -200,7 +200,7 @@ describe.skipIf(!url)('database (real Postgres)', () => {
 
   runDbContract('real Postgres', {
     makeDb: async () => {
-      await rawQuery(`TRUNCATE google_accounts, google_auth, oauth_clients, oauth_codes, oauth_tokens, login_attempts, change_log`);
+      await rawQuery(`TRUNCATE google_accounts, google_auth, oauth_clients, oauth_codes, oauth_tokens, login_attempts, change_log, business_resources`);
       return db;
     },
     seedLegacy: async (_db, tokens) => { await rawQuery(`INSERT INTO google_auth (id, tokens) VALUES (1, $1::jsonb)`, [JSON.stringify(tokens)]); }

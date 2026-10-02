@@ -223,6 +223,19 @@ export function runDbContract(label, { makeDb, seedLegacy }) {
       });
     });
 
+    describe('business resources', () => {
+      it('remembers an ID, corrects it when saved again, and keeps businesses and kinds apart', async () => {
+        await db.saveBusinessResource({ business: 'rentals', kind: 'calendar', key: 'Deliveries & Service', googleId: 'cal-1' });
+        await db.saveBusinessResource({ business: 'rentals', kind: 'folder', key: '02 Customers', googleId: 'f-2' });
+        await db.saveBusinessResource({ business: 'other', kind: 'calendar', key: 'Deliveries & Service', googleId: 'cal-x' });
+        expect((await db.listBusinessResources('rentals')).map((r) => [r.kind, r.key, r.google_id])).toEqual([['calendar', 'Deliveries & Service', 'cal-1'], ['folder', '02 Customers', 'f-2']]);
+        await db.saveBusinessResource({ business: 'rentals', kind: 'calendar', key: 'Deliveries & Service', googleId: 'cal-2' });
+        expect((await db.listBusinessResources('rentals', 'calendar')).map((r) => r.google_id)).toEqual(['cal-2']);
+        expect(await db.listBusinessResources('rentals', 'folder')).toHaveLength(1);
+        expect(await db.listBusinessResources('nobody')).toEqual([]);
+      });
+    });
+
     describe('change log', () => {
       it('stores a change with before and after, newest first', async () => {
         await db.recordChange({ actingAs: 'a@example.test', connection: 'cx/AAAAAAAA', tool: 'admin_move_user_orgunit', target: 'sam@example.test', summary: 'Moved sam', before: { orgUnitPath: '/' }, after: { orgUnitPath: '/Staff' } });

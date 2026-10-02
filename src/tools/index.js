@@ -24,9 +24,11 @@ import * as digest from './digest.js';
 import * as inbox from './inbox.js';
 import * as staff from './staff.js';
 import * as business from './business.js';
+import * as dnsTools from './dns.js';
+import * as businessResources from './business-resources.js';
 import { applyDomainGuard } from './domain-guard.js';
 
 export const registry = applyDomainGuard(applyGuards(mergeNamespaces([
   gmail, drive, calendar, sheets, docs, slides, forms, tasks, people,
-  adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts, mailboxBranding, ops, emailHealth, healthReport, digest, inbox, staff, business
+  adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts, mailboxBranding, ops, emailHealth, healthReport, digest, inbox, staff, business, dnsTools, businessResources
 ])));
