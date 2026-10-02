@@ -10,8 +10,15 @@ question to him is written in plain English, with no jargon unexplained.
 
 ## What this plan delivers
 
-Today the server is a wide set of Google buttons (349 tools) that knows which
-business it is acting for. When this plan is complete it will also:
+**Status (audited 2026-10-02):** most of this plan is built and on `main`. The
+server now loads 354 tools, has 993 passing unit tests plus database tests in CI,
+and has every item below in place except the last proofs described in
+`TASKS.md` (the status ledger and the "Audit" section at its end say exactly what
+is built, what is waiting on a live check by Chris, and what is not started).
+The text in this section is what the plan set out to deliver:
+
+The server began as a wide set of Google buttons (349 tools) that knew which
+business it was acting for. When this plan is complete it will also:
 
 1. **Be safe to leave running.** Tests on every change, lockout on the
    passphrase page, encrypted tokens, and a record of every change it makes.
@@ -71,8 +78,10 @@ contains the design decisions and the cheaper model should execute them.
 | P4 | Appliance Desk integration support | P4-1 … P4-4 (+ app-side spec) | 1 week here, more in the app repo |
 | P5 | Structure and documentation | P5-1 … P5-4 | 1 week |
 
-Phases are sequential. P0 before anything else: there are no tests today, and
-every later card depends on being able to prove it did not break something.
+Phases are sequential. P0 came first because there were no tests; there are
+now, and every later card relies on them to prove it did not break something.
+Only P0-2 (the live read-only smoke test), P5-2 and P5-4 are not built; see the
+ledger in `TASKS.md` for the exact state of every card.
 
 ## Rules that never bend
 
@@ -108,8 +117,11 @@ every later card depends on being able to prove it did not break something.
 
 ## Related documents elsewhere
 
-- `../../DEPLOY.md`: hosted setup, including Part 5 (domain-wide delegation).
+- `../../DEPLOY.md`: hosted setup, including Part 5 (domain-wide delegation),
+  Part 6 (encrypting stored sign-ins), Part 7 (DNS at Vercel) and Part 8 (the
+  appliance desk app's own robot identity).
 - `../../README.md`: user-facing tool catalog.
+- `../OWNER-GUIDE.md`: the plain-English list of what to ask Claude for.
 - The Appliance Desk app's own plan lives in that repo at
   `docs/plans/overhaul/` and its Google-integration work is Stage 4 of the
   "Appliance Desk Completion Plan" doc Chris holds in Claude.

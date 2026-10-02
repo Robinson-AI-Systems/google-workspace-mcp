@@ -78,8 +78,8 @@ click) spelled out as numbered steps.
 ## Proof
 - `npm run check`: pass/fail
 - `npm test`: N passed, N failed (paste the summary line)
-- Database test on Neon branch <name>: ran / not needed because <reason>
-- Smoke report: attached at docs/plan/smoke-report-<date>.md / not needed because <reason>
+- Database tests (`npm run test:db`; CI runs them on a throwaway Postgres): ran / not needed because <reason>
+- Smoke report (once P0-2 exists): attached at docs/plan/smoke-report-<date>.md / not needed because <reason>
 - Manual check from the card's acceptance list: what you did and what you saw
 
 ## Not done / known gaps
@@ -97,7 +97,7 @@ TASKS.md row updated to IN_REVIEW.
 ## Checklist before opening any PR
 
 - [ ] Branch from fresh `main`; one card (or an allowed group).
-- [ ] `npm run check` passes.
+- [ ] `npm run check` passes (it includes `scripts/check-writes.mjs`, which fails if a changing tool has no `dryRun`).
 - [ ] `npm test` passes and new behavior has new tests.
 - [ ] No secret in code, tests, fixtures, logs, or PR body.
 - [ ] Any new table/column uses `IF NOT EXISTS`; nothing renamed or dropped.

@@ -8,7 +8,7 @@ This is the one part that has to happen in your own Google account, in a browser
 
 1. Go to [console.cloud.google.com](https://console.cloud.google.com/) and create a new project (or pick an existing one). Name it anything, e.g. "Workspace MCP".
 2. Go to **APIs & Services > Library** and enable each of these (search each by name, click Enable — takes a couple minutes total):
-   - Gmail API, Google Drive API, Google Calendar API, Google Sheets API, Google Docs API, Google Slides API, Google Forms API, Tasks API, People API, Google Chat API, Admin SDK API, Groups Settings API, Enterprise License Manager API, Alert Center API, Chrome Policy API, Cloud Identity API, Site Verification API, Google Vault API, Admin Data Transfer API (if listed — some are folded into Admin SDK).
+   - Gmail API, Google Drive API, Google Calendar API, Google Sheets API, Google Docs API, Google Slides API, Google Forms API, Tasks API, People API, Google Chat API, Admin SDK API, Groups Settings API, Enterprise License Manager API, Alert Center API, Chrome Policy API, Cloud Identity API, Site Verification API, Google Vault API, Admin Data Transfer API (if listed — some are folded into Admin SDK). Alert Center API can be enabled but its three tools will not work yet: Google's sign-in screen refuses that permission, so the server does not ask for it (see README).
 3. Go to **APIs & Services > OAuth consent screen**. Choose **Internal** if this option is available (it will be, since you're a Workspace admin) — this keeps it private to your own domain. Fill in an app name (e.g. "Robinson Google Workspace MCP") and your email, save.
 4. Go to **APIs & Services > Credentials > Create Credentials > OAuth client ID**. Application type: **Web application**. Name it anything.
 5. Under **Authorized redirect URIs**, add (you'll fill in the real address after Part 2 deploys — come back and add it then):
@@ -57,7 +57,7 @@ Claude's connector system expects your server to speak OAuth. Since this server 
 
 ## Part 5 — Let the server brand other mailboxes (optional, one time, ~15 minutes)
 
-Some Gmail settings (adding "send mail as" identities, setting a signature on a mailbox you are not signed into) are only allowed through a Google **service account** with **domain-wide delegation**: a robot identity your Workspace trusts to act as its users. This server may ask for exactly four permissions for that robot: two about Gmail settings, plus `calendar` and `drive.file` (added 2026-10-02 at Chris's written approval, for the business calendar and folder tools). Each action asks only for the ones it needs, so Gmail branding keeps working even if you have not added the last two yet. The robot is used by the mailbox tools (branding, offboarding, the health report) and by `workspace_delegation_status`.
+Some Gmail settings (adding "send mail as" identities, setting a signature on a mailbox you are not signed into) are only allowed through a Google **service account** with **domain-wide delegation**: a robot identity your Workspace trusts to act as its users. This server may ask for exactly four permissions for that robot: two about Gmail settings, plus `calendar` and `drive.file` (added 2026-10-02 at Chris's written approval). Each action asks only for the ones it needs, so Gmail branding keeps working even if you have not added the last two yet. The robot is used by the mailbox tools (branding, offboarding, adding staff, the health report). The two newer permissions are held in reserve for the business apps: today only `workspace_delegation_status` uses them (it tries each one to prove it works), because the business calendar and folder tools act as the connection's own account and need no robot.
 
 1. Open [console.cloud.google.com](https://console.cloud.google.com/) and select the **same project** that holds this server's OAuth client (APIs & Services > Credentials shows it).
 2. **IAM & Admin > Service Accounts > Create service account.** Name it `workspace-mcp-delegate`. No roles needed. Create.
@@ -68,8 +68,6 @@ Some Gmail settings (adding "send mail as" identities, setting a signature on a 
    `https://www.googleapis.com/auth/gmail.settings.basic,https://www.googleapis.com/auth/gmail.settings.sharing,https://www.googleapis.com/auth/calendar,https://www.googleapis.com/auth/drive.file`
 
    If you set this up earlier with only the two Gmail permissions: open the existing entry, **Edit**, and replace its scope list with the line above (the Client ID stays the same). Authorize it.
-
-   Authorize.
 6. In Vercel > this project > **Settings > Environment Variables**, add `GOOGLE_SERVICE_ACCOUNT_JSON` with the entire contents of the downloaded JSON file as the value (all environments). Redeploy when Vercel offers.
 7. Ask Claude to run `workspace_delegation_status` with a `testUser`. It tries each permission on its own and should report `allScopesWork: true`. If one is missing it names it and says exactly what to type in the Admin console. Google can take a few minutes to apply step 5.
 
