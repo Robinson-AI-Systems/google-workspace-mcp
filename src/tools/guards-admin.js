@@ -60,6 +60,8 @@ const matchingConnections = async (prefix) => {
   return (await listConnections()).filter((c) => p && String(c.token_prefix || '').startsWith(p)).map((c) => pick(c, ['token_prefix', 'connection_id', 'client_name', 'google_account', 'last_used_at', 'revoked_at']));
 };
 
+const verifiedDomains = async (siteVerification, domain) => ({ verified: ((await data(siteVerification.webResource.list({}))).items || []).some((r) => String(r?.site?.identifier || '').toLowerCase() === String(domain || '').toLowerCase()) });
+
 export const GUARDS_ADMIN = {
   // ---------- Users ----------
   admin_create_user: { destructive: D,
@@ -296,5 +298,10 @@ export const GUARDS_ADMIN = {
     verify: (a, b, after, details) => typeof details === 'object' && details?.revoked > 0 && list(after?.connections).length > 0 && list(after.connections).every((c) => !!c.revoked_at),
     describe: (a) => ({ target: `${String(a.tokenPrefix || '').slice(0, 8)}...`, summary: `Switch off the Claude connection starting ${String(a.tokenPrefix || '').slice(0, 8)}: it stops working at once and cannot renew itself` }),
     before: async (a) => ({ connections: await matchingConnections(a.tokenPrefix) }),
-    after: async (a) => ({ connections: await matchingConnections(a.tokenPrefix) }) }
+    after: async (a) => ({ connections: await matchingConnections(a.tokenPrefix) }) },
+  domain_confirm_verification: { destructive: false,
+    verify: (a, b, after) => after?.verified === true,
+    describe: (a) => ({ target: a.domainName, summary: `Ask Google to check the ${a.verificationMethod === 'META' ? 'meta tag' : 'DNS record'} and finish verifying ownership of ${a.domainName}` }),
+    before: (a, { siteVerification }) => verifiedDomains(siteVerification, a.domainName),
+    after: (a, { siteVerification }) => verifiedDomains(siteVerification, a.domainName) }
 };

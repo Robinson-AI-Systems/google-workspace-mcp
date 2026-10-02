@@ -115,6 +115,45 @@ const questionAfter = async (a, { forms }) => {
 const questionBefore = async (a, { forms }) => ({ itemCount: (await formItems(forms, a.formId)).items.length });
 const addedOne = (a, before, after) => typeof before?.itemCount !== 'number' || after?.itemCount === before.itemCount + 1;
 
+
+// ---------- helpers for the Sheets layout tools ----------
+const colLetter = (i) => { let n = Number(i) + 1; let s = ''; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+const blockText = (a) => `rows ${Number(a.startRow) + 1}-${a.endRow}, columns ${colLetter(a.startColumn)}-${colLetter(Number(a.endColumn) - 1)}`;
+const sheetsOf = async (sheets, spreadsheetId, fields) => (await data(sheets.spreadsheets.get({ spreadsheetId, fields }))).sheets || [];
+const tabList = async (sheets, spreadsheetId) => { const tabs = await sheetsOf(sheets, spreadsheetId, 'sheets(properties(sheetId,title))'); return { count: tabs.length, titles: tabs.map((t) => t.properties?.title) }; };
+const tabInfo = async (sheets, a) => (await sheetsOf(sheets, a.spreadsheetId, 'sheets(properties(sheetId,title,gridProperties),merges,protectedRanges)')).find((t) => t.properties?.sheetId === a.sheetId) || {};
+const tabProps = async (sheets, a) => pick((await tabInfo(sheets, a)).properties?.gridProperties || {}, ['frozenRowCount', 'frozenColumnCount']);
+const tabMerges = async (sheets, a) => (await tabInfo(sheets, a)).merges || [];
+const blockValues = async (sheets, a) => {
+  const title = (await tabInfo(sheets, a)).properties?.title;
+  if (!title) return [];
+  const range = `'${String(title).replace(/'/g, "''")}'!${colLetter(a.startColumn)}${Number(a.startRow) + 1}:${colLetter(Number(a.endColumn) - 1)}${a.endRow}`;
+  return (await data(sheets.spreadsheets.values.get({ spreadsheetId: a.spreadsheetId, range }))).values || [];
+};
+const cornerFormat = async (sheets, a) => {
+  const title = (await tabInfo(sheets, a)).properties?.title;
+  if (!title) return { note: 'That tab was not found.' };
+  const cell = `'${String(title).replace(/'/g, "''")}'!${colLetter(a.startColumn)}${Number(a.startRow) + 1}`;
+  const r = await data(sheets.spreadsheets.get({ spreadsheetId: a.spreadsheetId, ranges: [cell], fields: 'sheets(data(rowData(values(userEnteredFormat))))' }));
+  return { format: r.sheets?.[0]?.data?.[0]?.rowData?.[0]?.values?.[0]?.userEnteredFormat || {} };
+};
+/** true when every field in `want` is present with the same value in `got` (Google drops fields it holds as false/default). */
+function coversDeep(got, want) {
+  if (want && typeof want === 'object' && !Array.isArray(want)) return Object.entries(want).every(([k, v]) => coversDeep(got?.[k], v));
+  if (typeof want === 'number' && typeof got === 'number') return Math.abs(want - got) < 0.001;
+  if (typeof want === 'boolean') return !!got === want;
+  return JSON.stringify(got) === JSON.stringify(want);
+}
+const sameBlock = (r, a) => (r?.sheetId ?? 0) === a.sheetId && (r?.startRowIndex ?? 0) === a.startRow && r?.endRowIndex === a.endRow && (r?.startColumnIndex ?? 0) === a.startColumn && r?.endColumnIndex === a.endColumn;
+const mergeCovers = (merges, a) => (merges || []).some((m) => (m.startRowIndex ?? 0) <= a.startRow && m.endRowIndex >= a.endRow && (m.startColumnIndex ?? 0) <= a.startColumn && m.endColumnIndex >= a.endColumn);
+const isSorted = (rows, a) => {
+  const col = Number(a.sortColumnIndex) - Number(a.startColumn);
+  const vals = rows.map((r) => r[col] ?? '');
+  const asNum = vals.every((v) => v === '' || !Number.isNaN(Number(v)));
+  const cmp = (x, y) => (asNum ? Number(x || 0) - Number(y || 0) : String(x).localeCompare(String(y)));
+  return vals.every((v, i) => i === 0 || (a.ascending === false ? cmp(vals[i - 1], v) >= 0 : cmp(vals[i - 1], v) <= 0));
+};
+
 export const GUARDS_FILES = {
   // ---------- Drive: creating ----------
   drive_upload_file: { destructive: false,
@@ -344,5 +383,44 @@ export const GUARDS_FILES = {
     describe: (a) => ({ target: a.formId, summary: `PUBLISH the form ${a.formId} and ${a.acceptingResponses === false ? 'stop it accepting responses' : 'START ACCEPTING RESPONSES from anyone it is shared with'}` }),
     before: async (a, { forms }) => (await data(forms.forms.get({ formId: a.formId }))).publishSettings?.publishState || {},
     after: async (a, { forms }) => (await data(forms.forms.get({ formId: a.formId }))).publishSettings?.publishState || {},
-    verify: (a, b, after) => after?.isPublished === true && !!after.isAcceptingResponses === (a.acceptingResponses !== false) }
+    verify: (a, b, after) => after?.isPublished === true && !!after.isAcceptingResponses === (a.acceptingResponses !== false) },
+
+  // ---------- Sheets: layout and formatting tools ----------
+  sheets_duplicate_sheet: { destructive: false,
+    verify: (a, b, after) => after?.count === (b?.count ?? -1) + 1 && (!a.newSheetName || after.titles.includes(a.newSheetName)),
+    describe: (a) => ({ target: a.spreadsheetId, summary: `Duplicate tab ${a.sheetId} of the spreadsheet ${a.spreadsheetId}${a.newSheetName ? ` as "${a.newSheetName}"` : ''}` }),
+    before: (a, { sheets }) => tabList(sheets, a.spreadsheetId),
+    after: (a, { sheets }) => tabList(sheets, a.spreadsheetId) },
+  sheets_format_cells: { destructive: false,
+    verify: (a, b, after) => coversDeep(after?.format, a.format),
+    describe: (a) => ({ target: a.spreadsheetId, summary: `Change the formatting (${Object.keys(a.format || {}).join(', ') || 'nothing given'}) of ${blockText(a)} in tab ${a.sheetId} of ${a.spreadsheetId}` }),
+    before: (a, { sheets }) => cornerFormat(sheets, a),
+    after: (a, { sheets }) => cornerFormat(sheets, a) },
+  sheets_freeze_rows: { destructive: false,
+    verify: (a, b, after) => (a.frozenRowCount === undefined || (after?.frozenRowCount || 0) === a.frozenRowCount) && (a.frozenColumnCount === undefined || (after?.frozenColumnCount || 0) === a.frozenColumnCount),
+    describe: (a) => ({ target: a.spreadsheetId, summary: `Freeze ${a.frozenRowCount ?? 0} row(s) and ${a.frozenColumnCount ?? 0} column(s) in tab ${a.sheetId} of ${a.spreadsheetId}` }),
+    before: (a, { sheets }) => tabProps(sheets, a),
+    after: (a, { sheets }) => tabProps(sheets, a) },
+  sheets_autoresize_columns: { destructive: false, // widths cannot be read back in a cheap, reliable way, so nothing is claimed
+    describe: (a) => ({ target: a.spreadsheetId, summary: `Resize columns ${a.startColumn} to ${a.endColumn} to fit their content in tab ${a.sheetId} of ${a.spreadsheetId}` }) },
+  sheets_sort_range: { destructive: D, // rows end up in a different order and the original order cannot be restored through the API
+    verify: (a, b, after) => after?.sorted === true,
+    describe: (a) => ({ target: a.spreadsheetId, summary: `SORT ${blockText(a)} in tab ${a.sheetId} of ${a.spreadsheetId} by column ${a.sortColumnIndex} ${a.ascending === false ? 'descending' : 'ascending'} (the original order is lost)` }),
+    before: async (a, { sheets }) => ({ rows: (await blockValues(sheets, a)).length }),
+    after: async (a, { sheets }) => { const rows = await blockValues(sheets, a); return { rows: rows.length, sorted: isSorted(rows, a) }; } },
+  sheets_merge_cells: { destructive: D, // only the top-left value of the merged block survives
+    verify: (a, b, after) => after?.merged === true,
+    describe: (a) => ({ target: a.spreadsheetId, summary: `MERGE ${blockText(a)} in tab ${a.sheetId} of ${a.spreadsheetId} (${a.mergeType || 'MERGE_ALL'}); values other than the top-left one are lost` }),
+    before: async (a, { sheets }) => ({ nonEmptyCells: (await blockValues(sheets, a)).flat().filter((v) => v !== '' && v !== undefined).length }),
+    after: async (a, { sheets }) => ({ merged: mergeCovers(await tabMerges(sheets, a), a) }) },
+  sheets_unmerge_cells: { destructive: false,
+    verify: (a, b, after) => after?.merged === false,
+    describe: (a) => ({ target: a.spreadsheetId, summary: `Unmerge ${blockText(a)} in tab ${a.sheetId} of ${a.spreadsheetId}` }),
+    before: async (a, { sheets }) => ({ merged: mergeCovers(await tabMerges(sheets, a), a) }),
+    after: async (a, { sheets }) => ({ merged: mergeCovers(await tabMerges(sheets, a), a) }) },
+  sheets_protect_range: { destructive: D, // decides who is allowed to edit
+    verify: (a, b, after) => after?.protectedNow === true,
+    describe: (a) => ({ target: a.spreadsheetId, summary: `PROTECT ${blockText(a)} in tab ${a.sheetId} of ${a.spreadsheetId}: ${a.warningOnly ? 'editors only get a warning' : `only ${(a.editorEmails || []).join(', ') || 'the owner'} can edit it`}` }),
+    before: async (a, { sheets }) => ({ protectedRanges: (await tabInfo(sheets, a)).protectedRanges?.length || 0 }),
+    after: async (a, { sheets }) => ({ protectedNow: ((await tabInfo(sheets, a)).protectedRanges || []).some((r) => sameBlock(r.range, a)) }) }
 };

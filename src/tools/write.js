@@ -118,6 +118,9 @@ export function guard(tool, oldHandler, spec) {
   return built;
 }
 
+/** A short, content-free look at an item that is still there: simple fields only, never message text, snippets, notes or bodies. */
+const brief = (item) => Object.fromEntries(Object.entries(item || {}).filter(([k, v]) => ['string', 'number', 'boolean'].includes(typeof v) && !/snippet|text|body|notes|content|description|raw/i.test(k)).map(([k, v]) => [k, typeof v === 'string' ? v.slice(0, 100) : v]));
+
 /** For deletions: ask for the item again. Not found means it is gone. */
 export function gone(get) {
   return async (args, clients) => {
@@ -125,7 +128,7 @@ export function gone(get) {
       const data = await get(args, clients);
       if (data && (data.deleted === true || data.deletionMetadata)) return { exists: false, note: 'Google keeps a record marked as deleted.' };
       if (data && data.status === 'cancelled') return { exists: false, note: 'Google keeps a "cancelled" marker for deleted events.' };
-      return { exists: true, stillThere: data };
+      return { exists: true, stillThere: brief(data) };
     } catch (err) {
       if (isNotFound(err)) return { exists: false };
       throw err;

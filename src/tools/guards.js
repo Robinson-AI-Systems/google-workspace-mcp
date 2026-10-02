@@ -53,7 +53,8 @@ const CORE = {
     describe: (a) => ({ target: `${a.alias} on ${a.userKey}`, summary: `Remove the alias ${a.alias} from ${a.userKey} (mail to it stops arriving)` }),
     before: async (a, { admin }) => ({ aliases: (await data(admin.users.aliases.list({ userKey: a.userKey }))).aliases?.map((x) => x.alias) || [] }),
     after: async (a, { admin }) => { const list = (await data(admin.users.aliases.list({ userKey: a.userKey }))).aliases?.map((x) => x.alias) || []; return { aliases: list, exists: list.includes(a.alias) }; } },
-  admin_add_user_alias: { destructive: false,
+  admin_add_user_alias: { destructive: D, // mail to the alias starts arriving in this person's inbox
+    verify: (a, b, after) => (after?.aliases || []).map((x) => String(x).toLowerCase()).includes(String(a.alias).toLowerCase()),
     describe: (a) => ({ target: `${a.alias} on ${a.userKey}`, summary: `Add the alias ${a.alias} to ${a.userKey}` }),
     before: async (a, { admin }) => ({ aliases: (await data(admin.users.aliases.list({ userKey: a.userKey }))).aliases?.map((x) => x.alias) || [] }),
     after: async (a, { admin }) => ({ aliases: (await data(admin.users.aliases.list({ userKey: a.userKey }))).aliases?.map((x) => x.alias) || [] }) },
@@ -173,7 +174,7 @@ const CORE = {
   // ---------- Gmail ----------
   gmail_delete_message: { destructive: D,
     describe: (a) => ({ target: a.messageId, summary: `PERMANENTLY delete the email ${a.messageId} (it skips the trash)` }),
-    before: (a, { gmail }) => data(gmail.users.messages.get({ userId: 'me', id: a.messageId, format: 'metadata', metadataHeaders: ['Subject', 'From', 'Date'] })).then((m) => ({ id: m.id, snippet: m.snippet, headers: m.payload?.headers })),
+    before: (a, { gmail }) => data(gmail.users.messages.get({ userId: 'me', id: a.messageId, format: 'metadata', metadataHeaders: ['Subject', 'From', 'Date'] })).then((m) => ({ id: m.id, headers: m.payload?.headers })),
     after: gone((a, { gmail }) => data(gmail.users.messages.get({ userId: 'me', id: a.messageId, format: 'minimal' }))) },
   gmail_batch_delete: { destructive: D,
     describe: (a) => ({ target: `${(a.messageIds || []).length} emails`, summary: `PERMANENTLY delete ${(a.messageIds || []).length} emails (they skip the trash)` }),
@@ -188,7 +189,7 @@ const CORE = {
     } },
   gmail_delete_thread: { destructive: D,
     describe: (a) => ({ target: a.threadId, summary: `PERMANENTLY delete the whole email thread ${a.threadId}` }),
-    before: (a, { gmail }) => data(gmail.users.threads.get({ userId: 'me', id: a.threadId, format: 'minimal' })).then((t) => ({ id: t.id, messages: (t.messages || []).length, snippet: t.snippet })),
+    before: (a, { gmail }) => data(gmail.users.threads.get({ userId: 'me', id: a.threadId, format: 'minimal' })).then((t) => ({ id: t.id, messages: (t.messages || []).length })),
     after: gone((a, { gmail }) => data(gmail.users.threads.get({ userId: 'me', id: a.threadId, format: 'minimal' }))) },
   gmail_delete_label: { destructive: D,
     describe: (a) => ({ target: a.labelId, summary: `Delete the Gmail label ${a.labelId} (the emails stay, they just lose the label)` }),
@@ -235,7 +236,13 @@ const CORE = {
     describe: () => ({ target: 'Drive trash', summary: 'PERMANENTLY empty the Drive trash (every file in it is lost for good)' }),
     before: async (a, { drive }) => { const r = await data(drive.files.list({ q: 'trashed = true', pageSize: 100, fields: 'files(id,name)' })); return { filesInTrash: (r.files || []).length, hasMore: !!r.nextPageToken, sample: (r.files || []).slice(0, 10).map((f) => f.name) }; },
     after: async (a, { drive }) => { const r = await data(drive.files.list({ q: 'trashed = true', pageSize: 10, fields: 'files(id)' })); return { filesInTrash: (r.files || []).length }; } },
-  drive_share_file: { destructive: false, confirmWhen: (a) => a.type === 'anyone' || a.type === 'domain',
+  drive_share_file: { destructive: false, confirmWhen: (a) => a.type === 'anyone' || a.type === 'domain' || !['reader', 'commenter'].includes(a.role),
+    // The new permission must exist with the role asked for (matched by id when Google gave one, otherwise by who it is for).
+    verify: (a, b, after) => {
+      const want = { type: a.type || 'user', role: a.role };
+      const all = Array.isArray(after?.permissions) ? after.permissions : after && !after.note ? [after] : [];
+      return all.some((x) => x.role === want.role && x.type === want.type && (!a.emailAddress || String(x.emailAddress || '').toLowerCase() === String(a.emailAddress).toLowerCase()));
+    },
     describe: (a) => ({ target: a.fileId, summary: `Share the Drive file ${a.fileId} with ${a.type === 'anyone' ? 'ANYONE with the link' : (a.emailAddress || a.type || 'user')} as ${a.role}` }),
     before: async (a, { drive }) => ({ permissions: (await data(drive.permissions.list({ fileId: a.fileId, fields: 'permissions(id,type,role,emailAddress)', supportsAllDrives: true }))).permissions }),
     after: (a, { drive }, details) => (details?.id
@@ -252,13 +259,16 @@ const CORE = {
     before: (a, { calendar }) => data(calendar.events.get({ calendarId: a.calendarId || 'primary', eventId: a.eventId })).then((e) => pick(e, ['summary', 'start', 'end', 'status'])),
     after: gone((a, { calendar }) => data(calendar.events.get({ calendarId: a.calendarId || 'primary', eventId: a.eventId }))) },
   calendar_create_event: { destructive: false,
+    // Guests get an email invitation unless sendUpdates is 'none'.
+    confirmWhen: (a) => (a.attendees || []).length > 0 && a.sendUpdates !== 'none',
+    verify: (a, b, after) => after?.summary === a.summary && after?.status !== 'cancelled' && ((a.attendees || []).length === 0 || (after?.attendees || []).length >= (a.attendees || []).length),
     describe: (a) => ({ target: a.summary, summary: `Create the calendar event "${a.summary}" from ${a.start} to ${a.end}${(a.attendees || []).length ? `, inviting ${(a.attendees || []).join(', ')}` : ''}` }),
-    after: (a, { calendar }, details) => (details?.id ? data(calendar.events.get({ calendarId: a.calendarId || 'primary', eventId: details.id })).then((e) => pick(e, ['id', 'summary', 'start', 'end', 'status', 'htmlLink'])) : { note: 'Google did not return the new event\'s id.' }) },
+    after: (a, { calendar }, details) => (details?.id ? data(calendar.events.get({ calendarId: a.calendarId || 'primary', eventId: details.id })).then((e) => ({ ...pick(e, ['id', 'summary', 'start', 'end', 'status', 'htmlLink']), attendees: (e.attendees || []).map((x) => x.email) })) : { note: 'Google did not return the new event\'s id.' }) },
 
   // ---------- Chat, contacts, tasks ----------
   chat_delete_message: { destructive: D,
     describe: (a) => ({ target: a.messageName, summary: `Delete the Chat message ${a.messageName}` }),
-    before: (a, { chat }) => data(chat.spaces.messages.get({ name: a.messageName })).then((m) => pick(m, ['name', 'text', 'createTime'])),
+    before: (a, { chat }) => data(chat.spaces.messages.get({ name: a.messageName })).then((m) => ({ ...pick(m, ['name', 'createTime']), textLength: String(m.text || '').length })),
     after: gone((a, { chat }) => data(chat.spaces.messages.get({ name: a.messageName }))) },
   contacts_delete: { destructive: D,
     describe: (a) => ({ target: a.resourceName, summary: `Delete the contact ${a.resourceName}` }),
@@ -299,7 +309,8 @@ const CORE = {
     describe: (a) => ({ target: `${a.memberEmail} in ${a.groupKey}`, summary: `Remove ${a.memberEmail} from the group ${a.groupKey} (they stop getting its mail and access)` }),
     before: (a, { admin }) => data(admin.members.get({ groupKey: a.groupKey, memberKey: a.memberEmail })).then((m) => pick(m, ['email', 'role', 'status'])),
     after: gone((a, { admin }) => data(admin.members.get({ groupKey: a.groupKey, memberKey: a.memberEmail }))) },
-  calendar_share_calendar: { destructive: false, confirmWhen: (a) => a.scopeType === 'default' || a.scopeType === 'domain',
+  calendar_share_calendar: { destructive: false, confirmWhen: (a) => a.scopeType === 'default' || a.scopeType === 'domain' || ['owner', 'writer'].includes(a.role),
+    verify: (a, b, after) => after?.role === (a.role || 'reader'),
     describe: (a) => ({ target: a.calendarId, summary: `Share the calendar ${a.calendarId} with ${a.scopeType === 'default' ? 'ANYONE (public)' : a.scopeType === 'domain' ? 'the WHOLE domain' : (a.scopeValue || 'a user')} as ${a.role}` }),
     before: async (a, { calendar }) => ({ rules: ((await data(calendar.acl.list({ calendarId: a.calendarId }))).items || []).map((r) => pick(r, ['id', 'role', 'scope'])) }),
     after: async (a, { calendar }, details) => (details?.id ? pick(await data(calendar.acl.get({ calendarId: a.calendarId, ruleId: details.id })), ['id', 'role', 'scope']) : { note: 'Google did not return the new rule\'s id.' }) },

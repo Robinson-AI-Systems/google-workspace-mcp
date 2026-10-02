@@ -68,7 +68,7 @@ const eventMatches = (updates, after) => Object.entries(updates || {}).every(([k
   return true; // fields we do not read back (reminders, recurrence, ...) are not claimed
 });
 
-const taskView = (t) => pick(t, ['id', 'title', 'notes', 'status', 'due']);
+const taskView = (t) => ({ ...pick(t, ['id', 'title', 'status', 'due']), notesLength: String(t?.notes || '').length });
 const contactView = (p) => pick(p, ['resourceName', 'names', 'emailAddresses', 'phoneNumbers', 'organizations']);
 const CONTACT_FIELDS = 'names,emailAddresses,phoneNumbers,organizations';
 
@@ -114,6 +114,14 @@ export const GUARDS_MAIL = {
     describe: (a) => ({ target: a.messageId, summary: `Mark the email ${a.messageId} as unread` }),
     before: (a, { gmail }) => msgMeta(gmail, a.messageId),
     after: (a, { gmail }) => msgLabels(gmail, a.messageId) },
+  gmail_untrash_message: { destructive: false, verify: (a, b, after) => !list(after?.labelIds).includes('TRASH'),
+    describe: (a) => ({ target: a.messageId, summary: `Move the email ${a.messageId} out of the trash` }),
+    before: (a, { gmail }) => msgMeta(gmail, a.messageId),
+    after: (a, { gmail }) => msgLabels(gmail, a.messageId) },
+  gmail_untrash_thread: { destructive: false, verify: (a, b, after) => after?.messages > 0 && after.labelIdsPerMessage.every((l) => !l.includes('TRASH')),
+    describe: (a) => ({ target: a.threadId, summary: `Move the whole email thread ${a.threadId} out of the trash` }),
+    before: (a, { gmail }) => threadLabels(gmail, a.threadId),
+    after: (a, { gmail }) => threadLabels(gmail, a.threadId) },
   gmail_trash_thread: { destructive: false, verify: (a, b, after) => after?.messages > 0 && after.labelIdsPerMessage.every((l) => l.includes('TRASH')),
     describe: (a) => ({ target: a.threadId, summary: `Move the whole email thread ${a.threadId} to the trash` }),
     before: (a, { gmail }) => threadLabels(gmail, a.threadId),
@@ -202,11 +210,11 @@ export const GUARDS_MAIL = {
     describe: (a) => ({ target: a.tasklistId, summary: `Rename the task list ${a.tasklistId} to "${a.title}"` }),
     before: async (a, { tasks }) => pick(await data(tasks.tasklists.get({ tasklist: a.tasklistId })), ['id', 'title']),
     after: async (a, { tasks }) => pick(await data(tasks.tasklists.get({ tasklist: a.tasklistId })), ['id', 'title']) },
-  tasks_create_task: { destructive: false, verify: (a, b, after, details) => !!details?.id && after?.id === details.id && after.title === a.title && (a.notes === undefined || after.notes === a.notes),
+  tasks_create_task: { destructive: false, verify: (a, b, after, details) => !!details?.id && after?.id === details.id && after.title === a.title && (a.notes === undefined || after.notesLength === String(a.notes).length),
     describe: (a) => ({ target: a.title, summary: `Create the task "${a.title}" in the list ${a.tasklistId || '@default'}${a.due ? `, due ${a.due}` : ''}` }),
     after: async (a, { tasks }, details) => (details?.id ? taskView(await data(tasks.tasks.get({ tasklist: a.tasklistId || '@default', task: details.id }))) : { note: 'Google did not return the new task\'s id.' }) },
   tasks_update_task: { destructive: false,
-    verify: (a, b, after) => ['title', 'notes', 'status'].every((k) => a[k] === undefined || after?.[k] === a[k]) && (a.due === undefined || String(after?.due || '').slice(0, 10) === String(a.due).slice(0, 10)),
+    verify: (a, b, after) => ['title', 'status'].every((k) => a[k] === undefined || after?.[k] === a[k]) && (a.notes === undefined || after?.notesLength === String(a.notes).length) && (a.due === undefined || String(after?.due || '').slice(0, 10) === String(a.due).slice(0, 10)),
     describe: (a) => ({ target: a.taskId, summary: `Change the task ${a.taskId}: ${['title', 'notes', 'due', 'status'].filter((k) => a[k] !== undefined).map((k) => (k === 'notes' ? 'notes' : `${k} to "${a[k]}"`)).join(', ') || 'nothing given'}` }),
     before: async (a, { tasks }) => taskView(await data(tasks.tasks.get({ tasklist: a.tasklistId || '@default', task: a.taskId }))),
     after: async (a, { tasks }) => taskView(await data(tasks.tasks.get({ tasklist: a.tasklistId || '@default', task: a.taskId }))) },
