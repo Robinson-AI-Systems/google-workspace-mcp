@@ -1,5 +1,6 @@
 import { recordChange } from '../changelog.js';
 import { ok } from './util.js';
+import { buildSettingsBody, SETTINGS_DESCRIPTION, SETTINGS_SCHEMA_PROPERTIES } from './group-settings.js';
 
 const CUSTOMER = 'my_customer'; // Directory API shorthand for "your own Workspace customer"
 
@@ -41,7 +42,7 @@ export const tools = [
   { name: 'admin_add_group_alias', description: 'Add an email alias to a group', inputSchema: { type: 'object', properties: { groupKey: { type: 'string' }, alias: { type: 'string' } }, required: ['groupKey', 'alias'] } },
   { name: 'admin_delete_group_alias', description: 'Remove an email alias from a group', inputSchema: { type: 'object', properties: { groupKey: { type: 'string' }, alias: { type: 'string' } }, required: ['groupKey', 'alias'] } },
   { name: 'admin_get_group_settings', description: 'Get group posting/moderation/join settings (who can post, join, view — Groups Settings API)', inputSchema: { type: 'object', properties: { groupEmail: { type: 'string' } }, required: ['groupEmail'] } },
-  { name: 'admin_update_group_settings', description: 'Update group posting/moderation/join permissions', inputSchema: { type: 'object', properties: { groupEmail: { type: 'string' }, whoCanJoin: { type: 'string' }, whoCanPostMessage: { type: 'string' }, whoCanViewMembership: { type: 'string' }, whoCanViewGroup: { type: 'string' }, allowExternalMembers: { type: 'boolean' }, isArchived: { type: 'boolean' } }, required: ['groupEmail'] } },
+  { name: 'admin_update_group_settings', description: SETTINGS_DESCRIPTION, inputSchema: { type: 'object', properties: SETTINGS_SCHEMA_PROPERTIES, required: ['groupEmail'] } },
 
   // ---------- Org units ----------
   { name: 'admin_list_orgunits', description: 'List organizational units', inputSchema: { type: 'object', properties: { orgUnitPath: { type: 'string', default: '/' }, type: { type: 'string', enum: ['all', 'children'], default: 'all' } } } },
@@ -278,17 +279,12 @@ export const handlers = {
     return ok(res.data);
   },
   admin_update_group_settings: async (args, { groupssettings }) => {
-    const { groupEmail, ...rest } = args;
-    const requestBody = {};
-    if (rest.whoCanJoin) requestBody.whoCanJoin = rest.whoCanJoin;
-    if (rest.whoCanPostMessage) requestBody.whoCanPostMessage = rest.whoCanPostMessage;
-    if (rest.whoCanViewMembership) requestBody.whoCanViewMembership = rest.whoCanViewMembership;
-    if (rest.whoCanViewGroup) requestBody.whoCanViewGroup = rest.whoCanViewGroup;
-    if (typeof rest.allowExternalMembers === 'boolean') requestBody.allowExternalMembers = String(rest.allowExternalMembers);
-    if (typeof rest.isArchived === 'boolean') requestBody.isArchived = String(rest.isArchived);
+    const { groupEmail } = args;
+    const requestBody = buildSettingsBody(args); // refuses a value Google would not accept, with the list of allowed ones
     const res = await groupssettings.groups.patch({ groupUniqueId: groupEmail, requestBody });
     return ok(res.data);
   },
+
 
   // Org units
   admin_list_orgunits: async (args, { admin }) => {

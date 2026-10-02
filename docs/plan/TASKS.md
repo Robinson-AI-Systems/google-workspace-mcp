@@ -595,7 +595,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P5-2 | TODO | | Not before 30 days after encryption went live (key set 2026-10-02, so not before 2026-11-01) |
 | P5-3 | DONE | | Chris decided to retire local mode (2026-10-02). Local files, scripts and README sections removed; hosted only. README, DEPLOY and ARCHITECTURE checked against the code in the 2026-10-02 audit and match. |
 | P5-4 | TODO | | #19 corrects README drift; generated catalog/version/changelog work remains TODO. |
-| P6-1 | TODO | | Added 2026-10-02 (Chris: "go with #1"). Extends the existing `admin_update_group_settings`; no new tool. Start only after the docs-audit PR (#24) is merged |
+| P6-1 | IN_REVIEW | #25 | `admin_update_group_settings` now sets 16 more settings (reply-to, customReplyTo, message and spam moderation, who moderates content and members, who can contact the owners and discover the group, web posting, post-as-group, collaborative inbox, address-book listing, rejection notice and text, footer and text), with the allowed values checked against Google's reference on 2026-10-02. Values are checked before anything is read or changed, in a preview too, and a bad one is refused with the allowed list. Needs `confirm` for the old outsider/internet cases plus `messageModerationLevel: MODERATE_NONE` and `spamModerationLevel: ALLOW`. Read-back checks every setting asked for. Deviations: `showInGroupDirectory` left out (Google marks it deprecated); a choice may be typed in any letter case; the original six fields are still passed through unchecked, exactly as before. Manual check still to do: it changes a real group |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 (PR #1), account-choice fix (PR #2), domain-wide delegation + mailbox branding
@@ -608,7 +608,7 @@ Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 Method. Every card was checked against `main` (PR #23 merged): the code exists,
 `npm run check` passes, and `npm test` passes (993 tests, 34 files). Each card
 is weighted by effort, taking the middle of the size key (S = 0.5 day, M = 1.5
-days, L = 4 days), for 37 days across the 35 cards (P6-1 was added the same day, which moved the estimate from 84% to 83%). A card counts 100% when
+days, L = 4 days), for 37 days across the 35 cards (P6-1 was added the same day, which moved the estimate from 84% to 83%; building it moved it back to 84%). A card counts 100% when
 every acceptance check is proven (`DONE`), 90% when it is built and tested but
 its live check by Chris is still outstanding (the live check is about a tenth of
 the work), and 0% when it is not built. This is an estimate of effort, not a
@@ -617,15 +617,15 @@ measurement.
 | State | Cards | Effort (days) | Share |
 | --- | --- | --- | --- |
 | Done, acceptance proven | P0-7, P1-2, P1-5, P3-5, P4-1, P4-2, P5-3 | 3.5 | 9% |
-| Built and tested, live check outstanding | 23 cards marked `MERGED`, plus P5-1 (about 90% built) | 30.1 | 81% |
-| Not built | P0-2, P5-2 (time-blocked), P5-4, P6-1, and the last tenth of P5-1 | 3.4 | 9% |
+| Built and tested, live check outstanding | 23 cards marked `MERGED`, plus P6-1 and P5-1 (about 90% built) | 30.6 | 83% |
+| Not built | P0-2, P5-2 (time-blocked), P5-4, and the last tenth of P5-1 | 2.9 | 8% |
 
-**Complete: about 83%. Remaining: about 17%** (roughly 9% still to build and 8%
-to prove with live checks; shares are rounded). By code alone, about 91% is built.
+**Complete: about 84%. Remaining: about 16%** (roughly 8% still to build and 8%
+to prove with live checks; shares are rounded). By code alone, about 92% is built.
 
 Left to build: P0-2 (read-only smoke test, 1.5 days), P5-4 (version 2.0,
-changelog, generated tool catalog), finishing P5-1 (eleven tools), P6-1 (full
-group settings), and P5-2 (only after 2026-11-01).
+changelog, generated tool catalog), finishing P5-1 (eleven tools), and P5-2
+(only after 2026-11-01).
 
 Left to prove (all need Chris's go-ahead because they touch real accounts): the
 manual checks listed in the ledger notes above, for example upload a test file to

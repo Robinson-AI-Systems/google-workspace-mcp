@@ -16,7 +16,9 @@ const mutations = (calls) => calls.filter((c) => !READ_ONLY.test(c.path));
 const toolNamed = (n) => registry.tools.find((t) => t.name === n);
 
 // Realistic arguments for the names the guard descriptions read.
-const fromSchema = (tool) => Object.fromEntries(Object.entries(tool.inputSchema.properties || {}).filter(([k]) => k !== 'confirm' && k !== 'dryRun').map(([k, p]) => [k, ({ string: `${k}-x`, number: 1, integer: 1, boolean: true, array: ['x'], object: {} })[p.type] ?? 'x']));
+// Dummy values for fields whose value is checked: a field with a list of allowed values gets the first one; these get a value of the right shape.
+const SAMPLE_VALUES = { customReplyTo: 'reply@example.test' };
+const fromSchema = (tool) => Object.fromEntries(Object.entries(tool.inputSchema.properties || {}).filter(([k]) => k !== 'confirm' && k !== 'dryRun').map(([k, p]) => [k, p.enum?.[0] ?? SAMPLE_VALUES[k] ?? ({ string: `${k}-x`, number: 1, integer: 1, boolean: true, array: ['x'], object: {} })[p.type] ?? 'x']));
 const ARGS = { userKey: 'sam@example.test', groupKey: 'team@example.test', alias: 'a@example.test', email: 'ops@example.test', fileId: 'f1', eventId: 'e1', calendarId: 'primary', id: 'id1', documentId: 'd1', spreadsheetId: 's1', sheetId: 1, presentationId: 'p1', pageObjectId: 'o1', objectId: 'o1', startIndex: 1, endIndex: 5, orgUnitPath: '/Old', domainName: 'example.test', domainAliasName: 'alias.example.test', roleId: '1', ids: ['m1'], messageId: 'm1' };
 
 beforeEach(async () => {
