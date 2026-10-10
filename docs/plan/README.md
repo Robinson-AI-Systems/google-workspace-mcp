@@ -78,7 +78,8 @@ contains the design decisions and the cheaper model should execute them.
 | P4 | Appliance Desk integration support | P4-1 … P4-4 (+ app-side spec) | 1 week here, more in the app repo |
 | P5 | Structure and documentation | P5-1 … P5-4 | 1 week |
 | P6 | Optional extensions (added 2026-10-02) | P6-1 | under a day |
-| P7 | God Mode expansion (proposed 2026-10-02) | P7-1 to P7-8 | about 12 days, none built |
+| P7 | God Mode expansion (proposed 2026-10-02) | P7-1 to P7-8 (P7-6, P7-7 superseded by P8-2) | about 10 days |
+| P8 | Robinson Tool Contract: small results, profiles and read-only, passes, HTTPS tool API, developer workflows, owner overview and guided settings; later conformance and the shared package (added 2026-10-10) | P8-1 to P8-8 | about 6 days, plus P8-5/P8-6 when the hub provides them |
 
 Phases are sequential. P0 came first because there were no tests; there are
 now, and every later card relies on them to prove it did not break something.
@@ -86,6 +87,12 @@ Only P0-2 (the live read-only smoke test), P5-2 and P5-4 are not built (P6-1, fu
 ledger in `TASKS.md` for the exact state of every card.
 
 ## Rules that never bend
+
+- **This server stays fully usable on its own.** It follows the Robinson Tool Contract (RTC 1, authority:
+  `docs/CONTRACT.md` in `Robinson-AI-Systems/robinsons-toolkit-hub`) so Robinson's Toolkit can combine it with Chris's
+  other servers later, but nothing here may depend on the hub being built.
+- **Every door uses the same guards.** MCP, `workspace_call` and the HTTPS tool API go through the same wrapped
+  handlers (safety layer, domain guard, profile).
 
 - **Never widen `DELEGATED_SCOPES`** (`src/auth/service-account.js`) without
   Chris saying yes in writing, one scope at a time, with the Admin console

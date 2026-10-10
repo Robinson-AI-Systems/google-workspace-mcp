@@ -659,6 +659,8 @@ others, and for undoing an undo.
 
 ### P7-6 · Read-only connection mode (S)
 
+> **Superseded 2026-10-10 by P8-2** (the contract's `read_only` profile). Kept for the original intent.
+
 **Goal.** A connection that physically cannot change anything, for safe browsing.
 
 **Build.** A per-connection setting (next to the allowed-domains setting) that
@@ -670,6 +672,8 @@ Database change must be additive and idempotent, with a database test.
 read-only mode, every read tool still works.
 
 ### P7-7 · Tool profiles, a smaller menu (M)
+
+> **Superseded 2026-10-10 by P8-2** (profiles, area filters and compact listing). Kept for the original intent.
 
 **Goal.** Claude loads faster and cheaper. All 354 tool descriptions are about
 54,000 tokens if loaded at once.
@@ -710,6 +714,150 @@ per user and does not stop the rest, the cap is enforced.
 | Chat bots, Alert Center | Not planned | Alert Center cannot work with the permissions we deliberately do not request |
 
 ---
+
+## Phase 8: Robinson Tool Contract (added 2026-10-10, Chris)
+
+**Why.** Chris decided (2026-10-10) to build each service as its own solid, hosted server (this one, the Stripe MCP, and
+later his own Vercel, Neon, GitHub and others), each **fully usable on its own**, and later combine them in
+**Robinson's Toolkit** (`Robinson-AI-Systems/robinsons-toolkit-hub`, the hub) into one MCP, CLI and HTTPS API for any AI
+agent. Every server follows the **Robinson Tool Contract, RTC 1** — the authority is `docs/CONTRACT.md` in the hub
+repo. The Stripe MCP is being built to it from the start; this phase brings this server up to it.
+
+**These servers are general tools for developers and account owners alike** (Chris, 2026-10-10): any agent should be
+able to use them freely on any project — building for a client, building for himself, or setting up and running his own
+accounts. Real projects are completeness checks, not the purpose. P8-7 adds the build-time jobs; P8-8 brings the owner
+side up to the shared rules.
+
+**What it gives Chris now, before any hub exists:** a smaller, cheaper tool menu for Claude (the 54,000-token problem
+P7-7 was going to fix), a read-only mode (P7-6), and short-lived passes so an agent that cannot add the connector
+(Codex, a cloud workspace, a script) can use this server through the `rtool` command-line tool or plain HTTPS.
+
+**Absorbs P7-6 and P7-7.** Their goals are delivered by P8-2; their ledger rows say so. P7-2 to P7-5 and P7-8 are
+unchanged. Order: P8-1 to P8-4 may run before or after P7-2 to P7-5 (Chris's choice; independent code); P8-5 waits for
+the hub's conformance package; P8-6 waits for the hub's shared package.
+
+Copy, don't reinvent: the Stripe MCP's designs `docs/designs/BATCH-C.md` and `BATCH-R.md`
+(`Robinson-AI-Systems/stripe-mcp`) hold the detailed rules for P8-1 to P8-4; this phase applies them here, with this
+server's prefix `workspace_` for the meta-tools.
+
+### P8-1 · Small results: fields, detail, handles, annotations (M)
+
+**Build.** Every read tool gets `fields` (dotted paths) and `detail: summary|full` (default summary) from a registry
+layer, not by hand; summary mappers for the common Google objects (message, thread, file, event, user, group, sheet
+range). A result over 8 KB returns the first part, a count, a one-line summary and a handle kept 24 hours in a new
+`result_store` table (additive), readable only by the same connection; `workspace_get_result` pages it. Every tool gets
+MCP annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) from the safety table. Workflows
+declare `outputSchema` and return `structuredContent`.
+
+**Acceptance.** Every read tool against 100-item fakes returns ≤8 KB or a handle; field projection tested; handle
+isolation between connections (database test); annotations match the guard table (test).
+
+### P8-2 · Profiles, read-only mode and listing modes (M) — delivers P7-6 and P7-7
+
+**Build.** Per connection: profile `read_only` | `everyday` | `full` (plus optional area filters such as mail, files,
+admin — P7-7's idea), listing mode `catalog` | `compact`. `read_only` lists no changing tool and refuses one called by
+name. Compact lists only `workspace_search_tools`, `workspace_describe_tool`, `workspace_call`, `workspace_batch`
+(reads only), `workspace_get_result`, `workspace_whoami` and the `workflow_*` tools, under 5,000 tokens.
+`workspace_call` dispatches through the same wrapped handler, so the safety layer and domain guard always apply.
+Listing descriptions ≤160 characters (longer guidance moves into property descriptions and `workspace_describe_tool`).
+Chosen on the login page; `workspace_list_connections` shows it.
+
+**Settings must survive refresh (review finding, PR #28).** Today a refresh (`api/oauth/token.js`, `grant_type=refresh_token`)
+creates a new `oauth_tokens` row carrying only `client_id` and `google_account`, so a setting stored on the token row would
+be silently dropped and a `read_only` connection would regain write tools. So: the profile, listing and area filters are
+stored on the authorization code and the token row (additive columns), `getTokenByRefreshToken` returns them, and the
+refresh path copies **every** connection setting from the issuing row into the new row (one helper, used by both grant
+types, so a future setting cannot be forgotten). Revocation already covers refresh tokens; keep it that way.
+
+**Acceptance.** Unit tests: read_only refuses every changing tool and allows every read; a **refreshed** read_only
+connection is still read_only and keeps its listing and area filters (unit test on the token endpoint plus a database
+test on real Postgres); a test fails if a column added to the connection settings is not copied on refresh; each profile
+lists exactly its tools; `workspace_call` passes the same dryRun/confirm/domain-guard tests as direct calls; a budget check in
+`npm run check` fails if compact ≥5,000 tokens or any description >160 characters (numbers printed).
+
+### P8-3 · Passes (M)
+
+**Build.** RTC §2: `oauth_tokens.kind = 'pass'` (additive columns: `kind`, `allow_writes`, `areas`, `expires_at`,
+`for_hub`); `workspace_create_pass` (confirm) and a passphrase-protected page create one; the pass is shown **once** on a
+one-time page, never in chat. Defaults: read_only, 24 hours, writes off, the connection's own account and allowed
+domains. Longer life (≤30 days; ≤365 only when marked for Robinson's Toolkit), writes and areas are explicit choices.
+Listed and revocable with the existing connection tools.
+
+**Acceptance.** Unit and database tests: shown once; expired and revoked passes refused; a read-only pass cannot write
+through any door; domain guard applies to pass calls exactly as to connector calls.
+
+### P8-4 · HTTPS tool API and contract manifest (M)
+
+**Build.** RTC §1 and §7: `GET /api/contract` (no auth), `GET /api/whoami`, `GET /api/tools`, `GET /api/tools/{name}`,
+`POST /api/tools/{name}`, `POST /api/tools/_batch`, `GET /api/results/{handle}`, `GET /api/openapi.json` (≤30 operations);
+pass-only auth; the RTC result envelope and error codes. Same registry and wrapped handlers as the MCP door.
+
+**Rate limit that actually works on Vercel (review finding, PR #28).** Serverless instances share no memory, so an
+in-memory counter resets on cold starts and differs per instance. The per-pass limit is kept in Postgres: a
+`rate_limits (key, window_start, count)` table (additive) updated with one atomic
+`INSERT … ON CONFLICT … DO UPDATE SET count = count + 1 … RETURNING count` per request, fixed one-minute windows, a limit
+stored as a setting (starting value 120 requests per minute per pass), old windows deleted opportunistically. Over the
+limit → HTTP 429 with `Retry-After` and the RTC error code `rate_limited`.
+
+**Acceptance.** Unit tests: the dryRun / needs-confirmation / confirm / read-back / change-log behavior of a sample of
+changing tools is identical through HTTPS and MCP; a database test drives two **independently created handler
+instances** against the same Postgres and proves the combined requests hit the limit (and a new window resets it); manifest counts match the registry; connector tokens and no token are
+refused on `/api/tools`. Manual: `rtool whoami` against the preview with a test pass (once the hub's CLI exists).
+
+### P8-5 · RTC 1 conformance in CI (S) — after the hub's conformance package exists
+
+**Acceptance.** The hub's `packages/conformance` passes in this repo's CI against a local server with fake Google.
+
+### P8-6 · Adopt the shared package `robinson-mcp-core` (M) — after the hub extracts it from the Stripe MCP
+
+**Build.** Replace this repo's copies of the contract-generic code (login and lockout, `defineWrite`/`guard`, result
+rules, meta-tools, passes, HTTPS doors, error envelope) with the shared package at a pinned version. Google-specific code
+(clients, delegation, domain guard, Google error rules, tools) stays here. Behavior unchanged.
+
+**Acceptance.** The full unit and database suites pass unchanged; conformance passes; the diff removes the copied files.
+
+### P8-7 · Developer workflows: test fixtures, cleanup, app integration check (M)
+
+**Why.** Chris, 2026-10-10: these servers are "a powerful development tool … able to work freely on any project", not
+only for running a business. When an agent builds an app that uses Google (calendar sync, Drive filing, Gmail), it needs
+the same kind of build-time help the Stripe MCP gets in its Batch V.
+
+**Build.**
+- **Tagged fixtures:** `workspace_dev_create_fixtures(scenario, folder?)` creates test material for an app under
+  development — a Drive folder tree with sample Docs/Sheets, calendar events on a named test calendar, Gmail labels and
+  a few self-addressed test messages — every object recorded in a `dev_runs` / `dev_run_objects` table (additive) and,
+  where Google allows, tagged (Drive `appProperties.rtc_run`, event `extendedProperties.private.rtc_run`, label names
+  prefixed `rtc-<run>/`). Acts only as the connection's own account, never on other users; never sends to anyone else.
+- **Precise cleanup:** `workspace_dev_cleanup(run)` deletes or trashes exactly the recorded objects (Drive to trash, so
+  it can be undone), with preview and `confirm`.
+- **Integration check for an app being built:** `workspace_dev_check_integration(spec)` — given what the app needs
+  (APIs, OAuth scopes, delegated scopes, a service account's client ID, calendars and folders it expects), reports
+  what is ready, what is missing, and the exact console steps (`workspace_where_is_setting`), without changing anything.
+
+**Acceptance.** Unit tests with fakes: fixtures record every ID; cleanup touches only recorded objects (an untagged
+object with the same name is left alone); Drive cleanup trashes rather than deletes; the check lists missing scopes and
+APIs with console steps; dryRun/confirm/read-back/change-log behave as for every changing tool; nothing acts on another
+user's data.
+
+### P8-8 · Owner side to contract §11: admin overview, structured guided settings, audience tags (M)
+
+**Why.** Chris, 2026-10-10: the toolsets must be great for "both developers and end users of each service, account
+management tools … everything". This server is already strong on administration (users, groups, domains, licences,
+security, reports); this card brings it to the shared owner rules (hub `docs/CONTRACT.md` §11).
+
+**Build.**
+- `workspace_admin_overview`: one call reading the account's owner-side state — organization and domains, verification
+  and DNS health, users and admins, two-step enforcement, third-party app access, forwarding, licences and plan, groups
+  with outside access, recent security alerts where readable — each `ok` / `needs_attention` (why) / `not_readable`.
+  Reuses `workflow_health_report`, `workflow_security_snapshot` and `workflow_email_health` internally; no new Google
+  permissions.
+- `workspace_where_is_setting` returns the structured format `{ setting, url, steps[], expected, verifyWith? }` for all
+  existing entries (47 today), and the console map grows to cover every Admin console settings page Google offers no API
+  for (walk it once; record the date). Where a value can be read back, `verifyWith` names the read tool.
+- Every tool gets an `audience` tag (builder / owner / operator) used by search.
+
+**Acceptance.** Unit tests: overview items on fakes in all three states; every map entry has steps and an expected result;
+every `verifyWith` names an existing read tool; search filters by audience; no new scope requested.
 
 ## Status ledger
 
@@ -761,9 +909,17 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P7-3 | TODO | | Wider activity logs (more Reports applications) |
 | P7-4 | TODO | | Gmail Postmaster Tools (deliverability); new read-only permission approved by Chris 2026-10-02 |
 | P7-5 | TODO | | Undo built on the change log |
-| P7-6 | TODO | | Read-only connection mode |
-| P7-7 | TODO | | Tool profiles (smaller tool menu) |
+| P7-6 | SUPERSEDED | | Delivered by P8-2 (read_only profile) — Phase 8 added 2026-10-10 |
+| P7-7 | SUPERSEDED | | Delivered by P8-2 (profiles, area filters, compact listing) — Phase 8 added 2026-10-10 |
 | P7-8 | TODO | | Bulk and cross-domain operations; design note first |
+| P8-1 | TODO | | Small results (fields, detail, handles, annotations) |
+| P8-2 | TODO | | Profiles, read-only, catalog/compact listing, meta-tools; delivers P7-6, P7-7 |
+| P8-3 | TODO | | Passes (RTC §2) |
+| P8-4 | TODO | | HTTPS tool API, contract manifest, OpenAPI |
+| P8-5 | WAITING | | Needs the hub's conformance package (robinsons-toolkit-hub K-2) |
+| P8-6 | WAITING | | Needs `robinson-mcp-core` (robinsons-toolkit-hub K-3) |
+| P8-7 | TODO | | Developer workflows: tagged test fixtures, precise cleanup, app integration check |
+| P8-8 | TODO | | Owner side to contract §11: admin overview, structured guided settings, audience tags |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 (PR #1), account-choice fix (PR #2), domain-wide delegation + mailbox branding
