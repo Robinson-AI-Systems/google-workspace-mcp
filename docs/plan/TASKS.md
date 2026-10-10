@@ -723,9 +723,10 @@ later his own Vercel, Neon, GitHub and others), each **fully usable on its own**
 agent. Every server follows the **Robinson Tool Contract, RTC 1** — the authority is `docs/CONTRACT.md` in the hub
 repo. The Stripe MCP is being built to it from the start; this phase brings this server up to it.
 
-**These servers are general development tools** (Chris, 2026-10-10): any agent should be able to use them freely on any
-project — building an app, another toolset, or running a business system. Real projects are completeness checks, not the
-purpose. P8-7 adds the build-time jobs.
+**These servers are general tools for developers and account owners alike** (Chris, 2026-10-10): any agent should be
+able to use them freely on any project — building for a client, building for himself, or setting up and running his own
+accounts. Real projects are completeness checks, not the purpose. P8-7 adds the build-time jobs; P8-8 brings the owner
+side up to the shared rules.
 
 **What it gives Chris now, before any hub exists:** a smaller, cheaper tool menu for Claude (the 54,000-token problem
 P7-7 was going to fix), a read-only mode (P7-6), and short-lived passes so an agent that cannot add the connector
@@ -822,6 +823,26 @@ object with the same name is left alone); Drive cleanup trashes rather than dele
 APIs with console steps; dryRun/confirm/read-back/change-log behave as for every changing tool; nothing acts on another
 user's data.
 
+### P8-8 · Owner side to contract §11: admin overview, structured guided settings, audience tags (M)
+
+**Why.** Chris, 2026-10-10: the toolsets must be great for "both developers and end users of each service, account
+management tools … everything". This server is already strong on administration (users, groups, domains, licences,
+security, reports); this card brings it to the shared owner rules (hub `docs/CONTRACT.md` §11).
+
+**Build.**
+- `workspace_admin_overview`: one call reading the account's owner-side state — organization and domains, verification
+  and DNS health, users and admins, two-step enforcement, third-party app access, forwarding, licences and plan, groups
+  with outside access, recent security alerts where readable — each `ok` / `needs_attention` (why) / `not_readable`.
+  Reuses `workflow_health_report`, `workflow_security_snapshot` and `workflow_email_health` internally; no new Google
+  permissions.
+- `workspace_where_is_setting` returns the structured format `{ setting, url, steps[], expected, verifyWith? }` for all
+  existing entries (47 today), and the console map grows to cover every Admin console settings page Google offers no API
+  for (walk it once; record the date). Where a value can be read back, `verifyWith` names the read tool.
+- Every tool gets an `audience` tag (builder / owner / operator) used by search.
+
+**Acceptance.** Unit tests: overview items on fakes in all three states; every map entry has steps and an expected result;
+every `verifyWith` names an existing read tool; search filters by audience; no new scope requested.
+
 ## Status ledger
 
 Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
@@ -882,6 +903,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-5 | WAITING | | Needs the hub's conformance package (robinsons-toolkit-hub K-2) |
 | P8-6 | WAITING | | Needs `robinson-mcp-core` (robinsons-toolkit-hub K-3) |
 | P8-7 | TODO | | Developer workflows: tagged test fixtures, precise cleanup, app integration check |
+| P8-8 | TODO | | Owner side to contract §11: admin overview, structured guided settings, audience tags |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 (PR #1), account-choice fix (PR #2), domain-wide delegation + mailbox branding

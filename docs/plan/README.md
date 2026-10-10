@@ -79,7 +79,7 @@ contains the design decisions and the cheaper model should execute them.
 | P5 | Structure and documentation | P5-1 … P5-4 | 1 week |
 | P6 | Optional extensions (added 2026-10-02) | P6-1 | under a day |
 | P7 | God Mode expansion (proposed 2026-10-02) | P7-1 to P7-8 (P7-6, P7-7 superseded by P8-2) | about 10 days |
-| P8 | Robinson Tool Contract: small results, profiles and read-only, passes, HTTPS tool API, developer workflows; later conformance and the shared package (added 2026-10-10) | P8-1 to P8-7 | about 6 days, plus P8-5/P8-6 when the hub provides them |
+| P8 | Robinson Tool Contract: small results, profiles and read-only, passes, HTTPS tool API, developer workflows, owner overview and guided settings; later conformance and the shared package (added 2026-10-10) | P8-1 to P8-8 | about 6 days, plus P8-5/P8-6 when the hub provides them |
 
 Phases are sequential. P0 came first because there were no tests; there are
 now, and every later card relies on them to prove it did not break something.
