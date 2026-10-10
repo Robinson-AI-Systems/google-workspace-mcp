@@ -796,12 +796,15 @@ pass-only auth; the RTC result envelope and error codes. Same registry and wrapp
 in-memory counter resets on cold starts and differs per instance. The per-pass limit is kept in Postgres: a
 `rate_limits (key, window_start, count)` table (additive) updated with one atomic
 `INSERT … ON CONFLICT … DO UPDATE SET count = count + 1 … RETURNING count` per request, fixed one-minute windows, a limit
-stored as a setting (starting value 120 requests per minute per pass), old windows deleted opportunistically. Over the
+stored **per pass** in a `rate_limit_per_minute` column on the pass row (additive; starting value 120, allowed 1–600),
+chosen when the pass is created, shown by the connections tool and read on every call — never hard-coded, old windows deleted opportunistically. Over the
 limit → HTTP 429 with `Retry-After` and the RTC error code `rate_limited`.
 
 **Acceptance.** Unit tests: the dryRun / needs-confirmation / confirm / read-back / change-log behavior of a sample of
 changing tools is identical through HTTPS and MCP; a database test drives two **independently created handler
-instances** against the same Postgres and proves the combined requests hit the limit (and a new window resets it); manifest counts match the registry; connector tokens and no token are
+instances** against the same Postgres with **overlapping** requests (e.g. 150 at once, split across both) and asserts
+exactly 120 succeed and the rest get 429 — a read-then-update counter fails it; a pass created with limit 5 gets 429 on
+its 6th call; a new window resets the count; manifest counts match the registry; connector tokens and no token are
 refused on `/api/tools`. Manual: `rtool whoami` against the preview with a test pass (once the hub's CLI exists).
 
 ### P8-5 · RTC 1 conformance in CI (S) — after the hub's conformance package exists
