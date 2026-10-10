@@ -89,7 +89,7 @@ ledger in `TASKS.md` for the exact state of every card.
 ## Rules that never bend
 
 - **This server stays fully usable on its own.** It follows the Robinson Tool Contract (RTC 1, authority:
-  `docs/CONTRACT.md` in `Robinson-AI-Systems/robinsons-toolkit`) so Robinson's Toolkit can combine it with Chris's
+  `docs/CONTRACT.md` in `Robinson-AI-Systems/robinsons-toolkit-hub`) so Robinson's Toolkit can combine it with Chris's
   other servers later, but nothing here may depend on the hub being built.
 - **Every door uses the same guards.** MCP, `workspace_call` and the HTTPS tool API go through the same wrapped
   handlers (safety layer, domain guard, profile).

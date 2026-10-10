@@ -719,7 +719,7 @@ per user and does not stop the rest, the cap is enforced.
 
 **Why.** Chris decided (2026-10-10) to build each service as its own solid, hosted server (this one, the Stripe MCP, and
 later his own Vercel, Neon, GitHub and others), each **fully usable on its own**, and later combine them in
-**Robinson's Toolkit** (`Robinson-AI-Systems/robinsons-toolkit`, the hub) into one MCP, CLI and HTTPS API for any AI
+**Robinson's Toolkit** (`Robinson-AI-Systems/robinsons-toolkit-hub`, the hub) into one MCP, CLI and HTTPS API for any AI
 agent. Every server follows the **Robinson Tool Contract, RTC 1** — the authority is `docs/CONTRACT.md` in the hub
 repo. The Stripe MCP is being built to it from the start; this phase brings this server up to it.
 
@@ -852,8 +852,8 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-2 | TODO | | Profiles, read-only, catalog/compact listing, meta-tools; delivers P7-6, P7-7 |
 | P8-3 | TODO | | Passes (RTC §2) |
 | P8-4 | TODO | | HTTPS tool API, contract manifest, OpenAPI |
-| P8-5 | WAITING | | Needs the hub's conformance package (robinsons-toolkit K-2) |
-| P8-6 | WAITING | | Needs `robinson-mcp-core` (robinsons-toolkit K-3) |
+| P8-5 | WAITING | | Needs the hub's conformance package (robinsons-toolkit-hub K-2) |
+| P8-6 | WAITING | | Needs `robinson-mcp-core` (robinsons-toolkit-hub K-3) |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 (PR #1), account-choice fix (PR #2), domain-wide delegation + mailbox branding
