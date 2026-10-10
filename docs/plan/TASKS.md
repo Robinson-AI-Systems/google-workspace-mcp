@@ -762,8 +762,17 @@ name. Compact lists only `workspace_search_tools`, `workspace_describe_tool`, `w
 Listing descriptions ≤160 characters (longer guidance moves into property descriptions and `workspace_describe_tool`).
 Chosen on the login page; `workspace_list_connections` shows it.
 
-**Acceptance.** Unit tests: read_only refuses every changing tool and allows every read; each profile lists exactly
-its tools; `workspace_call` passes the same dryRun/confirm/domain-guard tests as direct calls; a budget check in
+**Settings must survive refresh (review finding, PR #28).** Today a refresh (`api/oauth/token.js`, `grant_type=refresh_token`)
+creates a new `oauth_tokens` row carrying only `client_id` and `google_account`, so a setting stored on the token row would
+be silently dropped and a `read_only` connection would regain write tools. So: the profile, listing and area filters are
+stored on the authorization code and the token row (additive columns), `getTokenByRefreshToken` returns them, and the
+refresh path copies **every** connection setting from the issuing row into the new row (one helper, used by both grant
+types, so a future setting cannot be forgotten). Revocation already covers refresh tokens; keep it that way.
+
+**Acceptance.** Unit tests: read_only refuses every changing tool and allows every read; a **refreshed** read_only
+connection is still read_only and keeps its listing and area filters (unit test on the token endpoint plus a database
+test on real Postgres); a test fails if a column added to the connection settings is not copied on refresh; each profile
+lists exactly its tools; `workspace_call` passes the same dryRun/confirm/domain-guard tests as direct calls; a budget check in
 `npm run check` fails if compact ≥5,000 tokens or any description >160 characters (numbers printed).
 
 ### P8-3 · Passes (M)
@@ -781,11 +790,18 @@ through any door; domain guard applies to pass calls exactly as to connector cal
 
 **Build.** RTC §1 and §7: `GET /api/contract` (no auth), `GET /api/whoami`, `GET /api/tools`, `GET /api/tools/{name}`,
 `POST /api/tools/{name}`, `POST /api/tools/_batch`, `GET /api/results/{handle}`, `GET /api/openapi.json` (≤30 operations);
-pass-only auth; the RTC result envelope and error codes; per-pass rate limit. Same registry and wrapped handlers as the
-MCP door.
+pass-only auth; the RTC result envelope and error codes. Same registry and wrapped handlers as the MCP door.
+
+**Rate limit that actually works on Vercel (review finding, PR #28).** Serverless instances share no memory, so an
+in-memory counter resets on cold starts and differs per instance. The per-pass limit is kept in Postgres: a
+`rate_limits (key, window_start, count)` table (additive) updated with one atomic
+`INSERT … ON CONFLICT … DO UPDATE SET count = count + 1 … RETURNING count` per request, fixed one-minute windows, a limit
+stored as a setting (starting value 120 requests per minute per pass), old windows deleted opportunistically. Over the
+limit → HTTP 429 with `Retry-After` and the RTC error code `rate_limited`.
 
 **Acceptance.** Unit tests: the dryRun / needs-confirmation / confirm / read-back / change-log behavior of a sample of
-changing tools is identical through HTTPS and MCP; manifest counts match the registry; connector tokens and no token are
+changing tools is identical through HTTPS and MCP; a database test drives two **independently created handler
+instances** against the same Postgres and proves the combined requests hit the limit (and a new window resets it); manifest counts match the registry; connector tokens and no token are
 refused on `/api/tools`. Manual: `rtool whoami` against the preview with a test pass (once the hub's CLI exists).
 
 ### P8-5 · RTC 1 conformance in CI (S) — after the hub's conformance package exists
