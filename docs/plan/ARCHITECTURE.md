@@ -205,6 +205,12 @@ export const handlers = { [name]: async (args, clients) => ok(...) };
 - At the audit date: 191 tools accept `dryRun`, 120 of them also require or
   conditionally require `confirm`.
 
+## Planned: Robinson Tool Contract (Phase 8, added 2026-10-10)
+
+Not built yet. Phase 8 in `TASKS.md` adds small results with handles, profiles and a read-only mode, compact listing
+with search/describe/call meta-tools, short-lived passes and an HTTPS tool API, following the contract in
+`Robinson-AI-Systems/robinsons-toolkit` `docs/CONTRACT.md`. Update this page section by section as each card ships.
+
 ## Known gaps (as of 2026-10-02)
 
 | Where | What | Card |
