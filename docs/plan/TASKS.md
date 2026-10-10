@@ -723,6 +723,10 @@ later his own Vercel, Neon, GitHub and others), each **fully usable on its own**
 agent. Every server follows the **Robinson Tool Contract, RTC 1** — the authority is `docs/CONTRACT.md` in the hub
 repo. The Stripe MCP is being built to it from the start; this phase brings this server up to it.
 
+**These servers are general development tools** (Chris, 2026-10-10): any agent should be able to use them freely on any
+project — building an app, another toolset, or running a business system. Real projects are completeness checks, not the
+purpose. P8-7 adds the build-time jobs.
+
 **What it gives Chris now, before any hub exists:** a smaller, cheaper tool menu for Claude (the 54,000-token problem
 P7-7 was going to fix), a read-only mode (P7-6), and short-lived passes so an agent that cannot add the connector
 (Codex, a cloud workspace, a script) can use this server through the `rtool` command-line tool or plain HTTPS.
@@ -795,6 +799,29 @@ rules, meta-tools, passes, HTTPS doors, error envelope) with the shared package 
 
 **Acceptance.** The full unit and database suites pass unchanged; conformance passes; the diff removes the copied files.
 
+### P8-7 · Developer workflows: test fixtures, cleanup, app integration check (M)
+
+**Why.** Chris, 2026-10-10: these servers are "a powerful development tool … able to work freely on any project", not
+only for running a business. When an agent builds an app that uses Google (calendar sync, Drive filing, Gmail), it needs
+the same kind of build-time help the Stripe MCP gets in its Batch V.
+
+**Build.**
+- **Tagged fixtures:** `workspace_dev_create_fixtures(scenario, folder?)` creates test material for an app under
+  development — a Drive folder tree with sample Docs/Sheets, calendar events on a named test calendar, Gmail labels and
+  a few self-addressed test messages — every object recorded in a `dev_runs` / `dev_run_objects` table (additive) and,
+  where Google allows, tagged (Drive `appProperties.rtc_run`, event `extendedProperties.private.rtc_run`, label names
+  prefixed `rtc-<run>/`). Acts only as the connection's own account, never on other users; never sends to anyone else.
+- **Precise cleanup:** `workspace_dev_cleanup(run)` deletes or trashes exactly the recorded objects (Drive to trash, so
+  it can be undone), with preview and `confirm`.
+- **Integration check for an app being built:** `workspace_dev_check_integration(spec)` — given what the app needs
+  (APIs, OAuth scopes, delegated scopes, a service account's client ID, calendars and folders it expects), reports
+  what is ready, what is missing, and the exact console steps (`workspace_where_is_setting`), without changing anything.
+
+**Acceptance.** Unit tests with fakes: fixtures record every ID; cleanup touches only recorded objects (an untagged
+object with the same name is left alone); Drive cleanup trashes rather than deletes; the check lists missing scopes and
+APIs with console steps; dryRun/confirm/read-back/change-log behave as for every changing tool; nothing acts on another
+user's data.
+
 ## Status ledger
 
 Update this table in every PR. Statuses: `TODO`, `IN_PROGRESS`, `IN_REVIEW`,
@@ -854,6 +881,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-4 | TODO | | HTTPS tool API, contract manifest, OpenAPI |
 | P8-5 | WAITING | | Needs the hub's conformance package (robinsons-toolkit-hub K-2) |
 | P8-6 | WAITING | | Needs `robinson-mcp-core` (robinsons-toolkit-hub K-3) |
+| P8-7 | TODO | | Developer workflows: tagged test fixtures, precise cleanup, app integration check |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 (PR #1), account-choice fix (PR #2), domain-wide delegation + mailbox branding
