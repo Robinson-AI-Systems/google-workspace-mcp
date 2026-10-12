@@ -992,3 +992,14 @@ minute limits; connection listing and confirmed revocation, with tests.
 This is **not** live Hub acceptance. P8-4 HTTPS pass-only doors, RTC conformance
 and genuine D-4 direct/relay/Sandbox proof remain exact dependencies in
 `Robinson-AI-Systems/robinsons-toolkit-hub` `docs/pr-cards/D-4.md`.
+
+
+### RTC implementation checkpoint #33 — authenticated HTTPS contract
+
+Implemented public manifest, OpenAPI, prefixed tool aliases, pass-only
+authenticated HTTPS discovery/description/guarded direct and batch calls,
+connection-scoped result retrieval, whoami and structured errors, preserving
+standalone MCP. Unit tests cover authorization, no-token/connector-token
+refusal, read-only write refusal and revocation. Remaining owner-approved
+non-production real D-4 direct/relay/Sandbox testing and full RTC conformance
+are required and tracked in Hub `docs/pr-cards/D-4.md`, not assumed passed.
