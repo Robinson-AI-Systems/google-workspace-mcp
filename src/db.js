@@ -351,7 +351,7 @@ export async function createAccessToken({ accessToken, refreshToken, clientId, g
 export async function getTokenByRefreshToken(refreshToken) {
   const q = db();
   if (!refreshToken) return null;
-  const rows = await q`SELECT client_id, google_account, profile, listing, areas FROM oauth_tokens WHERE refresh_token = ${refreshToken} AND revoked_at IS NULL AND expires_at > now() ORDER BY created_at DESC LIMIT 1`;
+  const rows = await q`SELECT client_id, google_account, profile, listing, areas FROM oauth_tokens WHERE refresh_token = ${refreshToken} AND revoked_at IS NULL ORDER BY created_at DESC LIMIT 1`;
   return rows[0] || null;
 }
 
@@ -408,7 +408,7 @@ export async function touchAccessToken(accessToken) {
 export async function listConnections() {
   const q = db();
   return q`
-    SELECT left(t.access_token, 8) AS token_prefix, left(encode(sha256(convert_to(t.access_token, 'UTF8')), 'hex'), 8) AS connection_id, t.client_id, c.client_name, t.google_account,
+    SELECT left(t.access_token, 8) AS token_prefix, left(encode(sha256(convert_to(t.access_token, 'UTF8')), 'hex'), 8) AS connection_id, t.client_id, c.client_name, t.google_account, t.profile, t.listing, t.areas,
            t.created_at, t.expires_at, t.last_used_at, t.revoked_at
     FROM oauth_tokens t LEFT JOIN oauth_clients c ON c.client_id = t.client_id
     WHERE t.expires_at > now()

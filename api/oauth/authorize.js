@@ -14,6 +14,7 @@ import {
 } from '../../src/db.js';
 import { clientIp, evaluateLogin, LOCKOUT_WINDOW_MINUTES } from '../../src/oauth/login-guard.js';
 import { ensureMigrated } from '../../src/auth/google-auth-hosted.js';
+import { RTC_AREAS } from '../../src/rtc/catalog.js';
 
 function renderLoginPage({ error, hidden, accounts, selected }) {
   const hiddenInputs = Object.entries(hidden).map(([k, v]) => `<input type="hidden" name="${k}" value="${escapeHtml(v || '')}">`).join('\n');
@@ -48,6 +49,8 @@ function renderLoginPage({ error, hidden, accounts, selected }) {
     <select name="profile" id="profile"><option value="read_only">Read only</option><option value="everyday">Everyday</option><option value="full">Full</option></select>
     <label for="listing">Tool listing</label>
     <select name="listing" id="listing"><option value="compact">Compact</option><option value="catalog">All tools</option></select>
+    <label for="areas">Optional allowed areas (comma separated; leave blank for all)</label>
+    <input type="text" name="areas" id="areas" placeholder="mail,files,calendar">
     <label for="passphrase">Admin passphrase</label>
     <input type="password" name="passphrase" id="passphrase" autofocus required>
     ${hiddenInputs}
@@ -125,8 +128,13 @@ export default async function handler(req, res) {
 
   const profile = ['read_only','everyday','full'].includes(params.profile) ? params.profile : 'read_only';
   const listing = ['catalog','compact'].includes(params.listing) ? params.listing : 'compact';
+  const requestedAreas = String(params.areas || '').trim();
+  const areas = requestedAreas ? [...new Set(requestedAreas.split(',').map(x=>x.trim().toLowerCase()))] : null;
+  if (areas && (areas.length > RTC_AREAS.length || areas.some(x=>!RTC_AREAS.includes(x)))) {
+    res.status(400).send('Invalid area list. Use only: ' + RTC_AREAS.join(', ')); return;
+  }
   const code = randomToken(24);
-  await createAuthCode({ code, clientId: client_id, redirectUri: redirect_uri, codeChallenge: code_challenge, codeChallengeMethod: code_challenge_method, googleAccount: chosen, profile, listing });
+  await createAuthCode({ code, clientId: client_id, redirectUri: redirect_uri, codeChallenge: code_challenge, codeChallengeMethod: code_challenge_method, googleAccount: chosen, profile, listing, areas });
 
   const redirectUrl = new URL(redirect_uri);
   redirectUrl.searchParams.set('code', code);

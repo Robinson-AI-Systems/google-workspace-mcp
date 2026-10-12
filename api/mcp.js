@@ -35,6 +35,7 @@ function buildServer(googleAccount, connection, settings) {
     }
     try {
       const clients = await buildHostedApiClients(googleAccount);
+      clients.rtcPolicy = settings; // Server-trusted policy; never sourced from tool arguments.
       clients.connection = connection; // which Claude connection is asking, for the change log
       clients.allowedDomains = await getAllowedDomains(clients.actingAs); // which business domains this connection may manage (src/tools/domain-guard.js)
       return await toolHandler(args || {}, clients);

@@ -123,7 +123,7 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     },
     async getTokenByRefreshToken(refreshToken) {
       if (!refreshToken) return null;
-      const rows = state.tokens.filter((t) => t.refresh_token === refreshToken && !t.revoked_at && t.expires_at > at()).sort((a, b) => b.created_at - a.created_at);
+      const rows = state.tokens.filter((t) => t.refresh_token === refreshToken && !t.revoked_at).sort((a, b) => b.created_at - a.created_at);
       return rows[0] ? { client_id: rows[0].client_id, google_account: rows[0].google_account, profile: rows[0].profile, listing: rows[0].listing, areas: rows[0].areas } : null;
     },
     async getAccessToken(accessToken) {
@@ -143,7 +143,7 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
         .sort((a, b) => b.created_at - a.created_at)
         .map((t) => ({
           token_prefix: t.access_token.slice(0, 8), connection_id: crypto.createHash('sha256').update(t.access_token, 'utf8').digest('hex').slice(0, 8), client_id: t.client_id, client_name: state.clients.get(t.client_id)?.client_name ?? null,
-          google_account: t.google_account, created_at: t.created_at, expires_at: t.expires_at, last_used_at: t.last_used_at, revoked_at: t.revoked_at
+          google_account: t.google_account, profile: t.profile, listing: t.listing, areas: t.areas, created_at: t.created_at, expires_at: t.expires_at, last_used_at: t.last_used_at, revoked_at: t.revoked_at
         }));
     },
     async revokeConnection(prefix) {
