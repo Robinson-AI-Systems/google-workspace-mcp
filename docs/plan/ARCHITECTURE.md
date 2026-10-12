@@ -1,4 +1,4 @@
-# Architecture, as of 2026-10-02
+# Architecture — maintained through October 12, 2026
 
 Read this before touching code. It describes what exists, why, and the
 conventions every card must keep. Where the code and this page disagree, the
@@ -17,7 +17,7 @@ through the Google APIs. A separate, narrowly scoped service account (the
 "robot identity") lets a few tools act *inside* other users' Gmail settings,
 and is authorized for calendar and `drive.file` in reserve. Every tool that
 changes things goes through a safety layer (preview, confirmation, read-back,
-change log). The old local stdio mode was retired on Chris's decision
+change log). The assembled catalog currently covers 370 operations (156 reviewed reads, 209 proven guarded writes, five protected meta dispatchers). The old local stdio mode was retired on Chris's decision
 (2026-10-02); the server is hosted-only.
 
 ## Request path (hosted)
@@ -44,9 +44,9 @@ per request (serverless has no memory between calls). It also stamps
 
 ## Tool registry layers
 
-`src/tools/index.js` builds the registry in three steps:
+`src/tools/index.js` builds the registry in four steps:
 
-1. `mergeNamespaces([...modules])` joins every tool module (26 modules).
+1. `mergeNamespaces([...modules])` joins registered tool modules.
    Duplicate tool names throw at import time.
 2. `applyGuards(...)` (`src/tools/guards.js` plus `guards-mail.js`,
    `guards-files.js`, `guards-admin.js`) wraps existing changing tools with the
@@ -57,6 +57,8 @@ per request (serverless has no memory between calls). It also stamps
    refuse an address or domain outside the account's `allowed_domains` unless
    the call says `crossDomain: true`. It checks only the addresses and domain
    names given in the arguments; a bare user ID, `me` or `all` is let through.
+
+4. `applyResultRules(...)` (`src/rtc/results.js`) ensures bounded results and structured RTC return behavior. The complete assembled registry passes an exact semantic mutation audit and is the source of `npm run gen:catalog`. The generated README catalog is checked in CI; no manual totals or hand-picked aliases.
 
 ## Connector login (how Claude gets its bearer token)
 
@@ -140,8 +142,7 @@ API controls → Domain-wide delegation.
 
 ### Database rules
 
-- Vercel builds **every branch** and previews share `DATABASE_URL` with
-  production. Old and new code run against the same database at the same
+- Automatic Vercel branch previews are **disabled** under the October 12 hosting policy. The live service follows only checked, scheduled at-most-daily `main → live` promotion; do not manually deploy. Old and new code run against the same database at the same
   time. Therefore: additive changes only, idempotent `initSchema`, and never
   move or delete data a previous version reads.
 - `initSchema()` runs on every request. Keep it cheap: `IF NOT EXISTS` only.
@@ -205,11 +206,9 @@ export const handlers = { [name]: async (args, clients) => ok(...) };
 - At the audit date: 191 tools accept `dryRun`, 120 of them also require or
   conditionally require `confirm`.
 
-## Planned: Robinson Tool Contract (Phase 8, added 2026-10-10)
+## Robinson Tool Contract (Phase 8; partial integration, not certified)
 
-Not built yet. Phase 8 in `TASKS.md` adds small results with handles, profiles and a read-only mode, compact listing
-with search/describe/call meta-tools, short-lived passes and an HTTPS tool API, following the contract in
-`Robinson-AI-Systems/robinsons-toolkit-hub` `docs/CONTRACT.md`. Update this page section by section as each card ships.
+RTC profiles, metadata, bounded result handles, guarded HTTPS tool routes and short-lived read-only TEST passes are implemented and locally tested. The authoritative implementation and blocked external acceptance live in `TASKS.md`. Neither pinned Hub reference conformance nor simulated Google proves protected deployed direct/relay/Sandbox and revocation against a real service. Never widen scopes or treat test profile acceptance as production activation.
 
 ## Known gaps (as of 2026-10-02)
 
@@ -220,7 +219,7 @@ with search/describe/call meta-tools, short-lived passes and an HTTPS tool API, 
 | `src/auth/scopes.js` `classroom` group | The sign-in asks for four Classroom permissions but no tool uses Classroom | Cleanup, needs every account to re-authorize if removed |
 | Read-only smoke test (`scripts/smoke-readonly.mjs`) | Does not exist yet, so tools that never worked against a real account are not yet found | P0-2 |
 | `google_accounts.tokens` | Plain copy still written next to the encrypted one | P5-2 (not before 30 days after encryption went live, 2026-10-02) |
-| Version, changelog, generated tool catalog | `package.json` still says 1.0.0; README tool table is hand-maintained | P5-4 |
+| Version, changelog, generated tool catalog | `package.json` is 2.0.0; generated README catalog and changelog maintained by `npm run gen:catalog` and semantic CI | P5-4 |
 
 Fixed since the first version of this page (kept so old PR text still makes
 sense): `drive_upload_file` Buffer bug (P0-3), licensing customer ID and
