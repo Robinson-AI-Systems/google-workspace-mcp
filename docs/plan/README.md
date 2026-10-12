@@ -48,25 +48,57 @@ Do not use Haiku for anything touching auth, tokens, delegation, or
 destructive tools. Do not use Opus/Fable to write code here; the plan already
 contains the design decisions and the cheaper model should execute them.
 
-## How to run the plan
+## Outcome-first autonomous development (owner instruction 2026-10-12)
 
-1. Read `IMPLEMENTER.md`, `TASKS.md`, the latest merged handoff and
-   `docs/HOSTING-COST-POLICY.md`; inspect live `main` and open reviews.
-2. Each new chat completes five **substantial implementation PRs**, ending
-   at the next multiple of five. Group related cards when useful; no
-   documentation-only PRs and no placeholder functionality.
-3. Every PR targets `main`. Update the status ledger in that same PR,
-   run `npm run check` and tests, and require GitHub Actions **`test`
-   and `release-policy`** at the exact PR head plus existing review gates.
-   Authorized agents can merge when green and safe without bypass.
-4. Vercel Production tracks only `live`; the scheduled, checked, at-most-
-   daily `main → live` workflow is the only automatic promotion.
-   Automatic previews are disabled: never wait for a preview, manually
-   deploy or promote to `live`. Schema changes must remain additive to
-   support rolling releases (see `ARCHITECTURE.md`, "Database rules").
-5. At the end of each phase, run the phase-gate review with the review model
-   using the review prompt in IMPLEMENTER.md. Fix what it finds before
-   starting the next phase.
+This is the standing, authoritative development workflow; IMPLEMENTER.md
+provides the practical PR/checklist/continuation template, and TASKS.md is
+the authoritative work, decision, blocker and permanent-handoff ledger.
+Do not create competing instruction files or documentation-only PRs.
+
+1. **Verify actual state:** current main, concurrent branches/agents, open
+   PRs, exact-head CI, reviews, owner decisions, TASKS.md status and
+   blockers, and the hosting-cost policy. Repository evidence overrides an
+   old checkpoint or copied prompt.
+2. **Choose an outcome:** state the highest-priority eligible milestone,
+   the usable capability to finish/materially advance, and its remaining
+   acceptance criteria. Prioritize demonstrated security, correctness, CI
+   and review defects ahead of feature expansion.
+3. **Build coherent work:** five substantial PRs is the normal session
+   planning boundary, **not** evidence of completion and not a quota.
+   Group related implementation; never pad or split needlessly. If fewer
+   safe substantive PRs are possible, record the precise limitation.
+4. **Keep four acceptance layers separate:** merged implementation,
+   meaningful automated verification (including disposable database),
+   exact deployed HTTPS behavior, and genuine Google/custom-MCP/Hub
+   provider integration. Mock/reference-server green tests and saved
+   hosting settings do not prove real acceptance. A card is DONE only
+   after its actual acceptance criteria pass.
+5. **Recheck blockers automatically:** every deferred item must have its
+   precise blocker, evidence or owner decision needed, dependencies,
+   condition that reopens it, and next action in TASKS.md. Recheck at
+   session start and after owner input, dependency merges or environment
+   changes. Restore eligible work without re-asking decisions already
+   recorded or abandoning previously blocked items.
+6. **Follow all existing gates:** substantial PRs target main, require
+   exact-head Actions `test` and `release-policy` plus applicable
+   review, and can be merged only by authorized agents when safe.
+   Keep security, ownership, auditability, recovery, TEST isolation,
+   scope and independent owner-approval controls. No placeholders,
+   undocumented side effects or unauthorized provider writes.
+7. **Releases are independent of PR count:** the checked scheduled
+   at-most-daily `main → live` process is the only automatic promotion;
+   disabled Vercel previews remain off and no manual deploy is permitted
+   for a development batch. Preserve Basic/queued builds, Neon resource
+   limits and autosuspend, owner spending/production/destructive gates,
+   and plaintext-token retirement's thirty-day time gate. Stripe LIVE
+   remains disabled wherever relevant; Cortiware remains deferred.
+
+At the end, report the user/developer capability advanced, exact actual
+proof, remaining acceptance and reasons, verified main/PRs/CI, and
+blockers with re-entry triggers. Update TASKS.md's permanent handoff in a
+substantive PR. Give a **compact** self-contained continuation prompt
+pointing to this workflow and the handoff, which instructs each future
+agent to repeat the same process.
 
 ## Order of work
 
@@ -137,30 +169,19 @@ ledger in `TASKS.md` for the exact state of every card.
   "Appliance Desk Completion Plan" doc Chris holds in Claude.
 
 
-## Persistent five-PR implementation cadence (owner direction 2026-10-12)
+## Substantive session cadence and continuation
 
-Use a substantive development PR for each unit of implementation. Normal new chat
-sessions deliver **five substantial PRs**, verify exact-head CI, reviews and
-post-merge main, and end at the next PR number divisible by five. The initial
-catch-up session from #29 is **six PRs, #30–#35**; subsequent sessions use five.
-If blocked, record what actually happened; never claim an unmerged PR is merged.
+The old October 12 exact-PR-number target is historical, not a binding
+success metric. Normally complete up to five coherent substantial PRs
+around a useful milestone; do not manufacture work to reach a multiple
+of five. No documentation-only PRs or placeholder implementation.
+Mark externally blocked acceptance IN_PROGRESS with exact requirements
+while advancing independently eligible work.
 
-**No documentation-only PRs.** Required docs and ledger changes accompany a
-substantial implementation PR; if all PRs have already merged, hand the docs
-work to the next session's first substantive PR.
-
-**No placeholders, fake functionality or TODO implementations presented as
-complete.** Implement real code, tests and security guards. A dependency
-owned by a later project is permitted only if its exact owner, contract,
-acceptance and follow-up are recorded in the roadmap/handoff. Partial
-acceptance is IN_PROGRESS, not DONE. Live RTC/relay acceptance may be claimed
-only after real authorized read-only proof and revocation.
-
-The final continuation prompt must instruct the next agent to verify fresh
-main/reviews/deployments, follow this folder and RTC 1 in the Toolkit Hub,
-complete five substantial PRs, preserve approval gates and no-doc-only/no-
-placeholder rules, then produce the same compact continuation prompt again.
-
+The future ending prompt must use the compact template in IMPLEMENTER.md,
+identify the verified checkpoint/milestone/next action, recheck the blocker
+register, honor every gate, update permanent handoff, and instruct its
+successor to write another prompt following the same standard.
 
 ## Verified hosting and main protections — October 12, 2026
 
