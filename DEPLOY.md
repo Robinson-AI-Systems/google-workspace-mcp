@@ -111,3 +111,23 @@ The appliance desk app must **not** borrow the connector's robot. It gets its ow
 3. In Vercel > the **appliance-desk** project > Environment Variables: `GOOGLE_SERVICE_ACCOUNT_JSON` (the file's contents, Sensitive) and `GOOGLE_IMPERSONATE_USER=ops@robinsonappliancerentals.com`. Production only until it has been tested.
 4. The app finds the business calendar and folders by asking this connector: ask Claude for `workspace_business_calendar` and `workspace_business_folders` for Appliance Rentals. They return the IDs and remember them in the shared database table `business_resources`, which the app can read.
 5. Never reuse one key for both identities, and never paste a key into a chat or commit it. If one is exposed, delete that key in Google Cloud and make a new one.
+
+
+## RTC 1 read-only TEST passes (owner setup)
+
+After deployment, visit `/api/rtc/passes` on the configured `PUBLIC_BASE_URL`
+HTTPS origin. Enter the existing owner passphrase and an already-connected
+Google account; optionally narrow the allowed areas, hours (default 24, max
+720) and requests per minute (default 120, allowed 1–600). The pass is
+**read_only**, **test** and **non-production**. It appears only once in the
+owner's browser; copy it directly into a protected agent secret environment,
+never a chat, URL, shell argument, PR, repository secret file or logs.
+
+Revoke by using `workspace_list_connections` to identify its `pass_…`
+identifier, then `workspace_revoke_connection` with `confirm: true`.
+The pass wire secret is kept hashed at rest. The rate-limit counter is atomic
+in Postgres across Vercel instances. Issuance does not grant any Google
+permission beyond the bound account. For non-production Toolkit Hub D-4
+acceptance, a deployed RTC HTTPS tool door and actual direct/relay/Sandbox
+checks with revocation are still required. No production or write pass
+issuance is enabled by this setup page.
