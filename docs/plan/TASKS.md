@@ -1023,23 +1023,13 @@ Postgres. Full service-level conformance remains IN_PROGRESS until its
 remaining integration probes genuinely pass.
 
 
-### RTC checkpoint #35 — owner overview, guided settings and D-4 direct test runner
+### Owner-requested stack optimization — 2026-10-12
 
-Implemented `workspace_admin_overview` from actual existing Google
-diagnostics with distinct `ok`, `needs_attention`, and
-`not_readable` sections; domain/area-aware reads; structured console
-setting instructions alongside old responses; audience metadata;
-fully paginated HTTPS catalog; and an opt-in genuine TEST-only direct
-route/revocation runner with protected environment inputs and no provider
-result/secret logging. Unit tests cover each. Never substitutes missing
-owner API access with a fake success.
-
-**Still required in Hub D-4**: a deployed exact commit reachable over
-HTTPS, approved scratch account and short-lived read_only pass configured
-outside chat, owner-sanctioned direct CLI/SDK test, GitHub encrypted relay
-test in a truly restricted workspace, Vercel Sandbox allowlisted test,
-revocation proof, and a full service-level RTC conformance assessment.
-The Hub agent owns relay configuration and complete three-route evidence;
-Google Workspace repository owns this service's endpoints, credentials
-and deployment. All are UNVERIFIED until actually observed. No
-production, spending, destructive or money-out approval has been given.
+CI now cancels superseded runs of the same PR, preserves independent post-merge
+main runs, and bounds the complete verification job at 20 minutes. Checkout does
+not retain its token in git configuration. npm install skips unsolicited audit
+and funding lookups; syntax/safety, unit, disposable Postgres, RTC and pinned Hub
+conformance checks all remain mandatory. Node 24 development instructions match
+CI and hosting. No live database, credentials, provider scopes, production
+activation, or daily main-to-live release controls change. PR and main CI must
+pass before this operational change is considered verified.
