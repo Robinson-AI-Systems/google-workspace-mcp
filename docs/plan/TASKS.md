@@ -981,3 +981,14 @@ P8-2 started: selected profile/listing and optional area restrictions persist th
 ### RTC checkpoint #31 — P8-1 result handles
 
 Implemented: read-tool field projection, 8KB response storage with 24-hour handles, owner-isolated PostgreSQL result retrieval, 4KB pages through workspace_get_result, fake and real-DB tests. No live Google access or full Hub conformance claimed. Summary mappers and endpoint-level conformance remain requirements, not placeholders: P8-1 and P8-5 acceptance must be closed with evidence in future substantive PRs.
+
+
+### RTC implementation checkpoint #32
+
+Owner-approved TEST read-only pass issuance is real: protected same-origin
+passphrase-locked one-time HTML page; SHA256-hashed pass storage; account and
+area binding; 24-hour default with bounded TTL; atomic per-pass PostgreSQL
+minute limits; connection listing and confirmed revocation, with tests.
+This is **not** live Hub acceptance. P8-4 HTTPS pass-only doors, RTC conformance
+and genuine D-4 direct/relay/Sandbox proof remain exact dependencies in
+`Robinson-AI-Systems/robinsons-toolkit-hub` `docs/pr-cards/D-4.md`.
