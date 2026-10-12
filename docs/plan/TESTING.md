@@ -111,3 +111,23 @@ No repository secret is needed, so nothing for Chris to add. The throwaway
 database holds no real data and disappears when the run ends. A failing test
 turns the PR red; the one-time proof of that (card P0-1 acceptance) is still
 outstanding.
+
+
+### RTC shared contract testing (Node 24)
+
+CI pins and checks out the Hub source commit
+`570e597ab865359072db43d1ab884ab456832207` into `.rtc-hub`, then
+runs `npm run test:rtc` (upstream `packages/conformance` suite)
+and `node scripts/rtc-conformance-ci.mjs` (upstream reference HTTP
+runner). The ordinary Workspace check, unit and throwaway Postgres
+suites run alongside it. No pass or credential is embedded in code
+or printed. Pinned source must be intentionally reviewed before an
+upgrade.
+
+**Evidence boundary:** passing tests of the reference fake server
+do not certify this deployed Google Workspace server. The runtime
+prints skipped checks as NOT VERIFIED, not passed. Actual D-4 service
+tests require owner-approved non-production credentials, direct,
+encrypted relay, Vercel Sandbox and revocation evidence. Full
+conformance cannot be claimed until all required service checks
+have been exercised, not merely the upstream fake.
