@@ -128,9 +128,19 @@ export function runDbContract(label, { makeDb, seedLegacy }) {
         await db.createAccessToken({ accessToken: 'at0', clientId: 'c1' });
         expect((await db.getAccessToken('at1')).google_account).toBe('rentals@example.test');
         expect((await db.getAccessToken('at0')).google_account).toBeNull();
-        expect(await db.getTokenByRefreshToken('rt1')).toEqual({ client_id: 'c1', google_account: 'rentals@example.test' });
+        expect(await db.getTokenByRefreshToken('rt1')).toMatchObject({ client_id: 'c1', google_account: 'rentals@example.test', profile: 'full', listing: 'catalog', areas: null });
       });
 
+      it('keeps restrictive settings on codes, tokens and refresh', async () => {
+        await db.createAuthCode({code:'rtc-code',clientId:'c1',redirectUri:'https://example.test/cb',profile:'read_only',listing:'compact',areas:['mail']});
+        const code=await db.consumeAuthCode('rtc-code');
+        expect(code).toMatchObject({profile:'read_only',listing:'compact',areas:['mail']});
+        await db.createAccessToken({accessToken:'rtc-at',refreshToken:'rtc-rt',clientId:'c1',profile:code.profile,listing:code.listing,areas:code.areas});
+        const first=await db.getTokenByRefreshToken('rtc-rt');
+        expect(first).toMatchObject({profile:'read_only',listing:'compact',areas:['mail']});
+        await db.createAccessToken({accessToken:'rtc-refreshed',refreshToken:'rtc-rt',clientId:'c1',profile:first.profile,listing:first.listing,areas:first.areas});
+        expect(await db.getAccessToken('rtc-refreshed')).toMatchObject({profile:'read_only',listing:'compact',areas:['mail']});
+      });
       it('only honors refresh tokens it issued', async () => {
         expect(await db.getTokenByRefreshToken('never-issued')).toBeNull();
         expect(await db.getTokenByRefreshToken('')).toBeNull();
