@@ -272,3 +272,21 @@ describe('P8-7 TEST Calendar event fixtures',()=>{
   expect(s.calls.filter(c=>c.path==='calendar.events.delete')).toHaveLength(0);
  });
 });
+
+it('retries a Calendar cleanup after provider deletion without deleting any other event',async()=>{
+ const {clients,calls,when}=makeFakeClients();
+ clients.connection='test-cal-connection';
+ clients.rtcPolicy={mode:'test',profile:'full',areas:['workspace','calendar']};
+ const runId='55555555-2222-4444-8666-999999999999',calendarId='owned-test-calendar',eventId='already-gone';
+ when('calendar.calendarList.get').resolves({data:{id:calendarId,accessRole:'owner'}});
+ when('calendar.events.get').resolves({data:{id:eventId,status:'cancelled'}});
+ const owner={actingAs:clients.actingAs,connection:clients.connection};
+ await state.db.startDevRun({id:runId,...owner,scenario:'calendar',calendarId});
+ await state.db.reserveDevStep({runId,...owner,kind:'event'});
+ await state.db.recordDevObject({runId,...owner,kind:'event',googleId:eventId,parentId:calendarId});
+ await state.db.markDevStepRecorded({runId,...owner,kind:'event',googleId:eventId});
+ const r=body(await handlers.workspace_dev_cleanup({runId,confirm:true},clients));
+ expect(r.confirmed).toBe(true);
+ expect(calls.filter(c=>c.path==='calendar.events.delete')).toHaveLength(0);
+ expect((await state.db.getDevRun({runId,...owner})).objects[0].cleaned_at).toBeTruthy();
+});

@@ -92,16 +92,23 @@ export async function inspectCalendarCleanup(run,clients,identity){
  const o=run.objects[0];
  if(o.kind!=='event'||o.parent_id!==run.calendar_id||o.google_id!==run.steps[0].google_id)
    throw Error('Calendar fixture ledger does not match reservation.');
- const result=await clients.calendar.events.get({calendarId:run.calendar_id,eventId:o.google_id});
- exactCalendarEvent(result.data,run.id,identity);
- return {run,identity,proof:[{kind:'event',id:o.google_id,calendarId:run.calendar_id,cleaned:!!o.cleaned_at}]};
+ let alreadyDeleted=false;
+ try{
+  const result=await clients.calendar.events.get({calendarId:run.calendar_id,eventId:o.google_id});
+  if(result.data?.status==='cancelled')alreadyDeleted=true;
+  else exactCalendarEvent(result.data,run.id,identity);
+ }catch(e){if(isNotFound(e))alreadyDeleted=true;else throw e;}
+ // When Calendar already deleted the exact ledger ID during a previous attempt,
+ // don't try another delete or invent a different event ID.
+ return {run,identity,proof:[{kind:'event',id:o.google_id,calendarId:run.calendar_id,cleaned:!!o.cleaned_at,alreadyDeleted}]};
 }
 export async function deleteRecordedCalendarFixture(run,clients,identity){
- await inspectCalendarCleanup(run,clients,identity);
+ const proof=await inspectCalendarCleanup(run,clients,identity);
  const obj=run.objects[0];
- await clients.calendar.events.delete({calendarId:run.calendar_id,eventId:obj.google_id,sendUpdates:'none'});
- let gone=false;
- try{
+ if(!proof.proof[0].alreadyDeleted)
+   await clients.calendar.events.delete({calendarId:run.calendar_id,eventId:obj.google_id,sendUpdates:'none'});
+ let gone=proof.proof[0].alreadyDeleted;
+ if(!gone)try{
   const r=await clients.calendar.events.get({calendarId:run.calendar_id,eventId:obj.google_id});
   gone=r.data?.status==='cancelled';
  }catch(e){if(isNotFound(e))gone=true;else throw e;}
