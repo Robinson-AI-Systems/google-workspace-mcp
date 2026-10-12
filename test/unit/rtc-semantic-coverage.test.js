@@ -24,6 +24,15 @@ describe('exhaustive semantic mutation classification',()=>{
    const fake={tools:[...registry.tools,ghost],handlers:{...registry.handlers,gmail_get_and_send:async()=>({})}};
    expect(mutationCoverageErrors(fake,checks)).toContain('No guarded-write provenance: gmail_get_and_send');
  });
+ it('rejects forged public Symbol provenance on a fake mutating handler',()=>{
+   const forged=async()=>({});
+   forged[Symbol.for('robinson.workspace.guarded-write.v1')]=true;
+   expect(isGuardedWrite(forged)).toBe(false);
+   const name='gmail_get_and_send';
+   const fake={tools:[...registry.tools,{name,inputSchema:{properties:{dryRun:{type:'boolean'}}}}],
+     handlers:{...registry.handlers,[name]:forged}};
+   expect(mutationCoverageErrors(fake,checks)).toContain('No guarded-write provenance: '+name);
+ });
  it('detects unknown read handler and missing registered reads instead of silently treating them as safe',()=>{
    const fake={tools:registry.tools.filter(t=>t.name!=='gmail_get_message'),handlers:registry.handlers};
    expect(mutationCoverageErrors(fake,checks)).toContain('Stale reviewed read declaration: gmail_get_message');
