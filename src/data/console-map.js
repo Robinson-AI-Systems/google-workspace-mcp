@@ -110,3 +110,37 @@ export const CONSOLE_MAP = [
   { id: 'gmail-send-limits', title: 'Sending limits and bulk-sender rules', keywords: ['sending limit', 'bulk', 'limit', 'daily limit', 'quota', 'send limit', 'rate limit', 'rejected'], link: null,
     path: ['Look up "Gmail sending limits" in the Google Workspace Admin Help', 'Limits are fixed by Google per plan and cannot be changed in the console'], note: 'Bulk mail should go through a sender like Resend (see workflow_email_health).' }
 ];
+
+
+/**
+ * Optional, narrowly scoped read-backs for manual Admin console guidance.
+ * These observe current Google data, not proof that a console-only policy
+ * toggle has been applied to every OU, group or mailbox. Never call a write
+ * tool as "verification"; no tool here is executed by the setting finder.
+ */
+export const CONSOLE_VERIFICATION=Object.freeze({
+ 'dkim':{tool:'workflow_email_health',note:'Checks public DKIM DNS and mailbox indicators for the chosen domain; it does not prove the Admin console signing switch is enabled.'},
+ 'spf-dmarc':{tool:'workflow_email_health',note:'Checks published SPF/DMARC DNS records for one domain, not every outbound sender or policy.'},
+ 'gmail-imap-pop':{tool:'gmail_get_imap_settings',note:'Reads IMAP access for the connected mailbox; it does not prove the organization-unit policy.'},
+ 'gmail-default-routing-delegation':{tool:'gmail_list_delegates',note:'Lists this mailbox’s delegates only; the organization-wide delegation setting still needs a console check.'},
+ 'drive-storage':{tool:'drive_get_storage_quota',note:'Shows storage for the connected account only, not every user or subscription quota.'},
+ 'drive-sharing':{tool:'workflow_audit_external_sharing',note:'Finds sharing exposure in visible files; the Admin console default sharing policy is not verified.'},
+ 'calendar-resources':{tool:'admin_list_calendar_resources',note:'Lists existing room/resource records; booking policy switches still require the Admin console.'},
+ 'domains':{tool:'admin_list_domains',note:'Checks domains visible to the authorized admin; public DNS readiness may need separate verification.'},
+ 'org-units':{tool:'admin_list_orgunits',note:'Lists organization units; inheritance and effective policy overrides still need manual confirmation.'},
+ 'users':{tool:'admin_list_users',note:'Reads the accessible account roster, not recent deletions or a completed user provisioning action.'},
+ 'admin-roles':{tool:'admin_list_role_assignments',note:'Lists role assignments, not proof that every admin has the least privilege needed.'},
+ 'alerts':{tool:'admin_list_alerts',note:'Reads available Alert Center alerts; it does not verify notification delivery rules.'},
+ 'reports':{tool:'reports_usage_customer',note:'Reads supported customer usage metrics; dashboard filters or data outside this API are unverified.'},
+ 'mobile-management':{tool:'admin_list_mobile_devices',note:'Lists enrolled mobile devices; effective mobile security rules need their own verification.'},
+ 'chrome-management':{tool:'admin_list_chrome_devices',note:'Lists Chrome devices; device-specific effective browser policies are not certified.'},
+ 'billing-plan':{tool:'workspace_plan_summary',note:'Counts assigned Google Workspace licenses; purchased seats, invoices and payment settings remain console-only.'},
+ 'license-assign-ui':{tool:'licensing_list_assignments',note:'Lists license assignments for a requested SKU; purchased seat counts are not returned.'},
+ 'email-forwarding':{tool:'gmail_get_forwarding_settings',note:'Checks forwarding for the acting mailbox, not all mailboxes or their permitted org-unit policy.'},
+ 'out-of-office':{tool:'gmail_get_vacation_settings',note:'Checks the connected mailbox vacation response, not all user accounts.'},
+ 'signature':{tool:'gmail_list_send_as',note:'Lists connected-mailbox sender identities and signatures; aliases/users outside this account are not covered.'},
+ '2sv':{tool:'admin_get_2sv_status',note:'Checks a named user’s enrollment/enforcement fields; it does not prove an entire organization-unit policy.'},
+ 'recovery':{tool:'admin_get_user',note:'Shows recorded recovery details for a named user, not the organization-wide recovery toggle.'},
+ 'groups-settings':{tool:'admin_get_group_settings',note:'Reads a selected group’s settings; organization-wide Groups for Business policies are separate.'},
+ 'api-controls':{tool:'workspace_delegation_status',note:'Tests only the configured narrow service-account scopes; other delegated app grants remain console-only.'}
+});
