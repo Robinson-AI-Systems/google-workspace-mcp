@@ -438,13 +438,15 @@ export async function touchAccessToken(accessToken) {
 /** Every connection token that has not expired, newest first. Only the first 8 characters of a token are ever returned. */
 export async function listConnections() {
   const q = db();
-  return q`
+  const connectors=await q`
     SELECT left(t.access_token, 8) AS token_prefix, left(encode(sha256(convert_to(t.access_token, 'UTF8')), 'hex'), 8) AS connection_id, t.client_id, c.client_name, t.google_account, t.profile, t.listing, t.areas,
            t.created_at, t.expires_at, t.last_used_at, t.revoked_at
     FROM oauth_tokens t LEFT JOIN oauth_clients c ON c.client_id = t.client_id
     WHERE t.expires_at > now()
     ORDER BY t.created_at DESC
   `;
+  const passes=await listRtcPasses();
+  return [...connectors.map(c=>({...c,kind:'connector'})),...passes.map(p=>({...p,token_prefix:p.id}))].sort((x,y)=>new Date(y.created_at)-new Date(x.created_at));
 }
 
 /**
@@ -456,6 +458,7 @@ export async function revokeConnection(prefix) {
   const q = db();
   const p = String(prefix || '');
   if (p.length < 8) return { revoked: 0, reason: 'too_short' };
+  if (p.startsWith('pass_')) return { revoked: await revokeRtcPass(p) };
   const found = await q`SELECT access_token, refresh_token FROM oauth_tokens WHERE left(access_token, ${p.length}) = ${p}`;
   if (found.length === 0) return { revoked: 0, reason: 'not_found' };
   if (found.length > 1) return { revoked: 0, reason: 'ambiguous' };
