@@ -32,7 +32,7 @@ export const READ_ONLY_TOOL_NAMES=new Set([
   'gmail_list_delegates', 'gmail_list_drafts', 'gmail_list_filters', 'gmail_list_forwarding_addresses',
   'gmail_list_history', 'gmail_list_labels', 'gmail_list_messages', 'gmail_list_send_as',
   'gmail_list_threads', 'gmail_search', 'identity_check_membership', 'identity_get_security_settings',
-  'identity_list_group_transitive_membership', 'licensing_get_assignment', 'licensing_list_assignments', 'reports_admin_activity',
+  'identity_list_group_transitive_membership', 'licensing_get_assignment', 'licensing_list_assignments', 'reports_activity', 'reports_admin_activity',
   'reports_drive_activity', 'reports_groups_activity', 'reports_login_activity', 'reports_mobile_activity',
   'reports_oauth_token_activity', 'reports_usage_customer', 'reports_usage_user', 'sheets_batch_get',
   'sheets_get_sheet_as_csv', 'sheets_get_spreadsheet', 'sheets_get_values', 'slides_export_as_pdf',

@@ -17,7 +17,7 @@ through the Google APIs. A separate, narrowly scoped service account (the
 "robot identity") lets a few tools act *inside* other users' Gmail settings,
 and is authorized for calendar and `drive.file` in reserve. Every tool that
 changes things goes through a safety layer (preview, confirmation, read-back,
-change log). The assembled catalog currently covers 370 operations (156 reviewed reads, 209 proven guarded writes, five protected meta dispatchers). The old local stdio mode was retired on Chris's decision
+change log). The assembled catalog currently covers 371 operations (157 reviewed reads, 209 proven guarded writes, five protected meta dispatchers). The old local stdio mode was retired on Chris's decision
 (2026-10-02); the server is hosted-only.
 
 ## Request path (hosted)
@@ -241,3 +241,8 @@ passphrase compare (P0-5), no connection list or revocation (P1-1).
   "Migrated from single-account setup") and
   `ops@robinsonappliancerentals.com` ("Appliance Rentals"). Both are super
   admins; both have 2-step verification enforced.
+
+
+### Reports audit expansion (P7-3)
+
+`reports_activity` reads only Google's allowlisted Admin SDK Reports application names (including Calendar, Meet, Chat, SAML/SSO, rules, security and login). It preserves the provider paging cursor, refuses unknown names locally and caps page size without enabling `includeSensitiveData`. Existing named Reports tools retain their previous response shape. One additional audited read is included in the assembled semantic inventory; plan availability and actual Google provider acceptance remain separately unverified.
