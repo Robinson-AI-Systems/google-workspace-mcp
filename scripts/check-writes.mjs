@@ -20,3 +20,9 @@ for(const tool of registry.tools){
 for(const name of DISPATCHERS)if(!RTC_META.has(name)||!registry.handlers[name])errors.push(name+': missing guarded dispatcher');
 if(errors.length){console.error('[mutation-check] '+errors.length+' failures:\n'+errors.join('\n'));process.exit(1);}
 console.log('[mutation-check] '+writes+' semantically classified mutating handlers are provenance-guarded; '+DISPATCHERS.size+' dispatcher separately enforced.');
+
+// Temporary inventory during the audit of the assembled registry; superseded by
+// the reviewed exhaustive read-only list in this same PR before final merge.
+console.log('[READ_INVENTORY_BEGIN]');
+for (const name of registry.tools.filter(t => !isWrite(t.name) && !RTC_META.has(t.name)).map(t => t.name).sort()) console.log('[READ] '+name);
+console.log('[READ_INVENTORY_END]');
