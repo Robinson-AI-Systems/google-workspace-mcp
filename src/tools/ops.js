@@ -43,7 +43,18 @@ const whereIsSetting = async (args) => {
   if (!hits.length) {
     return ok({ found: false, note: `Nothing in the map matches "${query}". Try other words, or use the search box at the top of ${CONSOLE_HOME} (it searches every setting).`, topics: CONSOLE_MAP.map((e) => e.title) });
   }
-  return ok({ found: true, matches: hits.map(({ score, ...h }) => ({ ...h, link: h.link || `${CONSOLE_HOME} (follow the clicks below)`, steps: h.path.map((p, i) => `${i + 1}. ${p}`) })), note: 'Menu names move around a little between Google releases; the Admin console search box finds any setting by name.' });
+  const matches=hits.map(({score,...h})=>({...h,link:h.link||`${CONSOLE_HOME} (follow the clicks below)`,
+    steps:h.path.map((p,i)=>`${i+1}. ${p}`)}));
+  const guides=hits.map(({score,...h})=>({
+    setting:h.title,
+    url:h.link||CONSOLE_HOME,
+    steps:h.path.map((p,i)=>({n:i+1,action:'Navigate to',target:p})),
+    expected:'The identified settings page is visible. No setting has been changed or verified.',
+    ...(h.verifyWith?{verifyWith:h.verifyWith}:{})
+  }));
+  return ok({found:true,matches,...guides[0],alternatives:guides.slice(1),
+    note:'Menu names can move; use Admin console search if a path changes. No changes are claimed.'});
+
 };
 
 // ---------- P2-1: calendar settings ----------
