@@ -10,6 +10,10 @@
 import { ok } from './util.js';
 import { recordChange } from '../changelog.js';
 
+// Provenance marker is applied by defineWrite, not by a tool's input schema.
+export const GUARDED_WRITE = Symbol.for('robinson.workspace.guarded-write.v1');
+export const isGuardedWrite = fn => typeof fn==='function'&&fn[GUARDED_WRITE]===true;
+export const markGuardedWrite = fn => Object.defineProperty(fn,GUARDED_WRITE,{value:true});
 const DRY_RUN_FIELD = { type: 'boolean', description: 'Preview only: say what would change and change nothing.' };
 const CONFIRM_FIELD = { type: 'boolean', description: 'Must be true for this to go ahead. Ask the person first; this is hard or impossible to undo.' };
 
@@ -89,8 +93,12 @@ export function defineWrite({ name, description, inputSchema, destructive = fals
       if (mismatch) confirmed = false;                       // Google answered, but not with what was asked for
     }
     const logged = await recordChange(clients, { tool: name, target: p.target, summary: p.summary + (confirmed === false ? (mismatch ? ' (asked, but Google does not show the requested result)' : ' (changed, but could not confirm it by reading it back)') : ''), before, after });
-    return ok({ done: true, summary: p.summary, target: p.target, before, after, confirmed, ...(mismatch ? { warning: 'Google does not show the result that was asked for. Check it before telling the person it worked.' } : {}), details, logged: logged.logged });
+    if(!logged.logged)confirmed=false;
+    return ok({ done: true, summary: p.summary, target: p.target, before, after, confirmed,
+      ...(!logged.logged?{auditFailure:true,warning:'Google may have changed the item, but audit logging failed. Do not treat this as verified success.'}:{}),
+      ...(mismatch ? { warning: 'Google does not show the result that was asked for. Check it before telling the person it worked.' } : {}), details, logged: logged.logged });
   };
+  markGuardedWrite(handler);
   return { tool, handler };
 }
 

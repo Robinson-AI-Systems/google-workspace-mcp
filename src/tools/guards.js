@@ -340,6 +340,11 @@ const CORE = {
     before: async (a, { admin }) => pick(await data(admin.users.get({ userKey: a.fromUserId, fields: 'primaryEmail,suspended' })), ['primaryEmail', 'suspended']),
     after: async (a, clients, details) => ({ note: 'Google runs transfers in the background. Use datatransfer_get_transfer_status to follow it.', transferId: details?.id }) },
 
+  domain_confirm_verification: { destructive:false,
+    describe:a=>({target:a.domainName,summary:`Ask Google to verify ownership of domain ${a.domainName}`}),
+    before:async(a,{siteVerification})=>({verified:(await data(siteVerification.webResource.list({}))).items?.some(x=>x.site?.identifier===a.domainName)===true}),
+    after:async(a,{siteVerification})=>({verified:(await data(siteVerification.webResource.list({}))).items?.some(x=>x.site?.identifier===a.domainName)===true}),
+    verify:(a,b,after)=>after?.verified===true },
   // ---------- Bulk editors: deleting through them needs the same confirm as the single-purpose delete tools ----------
   docs_batch_update: { destructive: false, confirmWhen: (a) => DELETING_REQUEST(a.requests),
     describe: (a) => ({ target: a.documentId, summary: `Apply ${(a.requests || []).length} edit(s) to the document ${a.documentId}${DELETING_REQUEST(a.requests) ? ' (includes deleting content)' : ''}` }) },

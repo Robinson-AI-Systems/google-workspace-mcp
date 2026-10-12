@@ -78,6 +78,41 @@ const valuesMatch = (wanted, got) => rowsOf(wanted).every((row, r) => row.every(
 const firstRows = (values) => (values || []).slice(0, 5);
 const rangeItems = (a) => (Array.isArray(a.data) ? a.data : []).filter((d) => d && typeof d.range === 'string').slice(0, 20);
 
+
+const sheetState = async (sheets, a, extra='') => {
+  const fields='sheets(properties(sheetId,title,gridProperties),merges,protectedRanges'+(extra?','+extra:'')+')';
+  const r=await data(sheets.spreadsheets.get({spreadsheetId:a.spreadsheetId,fields}));
+  return (r.sheets||[]).find(s=>s.properties?.sheetId===a.sheetId)||null;
+};
+const sameRange=(a,r)=>!!r&&r.sheetId===a.sheetId&&
+ (r.startRowIndex??0)===(a.startRow??0)&&(r.endRowIndex??0)===(a.endRow??0)&&
+ (r.startColumnIndex??0)===(a.startColumn??0)&&(r.endColumnIndex??0)===(a.endColumn??0);
+const rangeNote=a=>`tab ${a.sheetId} rows ${a.startRow??0}:${a.endRow??'end'}, columns ${a.startColumn??0}:${a.endColumn??'end'}`;
+const cellColumn=n=>{let x=n+1,s='';while(x>0){x--;s=String.fromCharCode(65+x%26)+s;x=Math.floor(x/26)}return s;};
+const rangeOf=async(sheets,a)=>{
+ const sh=await sheetState(sheets,a);
+ if(!sh?.properties?.title)throw Error('Cannot verify sheet range without tab title.');
+ if(![a.startRow,a.endRow,a.startColumn,a.endColumn].every(Number.isInteger)
+   ||a.startRow<0||a.startColumn<0||a.endRow<=a.startRow||a.endColumn<=a.startColumn)
+   throw Error('Invalid bounded cell range.');
+ return "'"+sh.properties.title.replace(/'/g,"''")+"'!"+cellColumn(a.startColumn)+(a.startRow+1)+":"+cellColumn(a.endColumn-1)+a.endRow;
+};
+const cellFormats=async(sheets,a)=>{
+ if((a.endRow-a.startRow)*(a.endColumn-a.startColumn)>100) return {bounded:false};
+ const range=await rangeOf(sheets,a);
+ const res=await data(sheets.spreadsheets.get({spreadsheetId:a.spreadsheetId,ranges:[range],includeGridData:true,fields:'sheets(data(startRow,startColumn,rowData(values(userEnteredFormat))))'}));
+ const rows=res.sheets?.[0]?.data?.[0]?.rowData||[];
+ const expected=(a.endRow-a.startRow)*(a.endColumn-a.startColumn);
+ let matched=0,read=0;
+ for(const row of rows.slice(0,a.endRow-a.startRow)){
+  for(const cell of (row.values||[]).slice(0,a.endColumn-a.startColumn)){
+   read++;
+   if(Object.entries(a.format||{}).every(([k,v])=>JSON.stringify(cell.userEnteredFormat?.[k])===JSON.stringify(v)))matched++;
+  }
+ }
+ return {bounded:true,read,expected,matched};
+};
+
 const sheetTabs = async (sheets, spreadsheetId) => ((await data(sheets.spreadsheets.get({ spreadsheetId, fields: 'sheets.properties(sheetId,title)' }))).sheets || []).map((s) => ({ sheetId: s.properties?.sheetId, title: s.properties?.title }));
 
 // ---------- Docs / Slides ----------
@@ -213,6 +248,71 @@ export const GUARDS_FILES = {
     before: async (a, { sheets }) => ({ tabs: (await sheetTabs(sheets, a.spreadsheetId)).map((t) => t.title) }),
     after: async (a, { sheets }) => ({ tabs: (await sheetTabs(sheets, a.spreadsheetId)).map((t) => t.title) }),
     verify: (a, b, after) => (after?.tabs || []).includes(a.title) },
+
+  sheets_duplicate_sheet: { destructive:false,
+    describe:a=>({target:a.spreadsheetId,summary:`Duplicate tab ${a.sheetId} within spreadsheet ${a.spreadsheetId}`}),
+    before:async(a,{sheets})=>({tabs:await sheetTabs(sheets,a.spreadsheetId)}),
+    after:async(a,{sheets},details)=>({newSheetId:details?.replies?.[0]?.duplicateSheet?.properties?.sheetId,
+      tabs:await sheetTabs(sheets,a.spreadsheetId)}),
+    verify:(a,b,after)=>Number.isInteger(after?.newSheetId)&&
+      !b.tabs.some(t=>t.sheetId===after.newSheetId)&&after.tabs.some(t=>t.sheetId===after.newSheetId&&
+        (!a.newSheetName||t.title===a.newSheetName)) },
+  sheets_format_cells: { destructive:true,
+    describe:a=>({target:a.spreadsheetId,summary:`OVERWRITE cell formatting in ${rangeNote(a)} of spreadsheet ${a.spreadsheetId}`}),
+    before:async(a,{sheets})=>({sheetExists:!!await sheetState(sheets,a)}),
+    after:async(a,{sheets})=>cellFormats(sheets,a),
+    verify:(a,b,after)=>after?.bounded&&after.expected>0&&after.read===after.expected&&after.matched===after.expected },
+  sheets_freeze_rows: { destructive:false,
+    describe:a=>({target:a.spreadsheetId,summary:`Change frozen row/column counts for tab ${a.sheetId}`}),
+    before:async(a,{sheets})=>({grid:(await sheetState(sheets,a))?.properties?.gridProperties}),
+    after:async(a,{sheets})=>({grid:(await sheetState(sheets,a))?.properties?.gridProperties}),
+    verify:(a,b,after)=>!!after?.grid&&
+      (a.frozenRowCount===undefined||after.grid.frozenRowCount===a.frozenRowCount)&&
+      (a.frozenColumnCount===undefined||after.grid.frozenColumnCount===a.frozenColumnCount) },
+  sheets_autoresize_columns: { destructive:false,
+    describe:a=>({target:a.spreadsheetId,summary:`Auto-resize columns ${a.startColumn}:${a.endColumn} of tab ${a.sheetId}`}),
+    before:async(a,{sheets})=>({exists:!!await sheetState(sheets,a)}),
+    after:async(a,{sheets})=>{
+      const sh=await sheetState(sheets,a,'data(columnMetadata(pixelSize))');
+      const widths=sh?.data?.[0]?.columnMetadata?.slice(a.startColumn,a.endColumn).map(x=>x.pixelSize);
+      return {widths,observed:Array.isArray(widths)&&widths.length===a.endColumn-a.startColumn&&widths.every(x=>Number.isFinite(x)&&x>0)};
+    },
+    verify:(a,b,after)=>after?.observed===true },
+  sheets_sort_range: { destructive:true,
+    describe:a=>({target:a.spreadsheetId,summary:`REORDER the cells in ${rangeNote(a)} of spreadsheet ${a.spreadsheetId}`}),
+    before:async(a,{sheets})=>({exists:!!await sheetState(sheets,a)}),
+    after:async(a,{sheets})=>{
+      if((a.endRow-a.startRow)>200)return {bounded:false};
+      const range=await rangeOf(sheets,a);
+      const rows=(await data(sheets.spreadsheets.values.get({spreadsheetId:a.spreadsheetId,range}))).values||[];
+      const index=a.sortColumnIndex-a.startColumn;
+      const values=rows.map(r=>r[index]);
+      let sorted=index>=0&&index<a.endColumn-a.startColumn&&values.length>0;
+      for(let i=1;i<values.length;i++){
+        const x=String(values[i-1]??''),y=String(values[i]??'');
+        const cmp=x.localeCompare(y,undefined,{numeric:true,sensitivity:'base'});
+        if((a.ascending===false&&cmp<0)||(a.ascending!==false&&cmp>0))sorted=false;
+      }
+      return {bounded:true,rows:rows.length,sorted};
+    },
+    verify:(a,b,after)=>after?.bounded===true&&after.sorted===true },
+  sheets_merge_cells: { destructive:true,
+    describe:a=>({target:a.spreadsheetId,summary:`MERGE cells in ${rangeNote(a)} (may discard values outside top-left)`}),
+    before:async(a,{sheets})=>({merges:(await sheetState(sheets,a))?.merges||[]}),
+    after:async(a,{sheets})=>({merges:(await sheetState(sheets,a))?.merges||[]}),
+    verify:(a,b,after)=>after?.merges?.some(r=>sameRange(a,r))===true },
+  sheets_unmerge_cells: { destructive:false,
+    describe:a=>({target:a.spreadsheetId,summary:`Unmerge cells in ${rangeNote(a)}`}),
+    before:async(a,{sheets})=>({merges:(await sheetState(sheets,a))?.merges||[]}),
+    after:async(a,{sheets})=>({merges:(await sheetState(sheets,a))?.merges||[]}),
+    verify:(a,b,after)=>Array.isArray(after?.merges)&&!after.merges.some(r=>sameRange(a,r)) },
+  sheets_protect_range: { destructive:true,
+    describe:a=>({target:a.spreadsheetId,summary:`Change editing access by protecting ${rangeNote(a)}`}),
+    before:async(a,{sheets})=>({protectedRanges:(await sheetState(sheets,a))?.protectedRanges||[]}),
+    after:async(a,{sheets})=>({protectedRanges:(await sheetState(sheets,a))?.protectedRanges||[]}),
+    verify:(a,b,after)=>after?.protectedRanges?.some(x=>sameRange(a,x.range)&&
+      !!x.warningOnly===!!a.warningOnly&&
+      (!a.editorEmails||a.editorEmails.every(email=>(x.editors?.users||[]).some(u=>u.toLowerCase()===email.toLowerCase()))))===true },
   sheets_copy_to_spreadsheet: { destructive: false,
     describe: (a) => ({ target: a.destinationSpreadsheetId, summary: `Copy the tab ${a.sheetId} of spreadsheet ${a.spreadsheetId} into spreadsheet ${a.destinationSpreadsheetId}` }),
     before: async (a, { sheets }) => ({ tabsInDestination: (await sheetTabs(sheets, a.destinationSpreadsheetId)).length }),
