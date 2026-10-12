@@ -1,0 +1,50 @@
+[
+  {
+    "area": "gmail",
+    "type": "settings/gmail.external_recipient_warning",
+    "field": "enabled",
+    "expected": true,
+    "label": "Warn before mailing external recipients",
+    "consoleQuery": "gmail external recipient warning"
+  },
+  {
+    "area": "gmail",
+    "type": "settings/gmail.spoofing_and_authentication",
+    "field": "detect_domain_name_spoofing",
+    "expected": true,
+    "label": "Detect similarly named spoofed domains",
+    "consoleQuery": "gmail phishing safety"
+  },
+  {
+    "area": "gmail",
+    "type": "settings/gmail.spoofing_and_authentication",
+    "field": "detect_employee_name_spoofing",
+    "expected": true,
+    "label": "Detect employee-name spoofing",
+    "consoleQuery": "gmail phishing safety"
+  },
+  {
+    "area": "drive_and_docs",
+    "type": "settings/drive_and_docs.external_sharing",
+    "field": "warn_for_external_sharing",
+    "expected": true,
+    "label": "Warn when files are shared outside the organization",
+    "consoleQuery": "external drive sharing"
+  },
+  {
+    "area": "calendar",
+    "type": "settings/calendar.external_invitations",
+    "field": "warn_on_invite",
+    "expected": true,
+    "label": "Warn when inviting external calendar guests",
+    "consoleQuery": "calendar external invitation"
+  },
+  {
+    "area": "chat",
+    "type": "settings/chat.chat_history",
+    "field": "history_on_by_default",
+    "expected": true,
+    "label": "Default chat history on for organizational recordkeeping (review retention policy)",
+    "consoleQuery": "chat history"
+  }
+]
