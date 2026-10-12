@@ -70,6 +70,10 @@ export async function createTaggedDriveFixtures(args,clients){
  const request=validateFixtureRequest(args),id=request.runId||crypto.randomUUID(),identity=owner(clients);
  await checkParent(clients,request.folder);
  await startDevRun({id,...identity,scenario:request.scenario,folder:request.folder});
+ const prior=await getDevRun({runId:id,...identity});
+ if(prior?.objects.length>0&&prior?.steps.length===0)
+   throw Error('Legacy fixture run '+id+' has object IDs but no creation reservations. Refusing duplicate creation; recover by exact provider IDs in a separately reviewed reconciliation.');
+
  const objects=[];
  let parent=request.folder;
  try{
@@ -156,7 +160,8 @@ async function loadRun(args,clients) {
  if(run.scenario!=='files')throw Error('Only Drive file fixture cleanup is implemented.');
  if(!Array.isArray(run.objects)||run.objects.length===0)throw Error('No recorded objects; refusing cleanup.');
  if(run.objects.some(o=>!Object.hasOwn(KIND_MIME,o.kind)))throw Error('Unknown fixture kind; refusing cleanup.');
- if(run.steps?.some(s=>s.state!=='recorded'))throw Error('Uncertain fixture reservation exists; reconcile every pending provider ID before cleanup.');
+ if(!run.steps?.length||run.steps.some(s=>s.state!=='recorded'))
+   throw Error('Missing or uncertain fixture reservations; reconcile every provider ID before cleanup.');
  return {run,identity};
 }
 async function inspectCleanup(args,clients) {

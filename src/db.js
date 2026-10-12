@@ -186,6 +186,7 @@ export async function initSchema() {
     PRIMARY KEY(run_id,kind,google_id)
   )`;
   await q`CREATE INDEX IF NOT EXISTS dev_run_objects_run ON dev_run_objects(run_id)`;
+  await q`CREATE UNIQUE INDEX IF NOT EXISTS dev_run_objects_single_kind ON dev_run_objects(run_id,kind)`;
   await q`ALTER TABLE dev_runs ADD COLUMN IF NOT EXISTS root_folder TEXT`;
   // An immutable reservation exists BEFORE any provider mutation. A retry is
   // reconciliation-only while a slot is pending; never blindly create again.
@@ -668,7 +669,7 @@ export async function recordDevObject({runId,actingAs,connection,kind,googleId,p
  await q`INSERT INTO dev_run_objects(run_id,kind,google_id,parent_id)
    SELECT id,${kind},${googleId},${parentId} FROM dev_runs
    WHERE id=${runId} AND acting_as=${email} AND connection=${connection}
-   ON CONFLICT DO NOTHING`;
+   ON CONFLICT (run_id,kind) DO NOTHING`;
  const existing=await q`SELECT o.google_id FROM dev_run_objects o JOIN dev_runs r ON r.id=o.run_id
    WHERE o.run_id=${runId} AND o.kind=${kind}
    AND r.acting_as=${email} AND r.connection=${connection}`;

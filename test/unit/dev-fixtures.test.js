@@ -80,7 +80,12 @@ describe('P8-7 precise confirmed cleanup',()=>{
  }
  async function seeded(s){
    await state.db.startDevRun({id:s.run,actingAs:s.clients.actingAs,connection:s.clients.connection,scenario:'files'});
-   for(const [kind,googleId] of s.objects)await state.db.recordDevObject({runId:s.run,actingAs:s.clients.actingAs,connection:s.clients.connection,kind,googleId});
+   for(const [kind,googleId] of s.objects){
+     const input={runId:s.run,actingAs:s.clients.actingAs,connection:s.clients.connection,kind,googleId};
+     await state.db.reserveDevStep(input);
+     await state.db.recordDevObject(input);
+     await state.db.markDevStepRecorded(input);
+   }
  }
  it('no confirmation means zero writes; dry-run lists only recorded IDs',async()=>{
    const s=ready();await seeded(s);
@@ -180,4 +185,13 @@ describe('P8-7 reservation-first crash and replay safety',()=>{
    await expect(handlers.workspace_dev_create_fixtures({scenario:'files',runId,folder:'folder-other'},s.clients)).rejects.toThrow();
    expect(body(await handlers.workspace_dev_list_runs({}, {...s.clients,connection:'other'})).runs).toEqual([]);
  });
+});
+
+it('blocks legacy run without reservations rather than duplicating or blind-cleaning objects',async()=>{
+ const s=setup(),runId='42222222-3333-4444-8555-aaaaaaaaaaaa';
+ await state.db.startDevRun({id:runId,actingAs:s.clients.actingAs,connection:s.clients.connection,scenario:'files'});
+ await state.db.recordDevObject({runId,actingAs:s.clients.actingAs,connection:s.clients.connection,kind:'folder',googleId:'old-folder'});
+ await expect(handlers.workspace_dev_create_fixtures({scenario:'files',runId},s.clients)).rejects.toThrow(/Legacy fixture run/);
+ await expect(handlers.workspace_dev_cleanup({runId,confirm:true},s.clients)).rejects.toThrow(/reservations/);
+ expect(s.calls.filter(c=>c.path==='drive.files.create')).toHaveLength(0);
 });
