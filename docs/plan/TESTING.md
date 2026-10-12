@@ -131,3 +131,17 @@ tests require owner-approved non-production credentials, direct,
 encrypted relay, Vercel Sandbox and revocation evidence. Full
 conformance cannot be claimed until all required service checks
 have been exercised, not merely the upstream fake.
+
+
+### App-builder integration verification
+
+`workspace_dev_check_integration` only calls read endpoints through
+the requesting Google account. Its results distinguish observed provider
+access from missing resources and scopes and from access that cannot
+be proven. Requested delegated scopes declared in local configuration
+are **not** treated as proof of Admin console authorization. The checker
+does not widen the existing service-account scope set or create test
+objects. `test/unit/dev-integration.test.js` simulates real client
+calls and proves area isolation, consent evidence and safe errors.
+The fixture-creation/cleanup half of P8-7 remains tracked separately
+in `TASKS.md` and must not be called done.
