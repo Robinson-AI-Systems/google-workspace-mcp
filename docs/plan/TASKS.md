@@ -902,7 +902,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P4-2 | DONE | #21 | `delegatedClients(userEmail, scopes)` returns only the clients for the scopes asked; anything outside `DELEGATED_SCOPES` throws (tested). Nothing uses it yet beyond the status tool: the business tools act as the connection's own account, so the robot's new permissions are held in reserve |
 | P4-3 | MERGED | #20 | `workspace_business_calendar`, `workspace_business_folders` + `business_resources` table (contract-tested on the in-memory fake and on a real Postgres 16, 44 DB tests passing). Acts as the connection's own account, so it needs no delegation. Idempotent; a remembered ID that no longer exists is not trusted; the main folder is searched across all of Drive and two matches stop it rather than guess; the preview and the read-back look at Drive itself. Manual check still to do: returns the existing `c_dd214eeb…` calendar and `13yNQodb…` folder tree |
 | P4-4 | MERGED | #21 | DEPLOY.md Part 5 updated and Part 8 added (the app's own service account, its four scopes, the Vercel variables, how it finds the IDs). Cross-linked to APPLIANCE-DESK-INTEGRATION.md. Chris can follow it in about 15 minutes |
-| P5-1 | IN_REVIEW | #45, #49 | All eleven formerly uncovered mutators guarded in #45. #49 replaces name-based safe-inference with an exact 156-tool audited read-only inventory and fail-closed provenance checks on actual assembled handlers, with malicious-name regression tests. Merge/CI evidence remains distinct from real-provider acceptance. |
+| P5-1 | DONE (automated safety acceptance) | #45, #49 | All eleven missing mutators guarded (#45); #49's exhaustive assembled-registry contract reviews 156 exact read-only tools and proves 209 handler-provenance-guarded writes; unknown name effects fail closed regardless of `dryRun`. Private WeakSet provenance is not forgeable with a public Symbol. Exact-head `test`+`release-policy` and automated fake-Google/Postgres/RTC tests passed; actual provider/Hub routes remain separate P0-2/P8 acceptance and are NOT claimed. |
 | P5-2 | TODO | | Not before 30 days after encryption went live (key set 2026-10-02, so not before 2026-11-01) |
 | P5-3 | DONE | | Chris decided to retire local mode (2026-10-02). Local files, scripts and README sections removed; hosted only. README, DEPLOY and ARCHITECTURE checked against the code in the 2026-10-02 audit and match. |
 | P5-4 | TODO | | #19 corrects README drift; generated catalog/version/changelog work remains TODO. |
@@ -1181,16 +1181,18 @@ no open PRs/reviews before #49. `live` was separately observed at
 `c7472dd71fce266391496bd657608cff0ef440de`; not proof of
 deployed HTTPS acceptance. Actual SHA/status must be re-read after merges.
 
-**Current outcome:** eliminate the residual P5-1 misclassification
-risk with exhaustive semantic read declarations and guarded-write
-provenance in #49, including adversarial test cases. Permanently apply
+**Current outcome:** P5-1's residual misclassification risk is addressed
+by exhaustive read semantics and a private guarded-write provenance
+registry in #49, including forged-handler/unknown-name regression tests. Permanently apply
 the outcome-first session and five-PR planning standard in the existing
 plan/implementer/ledger as part of that substantive PR.
 
 **Evidence layers:** Code already merged for all three P8-7 fixture
 families; mocked Google, unit and disposable-Postgres proof exists.
-#49's exact-head CI and reviews must pass before claiming P5-1
-classification accepted. Actual scheduled live SHA, genuine Google
+#49's pre-ledger final head `39bc73f89362c3810e4bdbecc464052b25aaf1cd`
+passed required checks and 1,181 unit / 48 disposable-Postgres /
+18 RTC tests; this last ledger-only adjustment must pass exact-head
+checks again before merge. Actual scheduled live SHA, genuine Google
 TEST fixture creation/cleanup, RTC direct/restricted relay/Sandbox
 and revocation have **not** been demonstrated and are not DONE.
 
@@ -1207,3 +1209,18 @@ handoff; select the next concrete eligible outcome; normally complete
 up to five coherent substantive PRs without padding; prove each
 acceptance layer; preserve hosting/scope/owner gates; update this
 handoff and issue another compact prompt following IMPLEMENTER.md.
+
+
+### P5-1 audited outcome and proof — PR #49
+
+The next security gate does **not** infer read-only behavior from prefixes,
+underscores, regular expressions or input-schema `dryRun`. It uses a
+reviewed 156-operation exact read inventory, treats new/unknown names
+as writes, verifies the actual assembled handlers are backed by
+`defineWrite`/approved wrapper provenance, and rejects a forged public
+Symbol marker using a private WeakSet. A misleading `gmail_get_and_send`
+name and fabricated schema are explicit failing regression cases.
+Observed exact-head Actions run [38306582547](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/runs/38306582547):
+`test` and `release-policy` successful, 1,181 unit tests, 48 real disposable
+Postgres tests and 18 RTC tests pass. Deployed service identity and real
+Google fixture/Hub acceptance are not covered by these successes.
