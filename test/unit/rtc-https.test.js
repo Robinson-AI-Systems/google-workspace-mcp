@@ -44,7 +44,7 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   expect(toInternal('workspace_gmail_list_messages')).toBe('gmail_list_messages');
  });
  it('refuses direct writes and mixed write batches before executing handlers',async()=>{
-  expect((await invoke('POST',{tool:'workspace_gmail_send_email'},{to:'a@example.test',confirm:true})).body.error.code).toBe('outside_scope');
+  expect((await invoke('POST',{tool:'workspace_gmail_send_email'},{to:'a@example.test',confirm:true})).body.error.code).toBe('refused_by_guard');
   const batch=await invoke('POST',{tool:'_batch'},{calls:[{name:'workspace_list_accounts'},{name:'workspace_gmail_send_email',args:{confirm:true}}]});
   expect(batch.statusCode).toBe(403);
  });
