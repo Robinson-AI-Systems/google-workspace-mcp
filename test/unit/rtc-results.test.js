@@ -59,7 +59,8 @@ describe('RTC object-specific compact results',()=>{
    const out=await shapeReadResult(ok({messages:many}),{toolName:'gmail_list_messages'},'owner-a',fake.storeRtcResult);
    const data=JSON.parse(out.content[0].text);
    expect(data.handle).toMatch(/^rtc_result_/);
-   expect(data.data.messages).toHaveLength(100);
+   expect(data.data.messages).toHaveLength(8);
+   expect(data.count).toBe(100);
    expect(JSON.stringify(data.data)).not.toContain('zzzz');
    const saved=await fake.getRtcResult(data.handle,'owner-a');
    expect(saved.data.messages[0].payload.body.data).toHaveLength(200);
