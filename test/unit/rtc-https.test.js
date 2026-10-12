@@ -53,9 +53,13 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   expect(r.statusCode).toBe(200);expect(r.body.ok).toBe(true);
   expect(r.body.result[0].email).toBe('ops@example.test');
  });
+ it('uses structured not_found rather than outside_scope on nonexistent tools',async()=>{
+  const r=await invoke('GET',{tool:'workspace_does_not_exist'});
+  expect(r.statusCode).toBe(404);expect(r.body.error.code).toBe('not_found');
+ });
  it('rejects a revoked pass immediately',async()=>{
   const pass=await holder.db.getRtcPass(token);
   await holder.db.revokeRtcPass(pass.id);
-  expect((await invoke('GET',{door:'whoami'})).statusCode).toBe(401);
+  const r=await invoke('GET',{door:'whoami'});expect(r.statusCode).toBe(401);expect(r.body.error.code).toBe('pass_revoked');
  });
 });
