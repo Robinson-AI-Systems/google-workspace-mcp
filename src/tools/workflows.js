@@ -253,20 +253,26 @@ export const handlers = {
   },
 
   workflow_security_snapshot: async (_args, { admin, alertcenter }) => {
-    const users = await admin.users.list({ customer: 'my_customer', maxResults: 500, fields: 'users(primaryEmail,isEnrolledIn2Sv,isEnforcedIn2Sv,isAdmin,suspended)' });
+    const users = await admin.users.list({ customer: 'my_customer', maxResults: 500, fields: 'nextPageToken,users(primaryEmail,isEnrolledIn2Sv,isEnforcedIn2Sv,isAdmin,suspended)' });
     const allUsers = users.data.users || [];
     const without2sv = allUsers.filter(u => !u.isEnrolledIn2Sv && !u.suspended).map(u => u.primaryEmail);
     const admins = allUsers.filter(u => u.isAdmin).map(u => u.primaryEmail);
 
     let alerts = [];
+    let alertsReadable = false;
     try {
       const alertRes = await alertcenter.alerts.list({ pageSize: 10 });
       alerts = alertRes.data.alerts || [];
+      alertsReadable = true;
     } catch {
-      // Alert Center may be unavailable depending on edition; not fatal.
+      // Unreadable alerts are not evidence that there are no alerts.
     }
 
     return ok({
+      // Pagination and Alert Center permission are surfaced to owner consumers;
+      // the first 500 users and unreadable alerts cannot certify a green report.
+      complete: !users.data.nextPageToken,
+      alertsReadable,
       totalUsers: allUsers.length,
       usersWithout2StepVerification: without2sv,
       superAdmins: admins,
