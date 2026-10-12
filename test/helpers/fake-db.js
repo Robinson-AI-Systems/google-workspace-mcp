@@ -21,7 +21,8 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     nextAttemptId: 1,
     changes: [],
     resources: [],
-    nextChangeId: 1
+    nextChangeId: 1,
+    rtcResults: new Map()
   };
   const at = () => new Date(clock());
   const afterSeconds = (s) => new Date(clock() + s * 1000);
@@ -29,6 +30,8 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
   const api = {
     connectionId: (accessToken) => crypto.createHash('sha256').update(String(accessToken), 'utf8').digest('hex').slice(0, 8),
     async initSchema() {},
+    async storeRtcResult({handle,connection,payload,ttlHours=24}) {state.rtcResults.set(handle,{connection,payload,expires_at:afterSeconds(ttlHours)});return handle;},
+    async getRtcResult(handle,connection){const r=state.rtcResults.get(handle);return r&&r.connection===connection&&r.expires_at>at()?r.payload:null;},
 
     async listGoogleAccounts() {
       return [...state.accounts.values()]
