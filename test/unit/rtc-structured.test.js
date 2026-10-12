@@ -3,6 +3,7 @@ import {registry} from '../../src/tools/index.js';
 import {OUTPUT_SCHEMAS,attachStructuredResult} from '../../src/rtc/structured.js';
 import {ok} from '../../src/tools/util.js';
 import {makeFakeClients} from '../helpers/fake-google.js';
+import {listedTools} from '../../src/rtc/catalog.js';
 const targets=Object.keys(OUTPUT_SCHEMAS);
 describe('P8-1 typed MCP workflow outputs',()=>{
  it('declares full machine-readable schemas for each supported JSON workflow',()=>{
@@ -11,6 +12,13 @@ describe('P8-1 typed MCP workflow outputs',()=>{
      expect(tool?.outputSchema,name).toEqual(OUTPUT_SCHEMAS[name]);
      expect(tool.outputSchema.type).toBe('object');
      expect(tool.outputSchema.anyOf[0].required.length).toBeGreaterThan(1);
+   }
+ });
+ it('keeps compact listing budget small without hiding full discoverable schemas',()=>{
+   const compact=listedTools(registry.tools,{profile:'full'},'compact');
+   for(const name of ['workflow_security_snapshot','workflow_audit_external_sharing']){
+     expect(compact.find(x=>x.name===name).outputSchema).toBeUndefined();
+     expect(registry.tools.find(x=>x.name===name).outputSchema).toBeDefined();
    }
  });
  it('attaches exact structured content to security snapshots and sharing audits',async()=>{
