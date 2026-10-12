@@ -256,3 +256,8 @@ The owner-approved `postmaster.readonly` OAuth scope is now requested for **user
 ### P7-2 customer-policy audit limitation
 
 The Cloud Identity Policy API provides explicitly set customer/OU/group rules, **not** effective per-domain reduced settings. `identity_list_policies` and `identity_policy_audit` compare a documented editable baseline from `src/data/policy-baseline.json`; absent and inherited fields are marked `not_readable` instead of falsely green. A domain argument is a business authorization boundary, not a Google provider filter: **business-restricted connections must explicitly use `crossDomain:true` with owner approval** to see customer-wide policies. Read-only OAuth scope `cloud-identity.policies.readonly` requires existing connections to reauthorize and an API-enabled Super Admin. A verified live read and full settings coverage remain outstanding P7-2 acceptance; no service-account delegation scope is added.
+
+
+### Policy baseline expansion and precedence of evidence (P7-2 follow-up)
+
+The editable `src/data/policy-baseline.json` contains 21 vetted, uniquely identified checks across seven supported settings areas. A validated typed comparison supports equality and numeric minimums (password length). A confirmed explicit mismatch is never suppressed by missing entries, unknown inherited values or a paginated provider result: it remains `needs_attention`; observations absent or incomplete without a contradiction remain `not_readable`. Matches apply to the **observed explicit policy only** and never certify effective OU/group/domain settings. This is a review baseline, not a mandatory universal configuration; the owner may deliberately revise rules before any audit results are treated as recommendations.

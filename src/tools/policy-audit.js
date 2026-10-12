@@ -4,7 +4,7 @@ import { ok } from './util.js';
 import { matchSettings } from './ops.js';
 import baseline from '../data/policy-baseline.json' with { type:'json' };
 
-const AREAS=Object.freeze(['gmail','drive_and_docs','calendar','chat','groups_for_business','api_controls','workspace_marketplace','meet','devices','other']);
+const AREAS=Object.freeze(['gmail','drive_and_docs','calendar','chat','groups_for_business','api_controls','workspace_marketplace','meet','devices','security','other']);
 function area(value) {
   if(value===undefined||value===null||value==='')return null;
   if(!AREAS.includes(value))throw new Error('Unknown policy area; allowed: '+AREAS.join(', '));
@@ -34,7 +34,31 @@ async function listOne(args,clients){
   const all=response.data?.policies||[];validatePolicies(all);
   return {policies:cfg.chosen?all.filter(p=>label(p)===cfg.chosen):all,nextPageToken:response.data?.nextPageToken||null,scopeNote};
 }
+export function validateBaseline(rules=baseline){
+  if(!Array.isArray(rules)||!rules.length)throw new Error('Policy baseline must contain rules.');
+  const seen=new Set();
+  for(const r of rules){
+    if(!r||!AREAS.includes(r.area)||typeof r.type!=='string'||!r.type.startsWith('settings/'+r.area+'.')||
+       !/^[A-Za-z][A-Za-z0-9_]*$/.test(r.field||'')||typeof r.label!=='string'||!r.label.trim()||
+       typeof r.consoleQuery!=='string'||!r.consoleQuery.trim()||
+       !['boolean','string','number'].includes(typeof r.expected)||
+       (typeof r.expected==='number'&&!Number.isFinite(r.expected))||
+       (r.comparator!==undefined&&r.comparator!=='atLeast')||
+       (r.comparator==='atLeast'&&typeof r.expected!=='number'))
+      throw new Error('Invalid policy baseline rule: '+String(r?.type));
+    const key=r.type+'#'+r.field;
+    if(seen.has(key))throw new Error('Duplicate policy baseline rule: '+key);
+    seen.add(key);
+  }
+  return rules;
+}
+function differs(observed,rule){
+  if(observed===undefined)return false;
+  if(rule.comparator==='atLeast')return typeof observed!=='number'||!Number.isFinite(observed)||observed<rule.expected;
+  return observed!==rule.expected;
+}
 export function evaluateBaseline(policies,{complete=true,chosen=null}={}){
+  validateBaseline();
   validatePolicies(policies);
   const matches=baseline.filter(r=>!chosen||r.area===chosen);
   return matches.map(rule=>{
@@ -42,10 +66,10 @@ export function evaluateBaseline(policies,{complete=true,chosen=null}={}){
     const observations=relevant.map(p=>({name:p.name,policyQuery:p.policyQuery||null,policyType:p.type||null,value:p.setting?.value?.[rule.field]}));
     // Missing/unknown values and incomplete pagination must not become green.
     const unknown=observations.length===0||observations.some(o=>o.value===undefined);
-    const mismatch=observations.some(o=>o.value!==undefined&&o.value!==rule.expected);
-    return {setting:rule.label,policySetting:rule.type,field:rule.field,expected:rule.expected,
-      status:!complete||unknown?'not_readable':mismatch?'needs_attention':'ok',
-      reason:!complete?'Some pages were not available; cannot conclude.':unknown?'No explicit readable policy value was returned; inherited/default state is not proven.':mismatch?'One or more explicit policies differ from this editable baseline.':'All observed explicit policy entries match the baseline; inherited state and per-domain effectiveness are not verified.',
+    const mismatch=observations.some(o=>differs(o.value,rule));
+    return {setting:rule.label,policySetting:rule.type,field:rule.field,expected:rule.expected,...(rule.comparator?{comparator:rule.comparator}:{}),
+      status:mismatch?'needs_attention':!complete||unknown?'not_readable':'ok',
+      reason:mismatch?'One or more observed explicit policies differ from the owner-editable baseline, even if other pages or inherited settings are unavailable.':!complete?'Some pages were not available; cannot conclude.':unknown?'No explicit readable policy value was returned; inherited/default state is not proven.':'All observed explicit policy entries match the baseline; inherited state and per-domain effectiveness are not verified.',
       observations,console:guide(rule)};
   });
 }
@@ -67,7 +91,7 @@ export const handlers={
      seen.add(v.nextPageToken);token=v.nextPageToken;
    }
    const results=evaluateBaseline(policies,{complete,chosen:cfg.chosen});
-   return ok({domain:args.domain.toLowerCase(),customerWide:true,complete,policiesRead:policies.length,results,scopeNote,
+   return ok({domain:args.domain.toLowerCase(),customerWide:true,complete,policiesRead:policies.length,baselineRules:baseline.length,areasWithRules:[...new Set(baseline.map(r=>r.area))],results,scopeNote,
       summary:{needsAttention:results.filter(r=>r.status==='needs_attention').length,notReadable:results.filter(r=>r.status==='not_readable').length,matchingExplicitPolicies:results.filter(r=>r.status==='ok').length}});
  }
 };
