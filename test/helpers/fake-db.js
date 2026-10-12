@@ -160,6 +160,7 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       const row=[...state.rtcPasses.values()].find(x=>x.token_hash===hash&&!x.revoked_at&&x.expires_at>at());
       return row?{...row}:null;
     },
+    async rtcPassFailureCode(token){if(typeof token!=='string'||!/^rtc_pass_[A-Za-z0-9_-]{43}$/.test(token))return 'permission';const hash=crypto.createHash('sha256').update(token).digest('hex');const row=[...state.rtcPasses.values()].find(x=>x.token_hash===hash);return !row?'permission':row.revoked_at?'pass_revoked':row.expires_at<=at()?'pass_expired':'permission';},
     async revokeRtcPass(id){const row=state.rtcPasses.get(id);if(!row||row.revoked_at)return 0;row.revoked_at=at();return 1;},
     async listRtcPasses(){return [...state.rtcPasses.values()].map(({token_hash,...rest})=>({...rest,connection_id:rest.id,kind:'pass'}));},
     async chargeRtcPass(id,limit){const key=id+':'+Math.floor(clock()/60000);const n=state.rtcLimits.get(key)||0;if(n>=limit)return false;state.rtcLimits.set(key,n+1);return true;},

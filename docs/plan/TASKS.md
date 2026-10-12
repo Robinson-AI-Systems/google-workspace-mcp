@@ -1003,3 +1003,21 @@ standalone MCP. Unit tests cover authorization, no-token/connector-token
 refusal, read-only write refusal and revocation. Remaining owner-approved
 non-production real D-4 direct/relay/Sandbox testing and full RTC conformance
 are required and tracked in Hub `docs/pr-cards/D-4.md`, not assumed passed.
+
+
+### RTC checkpoint #34 — shared conformance integration
+
+CI checks out a reviewed exact Hub commit for the complete upstream
+`packages/conformance` Vitest suite, runs its real HTTP reference
+server/runner and reports required skips as **NOT VERIFIED**. The
+Google Workspace HTTP/pass/result and real PostgreSQL proofs also
+run in the same CI job. Implemented lifecycle-specific
+`pass_expired`/`pass_revoked` errors, accurate unknown-tool 404,
+and full-result retrieval with optional pages.
+
+Do **not** interpret upstream reference conformance as live Google
+Workspace conformance. D-4 requires a deployed RTC service, approved
+scratch passes, actual direct/relay/Vercel Sandbox calls and revocation;
+two-instance pass rate-limit is separately tested against throwaway
+Postgres. Full service-level conformance remains IN_PROGRESS until its
+remaining integration probes genuinely pass.

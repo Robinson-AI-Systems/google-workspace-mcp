@@ -14,8 +14,10 @@ describe('RTC result handles',()=>{
    expect(info.handle).toMatch(/^rtc_result_/);
    expect(info.bytes).toBeGreaterThan(INLINE_BYTES);
    expect((await fake.getRtcResult(info.handle,'connection-2'))).toBeNull();
-   const page=await readStoredResult({handle:info.handle},'connection-1',fake.getRtcResult);
+   const page=await readStoredResult({handle:info.handle,page:1},'connection-1',fake.getRtcResult);
    expect(JSON.parse(page.content[0].text).next).toBe(2);
+   const full=await readStoredResult({handle:info.handle},'connection-1',fake.getRtcResult);
+   expect(JSON.parse(full.content[0].text).payload.length).toBeGreaterThan(INLINE_BYTES);
    expect((await readStoredResult({handle:info.handle},'connection-2',fake.getRtcResult)).isError).toBe(true);
  });
  it('does not change small legacy MCP responses',async()=>{

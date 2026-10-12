@@ -2,7 +2,7 @@
 // Existing legacy MCP tool names remain untouched; HTTPS uses workspace_ aliases.
 import { registry } from '../src/tools/index.js';
 import { RTC_AREAS,allowedTool,listedTools,toolMetadata,isWrite } from '../src/rtc/catalog.js';
-import { initSchema,getRtcPass,chargeRtcPass,getAllowedDomains } from '../src/db.js';
+import { initSchema,getRtcPass,rtcPassFailureCode,chargeRtcPass,getAllowedDomains } from '../src/db.js';
 import { onceSuccessful } from '../src/once.js';
 import { buildHostedApiClients } from '../src/auth/google-auth-hosted.js';
 import { readStoredResult } from '../src/rtc/results.js';
@@ -23,7 +23,15 @@ function reply(res,status,data,retryAfter){
  if(retryAfter)res.setHeader('Retry-After',String(retryAfter));
  return res.status(status).json(data);
 }
-const success=(res,result,mode='test')=>reply(res,200,{ok:true,result,mode});
+const success=(res,result,mode='test')=>{
+ const data={ok:true,result,mode};
+ if(result&&typeof result==='object'&&typeof result.handle==='string'){
+   data.handle=result.handle;
+   data.count=result.count;
+   data.summary=result.summary;
+ }
+ return reply(res,200,data);
+};
 const fail=(res,status,code,what,todo='',retryAfter)=>reply(res,status,{ok:false,error:{what,cause:'',todo,technical:'',code}},retryAfter);
 function decodeMcp(result){
  if(result?.isError){
@@ -75,7 +83,7 @@ export default async function handler(req,res){
  const authorization=req.headers.authorization||'';
  const token=authorization.startsWith('Bearer ')?authorization.slice(7):'';
  const pass=await getRtcPass(token);
- if(!pass)return fail(res,401,'permission','Valid non-production RTC pass required.');
+ if(!pass)return fail(res,401,await rtcPassFailureCode(token),'Valid non-production RTC pass required.');
  if(!await chargeRtcPass(pass.id,pass.rate_limit_per_minute))return fail(res,429,'rate_limited','Pass call limit reached.','Retry after this minute.',60);
  if(req.method==='GET'&&door==='whoami')return success(res,{connection:pass.id,profile:pass.profile,areas:pass.areas,listing:pass.listing,mode:pass.mode,allow_writes:pass.allow_writes});
  if(req.method==='GET'&&door==='tools'){
@@ -101,10 +109,11 @@ export default async function handler(req,res){
    return result?.error?fail(res,403,result.error.code,result.error.what):success(res,result);
   }
   const internal=toInternal(name);
-  if(!internal||!allowedTool(internal,pass))return fail(res,403,'outside_scope','Tool is outside the pass permissions.');
+  if(!internal)return fail(res,404,'not_found','Unknown RTC tool.');
+  if(isWrite(internal)&&!pass.allow_writes)return fail(res,403,'refused_by_guard','This pass is read only.');
+  if(!allowedTool(internal,pass))return fail(res,403,'outside_scope','Tool is outside the pass permissions.');
   if(req.method==='GET')return success(res,expose(registry.tools.find(t=>t.name===internal)));
   if(req.method!=='POST')return fail(res,405,'invalid_args','Tool invocation requires POST.');
-  if(isWrite(internal)&&!pass.allow_writes)return fail(res,403,'refused_by_guard','This pass is read only.');
   if(Buffer.byteLength(JSON.stringify(req.body||{}))>65536)return fail(res,413,'invalid_args','Arguments too large.');
   const result=decodeMcp(await registry.handlers[internal](aliasArgs(internal,req.body||{}),await clientsFor(pass)));
   const serialized=JSON.stringify(result);
