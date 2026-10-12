@@ -1,3 +1,4 @@
+import { summarizeGoogleResult } from './summary.js';
 // RTC 1 result shaping: no silent data loss, short-lived connection-isolated retrieval.
 import crypto from 'node:crypto';
 import { storeRtcResult, getRtcResult } from '../db.js';
@@ -40,13 +41,20 @@ export async function shapeReadResult(output,args,connection,store=storeRtcResul
  let data;try{data=JSON.parse(raw)}catch{data=raw}
  if(args?.fields)data=projectFields(data,args.fields);
  const full=typeof data==='string'?data:JSON.stringify(data);
- if(Buffer.byteLength(full,'utf8')<=INLINE_BYTES)return args?.fields?ok(data):output;
+ const bytes=Buffer.byteLength(full,'utf8');
+ const compactData=args?.detail==='full'||args?.fields?data:summarizeGoogleResult(args?.toolName,data);
+ if(bytes<=INLINE_BYTES){
+   return args?.fields||args?.detail!=='full'&&compactData!==data?ok(compactData):output;
+ }
  if(!connection)return errorResult(new Error('Result too large with no connection owner.'));
  const handle='rtc_result_'+crypto.randomBytes(24).toString('base64url');
- const bytes=Buffer.byteLength(full,'utf8');
  await store({handle,connection,payload:{data,bytes}});
- return ok({handle,bytes,count:resultCount(data),summary:'Stored for 24 hours for this connection; call workspace_get_result.',preview:full.slice(0,768)});
+ const summary=compactData===data?'Stored for 24 hours for this connection; call workspace_get_result.':'Compact object summary, with full result available for 24 hours.';
+ return ok({handle,bytes,count:resultCount(data),summary,
+   ...(compactData!==data?{data:compactData}:{}),
+   preview:compactData===data?full.slice(0,768):undefined});
 }
+
 export async function readStoredResult({handle,page=null,fields}={},connection,read=getRtcResult){
  if(typeof handle!=='string'||!/^rtc_result_[a-zA-Z0-9_-]{32}$/.test(handle))return errorResult(new Error('invalid_args: invalid handle'));
  const saved=await read(handle,connection);
@@ -69,7 +77,7 @@ export function applyResultRules(registry){
   const original=registry.handlers[tool.name];
   registry.handlers[tool.name]=async(args={},clients)=>{
    const {fields,detail,...input}=args;
-   try{return await shapeReadResult(await original(input,clients),{fields,detail},clients?.connection);}
+   try{return await shapeReadResult(await original(input,clients),{fields,detail,toolName:tool.name},clients?.connection);}
    catch(e){return errorResult(e);}
   };
   return {...tool,inputSchema:{...tool.inputSchema,properties:props}};
