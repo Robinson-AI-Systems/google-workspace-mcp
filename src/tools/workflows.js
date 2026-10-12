@@ -263,7 +263,8 @@ export const handlers = {
     try {
       const alertRes = await alertcenter.alerts.list({ pageSize: 10 });
       alerts = alertRes.data.alerts || [];
-      alertsReadable = true;
+      // A first page with more alerts is not full security coverage.
+      alertsReadable = !alertRes.data.nextPageToken;
     } catch {
       // Unreadable alerts are not evidence that there are no alerts.
     }
