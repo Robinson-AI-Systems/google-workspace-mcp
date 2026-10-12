@@ -57,6 +57,30 @@ export const tools = [
   }
 ];
 
+// Bounded owner security readback. Missing provider evidence stays incomplete;
+// repeated page tokens or a provider error cannot turn into a successful scan.
+export const MAX_SECURITY_USER_PAGES=5;
+export const MAX_SECURITY_ALERT_PAGES=5;
+export async function boundedRead(fetchPage,field,maxPages){
+  const items=[],seen=new Set();let token,pages=0,complete=false,reason='page_limit';
+  for(let i=0;i<maxPages;i++){
+    let response;
+    try { response=await fetchPage(token); }
+    catch(e){
+      if(!pages)throw e;
+      reason='later_page_unavailable';break;
+    }
+    const values=response?.data?.[field]??[];
+    if(!Array.isArray(values))throw new Error('Google returned an invalid '+field+' page.');
+    items.push(...values);pages++;
+    const next=response?.data?.nextPageToken;
+    if(!next){complete=true;reason=null;break;}
+    if(typeof next!=='string'||seen.has(next)){reason='invalid_or_repeated_page_token';break;}
+    seen.add(next);token=next;
+  }
+  return {items,pages,complete,reason};
+}
+
 /** The primary email address for a user key that may be an address, alias or ID. */
 const mailboxOf = async (admin, userKey) => String((await admin.users.get({ userKey, fields: 'primaryEmail' })).data.primaryEmail || '').trim().toLowerCase(); // always the primary address: an alias or ID is not a valid delegation subject
 
@@ -253,31 +277,44 @@ export const handlers = {
   },
 
   workflow_security_snapshot: async (_args, { admin, alertcenter }) => {
-    const users = await admin.users.list({ customer: 'my_customer', maxResults: 500, fields: 'nextPageToken,users(primaryEmail,isEnrolledIn2Sv,isEnforcedIn2Sv,isAdmin,suspended)' });
-    const allUsers = users.data.users || [];
+    // Preserve existing fields while actually walking bounded directory pages.
+    // A truncated or unreadable later page cannot certify a healthy tenant.
+    const userScan = await boundedRead(
+      token => admin.users.list({ customer: 'my_customer', maxResults: 500,
+        fields: 'nextPageToken,users(primaryEmail,isEnrolledIn2Sv,isEnforcedIn2Sv,isAdmin,suspended)',
+        ...(token ? { pageToken: token } : {}) }),
+      'users', MAX_SECURITY_USER_PAGES
+    );
+    const allUsers = userScan.items;
     const without2sv = allUsers.filter(u => !u.isEnrolledIn2Sv && !u.suspended).map(u => u.primaryEmail);
     const admins = allUsers.filter(u => u.isAdmin).map(u => u.primaryEmail);
 
-    let alerts = [];
-    let alertsReadable = false;
+    let alertScan = {items:[],complete:false,pages:0,reason:'alert_center_unavailable'};
     try {
-      const alertRes = await alertcenter.alerts.list({ pageSize: 10 });
-      alerts = alertRes.data.alerts || [];
-      // A first page with more alerts is not full security coverage.
-      alertsReadable = !alertRes.data.nextPageToken;
+      alertScan = await boundedRead(
+        token => alertcenter.alerts.list({pageSize:10,...(token ? {pageToken:token}:{})}),
+        'alerts', MAX_SECURITY_ALERT_PAGES
+      );
     } catch {
-      // Unreadable alerts are not evidence that there are no alerts.
+      // Edition/scope failures do not mean there are zero security alerts.
     }
 
     return ok({
-      // Pagination and Alert Center permission are surfaced to owner consumers;
-      // the first 500 users and unreadable alerts cannot certify a green report.
-      complete: !users.data.nextPageToken,
-      alertsReadable,
+      // totalUsers has historically meant observed users, not Google's full
+      // directory size; retain it for callers and explain any incomplete scan.
       totalUsers: allUsers.length,
+      usersScanned: allUsers.length,
+      complete: userScan.complete,
+      alertsReadable: alertScan.complete,
       usersWithout2StepVerification: without2sv,
       superAdmins: admins,
-      recentAlerts: alerts.map(a => ({ type: a.type, createTime: a.createTime, source: a.source }))
+      recentAlerts: alertScan.items.map(a => ({ type: a.type, createTime: a.createTime, source: a.source })),
+      coverage: {
+        userPagesRead:userScan.pages,alertPagesRead:alertScan.pages,
+        userDirectoryComplete:userScan.complete,alertCenterComplete:alertScan.complete,
+        ...(userScan.reason?{userLimit:userScan.reason}:{}),
+        ...(alertScan.reason?{alertLimit:alertScan.reason}:{})
+      }
     });
   }
 };
