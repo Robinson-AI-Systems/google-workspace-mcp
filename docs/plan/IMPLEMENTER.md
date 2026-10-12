@@ -1,5 +1,8 @@
 # Implementer guide: prompts, PR template, checklists
 
+**Owner's later standing workflow (2026-10-12) supersedes the old one-card stop instruction below:** sessions complete five substantial PRs and hand off; the initial #30–#35 session completes six. No docs-only PRs; no placeholder functionality; every incomplete external dependency remains tracked. See plan README.
+
+
 ## Prompt to paste into the implementing model (Sonnet 5.5, medium effort)
 
 Replace `<CARD>` with the card ID, for example `P0-3`.
