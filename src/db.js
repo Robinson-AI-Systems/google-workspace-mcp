@@ -542,6 +542,8 @@ export async function getRtcResult(handle,connection){
 export async function createRtcPass({googleAccount,areas=null,rateLimit=120,hours=24,forHub=false}){
  const account=normalizeEmail(googleAccount);
  if(!account)throw new Error('Missing connected account.');
+ const allowlist=String(process.env.RTC_TEST_ACCOUNT_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
+ if(!allowlist.includes(account))throw new Error('Account is not authorized for RTC non-production TEST passes. Configure RTC_TEST_ACCOUNT_EMAILS with the approved scratch mailbox.');
  const limit=Number(rateLimit),ttl=Number(hours);
  if(!Number.isInteger(limit)||limit<1||limit>600)throw new Error('Rate limit must be 1–600 per minute.');
  if(!Number.isInteger(ttl)||ttl<1||ttl>(forHub?365*24:30*24))throw new Error('Pass duration exceeds the allowed range.');
