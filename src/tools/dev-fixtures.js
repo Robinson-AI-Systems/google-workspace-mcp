@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { defineWrite } from './write.js';
 import { ok } from './util.js';
 import { allowedTool } from '../rtc/catalog.js';
+import {createGmailFixtures,gmailReadback,inspectGmailCleanup,trashGmailFixtures,confirmGmailCleaned} from './dev-gmail.js';
 import { validateCalendarRequest, requireTestCalendar, createCalendarFixture, calendarReadback,inspectCalendarCleanup,deleteRecordedCalendarFixture,confirmCalendarGone } from './dev-calendar.js';
 import { startDevRun, reserveDevStep, recordDevObject, markDevStepRecorded, getDevRun, listDevRuns, markDevObjectCleaned } from '../db.js';
 
@@ -26,8 +27,9 @@ function owner(clients) {
   return {actingAs:clients.actingAs.toLowerCase(),connection:clients.connection};
 }
 export function validateFixtureRequest(args={}) {
-  if(!['files','calendar'].includes(args.scenario))throw Error('Choose files or calendar fixture scenario.');
+  if(!['files','calendar','gmail'].includes(args.scenario))throw Error('Choose files, calendar or gmail fixture scenario.');
  if(args.scenario==='calendar')validateCalendarRequest(args);
+ if(args.scenario==='gmail'&&(args.folder!==undefined||args.calendarId!==undefined||args.startAt!==undefined))throw Error('Gmail only targets the signed-in mailbox.');
   if(args.folder!==undefined&&(!/^[a-zA-Z0-9_-]{8,180}$/.test(args.folder)))throw Error('folder must be an existing Drive folder ID.');
   if(args.runId!==undefined&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(args.runId))
     throw Error('runId must be a UUID assigned to this same account and connection.');
@@ -119,6 +121,7 @@ export async function createTaggedDriveFixtures(args,clients){
 async function readTagged(args,clients,details) {
   const identity=owner(clients);
   if(args?.scenario==='calendar')return calendarReadback(clients,identity,details?.runId);
+  if(args?.scenario==='gmail')return gmailReadback(clients,identity,details?.runId);
   requireDriveArea(clients);
   const run=await getDevRun({runId:details?.runId,...identity});
   if(!run)return {verified:false};
@@ -136,7 +139,7 @@ const built=defineWrite({
   name:'workspace_dev_create_fixtures',
   description:'Create three tagged example Drive items for a development run, recorded by exact ID. Never shares anything.',
   inputSchema:{type:'object',properties:{
-    scenario:{type:'string',enum:['files','calendar']},
+    scenario:{type:'string',enum:['files','calendar','gmail']},
     folder:{type:'string',description:'Optional existing folder owned by the acting mailbox.'},
     runId:{type:'string',description:'Stable UUID: reuse exactly this ID after an uncertain provider result; NEVER create a new run for recovery.'},
     calendarId:{type:'string',description:'For calendar scenario: a separately owned TEST calendar, never primary.'},
@@ -144,6 +147,11 @@ const built=defineWrite({
   },required:['scenario']},
   plan:async(args,clients)=>{
     validateFixtureRequest(args);owner(clients);
+    if(args.scenario==='gmail'){
+      const need=['gmail_list_labels','gmail_create_label','gmail_get_label','gmail_list_messages','gmail_get_message','gmail_trash_message','gmail_delete_label'];
+      if(need.some(name=>!allowedTool(name,clients.rtcPolicy)))throw Error('Gmail area is not authorized for all fixture operations.');
+      return {summary:'Insert two self-addressed mailbox-local messages (never send) under a unique RTC label; recover by exact ID only. Run ID '+(args.runId||'will be generated'),target:clients.actingAs};
+    }
     if(args.scenario==='calendar'){
       if(!allowedTool('calendar_get_event',clients.rtcPolicy)||!allowedTool('calendar_create_event',clients.rtcPolicy))throw Error('Calendar area not permitted.');
       await requireTestCalendar(clients,args.calendarId,owner(clients));
@@ -152,7 +160,7 @@ const built=defineWrite({
     requireDriveArea(clients);await checkParent(clients,args.folder);
     return {summary:'Create or reconcile exactly one set of tagged test files without duplicating uncertain provider writes; runId '+(args.runId||'will be generated')+'. Create a tagged sample folder, Doc and Sheet under the acting mailbox, with each ID recorded for precise cleanup.',target:args.folder||clients.actingAs};
   },
-  apply:async(args,clients)=>ok(args.scenario==='calendar'?await createCalendarFixture(args,clients,owner(clients)):await createTaggedDriveFixtures(args,clients)),
+  apply:async(args,clients)=>ok(args.scenario==='calendar'?await createCalendarFixture(args,clients,owner(clients)):args.scenario==='gmail'?await createGmailFixtures(args,clients,owner(clients)):await createTaggedDriveFixtures(args,clients)),
   readAfter:readTagged,
   verify:(_args,_before,after)=>after?.verified===true
 });
@@ -169,7 +177,7 @@ async function loadRun(args,clients) {
  if(typeof args.runId!=='string'||!/^[0-9a-f]{8}-[0-9a-f-]{27,38}$/.test(args.runId))throw Error('Provide a valid recorded fixture run ID.');
  const run=await getDevRun({runId:args.runId,...identity});
  if(!run)throw Error('Fixture run does not exist for this account and connection.');
- if(!['files','calendar'].includes(run.scenario))throw Error('Unknown fixture scenario; refusing cleanup.');
+ if(!['files','calendar','gmail'].includes(run.scenario))throw Error('Unknown fixture scenario; refusing cleanup.');
  if(!Array.isArray(run.objects)||run.objects.length===0)throw Error('No recorded objects; refusing cleanup.');
  if(run.scenario==='files'&&run.objects.some(o=>!Object.hasOwn(KIND_MIME,o.kind)))throw Error('Unknown fixture kind; refusing cleanup.');
  if(!run.steps?.length||run.steps.some(s=>s.state!=='recorded'))
@@ -178,6 +186,11 @@ async function loadRun(args,clients) {
 }
 async function inspectCleanup(args,clients) {
  const {run,identity}=await loadRun(args,clients);
+ if(run.scenario==='gmail'){
+    const need=['gmail_get_message','gmail_trash_message','gmail_get_label','gmail_delete_label'];
+    if(need.some(name=>!allowedTool(name,clients.rtcPolicy)))throw Error('Gmail area is not authorized for cleanup.');
+    return inspectGmailCleanup(run,clients,identity);
+ }
  if(run.scenario==='calendar'){
     if(!allowedTool('calendar_get_event',clients.rtcPolicy)||!allowedTool('calendar_delete_event',clients.rtcPolicy))throw Error('Calendar area not permitted.');
     return inspectCalendarCleanup(run,clients,identity);
@@ -196,6 +209,7 @@ async function inspectCleanup(args,clients) {
 export async function trashRecordedFixtures(args,clients) {
  const inspected=await inspectCleanup(args,clients);
  if(inspected.run.scenario==='calendar')return deleteRecordedCalendarFixture(inspected.run,clients,inspected.identity);
+ if(inspected.run.scenario==='gmail')return trashGmailFixtures(inspected.run,clients,inspected.identity);
  const {run,identity,objects}=inspected;
  const completed=[],failures=[];
  for(const obj of objects) {
@@ -227,13 +241,14 @@ const cleanupBuilt=defineWrite({
  inputSchema:{type:'object',properties:{runId:{type:'string',description:'Run ID from workspace_dev_create_fixtures.'}},required:['runId']},
  plan:async(args,clients)=>{
    const checked=await inspectCleanup(args,clients);
-   return {target:checked.run.id,summary:checked.run.scenario==='calendar'?'Delete the one exactly recorded TEST calendar event after owner/tag verification (no guest notifications).':'Trash exactly '+checked.proof.length+' recorded and verified RTC fixture files (no permanent deletion).',
+   return {target:checked.run.id,summary:checked.run.scenario==='calendar'?'Delete the one exactly recorded TEST calendar event after owner/tag verification (no guest notifications).':checked.run.scenario==='gmail'?'Trash exactly two recorded Gmail TEST messages and delete only the recorded RTC label.':'Trash exactly '+checked.proof.length+' recorded and verified RTC fixture files (no permanent deletion).',
      readBefore:async()=>({runId:checked.run.id,objects:checked.proof})};
  },
  apply:async(args,clients)=>ok(await trashRecordedFixtures(args,clients)),
  readAfter:async(args,clients)=>{
    const {run,identity}=await loadRun(args,clients);
    if(run.scenario==='calendar')return confirmCalendarGone(run,clients,identity);
+   if(run.scenario==='gmail')return confirmGmailCleaned(run,clients,identity);
    const objects=run.objects;
    const checks=[];
    for(const obj of objects){
