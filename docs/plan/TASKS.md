@@ -921,7 +921,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-4 | IN_PROGRESS | #32–#34 | Pass-only RTC manifest/HTTPS routes and DB limit implemented; deployed boundary, two-instance and D-4 acceptance not verified |
 | P8-5 | IN_PROGRESS | #34 | Pinned Hub reference conformance and local gateway tests in CI; full conformance against this service and real D-4 routes still unverified |
 | P8-6 | WAITING | | Needs `robinson-mcp-core` (robinsons-toolkit-hub K-3) |
-| P8-7 | IN_PROGRESS | #40, #42–#43 | Integration checker, tagged Drive/Docs/Sheets fixtures, exact-ID run ledger and confirmed Drive-trash-only cleanup implemented; Gmail/calendar scenarios and real acceptance remain |
+| P8-7 | IN_PROGRESS | #40, #42–#43, #46 | Integration checker, tagged Drive/Docs/Sheets fixtures, exact-ID run ledger and confirmed Drive-trash-only cleanup implemented; Gmail/calendar scenarios and real acceptance remain |
 | P8-8 | IN_PROGRESS | #36 | Owner overview, structured guidance and audience tags implemented; full settings coverage and actual read-only live evidence pending |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
@@ -1132,3 +1132,8 @@ Guarded two Gmail untrash variants, eight Sheets editing operations, and domain 
 ### P5-1 assembled-registry exception reconciliation — PR #45
 
 Initial semantic CI correctly surfaced eight Reports read operations, Chrome policy resolution and four special workflow wrappers. The explicit read inventory now records the read-only provider operations rather than trusting verb names. Staff/business precheck wrappers are constructed only over an already proven `defineWrite` handler, while branding and optional-email digest now pass through the shared guard with additional confirmation and honest read-back limitations. Neither a hand-written `dryRun` property nor unreviewed legacy wrappers satisfy CI.
+
+
+### P8-7 crash-safe durable reservations — PR #46
+
+One immutable `dev_run_steps` reservation per run/kind is committed **before** external Drive creation. A retry with the same run UUID never issues a second provider create for a pending or already-recorded slot; it reconciles only exact Drive `rtc_run` + `rtc_kind` metadata and verified account ownership. `workspace_dev_list_runs` lists only the same connection's run IDs and pending counts for recovery after a crashed response. A zero/ambiguous provider tag search fails closed; cleanup refuses unresolved reservations rather than deleting a parent with unknown children. The existing provider-object ledger is idempotently repairable after DB recording failure. Additive schema, fake and real Postgres concurrency/replay/ownership tests accompany implementation. This does NOT claim automatic recovery when Google's listing is incomplete; manual provider-ID evidence and separate permissioned cleanup remain required.

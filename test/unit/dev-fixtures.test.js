@@ -16,11 +16,12 @@ function setup(){
  let n=0;const byId=new Map();
  when('drive.files.create').resolves(({requestBody})=>{
    const id='fixture'+(++n);
-   const value={id,...requestBody,trashed:false};
+   const value={id,...requestBody,owners:[{emailAddress:clients.actingAs}],trashed:false};
    byId.set(id,value);
    return {data:value};
  });
  when('drive.files.get').resolves(({fileId})=>({data:byId.get(fileId)||{}}));
+ when('drive.files.list').resolves(({q})=>({data:{files:[...byId.values()].filter(f=>f.appProperties?.rtc_run&&q.includes(f.appProperties.rtc_run)&&q.includes(f.appProperties.rtc_kind))}}));
  return {clients,calls,when,byId};
 }
 describe('P8-7 Drive test fixtures',()=>{
@@ -135,5 +136,48 @@ describe('TEST-only fixture security boundary',()=>{
      await expect(handlers.workspace_dev_cleanup({runId:'4ab45b6c-013e-4f66-8c4a-ccccccccccca',confirm:true},clients)).rejects.toThrow(/non-production TEST/);
    }
    expect(calls).toEqual([]);
+ });
+});
+
+describe('P8-7 reservation-first crash and replay safety',()=>{
+ it('replay with the same runId never creates a fourth Google object',async()=>{
+   const s=setup(),runId='42222222-3333-4444-8555-666666666666';
+   const first=body(await handlers.workspace_dev_create_fixtures({scenario:'files',runId},s.clients));
+   expect(first.confirmed).toBe(true);
+   const second=body(await handlers.workspace_dev_create_fixtures({scenario:'files',runId},s.clients));
+   expect(second.confirmed).toBe(true);
+   expect(s.calls.filter(c=>c.path==='drive.files.create')).toHaveLength(3);
+   expect((await state.db.getDevRun({runId,actingAs:s.clients.actingAs,connection:s.clients.connection})).steps.every(st=>st.state==='recorded')).toBe(true);
+ });
+ it('recovers a Google-created object when database recording failed without duplicating it',async()=>{
+   const s=setup(),runId='42222222-3333-4444-8555-777777777777';
+   const actual=state.db.recordDevObject.bind(state.db);
+   let failed=false;
+   state.db.recordDevObject=async input=>{if(!failed){failed=true;throw Error('lost database commit')}return actual(input);};
+   await expect(handlers.workspace_dev_create_fixtures({scenario:'files',runId},s.clients)).rejects.toThrow(/incomplete or uncertain/);
+   expect(s.calls.filter(c=>c.path==='drive.files.create')).toHaveLength(1);
+   state.db.recordDevObject=actual;
+   const recovered=body(await handlers.workspace_dev_create_fixtures({scenario:'files',runId},s.clients));
+   expect(recovered.confirmed).toBe(true);
+   expect(s.calls.filter(c=>c.path==='drive.files.create')).toHaveLength(3);
+   expect(s.calls.some(c=>c.path==='drive.files.list'&&c.args[0].q.includes(runId))).toBe(true);
+ });
+ it('a provider timeout leaves a pending step and prevents blind retry or cleanup',async()=>{
+   const s=setup(),runId='42222222-3333-4444-8555-888888888888';
+   s.when('drive.files.create').rejects(Error('timeout after dispatch'));
+   await expect(handlers.workspace_dev_create_fixtures({scenario:'files',runId},s.clients)).rejects.toThrow(/uncertain/);
+   const calls=s.calls.filter(c=>c.path==='drive.files.create').length;
+   await expect(handlers.workspace_dev_create_fixtures({scenario:'files',runId},s.clients)).rejects.toThrow(/pending/);
+   expect(s.calls.filter(c=>c.path==='drive.files.create')).toHaveLength(calls);
+   await expect(handlers.workspace_dev_cleanup({runId,confirm:true},s.clients)).rejects.toThrow();
+   const runs=body(await handlers.workspace_dev_list_runs({},s.clients)).runs;
+   expect(runs.find(r=>r.id===runId).pending).toBe(1);
+ });
+ it('foreign connection or changed root cannot hijack a reserved run',async()=>{
+   const s=setup(),runId='42222222-3333-4444-8555-999999999999';
+   await handlers.workspace_dev_create_fixtures({scenario:'files',runId},s.clients);
+   await expect(handlers.workspace_dev_create_fixtures({scenario:'files',runId},{...s.clients,connection:'other'})).rejects.toThrow(/different account/);
+   await expect(handlers.workspace_dev_create_fixtures({scenario:'files',runId,folder:'folder-other'},s.clients)).rejects.toThrow();
+   expect(body(await handlers.workspace_dev_list_runs({}, {...s.clients,connection:'other'})).runs).toEqual([]);
  });
 });
