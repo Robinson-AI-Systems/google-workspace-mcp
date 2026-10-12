@@ -4,6 +4,7 @@ vi.mock('../../src/db.js',()=>db);
 import {prepareUndo,handlers} from '../../src/tools/undo.js';
 import {toolMetadata} from '../../src/rtc/catalog.js';
 import {tools} from '../../src/tools/undo.js';
+import {SETTING_KEYS} from '../../src/tools/group-settings.js';
 const before={name:'old',labelListVisibility:'labelShow',messageListVisibility:'show'};
 const after={...before,name:'new'};
 let entry,c,state,writes,logs;
@@ -67,4 +68,55 @@ describe('safe log undo',()=>{
  it('advertises mutation and mandatory confirmation accurately',()=>{
   expect(toolMetadata(tools[0])).toMatchObject({writes:true,destructive:true,annotations:{readOnlyHint:false,destructiveHint:true}});
  });
+ it.each([
+  ['drive_rename_file','file_123','drive','files',{id:'file_123',name:'old',mimeType:'text/plain'},{id:'file_123',name:'new',mimeType:'text/plain'},{name:'old'}],
+  ['drive_star_file','file_123','drive','files',{id:'file_123',name:'doc',starred:false},{id:'file_123',name:'doc',starred:true},{starred:false}],
+  ['drive_unstar_file','file_123','drive','files',{id:'file_123',name:'doc',starred:true},{id:'file_123',name:'doc',starred:false},{starred:true}],
+  ['calendar_update_calendar','primary','calendar','calendars',{id:'cal@example.test',summary:'old',timeZone:'America/Denver'},{id:'cal@example.test',summary:'new',timeZone:'America/Denver',description:'new desc',location:'room'},{summary:'old',timeZone:'America/Denver',description:'',location:''}]
+ ])('restores %s without changing file contents, sharing or guests',async(tool,target,service,resource,b,a,body)=>{
+  entry={...entry,tool,target,before:b,after:a};state=a;let request;
+  c[service]={[resource]:{get:async()=>({data:state}),[service==='drive'?'update':'patch']:async r=>{request=r;state={...state,...r.requestBody};}}};
+  expect(unpack(await handlers.workspace_undo_change({changeId:1,confirm:true},c)).confirmed).toBe(true);
+  expect(request.requestBody).toEqual(body);
+  expect(request[service==='drive'?'fileId':'calendarId']).toBe(b.id);
+  entry={...entry,id:2,tool:'workspace_undo_change',before:logs[0].before,after:logs[0].after};
+  expect(unpack(await handlers.workspace_undo_change({changeId:2,confirm:true},c)).confirmed).toBe(true);
+ });
+ it('refuses inconsistent provider IDs and lossy calendar text',async()=>{
+  entry={...entry,tool:'drive_rename_file',target:'file_123',before:{id:'wrong',name:'old',mimeType:'text/plain'},after:{id:'file_123',name:'new',mimeType:'text/plain'}};
+  await expect(prepareUndo({changeId:1},c)).rejects.toThrow('IDs');
+  entry={...entry,tool:'calendar_update_calendar',before:{id:'cal',summary:'old',timeZone:'UTC',description:'[2001 characters not stored]'},after:{id:'cal',summary:'new',timeZone:'UTC'}};
+  await expect(prepareUndo({changeId:1},c)).rejects.toThrow('shortened');
+ });
+
+ it.each([['admin_add_user_alias','users',[],['alias@example.test']],['admin_delete_user_alias','users',['alias@example.test'],[]],['admin_add_group_alias','groups',[],['alias@example.test']],['admin_delete_group_alias','groups',['alias@example.test'],[]]])('restores exact alias for %s and undo-of-undo',async(tool,resource,b,a)=>{
+  entry={...entry,tool,target:'alias@example.test on parent@example.test',before:{aliases:b},after:{aliases:a}};state={aliases:a};
+  c.allowedDomains=['example.test'];let request;
+  c.admin={[resource]:{aliases:{list:async()=>({data:{aliases:state.aliases.map(alias=>({alias}))}}),
+   insert:async r=>{request=r;state={aliases:[...state.aliases,r.requestBody.alias]};},delete:async r=>{request=r;state={aliases:state.aliases.filter(x=>x!==r.alias)};}}}};
+  expect(unpack(await handlers.workspace_undo_change({changeId:1,confirm:true},c)).confirmed).toBe(true);expect(state.aliases).toEqual(b);
+  expect(request[resource==='users'?'userKey':'groupKey']).toBe('parent@example.test');
+  entry={...entry,id:2,tool:'workspace_undo_change',before:logs[0].before,after:logs[0].after};
+  expect(unpack(await handlers.workspace_undo_change({changeId:2,confirm:true},c)).confirmed).toBe(true);expect(state.aliases).toEqual(a);
+ });
+ it('refuses foreign alias domains, multi-alias changes and capped lists before writes',async()=>{
+  entry={...entry,tool:'admin_add_user_alias',target:'alias@foreign.test on parent@example.test',before:{aliases:[]},after:{aliases:['alias@foreign.test']}};c.allowedDomains=['example.test'];
+  await expect(prepareUndo({changeId:1},c)).rejects.toThrow('outside_scope');
+  entry.target='alias@example.test on parent@example.test';entry.after={aliases:['alias@example.test','other@example.test']};
+  await expect(prepareUndo({changeId:1},c)).rejects.toThrow('single reversible');
+  entry.before={aliases:Array.from({length:100},(_,i)=>'a'+i+'@example.test')};
+  await expect(prepareUndo({changeId:1},c)).rejects.toThrow('untruncated');
+ });
+ it('restores complete reviewed group settings, refusing missing fields and outside domains',async()=>{
+  const b=Object.fromEntries(SETTING_KEYS.map(k=>[k,'old'])),a={...b,whoCanJoin:'ANYONE_CAN_JOIN'};
+  entry={...entry,tool:'admin_update_group_settings',target:'group@example.test',before:b,after:a};state=a;c.allowedDomains=['example.test'];
+  c.groupssettings={groups:{get:async()=>({data:state}),patch:async r=>{expect(Object.keys(r.requestBody).sort()).toEqual([...SETTING_KEYS].sort());state=r.requestBody;}}};
+  expect(unpack(await handlers.workspace_undo_change({changeId:1,confirm:true},c)).confirmed).toBe(true);expect(state).toEqual(b);
+  entry={...entry,id:2,tool:'workspace_undo_change',before:logs[0].before,after:logs[0].after};
+  expect(unpack(await handlers.workspace_undo_change({changeId:2,confirm:true},c)).confirmed).toBe(true);
+  entry={...entry,tool:'admin_update_group_settings',before:{whoCanJoin:'old'},after:a};
+  await expect(prepareUndo({changeId:1},c)).rejects.toThrow('complete');
+  c.allowedDomains=['other.test'];await expect(prepareUndo({changeId:1},c)).rejects.toThrow('outside_scope');
+ });
+
 });

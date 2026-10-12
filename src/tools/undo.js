@@ -3,6 +3,7 @@ import {isDeepStrictEqual} from 'node:util';
 import {getOwnedChange} from '../db.js';
 import {defineWrite} from './write.js';
 import {allowedTool} from '../rtc/catalog.js';
+import {outsideDomains} from './domain-guard.js';
 import {UNDO_ADAPTERS} from './undo-adapters.js';
 
 export async function prepareUndo(args,clients,lookup=getOwnedChange){
@@ -22,7 +23,11 @@ export async function prepareUndo(args,clients,lookup=getOwnedChange){
    throw Error('outside_scope: This connection cannot undo that kind of change.');
  const target=repeated?entry.before.target:adapter.target(entry);
  if(!adapter.validateTarget(target)||repeated&&(entry.after?.kind!==kind||entry.after?.target!==target))throw Error('Undo has no unambiguous saved target.');
+ if(adapter.domains&&Array.isArray(clients.allowedDomains)&&outsideDomains(adapter.domains(target),clients.allowedDomains).length)
+   throw Error('outside_scope: Undo target is outside the allowed business domains. Switch to the business connection; undo does not widen domains.');
  const before=adapter.state(repeated?entry.before.state:entry.before),after=adapter.state(repeated?entry.after.state:entry.after);
+ if((before.id!==undefined&&before.id!==target)||(after.id!==undefined&&after.id!==target))throw Error('Saved provider IDs do not match the undo target.');
+ if(adapter.validateTransition&&!adapter.validateTransition(before,after,target))throw Error('Saved change does not describe a single reversible operation.');
  const current=adapter.state(await adapter.read(clients,target));
  if(!isDeepStrictEqual(current,after))throw Error('The item has changed since this entry. Nothing was changed; review the current state instead of overwriting newer edits.');
  return {kind,target,before,after,adapter,current};
