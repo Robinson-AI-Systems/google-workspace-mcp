@@ -50,19 +50,20 @@ contains the design decisions and the cheaper model should execute them.
 
 ## How to run the plan
 
-1. Open `IMPLEMENTER.md`, copy the prompt at the top into a new session with
-   the implementing model, and name the task card ID you want done (for
-   example `P0-3`).
-2. The model works one card per PR, in the order in TASKS.md, unless a card
-   says it may be grouped. Chris prefers fewer, larger PRs over many small
-   ones; cards marked "may group with" can share a PR.
-3. Every PR: branch `ai/<model>/<card-id>-<slug>`, tests pass locally,
-   `npm run check` passes, the PR body follows the template in IMPLEMENTER.md,
-   and TASKS.md's status ledger is updated in the same PR.
-4. Chris merges. Vercel deploys `main` automatically. Preview deployments of
-   branches share the production database, so every schema change must be
-   additive and must tolerate old and new code running at once (see
-   ARCHITECTURE.md, "Database rules").
+1. Read `IMPLEMENTER.md`, `TASKS.md`, the latest merged handoff and
+   `docs/HOSTING-COST-POLICY.md`; inspect live `main` and open reviews.
+2. Each new chat completes five **substantial implementation PRs**, ending
+   at the next multiple of five. Group related cards when useful; no
+   documentation-only PRs and no placeholder functionality.
+3. Every PR targets `main`. Update the status ledger in that same PR,
+   run `npm run check` and tests, and require GitHub Actions **`test`
+   and `release-policy`** at the exact PR head plus existing review gates.
+   Authorized agents can merge when green and safe without bypass.
+4. Vercel Production tracks only `live`; the scheduled, checked, at-most-
+   daily `main → live` workflow is the only automatic promotion.
+   Automatic previews are disabled: never wait for a preview, manually
+   deploy or promote to `live`. Schema changes must remain additive to
+   support rolling releases (see `ARCHITECTURE.md`, "Database rules").
 5. At the end of each phase, run the phase-gate review with the review model
    using the review prompt in IMPLEMENTER.md. Fix what it finds before
    starting the next phase.
