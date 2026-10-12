@@ -146,6 +146,7 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     async createRtcPass({googleAccount,areas=null,rateLimit=120,hours=24,forHub=false}){
       const account=norm(googleAccount),limit=Number(rateLimit),ttl=Number(hours);
       if(!state.accounts.has(account))throw new Error('Unknown connected account.');
+      if(!String(process.env.RTC_TEST_ACCOUNT_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).includes(account))throw new Error('Scratch account not authorized.');
       if(!Number.isInteger(limit)||limit<1||limit>600)throw new Error('Invalid rate limit.');
       if(!Number.isInteger(ttl)||ttl<1||ttl>(forHub?365*24:30*24))throw new Error('Invalid duration.');
       const token='rtc_pass_'+crypto.randomBytes(32).toString('base64url');
