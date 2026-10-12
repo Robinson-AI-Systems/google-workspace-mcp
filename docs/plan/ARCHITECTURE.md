@@ -261,3 +261,8 @@ The Cloud Identity Policy API provides explicitly set customer/OU/group rules, *
 ### Policy baseline expansion and precedence of evidence (P7-2 follow-up)
 
 The editable `src/data/policy-baseline.json` contains 21 vetted, uniquely identified checks across seven supported settings areas. A validated typed comparison supports equality and numeric minimums (password length). A confirmed explicit mismatch is never suppressed by missing entries, unknown inherited values or a paginated provider result: it remains `needs_attention`; observations absent or incomplete without a contradiction remain `not_readable`. Matches apply to the **observed explicit policy only** and never certify effective OU/group/domain settings. This is a review baseline, not a mandatory universal configuration; the owner may deliberately revise rules before any audit results are treated as recommendations.
+
+
+### P8-1 typed read compatibility — nine operations after planned #55
+
+The registry advertises schemas for four existing JSON workflows and five newer read-only report surfaces (`reports_activity`, `postmaster_list_domains`, `postmaster_list_traffic_stats`, `identity_list_policies`, `identity_policy_audit`). A schema-checked successful full JSON response receives `structuredContent`; malformed returned success becomes an error. Large results retain the same connection-owned expiring handle with typed handle validation, not duplicated sensitive payloads. Explicit user `fields` projection remains partial JSON without pretending to fulfill the full-object schema; existing typed consumers must request full keys when requiring typed results. This is unit/service-side proof only, not live deployed Google/Hub acceptance.

@@ -2,6 +2,13 @@
 
 Changes to the codebase, not claims of successful live Google or Hub provider acceptance. Release version is package metadata; only the separately scheduled checked `main → live` process can promote production.
 
+## Unreleased — post-2.0.0 source changes (October 12, 2026)
+
+- **P7-3 / #51:** one allowlisted, paginated read-only Reports API for additional application audit streams using existing granted permissions; live plan coverage not yet verified.
+- **P7-4 / #52:** Postmaster v1 verified-domain and delivery-metric reads, guarded per connection; added already approved `postmaster.readonly` OAuth scope. Existing connected accounts need explicit new consent and real provider proof.
+- **P7-2 / #53–#54:** guarded read-only Cloud Identity organization policy inventory, configurable 21-rule baseline, honest missing/inherited-status handling and preservation of observed risks despite incomplete pagination. Added previously approved read-only policy OAuth scope; **not** a per-domain effective policy certification.
+- **P8-1 / #55 (pending):** machine-readable schemas/validation for the five new read-only APIs, bounded result handles, accurate domain counts and partial field-projection behavior. Exact-head CI/merge and Hub acceptance separately required.
+
 ## 2.0.0 — 2026-10-12 (code milestone; release deployment not verified)
 
 - **P0 safety:** automated unit/disposable-Postgres testing, sign-in lockout, encrypted token storage alongside legacy tokens, streaming Drive upload, bounded remote uploads and developer setup instructions.

@@ -38,7 +38,8 @@ export const handlers={
    // The page can contain domains for more than one business. Filter rather
    // than returning an unrestricted provider-wide list to scoped connections.
    const allowed=clients.allowedDomains;
-   return ok({domains:Array.isArray(allowed)?items.filter(x=>allowed.includes(String(x.name||'').replace(/^domains\//,'').toLowerCase())):items,
+   const visible=Array.isArray(allowed)?items.filter(x=>allowed.includes(String(x.name||'').replace(/^domains\//,'').toLowerCase())):items;
+   return ok({domains:visible,count:visible.length,
      ...(response.data?.nextPageToken?{nextPageToken:response.data.nextPageToken}:{}),
      ...(Array.isArray(allowed)?{scopeFiltered:true}:{})});
  },
