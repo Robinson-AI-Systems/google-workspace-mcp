@@ -68,8 +68,8 @@ export default async function handler(req,res){
  const door=String(req.query?.door||'');
  const name=typeof req.query?.tool==='string'?req.query.tool:null;
  const handle=typeof req.query?.result==='string'?req.query.result:null;
- if(req.method==='GET'&&door==='contract')return success(res,manifest());
- if(req.method==='GET'&&door==='openapi')return success(res,openapi());
+ if(req.method==='GET'&&door==='contract')return reply(res,200,manifest());
+ if(req.method==='GET'&&door==='openapi')return reply(res,200,openapi());
  if(!['GET','POST'].includes(req.method))return fail(res,405,'invalid_args','Method is not supported.');
  await schemaReady();
  const authorization=req.headers.authorization||'';
