@@ -37,7 +37,7 @@ export default async function handler(req, res) {
     const accessToken = randomToken(32);
     const refreshToken = randomToken(32);
     // The Google account chosen on the login page travels with the token from here on.
-    await createAccessToken({ accessToken, refreshToken, clientId: body.client_id, googleAccount: record.google_account });
+    await createAccessToken({ accessToken, refreshToken, clientId: body.client_id, googleAccount: record.google_account, profile: record.profile, listing: record.listing, areas: record.areas });
     res.status(200).json({ access_token: accessToken, token_type: 'Bearer', expires_in: 3600 * 24 * 30, refresh_token: refreshToken });
     return;
   }
@@ -62,7 +62,7 @@ export default async function handler(req, res) {
     }
     const accessToken = randomToken(32);
     // Keep acting as whichever Google account the original login chose.
-    await createAccessToken({ accessToken, refreshToken: body.refresh_token, clientId: body.client_id, googleAccount: issued.google_account || null });
+    await createAccessToken({ accessToken, refreshToken: body.refresh_token, clientId: body.client_id, googleAccount: issued.google_account || null, profile: issued.profile, listing: issued.listing, areas: issued.areas });
     res.status(200).json({ access_token: accessToken, token_type: 'Bearer', expires_in: 3600 * 24 * 30 });
     return;
   }

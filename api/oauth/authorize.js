@@ -44,6 +44,10 @@ function renderLoginPage({ error, hidden, accounts, selected }) {
     <h1>Robinson Google Workspace MCP</h1>
     ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
     ${accountField}
+    <label for="profile">Permission level</label>
+    <select name="profile" id="profile"><option value="read_only">Read only</option><option value="everyday">Everyday</option><option value="full">Full</option></select>
+    <label for="listing">Tool listing</label>
+    <select name="listing" id="listing"><option value="compact">Compact</option><option value="catalog">All tools</option></select>
     <label for="passphrase">Admin passphrase</label>
     <input type="password" name="passphrase" id="passphrase" autofocus required>
     ${hiddenInputs}
@@ -119,8 +123,10 @@ export default async function handler(req, res) {
     return;
   }
 
+  const profile = ['read_only','everyday','full'].includes(params.profile) ? params.profile : 'read_only';
+  const listing = ['catalog','compact'].includes(params.listing) ? params.listing : 'compact';
   const code = randomToken(24);
-  await createAuthCode({ code, clientId: client_id, redirectUri: redirect_uri, codeChallenge: code_challenge, codeChallengeMethod: code_challenge_method, googleAccount: chosen });
+  await createAuthCode({ code, clientId: client_id, redirectUri: redirect_uri, codeChallenge: code_challenge, codeChallengeMethod: code_challenge_method, googleAccount: chosen, profile, listing });
 
   const redirectUrl = new URL(redirect_uri);
   redirectUrl.searchParams.set('code', code);

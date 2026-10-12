@@ -77,6 +77,17 @@ export async function initSchema() {
   // Same for the short-lived login codes: the account picked on the login
   // page rides along until the token is issued.
   await q`ALTER TABLE oauth_codes ADD COLUMN IF NOT EXISTS google_account TEXT`;
+  for (const table of ['oauth_codes','oauth_tokens']) {
+    if (table === 'oauth_codes') {
+      await q`ALTER TABLE oauth_codes ADD COLUMN IF NOT EXISTS profile TEXT NOT NULL DEFAULT 'full'`;
+      await q`ALTER TABLE oauth_codes ADD COLUMN IF NOT EXISTS listing TEXT NOT NULL DEFAULT 'catalog'`;
+      await q`ALTER TABLE oauth_codes ADD COLUMN IF NOT EXISTS areas TEXT[]`;
+    } else {
+      await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS profile TEXT NOT NULL DEFAULT 'full'`;
+      await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS listing TEXT NOT NULL DEFAULT 'catalog'`;
+      await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS areas TEXT[]`;
+    }
+  }
   // Every try at the passphrase page, so repeated wrong guesses from one
   // address can be locked out (see src/oauth/login-guard.js). Additive only.
   await q`
@@ -311,11 +322,11 @@ export async function getOAuthClient(clientId) {
 }
 
 // ---------- Connector OAuth: authorization codes (PKCE) ----------
-export async function createAuthCode({ code, clientId, redirectUri, codeChallenge, codeChallengeMethod, googleAccount, ttlSeconds = 600 }) {
+export async function createAuthCode({ code, clientId, redirectUri, codeChallenge, codeChallengeMethod, googleAccount, profile = 'full', listing = 'catalog', areas = null, ttlSeconds = 600 }) {
   const q = db();
   await q`
-    INSERT INTO oauth_codes (code, client_id, redirect_uri, code_challenge, code_challenge_method, google_account, expires_at)
-    VALUES (${code}, ${clientId}, ${redirectUri}, ${codeChallenge || null}, ${codeChallengeMethod || null}, ${googleAccount ? normalizeEmail(googleAccount) : null}, now() + (${ttlSeconds} || ' seconds')::interval)
+    INSERT INTO oauth_codes (code, client_id, redirect_uri, code_challenge, code_challenge_method, google_account, profile, listing, areas, expires_at)
+    VALUES (${code}, ${clientId}, ${redirectUri}, ${codeChallenge || null}, ${codeChallengeMethod || null}, ${googleAccount ? normalizeEmail(googleAccount) : null}, ${profile}, ${listing}, ${areas}, now() + (${ttlSeconds} || ' seconds')::interval)
   `;
 }
 
@@ -328,11 +339,11 @@ export async function consumeAuthCode(code) {
 }
 
 // ---------- Connector OAuth: access tokens ----------
-export async function createAccessToken({ accessToken, refreshToken, clientId, googleAccount, ttlSeconds = 3600 * 24 * 30 }) {
+export async function createAccessToken({ accessToken, refreshToken, clientId, googleAccount, profile = 'full', listing = 'catalog', areas = null, ttlSeconds = 3600 * 24 * 30 }) {
   const q = db();
   await q`
-    INSERT INTO oauth_tokens (access_token, refresh_token, client_id, google_account, expires_at)
-    VALUES (${accessToken}, ${refreshToken || null}, ${clientId}, ${googleAccount ? normalizeEmail(googleAccount) : null}, now() + (${ttlSeconds} || ' seconds')::interval)
+    INSERT INTO oauth_tokens (access_token, refresh_token, client_id, google_account, profile, listing, areas, expires_at)
+    VALUES (${accessToken}, ${refreshToken || null}, ${clientId}, ${googleAccount ? normalizeEmail(googleAccount) : null}, ${profile}, ${listing}, ${areas}, now() + (${ttlSeconds} || ' seconds')::interval)
   `;
 }
 
@@ -340,7 +351,7 @@ export async function createAccessToken({ accessToken, refreshToken, clientId, g
 export async function getTokenByRefreshToken(refreshToken) {
   const q = db();
   if (!refreshToken) return null;
-  const rows = await q`SELECT client_id, google_account FROM oauth_tokens WHERE refresh_token = ${refreshToken} AND revoked_at IS NULL ORDER BY created_at DESC LIMIT 1`;
+  const rows = await q`SELECT client_id, google_account, profile, listing, areas FROM oauth_tokens WHERE refresh_token = ${refreshToken} AND revoked_at IS NULL AND expires_at > now() ORDER BY created_at DESC LIMIT 1`;
   return rows[0] || null;
 }
 
