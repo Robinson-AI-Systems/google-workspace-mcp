@@ -57,7 +57,7 @@ export function manifest(){
  return {rtc:1,server:'google-workspace-mcp',prefix:'workspace_',version:'1.0.0',
   areas:RTC_AREAS,counts:{tools:metadata.length,writes:metadata.filter(t=>t.writes).length,money:0},
   profiles:['read_only','everyday','full'],listingModes:['catalog','compact'],modes:['test'],
-  devTools:false,conformance:{status:'pending_real_D4_acceptance'}};
+  devTools:true,conformance:{status:'pending_real_D4_acceptance'}};
 }
 export function openapi(){
  return {openapi:'3.1.0',info:{title:'Robinson Google Workspace RTC tools',version:'1.0.0'},servers:[{url:process.env.PUBLIC_BASE_URL||''}],

@@ -1,3 +1,4 @@
+import {passOptions} from '../../src/rtc/pass-options.js';
 // An in-memory stand-in for src/db.js, so unit tests can run the real login
 // page, tool and OAuth code without Postgres. It must behave like the real
 // module; test/contract/db-contract.js runs the SAME checks against both this
@@ -195,15 +196,15 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       const row = state.tokens.find((t) => t.access_token === accessToken);
       if (row && (!row.last_used_at || row.last_used_at.getTime() < clock() - 60 * 1000)) row.last_used_at = at();
     },
-    async createRtcPass({googleAccount,areas=null,rateLimit=120,hours=24,forHub=false}){
-      const account=norm(googleAccount),limit=Number(rateLimit),ttl=Number(hours);
+    async createRtcPass(options){
+      const {account,areas,limit,ttl,forHub,allowWrites,profile}=passOptions(options);
       if(!state.accounts.has(account))throw new Error('Unknown connected account.');
       if(!String(process.env.RTC_TEST_ACCOUNT_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).includes(account))throw new Error('Scratch account not authorized.');
       if(!Number.isInteger(limit)||limit<1||limit>600)throw new Error('Invalid rate limit.');
       if(!Number.isInteger(ttl)||ttl<1||ttl>(forHub?365*24:30*24))throw new Error('Invalid duration.');
       const token='rtc_pass_'+crypto.randomBytes(32).toString('base64url');
       const hash=crypto.createHash('sha256').update(token).digest('hex'),id='pass_'+hash.slice(0,20);
-      state.rtcPasses.set(id,{id,token_hash:hash,google_account:account,areas,profile:'read_only',listing:'compact',mode:'test',allow_writes:false,rate_limit_per_minute:limit,created_at:at(),expires_at:afterSeconds(ttl*3600),revoked_at:null});
+      state.rtcPasses.set(id,{id,token_hash:hash,google_account:account,areas,profile,listing:'compact',mode:'test',allow_writes:allowWrites,for_hub:forHub,rate_limit_per_minute:limit,created_at:at(),expires_at:afterSeconds(ttl*3600),revoked_at:null});
       return {token,id};
     },
     async getRtcPass(token){
