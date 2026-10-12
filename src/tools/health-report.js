@@ -51,7 +51,7 @@ export function scoreUsers(users, now = Date.now(), { partial = false } = {}) {
   return out;
 }
 
-export function scoreApps(appsByUser, skipped = 0) {
+export function scoreApps(appsByUser, skipped = 0, unreadable = 0) {
   const flagged = [];
   for (const [user, apps] of Object.entries(appsByUser)) {
     for (const app of apps || []) {
@@ -60,7 +60,9 @@ export function scoreApps(appsByUser, skipped = 0) {
     }
   }
   const note = skipped ? ` (only the first ${MAX_DEEP_CHECKS} people were checked; ${skipped} not checked)` : '';
-  if (!flagged.length) return item('Third-party app access', 'PASS', `No app has access beyond sign-in${note}.`);
+  if (!flagged.length) return item('Third-party app access', skipped || unreadable ? 'WARN' : 'PASS',
+    `No wide-scope app observed in the readable subset${note}${unreadable ? `; ${unreadable} account(s) could not be read` : ''}.`,
+    skipped || unreadable ? 'Review unchecked or inaccessible users before concluding app access is safe.' : null);
   const apps = [...new Set(flagged.map((f) => f.app))];
   const full = flagged.filter((f) => f.full);
   return item('Third-party app access', full.length ? 'FAIL' : 'WARN',
@@ -68,10 +70,12 @@ export function scoreApps(appsByUser, skipped = 0) {
     'Review them with admin_list_tokens; remove ones nobody needs with admin_delete_token, and restrict new ones (workspace_where_is_setting "marketplace allowlist").');
 }
 
-export function scoreForwarding(byUser, workspaceDomains, skipped = 0) {
+export function scoreForwarding(byUser, workspaceDomains, skipped = 0, unreadable = 0) {
   const on = Object.entries(byUser).filter(([, f]) => f?.enabled && f.emailAddress);
   const note = skipped ? ` (only the first ${MAX_DEEP_CHECKS} people were checked)` : '';
-  if (!on.length) return item('Automatic forwarding of mail', 'PASS', `No mailbox forwards its mail automatically${note}.`);
+  if (!on.length) return item('Automatic forwarding of mail', skipped || unreadable ? 'WARN' : 'PASS',
+    `No forwarding observed in the readable mailboxes${note}${unreadable ? `; ${unreadable} mailbox(es) could not be read` : ''}.`,
+    skipped || unreadable ? 'Review unchecked mailboxes before concluding forwarding is disabled.' : null);
   const outside = on.filter(([, f]) => !workspaceDomains.has(domainOfEmail(f.emailAddress)));
   return item('Automatic forwarding of mail', outside.length ? 'FAIL' : 'WARN',
     `${on.map(([u, f]) => `${u} -> ${f.emailAddress}`).join('; ')}${note}.`,
@@ -83,12 +87,14 @@ export function scoreGroups(settingsByGroup, notChecked = 0) {
   const open = Object.entries(settingsByGroup).filter(([, s]) => s?.whoCanPostMessage === 'ANYONE_CAN_POST');
   const external = Object.entries(settingsByGroup).filter(([, s]) => String(s?.allowExternalMembers) === 'true');
   const names = (rows) => list(rows.map(([g]) => g));
-  if (!open.length && !external.length) return item('Groups open to outsiders', 'PASS', `No group accepts posts from anyone or has outside members${tail}.`);
+  if (!open.length && !external.length) return item('Groups open to outsiders', notChecked ? 'WARN' : 'PASS',
+    `No externally open group observed in the checked subset${tail}.`,
+    notChecked ? 'Review the remaining groups before concluding outside access is disabled.' : null);
   return item('Groups open to outsiders', 'WARN', `${open.length ? `Anyone on the internet can post to: ${names(open)}. ` : ''}${external.length ? `Outside members allowed in: ${names(external)}.` : ''}${tail}`.trim(),
     'Fine for a public inbox like support@ (but expect spam). For anything else: admin_update_group_settings, set whoCanPostMessage to ALL_IN_DOMAIN_CAN_POST.');
 }
 
-export function scoreLicences(users, licenceHolders, now = Date.now()) {
+export function scoreLicences(users, licenceHolders, now = Date.now(), { partial = false } = {}) {
   const byEmail = new Map(users.map((u) => [String(u.primaryEmail).toLowerCase(), u]));
   const cutoff = now - STALE_DAYS * DAY;
   const wasted = [];
@@ -101,12 +107,18 @@ export function scoreLicences(users, licenceHolders, now = Date.now()) {
     if (u.suspended || !t || t < Date.parse('1971-01-01') || t < cutoff) wasted.push(u.primaryEmail);
   }
   return wasted.length ? item('Paid licences nobody is using', 'WARN', `${wasted.length} licences are held by suspended or inactive accounts: ${list(wasted)}.`, 'Remove the licence (licensing_remove_license) or the account, and ask Google to lower the seat count (Billing > Subscriptions).')
-    : item('Paid licences nobody is using', 'PASS', 'Every licence is held by an active account.');
+    : partial ? item('Paid licences nobody is using', 'WARN', 'No unused licence was found in the checked subset; directory or licence assignment pages remain unread.',
+      'Review the remaining users and licence assignment pages before concluding every seat is used.')
+      : item('Paid licences nobody is using', 'PASS', 'Every licence is held by an active account.');
 }
 
-export function scoreSharing(files) {
-  return files.length ? item('Drive files open to anyone with the link', 'WARN', `${files.length}${files.length >= 50 ? '+' : ''} files owned by or visible to this account: ${list(files.map((f) => f.name))}.`, 'Use workflow_audit_external_sharing for the full list; tighten with drive_remove_permission.')
-    : item('Drive files open to anyone with the link', 'PASS', 'None found for this account.');
+export function scoreSharing(files, { complete = true } = {}) {
+  return files.length ? item('Drive files open to anyone with the link', 'WARN',
+      `${files.length}${complete ? '' : '+'} files owned by or visible to this account: ${list(files.map(f=>f.name))}.${complete ? '' : ' More pages remain unread.'}`,
+      'Use workflow_audit_external_sharing for the full list; tighten with drive_remove_permission.')
+    : complete ? item('Drive files open to anyone with the link', 'PASS', 'None found in the completed visible-file scan.')
+      : item('Drive files open to anyone with the link', 'WARN', 'None found in the first page, but more visible files remain unread.',
+        'Continue paginating the Drive sharing audit before concluding the account has no public links.');
 }
 
 // ---------- collecting the facts ----------
@@ -146,6 +158,9 @@ export async function healthReport(scope, clients, { gmailFor = realGmailFor, de
   if (!users.length) return { scope: domain || 'all', summary: { pass: 0, warn: 1, fail: 0, info: 0 }, checks: [item('Users', 'WARN', 'Google returned no users for this scope.', 'Check the domain name, and that this account is an admin.')], report: 'No users found.' };
   if (partial) note.push(`Only the first ${MAX_USERS} users were read; run the report for one domain at a time to cover the rest.`);
   results.push(...scoreUsers(users, now, { partial }));
+  if (partial) results.push(item('Directory coverage', 'WARN',
+    `Only the first ${users.length} users were inspected; Google reported additional directory records.`,
+    'Run per-domain reports or paginate all users before concluding the Workspace is healthy.'));
 
   const active = users.filter((u) => !u.suspended && !u.archived);
   const deep = active.slice(0, MAX_DEEP_CHECKS);
@@ -156,7 +171,7 @@ export async function healthReport(scope, clients, { gmailFor = realGmailFor, de
     const readable = apps.filter(([, a]) => Array.isArray(a));
     const broken = apps.filter(([, a]) => !Array.isArray(a));
     if (broken.length === apps.length) throw new Error(broken[0][1].error);
-    const r = scoreApps(Object.fromEntries(readable), skipped);
+    const r = scoreApps(Object.fromEntries(readable), skipped, broken.length);
     if (broken.length) r.found += ` Could not read the apps of ${broken.length} ${broken.length === 1 ? 'person' : 'people'}: ${list(broken.map(([u]) => u), 3)}.`;
     results.push(r);
   } catch (err) { results.push(unavailable('Third-party app access', err)); }
@@ -167,7 +182,7 @@ export async function healthReport(scope, clients, { gmailFor = realGmailFor, de
     try {
       const rows = await inBatches(deep, 5, async (u) => { try { return [u.primaryEmail, (await gmailFor(u.primaryEmail).users.settings.getAutoForwarding({ userId: 'me' })).data]; } catch (err) { return [u.primaryEmail, { error: trouble(err) }]; } });
       const failed = rows.filter(([, f]) => f.error);
-      const r = scoreForwarding(Object.fromEntries(rows.filter(([, f]) => !f.error)), new Set(users.map((u) => domainOfEmail(u.primaryEmail)).filter(Boolean)), skipped);
+      const r = scoreForwarding(Object.fromEntries(rows.filter(([, f]) => !f.error)), new Set(users.map((u) => domainOfEmail(u.primaryEmail)).filter(Boolean)), skipped, failed.length);
       if (failed.length) r.found += ` Could not read ${failed.length} mailbox${failed.length === 1 ? '' : 'es'}: ${list(failed.map(([u]) => u), 3)} (${failed[0][1].error}).`;
       if (failed.length === rows.length) { r.status = 'WARN'; r.fix = 'Check that the Admin console delegation entry lists gmail.settings.basic.'; }
       results.push(r);
@@ -190,12 +205,12 @@ export async function healthReport(scope, clients, { gmailFor = realGmailFor, de
       pageToken = res.data.nextPageToken;
       if (!pageToken) break;
     }
-    results.push(scoreLicences(users, holders, now));
+    results.push(scoreLicences(users, holders, now, { partial: partial || Boolean(pageToken) }));
   } catch (err) { results.push(unavailable('Paid licences nobody is using', err)); }
 
   try {
-    const files = (await clients.drive.files.list({ q: "visibility='anyoneWithLink' and trashed=false", pageSize: 50, fields: 'files(id,name)', supportsAllDrives: true, includeItemsFromAllDrives: true })).data.files || [];
-    results.push(scoreSharing(files));
+    const response = (await clients.drive.files.list({ q: "visibility='anyoneWithLink' and trashed=false", pageSize: 50, fields: 'nextPageToken,files(id,name)', supportsAllDrives: true, includeItemsFromAllDrives: true })).data;
+    results.push(scoreSharing(response.files || [], { complete: !response.nextPageToken }));
   } catch (err) { results.push(unavailable('Drive files open to anyone with the link', err)); }
 
   const count = (s) => results.filter((c) => c.status === s).length;
