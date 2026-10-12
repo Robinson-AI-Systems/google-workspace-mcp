@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { defineWrite } from './write.js';
 import { ok } from './util.js';
 import { allowedTool } from '../rtc/catalog.js';
+import { validateCalendarRequest, createCalendarFixture, calendarReadback,inspectCalendarCleanup,deleteRecordedCalendarFixture,confirmCalendarGone } from './dev-calendar.js';
 import { startDevRun, reserveDevStep, recordDevObject, markDevStepRecorded, getDevRun, listDevRuns, markDevObjectCleaned } from '../db.js';
 
 const FOLDER='application/vnd.google-apps.folder';
@@ -22,15 +23,15 @@ function requireDriveArea(clients) {
 function owner(clients) {
   if(!EMAIL.test(clients?.actingAs||'')||!clients?.connection)throw Error('Fixture changes need an authenticated connection and acting mailbox.');
   requireDevMode(clients);
-  requireDriveArea(clients);
   return {actingAs:clients.actingAs.toLowerCase(),connection:clients.connection};
 }
 export function validateFixtureRequest(args={}) {
-  if(args.scenario!=='files')throw Error('Only the files fixture scenario is implemented; choose files.');
+  if(!['files','calendar'].includes(args.scenario))throw Error('Choose files or calendar fixture scenario.');
+ if(args.scenario==='calendar')validateCalendarRequest(args);
   if(args.folder!==undefined&&(!/^[a-zA-Z0-9_-]{8,180}$/.test(args.folder)))throw Error('folder must be an existing Drive folder ID.');
   if(args.runId!==undefined&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(args.runId))
     throw Error('runId must be a UUID assigned to this same account and connection.');
-  return {scenario:args.scenario,folder:args.folder||null,runId:args.runId||null};
+  return {scenario:args.scenario,folder:args.folder||null,calendarId:args.calendarId||null,runId:args.runId||null};
 }
 async function checkParent(clients,folder) {
   if(!folder)return;
@@ -68,6 +69,7 @@ async function reconcileStep({id,kind,parent,identity,clients}){
 }
 export async function createTaggedDriveFixtures(args,clients){
  const request=validateFixtureRequest(args),id=request.runId||crypto.randomUUID(),identity=owner(clients);
+ requireDriveArea(clients);
  await checkParent(clients,request.folder);
  await startDevRun({id,...identity,scenario:request.scenario,folder:request.folder});
  const prior=await getDevRun({runId:id,...identity});
@@ -114,8 +116,10 @@ export async function createTaggedDriveFixtures(args,clients){
  return {runId:id,objects,scenario:request.scenario,actingAs:identity.actingAs};
 }
 
-async function readTagged(_args,clients,details) {
+async function readTagged(args,clients,details) {
   const identity=owner(clients);
+  if(args?.scenario==='calendar')return calendarReadback(clients,identity,details?.runId);
+  requireDriveArea(clients);
   const run=await getDevRun({runId:details?.runId,...identity});
   if(!run)return {verified:false};
   const objects=[];
@@ -132,15 +136,22 @@ const built=defineWrite({
   name:'workspace_dev_create_fixtures',
   description:'Create three tagged example Drive items for a development run, recorded by exact ID. Never shares anything.',
   inputSchema:{type:'object',properties:{
-    scenario:{type:'string',enum:['files']},
+    scenario:{type:'string',enum:['files','calendar']},
     folder:{type:'string',description:'Optional existing folder owned by the acting mailbox.'},
-    runId:{type:'string',description:'Stable UUID: reuse exactly this ID after an uncertain provider result; NEVER create a new run for recovery.'}
+    runId:{type:'string',description:'Stable UUID: reuse exactly this ID after an uncertain provider result; NEVER create a new run for recovery.'},
+    calendarId:{type:'string',description:'For calendar scenario: a separately owned TEST calendar, never primary.'},
+    startAt:{type:'string',description:'Optional future ISO event start time, with timezone.'}
   },required:['scenario']},
   plan:async(args,clients)=>{
-    validateFixtureRequest(args);owner(clients);await checkParent(clients,args.folder);
+    validateFixtureRequest(args);owner(clients);
+    if(args.scenario==='calendar'){
+      if(!allowedTool('calendar_get_event',clients.rtcPolicy)||!allowedTool('calendar_create_event',clients.rtcPolicy))throw Error('Calendar area not permitted.');
+      return {summary:'Create one tagged non-production event on an owned TEST calendar without invitees; run ID '+(args.runId||'will be generated'),target:args.calendarId};
+    }
+    requireDriveArea(clients);await checkParent(clients,args.folder);
     return {summary:'Create or reconcile exactly one set of tagged test files without duplicating uncertain provider writes; runId '+(args.runId||'will be generated')+'. Create a tagged sample folder, Doc and Sheet under the acting mailbox, with each ID recorded for precise cleanup.',target:args.folder||clients.actingAs};
   },
-  apply:async(args,clients)=>ok(await createTaggedDriveFixtures(args,clients)),
+  apply:async(args,clients)=>ok(args.scenario==='calendar'?await createCalendarFixture(args,clients,owner(clients)):await createTaggedDriveFixtures(args,clients)),
   readAfter:readTagged,
   verify:(_args,_before,after)=>after?.verified===true
 });
@@ -157,15 +168,20 @@ async function loadRun(args,clients) {
  if(typeof args.runId!=='string'||!/^[0-9a-f]{8}-[0-9a-f-]{27,38}$/.test(args.runId))throw Error('Provide a valid recorded fixture run ID.');
  const run=await getDevRun({runId:args.runId,...identity});
  if(!run)throw Error('Fixture run does not exist for this account and connection.');
- if(run.scenario!=='files')throw Error('Only Drive file fixture cleanup is implemented.');
+ if(!['files','calendar'].includes(run.scenario))throw Error('Unknown fixture scenario; refusing cleanup.');
  if(!Array.isArray(run.objects)||run.objects.length===0)throw Error('No recorded objects; refusing cleanup.');
- if(run.objects.some(o=>!Object.hasOwn(KIND_MIME,o.kind)))throw Error('Unknown fixture kind; refusing cleanup.');
+ if(run.scenario==='files'&&run.objects.some(o=>!Object.hasOwn(KIND_MIME,o.kind)))throw Error('Unknown fixture kind; refusing cleanup.');
  if(!run.steps?.length||run.steps.some(s=>s.state!=='recorded'))
    throw Error('Missing or uncertain fixture reservations; reconcile every provider ID before cleanup.');
  return {run,identity};
 }
 async function inspectCleanup(args,clients) {
  const {run,identity}=await loadRun(args,clients);
+ if(run.scenario==='calendar'){
+    if(!allowedTool('calendar_get_event',clients.rtcPolicy)||!allowedTool('calendar_delete_event',clients.rtcPolicy))throw Error('Calendar area not permitted.');
+    return inspectCalendarCleanup(run,clients,identity);
+ }
+ requireDriveArea(clients);
  const objects=[...run.objects].sort((a,b)=>cleanOrder[a.kind]-cleanOrder[b.kind]);
  const proof=[];
  for(const obj of objects) {
@@ -177,7 +193,9 @@ async function inspectCleanup(args,clients) {
  return {run,identity,objects,proof};
 }
 export async function trashRecordedFixtures(args,clients) {
- const {run,identity,objects}=await inspectCleanup(args,clients);
+ const inspected=await inspectCleanup(args,clients);
+ if(inspected.run.scenario==='calendar')return deleteRecordedCalendarFixture(inspected.run,clients,inspected.identity);
+ const {run,identity,objects}=inspected;
  const completed=[],failures=[];
  for(const obj of objects) {
    try {
@@ -214,6 +232,7 @@ const cleanupBuilt=defineWrite({
  apply:async(args,clients)=>ok(await trashRecordedFixtures(args,clients)),
  readAfter:async(args,clients)=>{
    const {run,identity}=await loadRun(args,clients);
+   if(run.scenario==='calendar')return confirmCalendarGone(run,clients,identity);
    const objects=run.objects;
    const checks=[];
    for(const obj of objects){

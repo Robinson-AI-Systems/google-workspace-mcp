@@ -34,15 +34,15 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     connectionId: (accessToken) => crypto.createHash('sha256').update(String(accessToken), 'utf8').digest('hex').slice(0, 8),
     async initSchema() {},
 
-    async startDevRun({id,actingAs,connection,scenario,folder=null}){
+    async startDevRun({id,actingAs,connection,scenario,folder=null,calendarId=null}){
       if(!id||!actingAs||!connection)throw Error('Authenticated unique run required.');
       const old=state.devRuns.get(id);
       if(old) {
-       if(old.acting_as!==norm(actingAs)||old.connection!==connection||old.scenario!==scenario||old.root_folder!==folder)
+       if(old.acting_as!==norm(actingAs)||old.connection!==connection||old.scenario!==scenario||old.root_folder!==folder||old.calendar_id!==calendarId)
          throw Error('Run ID belongs to a different account, connection, scenario or root folder.');
        return {created:false,runId:id};
       }
-      state.devRuns.set(id,{id,acting_as:norm(actingAs),connection,scenario,root_folder:folder,created_at:at(),objects:[],steps:[]});
+      state.devRuns.set(id,{id,acting_as:norm(actingAs),connection,scenario,root_folder:folder,calendar_id:calendarId,created_at:at(),objects:[],steps:[]});
       return {created:true,runId:id};
     },
     async reserveDevStep({runId,actingAs,connection,kind}){
