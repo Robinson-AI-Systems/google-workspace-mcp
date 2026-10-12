@@ -915,7 +915,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P7-6 | SUPERSEDED | | Delivered by P8-2 (read_only profile) — Phase 8 added 2026-10-10 |
 | P7-7 | SUPERSEDED | | Delivered by P8-2 (profiles, area filters, compact listing) — Phase 8 added 2026-10-10 |
 | P7-8 | TODO | | Bulk and cross-domain operations; design note first |
-| P8-1 | IN_PROGRESS | #31, #34, #41 | Common Gmail/Drive/Calendar/Admin/Sheets summaries and full-result handles added; workflow structured output and further proof remain |
+| P8-1 | IN_PROGRESS | #31, #34, #41, #44 | Common summaries, handles, and typed structuredContent/outputSchema for four JSON read workflows; full workflow and external acceptance pending |
 | P8-2 | IN_PROGRESS | #30 | Profile persistence, read-only dispatch, compact meta-tools and filters implemented; full service conformance / profile acceptance remains pending |
 | P8-3 | IN_PROGRESS | #32 | Owner-protected hashed, short-lived, scratch-account TEST read-only passes, revocation, limit guards; live issuance acceptance unverified |
 | P8-4 | IN_PROGRESS | #32–#34 | Pass-only RTC manifest/HTTPS routes and DB limit implemented; deployed boundary, two-instance and D-4 acceptance not verified |
@@ -1112,3 +1112,13 @@ Additive `dev_runs` and `dev_run_objects` tables record each created Drive/Docs/
 ### RTC P8-7 precise cleanup — PR #43
 
 `workspace_dev_cleanup` previews exact recorded run objects and requires `confirm:true`; it rechecks run tag, MIME and acting account ownership before moving only recorded objects into Drive trash. Children are processed before the parent; each is marked cleaned only after provider read-back, and a failure aborts before touching the parent. No permanent deletion or untagged/same-name matches. Provider integration and Gmail/calendar fixture acceptance remain unverified, with owner-independent production/spending restrictions unchanged.
+
+
+### RTC P8-1 typed read workflow results — PR #44
+
+Four stable JSON read workflows now advertise concrete `outputSchema` and return validated `structuredContent` derived from their final bounded MCP result. Oversized results return a connection-owned handle, not a duplicated full payload; malformed successful workflow results fail closed instead of producing misleading typed readiness. This is service-side tests only, not full hub acceptance. More workflows (including writes and text/Markdown reports) still need explicit object-specific schemas and evidence; P8-1 stays IN_PROGRESS. Scheduled-only production promotion, TEST-only passes, owner/spending gates and existing scopes are unchanged.
+
+
+### P8-7 security follow-up co-delivered with PR #44
+
+A review found the fixture write handlers required full Workspace/Drive area permissions but had not required a trusted `rtcPolicy.mode='test'`. Both creation and cleanup now fail closed before provider reads or writes for OAuth/full-profile connections without a server-trusted TEST mode, and for LIVE/production modes. This does not grant any TEST write credential or waive owner approval: current D-4 passes remain read-only, and live fixture execution remains prohibited/unverified. The existing read-only integration checker is not falsely certified as complete RTC developer mode.

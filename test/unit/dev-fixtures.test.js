@@ -12,7 +12,7 @@ const body=r=>JSON.parse(r.content[0].text);
 beforeEach(()=>{state.db=createFakeDb();});
 function setup(){
  const {clients,calls,when}=makeFakeClients();
- clients.connection='owner-A';
+ clients.connection='owner-A';clients.rtcPolicy={mode:'test',profile:'full',areas:['workspace','files']};
  let n=0;const byId=new Map();
  when('drive.files.create').resolves(({requestBody})=>{
    const id='fixture'+(++n);
@@ -66,7 +66,7 @@ describe('P8-7 Drive test fixtures',()=>{
 
 describe('P8-7 precise confirmed cleanup',()=>{
  function ready(){
-   const {clients,calls,when}=makeFakeClients();clients.connection='owner-A';
+   const {clients,calls,when}=makeFakeClients();clients.connection='owner-A';clients.rtcPolicy={mode:'test',profile:'full',areas:['workspace','files']};
    const byId=new Map();
    const run='4ab45b6c-013e-4f66-8c4a-ccccccccccca';
    const objects=[['folder','f-root','application/vnd.google-apps.folder'],['doc','d-1','application/vnd.google-apps.document'],['sheet','s-1','application/vnd.google-apps.spreadsheet']];
@@ -123,5 +123,17 @@ describe('P8-7 precise confirmed cleanup',()=>{
    const t=tools.find(t=>t.name==='workspace_dev_cleanup');
    expect(t.inputSchema.properties.confirm.type).toBe('boolean');
    expect(allowedTool(t.name,{profile:'read_only'})).toBe(false);
+ });
+});
+
+describe('TEST-only fixture security boundary',()=>{
+ it('refuses all provider reads and writes outside server-trusted TEST mode',async()=>{
+   const {clients,calls}=makeFakeClients();clients.connection='owner-A';
+   for(const rtcPolicy of [undefined,{mode:'live',profile:'full'},{mode:'production',profile:'full'},{profile:'full'}]){
+     clients.rtcPolicy=rtcPolicy;
+     await expect(handlers.workspace_dev_create_fixtures({scenario:'files',dryRun:true},clients)).rejects.toThrow(/non-production TEST/);
+     await expect(handlers.workspace_dev_cleanup({runId:'4ab45b6c-013e-4f66-8c4a-ccccccccccca',confirm:true},clients)).rejects.toThrow(/non-production TEST/);
+   }
+   expect(calls).toEqual([]);
  });
 });
