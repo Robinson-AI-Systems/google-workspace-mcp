@@ -123,7 +123,7 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
  }
  const statuses=checks.map(x=>x.status);
  return {actingAs:clients.actingAs,checkedAt:new Date().toISOString(),
-   status:statuses.includes('missing')?'missing':statuses.includes('not_readable')?'not_readable':'ready',
+   status:checks.length===0?'not_readable':statuses.includes('missing')?'missing':statuses.includes('not_readable')?'not_readable':'ready',
    checks,changesMade:false,
    note:'Only observed reads are marked ready. Domain-wide delegation requires independent Admin console verification.'};
 }

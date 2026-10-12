@@ -70,6 +70,12 @@ describe('RTC app development integration inspection',()=>{
    const wrong=await inspectGoogleIntegration({apis:[],serviceAccountClientId:'123456789012345678901'},c,{describe:()=>({configured:false})});
    expect(wrong.checks[0].status).toBe('missing');
  });
+ it('never declares readiness when the caller requested zero observable checks',async()=>{
+   const {c}=clients();
+   const r=await inspectGoogleIntegration({apis:[]},c);
+   expect(r.checks).toHaveLength(0);
+   expect(r.status).toBe('not_readable');
+ });
  it('rejects malformed specs, unknown APIs and cross-account requests',async()=>{
    expect(()=>validateIntegrationSpec({apis:['writeEverything']})).toThrow('Unsupported API');
    expect(()=>validateIntegrationSpec({apis:Array(15).fill('drive')})).toThrow();
