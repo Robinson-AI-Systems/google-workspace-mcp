@@ -20,6 +20,8 @@ function unpack(output){
 
 const SOURCES={
  identity:{tool:'workspace_whoami',args:()=>({})},
+ organization:{tool:'admin_get_customer_info',customerWide:true,args:()=>({})},
+ domains:{tool:'admin_list_domains',customerWide:true,args:()=>({})},
  security:{tool:'workflow_security_snapshot',customerWide:true,args:()=>({})},
  health:{tool:'workflow_health_report',args:clients=>({scope:domainOf(clients?.actingAs)})},
  email:{tool:'workflow_email_health',args:clients=>({domain:domainOf(clients?.actingAs)})},
@@ -43,6 +45,17 @@ function evaluateSummary(data,source){
 }
 
 function evaluate(section,data,clients){
+ if(section==='organization'){
+  return object(data)&&typeof data.id==='string'&&data.id.length>0&&typeof data.customerDomain==='string'
+   ?{status:'ok',reason:'Directory customer identity only; subscription and policy entitlement are separate.'}
+   :{status:'not_readable',reason:'Google did not return a complete customer identity.'};
+ }
+ if(section==='domains'){
+  if(!Array.isArray(data)||!data.length||data.some(d=>!object(d)||typeof d.domainName!=='string'||typeof d.verified!=='boolean'))
+   return {status:'not_readable',reason:'A complete domain verification list was not returned.'};
+  return data.some(d=>!d.verified)?{status:'needs_attention',reason:'At least one registered domain is unverified.'}:
+   {status:'ok',reason:'Directory domain verification only; DNS, aliases and mail authentication are separate.'};
+ }
  if(section==='identity'){
    if(!object(data)||typeof data.matches!=='boolean'||typeof data.gmailReports!=='string')
      return {status:'not_readable',reason:'Google did not confirm the mailbox identity.'};
@@ -75,10 +88,29 @@ function evaluate(section,data,clients){
    if(data.totalLicensesAssigned!==data.plans.reduce((n,p)=>n+(nonnegative(p?.assigned)?p.assigned:0),0)||
       data.plans.some(p=>!nonnegative(p?.assigned)))
      return {status:'not_readable',reason:'The license totals do not reconcile.'};
+   if(data.truncated===true)return {status:'not_readable',reason:'Unread license assignment pages remain; these counts are a partial observation.'};
    // Assigned licenses are observable; purchased seats and billing invoices are not.
    return {status:'ok',reason:'Assigned licenses only; paid-seat and invoice details require Admin console.'};
  }
  return {status:'not_readable',reason:'No reviewed evaluator for this check.'};
+}
+
+// Project exact observed health checks into owner-facing coverage sections.
+// A passing subset never proves an unobserved or incomplete source is healthy.
+function healthSection(health,names,{directory=false}={}){
+ const checks=health?.data?.checks;
+ if(!Array.isArray(checks))return {status:'not_readable',reason:health?.reason||'The health source returned no structured evidence.'};
+ const selected=names.map(name=>checks.find(c=>c.check===name));
+ if(selected.some(c=>!object(c)||!['PASS','WARN','FAIL','INFO'].includes(c.status)))
+  return {status:'not_readable',reason:'One or more required owner checks were not observed.'};
+ if(selected.some(c=>c.status==='FAIL'))return {status:'needs_attention',checks:selected};
+ if(selected.some(c=>/could not check|not checked|unavailable/i.test(String(c.found||''))))
+  return {status:'not_readable',reason:'The provider check could not be completed.',checks:selected};
+ if(selected.some(c=>c.status==='WARN'))return {status:'needs_attention',checks:selected};
+ if(directory&&checks.some(c=>c.check==='Directory coverage'&&c.status!=='PASS'))
+  return {status:'not_readable',reason:'The Directory scan is incomplete.',checks:selected};
+ if(selected.some(c=>c.status==='INFO'))return {status:'not_readable',reason:'Informational evidence does not establish the setting.',checks:selected};
+ return {status:'ok',checks:selected};
 }
 
 export async function buildAdminOverview(clients,call,{crossDomain=false}={}){
@@ -95,6 +127,19 @@ export async function buildAdminOverview(clients,call,{crossDomain=false}={}){
    items[section]={...evaluate(section,data,clients),data};
   }catch(e){items[section]={status:'not_readable',reason:errors(e)};}
  }));
+ items.users_admins=healthSection(items.health,['2-Step Verification','Super admins'],{directory:true});
+ items.two_step_enforcement=healthSection(items.health,['2-Step enforcement'],{directory:true});
+ items.third_party_app_access=healthSection(items.health,['Third-party app access'],{directory:true});
+ items.forwarding=healthSection(items.health,['Automatic forwarding of mail'],{directory:true});
+ items.groups_external=healthSection(items.health,['Groups open to outsiders']);
+ items.verification_dns={...items.email,reason:items.email.reason||'Email authentication and DNS evidence for this mailbox domain; not all customer domains.'};
+ items.licenses_plan={...items.licenses};
+ const security=items.security.data;
+ items.recent_security_alerts=!object(security)||!Array.isArray(security.recentAlerts)
+  ?{status:'not_readable',reason:items.security.reason||'No security alert evidence returned.'}
+  :security.recentAlerts.length?{status:'needs_attention',alerts:security.recentAlerts}
+   :security.alertsReadable===true&&security.coverage?.alertCenterComplete===true?{status:'ok',alerts:[]}:
+    {status:'not_readable',reason:'Security alerts were not completely readable.',alerts:security.recentAlerts};
  items.billing_invoices={status:'not_readable',reason:'Google Workspace invoice/payment settings have no API available to this server.',
    setting:{url:'https://admin.google.com/ac/billing',steps:[{n:1,action:'Open',target:'Billing in Admin console'}],expected:'Billing page visible; no changes are made or claimed.'}};
  items.notification_settings={status:'not_readable',reason:'Some owner notification preferences require the Admin console.',

@@ -125,14 +125,18 @@ export async function planSummary(clients, { customerId, maxPages = 20 } = {}) {
   const counts = new Map();
   let pageToken;
   let pages = 0;
+  const seen=new Set();
+  let limitReason;
   do {
+    if(pageToken&&seen.has(pageToken)){limitReason='pagination_cycle';break;}
+    if(pageToken)seen.add(pageToken);
     const res = await clients.licensing.licenseAssignments.listForProduct({ productId: 'Google-Apps', customerId, maxResults: 1000, pageToken });
     for (const a of res.data.items || []) counts.set(a.skuId, (counts.get(a.skuId) || 0) + 1);
     pageToken = res.data.nextPageToken;
     pages++;
   } while (pageToken && pages < maxPages);
   const plans = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([skuId, assigned]) => ({ skuId, plan: SKUS[skuId]?.name || `Unrecognised plan (${skuId})`, assigned, geminiIncluded: SKUS[skuId] ? SKUS[skuId].gemini : null }));
-  return { plans, truncated: Boolean(pageToken) };
+  return { plans, truncated: Boolean(pageToken),coverage:{pagesRead:pages,complete:!pageToken,...(pageToken?{limitReason:limitReason||'page_limit'}:{})} };
 }
 
 // ---------- P2-7: search presence ----------
