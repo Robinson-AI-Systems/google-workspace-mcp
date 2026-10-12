@@ -3,7 +3,7 @@
 // the job needs, brands the mailbox, and (only if asked, and only after confirm) emails login details.
 // Every step looks first and changes only what is missing, so a second run changes nothing.
 import { ok } from './util.js';
-import { defineWrite } from './write.js';
+import { defineWrite, withGuardedPrecheck } from './write.js';
 import { handlers as brandHandlers, brandingMatches } from './mailbox-branding.js';
 import { BUSINESSES, ROLES } from '../businesses.js';
 import { domainOfEmail } from '../domains.js';
@@ -171,9 +171,5 @@ const built = defineWrite({
 
 export const tools = [built.tool];
 export const handlers = {
-  [name]: async (args = {}, clients) => {
-    const problem = check(args);
-    if (problem) return ok({ done: false, refused: problem });
-    return built.handler(args, clients);
-  }
+  [name]: withGuardedPrecheck(built.handler, check)
 };

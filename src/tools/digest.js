@@ -90,7 +90,7 @@ export async function sendDigest(digest, to, clients) {
   let confirmed = false;
   try { confirmed = (await clients.gmail.users.messages.get({ userId: 'me', id: sent.id, format: 'minimal' })).data.labelIds?.includes('SENT') === true; } catch { /* reported as not confirmed */ }
   const logged = await recordChange(clients, { tool: 'workflow_weekly_digest', target: to, summary: `Emailed the weekly digest for ${digest.domain} to ${to}${confirmed ? '' : ' (could not confirm it landed in Sent)'}`, after: { messageId: sent.id, confirmed } });
-  return { sent: true, to, messageId: sent.id, confirmed, logged: logged.logged };
+  return { sent: true, to, messageId: sent.id, confirmed: confirmed && logged.logged, logged: logged.logged };
 }
 
 export const tools = [

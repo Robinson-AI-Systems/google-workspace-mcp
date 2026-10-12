@@ -7,12 +7,13 @@
 // A bare user ID, "me" or "all" carries no domain, so it is let through, and so are list tools that are
 // not aimed at one person (they list the whole Workspace the account administers).
 import { ok } from './util.js';
+import { isGuardedWrite,markGuardedWrite } from './write.js';
 import { domainOfEmail } from '../domains.js';
 
 const EMAIL_ARGS = ['emailTo', 'userKey', 'userId', 'primaryEmail', 'email', 'groupKey', 'groupEmail', 'memberEmail', 'alias', 'userEmail', 'fromUserId', 'toUserId', 'managerEmail', 'transferDriveAndCalendarTo', 'assignedToUserKey', 'recoveryEmail'];
 const EMAIL_LIST_ARGS = ['groupEmails', 'aliases', 'accountEmails'];
 const DOMAIN_ARGS = ['domainName', 'domainAliasName', 'parentDomainName', 'domain', 'scope']; // scope: a domain, or the word "all" (which targets no domain)
-const TOOL_FAMILY = /^(admin|licensing|datatransfer|workflow|identity|reports|vault|dns)_/;
+const TOOL_FAMILY = /^(admin|licensing|datatransfer|workflow|identity|reports|vault|dns|domain)_/;
 const CROSS_DOMAIN_FIELD = { type: 'boolean', description: 'Set to true only when you really mean to act on an address or domain outside the domains this connection is limited to.' };
 
 const clean = (v) => String(v ?? '').trim().toLowerCase();
@@ -46,7 +47,7 @@ export function applyDomainGuard(registry) {
     const aimed = [...EMAIL_ARGS, ...EMAIL_LIST_ARGS, ...DOMAIN_ARGS].some((a) => a in props);
     if (!aimed) return tool;
     const inner = registry.handlers[tool.name];
-    registry.handlers[tool.name] = async (args = {}, clients) => {
+    const wrapper = async (args = {}, clients) => {
       const { crossDomain, ...rest } = args;
       if (crossDomain !== true && Array.isArray(clients?.allowedDomains)) {
         if ('scope' in props && (!String(rest.scope ?? '').trim() || clean(rest.scope) === 'all')) {
@@ -57,6 +58,7 @@ export function applyDomainGuard(registry) {
       }
       return inner(rest, crossDomain === true ? Object.create(clients || {}, { crossDomain: { value: true, enumerable: true } }) : clients);
     };
+    registry.handlers[tool.name]=isGuardedWrite(inner)?markGuardedWrite(wrapper):wrapper;
     return { ...tool, description: `${tool.description} Limited to this connection's own business domains unless crossDomain: true.`, inputSchema: { ...tool.inputSchema, properties: { ...props, crossDomain: CROSS_DOMAIN_FIELD } } };
   });
   return registry;

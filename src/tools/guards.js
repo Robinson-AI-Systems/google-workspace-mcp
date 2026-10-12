@@ -340,6 +340,25 @@ const CORE = {
     before: async (a, { admin }) => pick(await data(admin.users.get({ userKey: a.fromUserId, fields: 'primaryEmail,suspended' })), ['primaryEmail', 'suspended']),
     after: async (a, clients, details) => ({ note: 'Google runs transfers in the background. Use datatransfer_get_transfer_status to follow it.', transferId: details?.id }) },
 
+  workflow_brand_mailbox: { destructive:false,
+    confirmWhen:a=>!!(a.makeDefault||a.avatarBase64||a.vacation||(a.aliases||[]).length),
+    describe:a=>({target:a.userEmail,summary:`Change mailbox branding and settings for ${a.userEmail}`}),
+    before:async(a)=>({mailbox:a.userEmail}),
+    // The legacy workflow performs its own provider read-back. This second guard
+    // records the transition without claiming an independent provider verification.
+  },
+  workflow_weekly_digest: { destructive:false,confirmWhen:a=>!!a.emailTo,
+    describe:a=>({target:a.emailTo||a.domain,summary:`Read a weekly digest${a.emailTo?' and SEND it to '+a.emailTo:''}`}),
+    after:async(a,{gmail},details)=>a.emailTo&&details?.messageId?
+      data(gmail.users.messages.get({userId:'me',id:details.messageId,format:'minimal'})):
+      {notSent:true},
+    verify:(a,b,after,details)=>a.emailTo?!!details?.sent&&
+      !!details?.logged&&after?.labelIds?.includes('SENT')===true:after?.notSent===true },
+  domain_confirm_verification: { destructive:false,
+    describe:a=>({target:a.domainName,summary:`Ask Google to verify ownership of domain ${a.domainName}`}),
+    before:async(a,{siteVerification})=>({verified:(await data(siteVerification.webResource.list({}))).items?.some(x=>x.site?.identifier===a.domainName)===true}),
+    after:async(a,{siteVerification})=>({verified:(await data(siteVerification.webResource.list({}))).items?.some(x=>x.site?.identifier===a.domainName)===true}),
+    verify:(a,b,after)=>after?.verified===true },
   // ---------- Bulk editors: deleting through them needs the same confirm as the single-purpose delete tools ----------
   docs_batch_update: { destructive: false, confirmWhen: (a) => DELETING_REQUEST(a.requests),
     describe: (a) => ({ target: a.documentId, summary: `Apply ${(a.requests || []).length} edit(s) to the document ${a.documentId}${DELETING_REQUEST(a.requests) ? ' (includes deleting content)' : ''}` }) },
