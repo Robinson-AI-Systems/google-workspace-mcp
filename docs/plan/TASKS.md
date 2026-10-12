@@ -1127,3 +1127,8 @@ A review found the fixture write handlers required full Workspace/Drive area per
 ### P5-1 mutation safety hardening — PR #45
 
 Guarded two Gmail untrash variants, eight Sheets editing operations, and domain verification using shared preview, conditional/destructive confirmation, provider readback and change logging. For operations that cannot prove complete state (large formatted ranges, provider-insufficient metadata), `confirmed` stays false. The CI mutation gate checks handler provenance in the fully assembled registry, including after domain guard wrapping, instead of accepting a `dryRun` input field as proof. Audit logging failures no longer return verified `confirmed:true`; `done:true` still accurately reports an already-attempted provider mutation. P5-2 plaintext-token retirement remains gated on a full observed live window and has not been advanced.
+
+
+### P5-1 assembled-registry exception reconciliation — PR #45
+
+Initial semantic CI correctly surfaced eight Reports read operations, Chrome policy resolution and four special workflow wrappers. The explicit read inventory now records the read-only provider operations rather than trusting verb names. Staff/business precheck wrappers are constructed only over an already proven `defineWrite` handler, while branding and optional-email digest now pass through the shared guard with additional confirmation and honest read-back limitations. Neither a hand-written `dryRun` property nor unreviewed legacy wrappers satisfy CI.

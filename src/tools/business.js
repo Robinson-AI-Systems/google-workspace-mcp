@@ -3,7 +3,7 @@
 // filters, a business calendar, the standard Drive folder set, mailbox branding, and an email health check.
 // Every step looks first and changes only what is missing, so running it twice changes nothing the second time.
 import { ok } from './util.js';
-import { defineWrite, isNotFound } from './write.js';
+import { defineWrite, isNotFound, withGuardedPrecheck } from './write.js';
 import { handlers as brandHandlers, ensureLabels, brandingMatches } from './mailbox-branding.js';
 import { emailHealth } from './email-health.js';
 import { validZone } from './ops.js';
@@ -214,9 +214,5 @@ const built = defineWrite({
 
 export const tools = [built.tool];
 export const handlers = {
-  [name]: async (args = {}, clients) => {
-    const problem = check(args);
-    if (problem) return ok({ done: false, refused: problem });
-    return built.handler(args, clients);
-  }
+  [name]: withGuardedPrecheck(built.handler, check)
 };

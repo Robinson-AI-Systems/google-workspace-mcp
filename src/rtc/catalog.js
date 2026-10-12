@@ -1,7 +1,11 @@
 // Classify permissions once, before listing OR dispatch, for all delivery doors.
 import { GUARDS } from '../tools/guards.js';
 const SAFE_VERBS = new Set(['list','get','search','find','read','describe','whoami','check','inspect','audit','preview','export','download','count','query','watch','validate','fetch','lookup','status','summarize','report']);
-const SAFE_NAMES = new Set(['workspace_dev_check_integration','workspace_admin_overview','workspace_whoami','workspace_list_accounts','workspace_list_connections','workspace_recent_changes','workspace_where_is_setting','workspace_plan_summary','gmail_inbox_summary','gmail_find_unanswered','workflow_email_health','workflow_health_report','workflow_security_snapshot','workflow_audit_external_sharing','workflow_search_presence_check']);
+// Reviewed read-only provider operations despite names without safe-verb suffixes:
+const SEMANTIC_READS = new Set(['reports_login_activity','reports_admin_activity','reports_drive_activity',
+ 'reports_groups_activity','reports_oauth_token_activity','reports_mobile_activity',
+ 'reports_usage_customer','reports_usage_user','chrome_resolve_policies']);
+const SAFE_NAMES = new Set([...SEMANTIC_READS,'workspace_dev_check_integration','workspace_admin_overview','workspace_whoami','workspace_list_accounts','workspace_list_connections','workspace_recent_changes','workspace_where_is_setting','workspace_plan_summary','gmail_inbox_summary','gmail_find_unanswered','workflow_email_health','workflow_health_report','workflow_security_snapshot','workflow_audit_external_sharing','workflow_search_presence_check']);
 const KNOWN_MUTATIONS = new Set(['gmail_untrash_message','gmail_untrash_thread','sheets_duplicate_sheet','sheets_format_cells','sheets_freeze_rows','sheets_autoresize_columns','sheets_sort_range','sheets_merge_cells','sheets_unmerge_cells','sheets_protect_range','domain_confirm_verification']);
 export const RTC_META = new Set(['workspace_search_tools','workspace_describe_tool','workspace_call','workspace_batch','workspace_get_result']);
 export const RTC_AREAS = ['mail','files','calendar','tasks','chat','admin','workspace','workflows','dns','people','business','identity','datatransfer','licensing'];

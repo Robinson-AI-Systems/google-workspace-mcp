@@ -14,6 +14,15 @@ import { recordChange } from '../changelog.js';
 export const GUARDED_WRITE = Symbol.for('robinson.workspace.guarded-write.v1');
 export const isGuardedWrite = fn => typeof fn==='function'&&fn[GUARDED_WRITE]===true;
 export const markGuardedWrite = fn => Object.defineProperty(fn,GUARDED_WRITE,{value:true});
+export function withGuardedPrecheck(handler,check) {
+ if(!isGuardedWrite(handler))throw Error('Precheck requires a genuine defineWrite handler.');
+ return markGuardedWrite(async(args={},clients)=>{
+   const problem=check(args);
+   if(problem)return ok({done:false,refused:problem});
+   return handler(args,clients);
+ });
+}
+
 const DRY_RUN_FIELD = { type: 'boolean', description: 'Preview only: say what would change and change nothing.' };
 const CONFIRM_FIELD = { type: 'boolean', description: 'Must be true for this to go ahead. Ask the person first; this is hard or impossible to undo.' };
 
