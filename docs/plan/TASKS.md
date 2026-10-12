@@ -1021,3 +1021,25 @@ scratch passes, actual direct/relay/Vercel Sandbox calls and revocation;
 two-instance pass rate-limit is separately tested against throwaway
 Postgres. Full service-level conformance remains IN_PROGRESS until its
 remaining integration probes genuinely pass.
+
+
+### RTC checkpoint #35 — owner overview, guided settings and D-4 direct test runner
+
+Implemented `workspace_admin_overview` from actual existing Google
+diagnostics with distinct `ok`, `needs_attention`, and
+`not_readable` sections; domain/area-aware reads; structured console
+setting instructions alongside old responses; audience metadata;
+fully paginated HTTPS catalog; and an opt-in genuine TEST-only direct
+route/revocation runner with protected environment inputs and no provider
+result/secret logging. Unit tests cover each. Never substitutes missing
+owner API access with a fake success.
+
+**Still required in Hub D-4**: a deployed exact commit reachable over
+HTTPS, approved scratch account and short-lived read_only pass configured
+outside chat, owner-sanctioned direct CLI/SDK test, GitHub encrypted relay
+test in a truly restricted workspace, Vercel Sandbox allowlisted test,
+revocation proof, and a full service-level RTC conformance assessment.
+The Hub agent owns relay configuration and complete three-route evidence;
+Google Workspace repository owns this service's endpoints, credentials
+and deployment. All are UNVERIFIED until actually observed. No
+production, spending, destructive or money-out approval has been given.
