@@ -77,6 +77,7 @@ describe.skipIf(!url)('database (real Postgres)', () => {
     it('stores only a hash, honors revocation, and counts concurrent calls atomically',async()=>{
       await db.initSchema();
       await db.saveGoogleTokensFor('rtc-pass@example.test',{access_token:'fake-google-access'});
+      process.env.RTC_TEST_ACCOUNT_EMAILS='rtc-pass@example.test';
       const {token,id}=await db.createRtcPass({googleAccount:'rtc-pass@example.test',rateLimit:120,hours:24});
       const active=await db.getRtcPass(token);
       expect(active).toMatchObject({id,profile:'read_only',mode:'test',allow_writes:false,rate_limit_per_minute:120});
