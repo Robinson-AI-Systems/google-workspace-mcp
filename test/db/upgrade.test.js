@@ -88,6 +88,7 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       expect(results.filter(x=>!x)).toHaveLength(30);
       expect((await db.revokeConnection(id)).revoked).toBe(1);
       expect(await db.getRtcPass(token)).toBeNull();
+      expect(await db.rtcPassFailureCode(token)).toBe('pass_revoked');
       await rawQuery('DELETE FROM rtc_rate_limits WHERE pass_id=$1',[id]);
       await rawQuery('DELETE FROM rtc_passes WHERE id=$1',[id]);
     });
