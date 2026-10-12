@@ -73,12 +73,18 @@ Do not create competing instruction files or documentation-only PRs.
    provider integration. Mock/reference-server green tests and saved
    hosting settings do not prove real acceptance. A card is DONE only
    after its actual acceptance criteria pass.
-5. **Recheck blockers automatically:** every deferred item must have its
-   precise blocker, evidence or owner decision needed, dependencies,
-   condition that reopens it, and next action in TASKS.md. Recheck at
-   session start and after owner input, dependency merges or environment
-   changes. Restore eligible work without re-asking decisions already
-   recorded or abandoning previously blocked items.
+5. **Investigate, remedy, then isolate blockers:** a blocked operation or
+   acceptance check is not a project-wide stop. Diagnose code defects,
+   configuration, outdated dependencies, stale documentation and owner
+   decisions already supplied; attempt every authorized repair and finish
+   independent implementation and verification before declaring anything
+   blocked. Never bypass safeguards or invent external acceptance evidence.
+   For an actually missing external permission, credential, decision or
+   evidence source, record the precise blocker, required evidence,
+   dependencies, re-entry condition and next action in TASKS.md. Recheck
+   these triggers at startup and after owner input, dependency merges or
+   environment changes; restore eligible work automatically. Review the
+   remaining approved roadmap before concluding nothing can proceed.
 6. **Follow all existing gates:** substantial PRs target main, require
    exact-head Actions `test` and `release-policy` plus applicable
    review, and can be merged only by authorized agents when safe.

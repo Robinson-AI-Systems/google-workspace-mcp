@@ -124,6 +124,15 @@ TASKS.md card, re-entry table and next eligible action reconciled.
 
 ## When the model gets stuck
 
+Before declaring a blocker, investigate and attempt authorized fixes to code,
+configuration, dependencies and documentation, and reconcile owner decisions
+already supplied. Implement and test everything that does not need the missing
+external resource. A blocked operation, release or provider acceptance check
+does not block independent approved milestones: record the exact missing
+permission/credential/evidence, its re-entry trigger and next action, then
+inspect the remaining roadmap and continue. Never relax a safety gate, create
+fabricated provider evidence, or stop solely to write a continuation prompt.
+
 - A Google API refuses with "insufficient permissions": the scope is missing
   from `ALL_SCOPES` (for the connection's own account) or from
   `DELEGATED_SCOPES` + Admin console (for delegated calls). Adding to
