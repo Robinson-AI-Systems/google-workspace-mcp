@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import { defineWrite } from './write.js';
 import { ok } from './util.js';
 import { allowedTool } from '../rtc/catalog.js';
-import { startDevRun, recordDevObject, getDevRun, markDevObjectCleaned } from '../db.js';
+import { startDevRun, reserveDevStep, recordDevObject, markDevStepRecorded, getDevRun, listDevRuns, markDevObjectCleaned } from '../db.js';
 
 const FOLDER='application/vnd.google-apps.folder';
 const DOC='application/vnd.google-apps.document';
@@ -28,7 +28,9 @@ function owner(clients) {
 export function validateFixtureRequest(args={}) {
   if(args.scenario!=='files')throw Error('Only the files fixture scenario is implemented; choose files.');
   if(args.folder!==undefined&&(!/^[a-zA-Z0-9_-]{8,180}$/.test(args.folder)))throw Error('folder must be an existing Drive folder ID.');
-  return {scenario:args.scenario,folder:args.folder||null};
+  if(args.runId!==undefined&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(args.runId))
+    throw Error('runId must be a UUID assigned to this same account and connection.');
+  return {scenario:args.scenario,folder:args.folder||null,runId:args.runId||null};
 }
 async function checkParent(clients,folder) {
   if(!folder)return;
@@ -37,34 +39,81 @@ async function checkParent(clients,folder) {
   if(data?.mimeType!==FOLDER||data.trashed||!data.owners?.some(x=>String(x.emailAddress).toLowerCase()===clients.actingAs.toLowerCase()))
     throw Error('Fixture parent must be an owned, accessible, untrashed My Drive folder.');
 }
-export async function createTaggedDriveFixtures(args,clients) {
-  const {scenario,folder}=validateFixtureRequest(args),id=crypto.randomUUID(),identity=owner(clients);
-  await checkParent(clients,folder);
-  await startDevRun({id,...identity,scenario});
-  const objects=[];
-  let parent=folder;
-  try {
-    for(const [kind,name,mimeType] of [
-      ['folder','RTC '+id+' sample',FOLDER],
-      ['doc','RTC '+id+' example doc',DOC],
-      ['sheet','RTC '+id+' example sheet',SHEET]
-    ]) {
-      const res=await clients.drive.files.create({
-        requestBody:{name,mimeType,parents:parent?[parent]:undefined,appProperties:{rtc_run:id}},
-        fields:'id,name,mimeType,parents,appProperties,trashed',
-        supportsAllDrives:false
-      });
-      const googleId=res?.data?.id;
-      if(typeof googleId!=='string'||!googleId)throw Error('Google did not return a file ID.');
-      await recordDevObject({runId:id,...identity,kind,googleId,parentId:parent});
-      objects.push({kind,id:googleId,parentId:parent});
-      if(kind==='folder')parent=googleId;
-    }
-  } catch(e) {
-    throw Error('Fixture run '+id+' is incomplete; recorded IDs remain for recovery. '+String(e?.message||'Provider error').slice(0,140));
-  }
-  return {runId:id,objects,scenario,actingAs:identity.actingAs};
+
+const KIND_MIME={folder:FOLDER,doc:DOC,sheet:SHEET};
+const SLOT_ORDER=['folder','doc','sheet'];
+const SLOT_NAME={folder:'sample folder',doc:'example doc',sheet:'example sheet'};
+async function taggedCandidates(runId,kind,clients){
+ const q="trashed = false and appProperties has { key='rtc_run' and value='"+runId+"' } and appProperties has { key='rtc_kind' and value='"+kind+"' }";
+ const r=await clients.drive.files.list({q,fields:'nextPageToken,files(id,mimeType,trashed,parents,owners(emailAddress),appProperties)',
+  pageSize:100,spaces:'drive',supportsAllDrives:false});
+ if(r?.data?.nextPageToken)throw Error('Tag search was paginated; outcome remains uncertain.');
+ return (r?.data?.files||[]).filter(f=>f.appProperties?.rtc_run===runId&&f.appProperties?.rtc_kind===kind);
 }
+function verifyOwnedTag(file,runId,kind,identity,parent){
+ if(!file||typeof file.id!=='string'||file.mimeType!==KIND_MIME[kind]||file.trashed===true||
+    file.appProperties?.rtc_run!==runId||file.appProperties?.rtc_kind!==kind||
+    !file.owners?.some(o=>String(o.emailAddress).toLowerCase()===identity.actingAs)||
+    (parent&&!file.parents?.includes(parent)))
+   throw Error('Tagged fixture failed ID, owner, type, parent or run verification.');
+ return file.id;
+}
+async function reconcileStep({id,kind,parent,identity,clients}){
+ const matches=await taggedCandidates(id,kind,clients);
+ if(matches.length!==1)throw Error('Fixture run '+id+' has a pending '+kind+' step with '+matches.length+' exact tag matches. No retry creation attempted; resolve by provider ID.');
+ const found=matches[0];verifyOwnedTag(found,id,kind,identity,parent);
+ await recordDevObject({runId:id,...identity,kind,googleId:found.id,parentId:parent});
+ await markDevStepRecorded({runId:id,...identity,kind,googleId:found.id});
+ return found.id;
+}
+export async function createTaggedDriveFixtures(args,clients){
+ const request=validateFixtureRequest(args),id=request.runId||crypto.randomUUID(),identity=owner(clients);
+ await checkParent(clients,request.folder);
+ await startDevRun({id,...identity,scenario:request.scenario,folder:request.folder});
+ const prior=await getDevRun({runId:id,...identity});
+ if(prior?.objects.length>0&&prior?.steps.length===0)
+   throw Error('Legacy fixture run '+id+' has object IDs but no creation reservations. Refusing duplicate creation; recover by exact provider IDs in a separately reviewed reconciliation.');
+
+ const objects=[];
+ let parent=request.folder;
+ try{
+  for(const kind of SLOT_ORDER){
+   const step=await reserveDevStep({runId:id,...identity,kind});
+   let googleId;
+   if(step.state==='recorded'){
+    const run=await getDevRun({runId:id,...identity});
+    const row=run?.objects.find(o=>o.kind===kind&&o.google_id===step.google_id);
+    if(!row)throw Error('Recorded step has no matching object ledger row.');
+    const found=(await clients.drive.files.get({fileId:step.google_id,
+      fields:'id,mimeType,trashed,parents,owners(emailAddress),appProperties',supportsAllDrives:false})).data;
+    verifyOwnedTag(found,id,kind,identity,parent);
+    googleId=step.google_id;
+   }else if(!step.created){
+    // Crash or overlapping retry: only exact tagged discovery is safe.
+    googleId=await reconcileStep({id,kind,parent,identity,clients});
+   }else{
+    // The durable reservation is committed BEFORE the external create. Once
+    // this call starts, all retries are reconciliation-only, even on timeout.
+    const res=await clients.drive.files.create({
+      requestBody:{name:'RTC '+id+' '+SLOT_NAME[kind],mimeType:KIND_MIME[kind],
+       parents:parent?[parent]:undefined,appProperties:{rtc_run:id,rtc_kind:kind}},
+      fields:'id,name,mimeType,parents,owners(emailAddress),appProperties,trashed',
+      supportsAllDrives:false
+    });
+    googleId=res?.data?.id;
+    if(typeof googleId!=='string'||!googleId)throw Error('Provider result omitted exact Google object ID.');
+    await recordDevObject({runId:id,...identity,kind,googleId,parentId:parent});
+    await markDevStepRecorded({runId:id,...identity,kind,googleId});
+   }
+   objects.push({kind,id:googleId,parentId:parent});
+   if(kind==='folder')parent=googleId;
+  }
+ }catch(e){
+  throw Error('Fixture run '+id+' is incomplete or uncertain. Never retry as a new run to recover. '+String(e?.message||'Provider error').slice(0,170));
+ }
+ return {runId:id,objects,scenario:request.scenario,actingAs:identity.actingAs};
+}
+
 async function readTagged(_args,clients,details) {
   const identity=owner(clients);
   const run=await getDevRun({runId:details?.runId,...identity});
@@ -76,25 +125,26 @@ async function readTagged(_args,clients,details) {
       objects.push({kind:obj.kind,id:obj.google_id,verified:res?.data?.id===obj.google_id&&res.data.trashed!==true&&res.data.appProperties?.rtc_run===run.id});
     } catch {objects.push({kind:obj.kind,id:obj.google_id,verified:false});}
   }
-  return {runId:run.id,objects,verified:objects.length===3&&objects.every(x=>x.verified)};
+  return {runId:run.id,objects,verified:objects.length===3&&objects.every(x=>x.verified)&&
+    run.steps?.length===3&&run.steps.every(s=>s.state==='recorded')};
 }
 const built=defineWrite({
   name:'workspace_dev_create_fixtures',
   description:'Create three tagged example Drive items for a development run, recorded by exact ID. Never shares anything.',
   inputSchema:{type:'object',properties:{
     scenario:{type:'string',enum:['files']},
-    folder:{type:'string',description:'Optional existing folder owned by the acting mailbox.'}
+    folder:{type:'string',description:'Optional existing folder owned by the acting mailbox.'},
+    runId:{type:'string',description:'Stable UUID: reuse exactly this ID after an uncertain provider result; NEVER create a new run for recovery.'}
   },required:['scenario']},
   plan:async(args,clients)=>{
     validateFixtureRequest(args);owner(clients);await checkParent(clients,args.folder);
-    return {summary:'Create a tagged sample folder, Doc and Sheet under the acting mailbox, with each ID recorded for precise cleanup.',target:args.folder||clients.actingAs};
+    return {summary:'Create or reconcile exactly one set of tagged test files without duplicating uncertain provider writes; runId '+(args.runId||'will be generated')+'. Create a tagged sample folder, Doc and Sheet under the acting mailbox, with each ID recorded for precise cleanup.',target:args.folder||clients.actingAs};
   },
   apply:async(args,clients)=>ok(await createTaggedDriveFixtures(args,clients)),
   readAfter:readTagged,
   verify:(_args,_before,after)=>after?.verified===true
 });
 
-const KIND_MIME={folder:FOLDER,doc:DOC,sheet:SHEET};
 const cleanOrder={sheet:0,doc:1,folder:2};
 function assertFixtureIdentity(run,obj,data,identity) {
  if(!data||data.id!==obj.google_id||data.mimeType!==KIND_MIME[obj.kind]||
@@ -110,6 +160,8 @@ async function loadRun(args,clients) {
  if(run.scenario!=='files')throw Error('Only Drive file fixture cleanup is implemented.');
  if(!Array.isArray(run.objects)||run.objects.length===0)throw Error('No recorded objects; refusing cleanup.');
  if(run.objects.some(o=>!Object.hasOwn(KIND_MIME,o.kind)))throw Error('Unknown fixture kind; refusing cleanup.');
+ if(!run.steps?.length||run.steps.some(s=>s.state!=='recorded'))
+   throw Error('Missing or uncertain fixture reservations; reconcile every provider ID before cleanup.');
  return {run,identity};
 }
 async function inspectCleanup(args,clients) {
@@ -177,5 +229,14 @@ const cleanupBuilt=defineWrite({
  verify:(_args,_before,after,details)=>after?.allTrashed===true&&details?.fullyCleaned===true
 });
 
-export const tools=[built.tool,cleanupBuilt.tool];
-export const handlers={[built.tool.name]:built.handler,[cleanupBuilt.tool.name]:cleanupBuilt.handler};
+export const tools=[built.tool,cleanupBuilt.tool,{
+  name:'workspace_dev_list_runs',
+  description:'List this connection’s fixture run IDs and pending step counts for safe crash recovery; never searches by filename.',
+  inputSchema:{type:'object',properties:{}}
+}];
+export const handlers={[built.tool.name]:built.handler,[cleanupBuilt.tool.name]:cleanupBuilt.handler,
+  async workspace_dev_list_runs(_args,clients){
+    const identity=owner(clients);
+    return ok({runs:await listDevRuns(identity)});
+  }
+};

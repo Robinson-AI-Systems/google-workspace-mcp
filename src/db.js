@@ -186,6 +186,21 @@ export async function initSchema() {
     PRIMARY KEY(run_id,kind,google_id)
   )`;
   await q`CREATE INDEX IF NOT EXISTS dev_run_objects_run ON dev_run_objects(run_id)`;
+  await q`CREATE UNIQUE INDEX IF NOT EXISTS dev_run_objects_single_kind ON dev_run_objects(run_id,kind)`;
+  await q`ALTER TABLE dev_runs ADD COLUMN IF NOT EXISTS root_folder TEXT`;
+  // An immutable reservation exists BEFORE any provider mutation. A retry is
+  // reconciliation-only while a slot is pending; never blindly create again.
+  await q`CREATE TABLE IF NOT EXISTS dev_run_steps (
+    run_id TEXT NOT NULL REFERENCES dev_runs(id),
+    kind TEXT NOT NULL,
+    state TEXT NOT NULL DEFAULT 'pending',
+    google_id TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY(run_id,kind),
+    CONSTRAINT dev_run_step_state CHECK (state IN ('pending','recorded'))
+  )`;
+
 
 }
 
@@ -621,32 +636,77 @@ export async function rtcPassFailureCode(token){
 
 
 // Exact-account and exact-connection fixture ledger; Google IDs are never guessed.
-export async function startDevRun({id,actingAs,connection,scenario}){
-  if(!id||!actingAs||!connection)throw new Error('Authenticated fixture owner required.');
-  const q=db();
-  await q`INSERT INTO dev_runs(id,acting_as,connection,scenario)
-    VALUES (${id},${normalizeEmail(actingAs)},${connection},${scenario})`;
+
+export async function startDevRun({id,actingAs,connection,scenario,folder=null}){
+ if(!id||!actingAs||!connection||!scenario)throw Error('Authenticated fixture run required.');
+ const q=db(),email=normalizeEmail(actingAs);
+ const inserted=await q`INSERT INTO dev_runs(id,acting_as,connection,scenario,root_folder)
+    VALUES (${id},${email},${connection},${scenario},${folder})
+    ON CONFLICT DO NOTHING RETURNING id`;
+ const found=await q`SELECT id,scenario,root_folder FROM dev_runs
+    WHERE id=${id} AND acting_as=${email} AND connection=${connection}`;
+ if(!found[0]||found[0].scenario!==scenario||found[0].root_folder!==folder)
+   throw Error('Run ID belongs to a different account, connection, scenario or root folder.');
+ return {created:inserted.length===1,runId:id};
+}
+// The UNIQUE slot is durably reserved before calling Drive. Even after a crash,
+// another request may only reconcile by exact provider tag, not create again.
+export async function reserveDevStep({runId,actingAs,connection,kind}){
+ const q=db(),email=normalizeEmail(actingAs);
+ const rows=await q`INSERT INTO dev_run_steps(run_id,kind,state)
+   SELECT id,${kind},'pending' FROM dev_runs
+   WHERE id=${runId} AND acting_as=${email} AND connection=${connection}
+   ON CONFLICT DO NOTHING RETURNING kind`;
+ const found=await q`SELECT s.kind,s.state,s.google_id FROM dev_run_steps s
+   JOIN dev_runs r ON r.id=s.run_id WHERE s.run_id=${runId} AND s.kind=${kind}
+    AND r.acting_as=${email} AND r.connection=${connection}`;
+ if(!found[0])throw Error('Unauthorized or unreserved development step.');
+ return {...found[0],created:rows.length===1};
 }
 export async function recordDevObject({runId,actingAs,connection,kind,googleId,parentId=null}){
-  if(!googleId)throw new Error('Provider did not return a fixture ID.');
-  const q=db();
-  const rows=await q`INSERT INTO dev_run_objects(run_id,kind,google_id,parent_id)
-    SELECT id,${kind},${googleId},${parentId} FROM dev_runs
-    WHERE id=${runId} AND acting_as=${normalizeEmail(actingAs)} AND connection=${connection}
-    ON CONFLICT DO NOTHING RETURNING google_id`;
-  if(rows.length!==1)throw new Error('Fixture was not recorded for the requesting connection.');
+ if(!googleId)throw Error('Google fixture ID missing; reservation stays uncertain.');
+ const q=db(),email=normalizeEmail(actingAs);
+ await q`INSERT INTO dev_run_objects(run_id,kind,google_id,parent_id)
+   SELECT id,${kind},${googleId},${parentId} FROM dev_runs
+   WHERE id=${runId} AND acting_as=${email} AND connection=${connection}
+   ON CONFLICT (run_id,kind) DO NOTHING`;
+ const existing=await q`SELECT o.google_id FROM dev_run_objects o JOIN dev_runs r ON r.id=o.run_id
+   WHERE o.run_id=${runId} AND o.kind=${kind}
+   AND r.acting_as=${email} AND r.connection=${connection}`;
+ if(existing.length!==1||existing[0].google_id!==googleId)
+   throw Error('Conflicting fixture ID; manual reconciliation required.');
+}
+export async function markDevStepRecorded({runId,actingAs,connection,kind,googleId}){
+ const q=db(),email=normalizeEmail(actingAs);
+ const changed=await q`UPDATE dev_run_steps AS s SET state='recorded',
+   google_id=${googleId},updated_at=now() FROM dev_runs AS r
+   WHERE s.run_id=r.id AND r.id=${runId} AND r.acting_as=${email}
+    AND r.connection=${connection} AND s.kind=${kind}
+    AND (s.google_id IS NULL OR s.google_id=${googleId}) RETURNING s.kind`;
+ if(changed.length!==1)throw Error('Development step could not be reconciled.');
 }
 export async function getDevRun({runId,actingAs,connection}){
-  if(!runId||!actingAs||!connection)return null;
-  const q=db();
-  const runs=await q`SELECT id,scenario,created_at FROM dev_runs
-    WHERE id=${runId} AND acting_as=${normalizeEmail(actingAs)} AND connection=${connection}`;
-  if(!runs[0])return null;
-  const objects=await q`SELECT kind,google_id,parent_id,cleaned_at FROM dev_run_objects
-    WHERE run_id=${runId} ORDER BY created_at,kind,google_id`;
-  return {...runs[0],objects};
+ if(!runId||!actingAs||!connection)return null;
+ const q=db(),email=normalizeEmail(actingAs);
+ const runs=await q`SELECT id,scenario,root_folder,created_at FROM dev_runs
+   WHERE id=${runId} AND acting_as=${email} AND connection=${connection}`;
+ if(!runs[0])return null;
+ const objects=await q`SELECT kind,google_id,parent_id,cleaned_at FROM dev_run_objects
+   WHERE run_id=${runId} ORDER BY created_at,kind,google_id`;
+ const steps=await q`SELECT kind,state,google_id FROM dev_run_steps
+   WHERE run_id=${runId} ORDER BY created_at,kind`;
+ return {...runs[0],objects,steps};
 }
-
+export async function listDevRuns({actingAs,connection}){
+ if(!actingAs||!connection)return [];
+ const q=db(),email=normalizeEmail(actingAs);
+ return q`SELECT r.id,r.scenario,r.created_at,
+   count(s.kind)::integer AS reserved,
+   count(s.kind) FILTER (WHERE s.state='pending')::integer AS pending
+   FROM dev_runs r LEFT JOIN dev_run_steps s ON s.run_id=r.id
+   WHERE r.acting_as=${email} AND r.connection=${connection}
+   GROUP BY r.id,r.scenario,r.created_at ORDER BY r.created_at DESC LIMIT 50`;
+}
 
 // Only an object's initiating account and connection can mark that exact fixture cleaned.
 export async function markDevObjectCleaned({runId,actingAs,connection,kind,googleId}){

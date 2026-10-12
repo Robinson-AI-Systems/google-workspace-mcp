@@ -33,16 +33,45 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
   const api = {
     connectionId: (accessToken) => crypto.createHash('sha256').update(String(accessToken), 'utf8').digest('hex').slice(0, 8),
     async initSchema() {},
-    async startDevRun({id,actingAs,connection,scenario}){
-      if(!id||!actingAs||!connection||state.devRuns.has(id))throw Error('Authenticated unique run required.');
-      state.devRuns.set(id,{id,acting_as:norm(actingAs),connection,scenario,created_at:at(),objects:[]});
+
+    async startDevRun({id,actingAs,connection,scenario,folder=null}){
+      if(!id||!actingAs||!connection)throw Error('Authenticated unique run required.');
+      const old=state.devRuns.get(id);
+      if(old) {
+       if(old.acting_as!==norm(actingAs)||old.connection!==connection||old.scenario!==scenario||old.root_folder!==folder)
+         throw Error('Run ID belongs to a different account, connection, scenario or root folder.');
+       return {created:false,runId:id};
+      }
+      state.devRuns.set(id,{id,acting_as:norm(actingAs),connection,scenario,root_folder:folder,created_at:at(),objects:[],steps:[]});
+      return {created:true,runId:id};
+    },
+    async reserveDevStep({runId,actingAs,connection,kind}){
+      const r=state.devRuns.get(runId);
+      if(!r||r.acting_as!==norm(actingAs)||r.connection!==connection)throw Error('Unauthorized or unreserved development step.');
+      let step=r.steps.find(x=>x.kind===kind);
+      if(step)return {...step,created:false};
+      step={kind,state:'pending',google_id:null};
+      r.steps.push(step);return {...step,created:true};
     },
     async recordDevObject({runId,actingAs,connection,kind,googleId,parentId=null}){
       const r=state.devRuns.get(runId);
       if(!r||r.acting_as!==norm(actingAs)||r.connection!==connection||!googleId)throw Error('Fixture was not recorded for the requesting connection.');
-      if(r.objects.some(o=>o.kind===kind&&o.google_id===googleId))throw Error('Duplicate fixture object.');
-      r.objects.push({kind,google_id:googleId,parent_id:parentId,cleaned_at:null});
+      const found=r.objects.filter(o=>o.kind===kind);
+      if(found.length&&found[0].google_id!==googleId)throw Error('Conflicting fixture ID; manual reconciliation required.');
+      if(!found.length)r.objects.push({kind,google_id:googleId,parent_id:parentId,cleaned_at:null});
     },
+    async markDevStepRecorded({runId,actingAs,connection,kind,googleId}){
+      const r=state.devRuns.get(runId);
+      if(!r||r.acting_as!==norm(actingAs)||r.connection!==connection)throw Error('Development step could not be reconciled.');
+      const step=r.steps.find(x=>x.kind===kind);
+      if(!step||(step.google_id&&step.google_id!==googleId))throw Error('Development step could not be reconciled.');
+      step.state='recorded';step.google_id=googleId;
+    },
+    async listDevRuns({actingAs,connection}){
+      return [...state.devRuns.values()].filter(r=>r.acting_as===norm(actingAs)&&r.connection===connection)
+       .map(r=>({id:r.id,scenario:r.scenario,created_at:r.created_at,reserved:r.steps.length,pending:r.steps.filter(s=>s.state==='pending').length}));
+    },
+
     async markDevObjectCleaned({runId,actingAs,connection,kind,googleId}){
       const r=state.devRuns.get(runId);
       if(!r||r.acting_as!==norm(actingAs)||r.connection!==connection)throw Error('Fixture cleanup ledger write was refused.');
@@ -52,7 +81,7 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     },
     async getDevRun({runId,actingAs,connection}){
       const r=state.devRuns.get(runId);
-      return r&&r.acting_as===norm(actingAs)&&r.connection===connection?{...r,objects:r.objects.map(o=>({...o}))}:null;
+      return r&&r.acting_as===norm(actingAs)&&r.connection===connection?{...r,objects:r.objects.map(o=>({...o})),steps:r.steps.map(s=>({...s}))}:null;
     },
 
     async storeRtcResult({handle,connection,payload,ttlHours=24}) {state.rtcResults.set(handle,{connection,payload,expires_at:afterSeconds(ttlHours)});return handle;},

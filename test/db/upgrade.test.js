@@ -73,6 +73,32 @@ describe.skipIf(!url)('database (real Postgres)', () => {
     });
   });
 
+
+  describe('P8-7 durable fixture reservation/recording',()=>{
+   it('reserves exactly one provider operation, survives replays and prevents cross-connection association',async()=>{
+     await db.initSchema();
+     const id='71111111-2222-4333-8444-555555555555',opts={id,actingAs:'developer@example.test',connection:'test-conn',scenario:'files'};
+     expect((await db.startDevRun(opts)).created).toBe(true);
+     expect((await db.startDevRun(opts)).created).toBe(false);
+     await expect(db.startDevRun({...opts,connection:'foreign'})).rejects.toThrow();
+     const slot={runId:id,actingAs:opts.actingAs,connection:opts.connection,kind:'folder'};
+     expect((await db.reserveDevStep(slot)).created).toBe(true);
+     expect((await db.reserveDevStep(slot)).created).toBe(false);
+     await expect(db.reserveDevStep({...slot,connection:'foreign'})).rejects.toThrow();
+     await db.recordDevObject({...slot,googleId:'google-folder-1'});
+     await db.recordDevObject({...slot,googleId:'google-folder-1'});
+     await expect(db.recordDevObject({...slot,googleId:'google-folder-2'})).rejects.toThrow();
+     await db.markDevStepRecorded({...slot,googleId:'google-folder-1'});
+     const run=await db.getDevRun({runId:id,actingAs:opts.actingAs,connection:opts.connection});
+     expect(run.steps).toMatchObject([{kind:'folder',state:'recorded',google_id:'google-folder-1'}]);
+     expect(run.objects).toHaveLength(1);
+     expect(await db.getDevRun({...slot,connection:'foreign'})).toBeNull();
+     expect((await db.listDevRuns({actingAs:opts.actingAs,connection:opts.connection})).some(x=>x.id===id)).toBe(true);
+     await rawQuery('DELETE FROM dev_run_objects WHERE run_id=$1',[id]);
+     await rawQuery('DELETE FROM dev_run_steps WHERE run_id=$1',[id]);
+     await rawQuery('DELETE FROM dev_runs WHERE id=$1',[id]);
+   });
+  });
   describe('RTC hashed read-only passes and atomic limits',()=>{
     it('stores only a hash, honors revocation, and counts concurrent calls atomically',async()=>{
       await db.initSchema();
