@@ -1,0 +1,7 @@
+{
+  "repository": "Robinson-AI-Systems/google-workspace-mcp",
+  "requiredChecks": [
+    "test",
+    "release-policy"
+  ]
+}
