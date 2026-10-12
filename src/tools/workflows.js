@@ -70,10 +70,14 @@ export async function boundedRead(fetchPage,field,maxPages){
       if(!pages)throw e;
       reason='later_page_unavailable';break;
     }
-    const values=response?.data?.[field]??[];
-    if(!Array.isArray(values))throw new Error('Google returned an invalid '+field+' page.');
+    const data=response?.data;
+    const values=data?.[field]??[];
+    if(!data||typeof data!=='object'||!Array.isArray(values)){
+      if(pages){reason='invalid_later_page';break;}
+      throw new Error('Google returned an invalid '+field+' page.');
+    }
     items.push(...values);pages++;
-    const next=response?.data?.nextPageToken;
+    const next=data.nextPageToken;
     if(!next){complete=true;reason=null;break;}
     if(typeof next!=='string'||seen.has(next)){reason='invalid_or_repeated_page_token';break;}
     seen.add(next);token=next;
