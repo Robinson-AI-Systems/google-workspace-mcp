@@ -155,7 +155,8 @@ const cleanupBuilt=defineWrite({
  },
  apply:async(args,clients)=>ok(await trashRecordedFixtures(args,clients)),
  readAfter:async(args,clients)=>{
-   const {run,identity,objects}=await loadRun(args,clients);
+   const {run,identity}=await loadRun(args,clients);
+   const objects=run.objects;
    const checks=[];
    for(const obj of objects){
      try {
