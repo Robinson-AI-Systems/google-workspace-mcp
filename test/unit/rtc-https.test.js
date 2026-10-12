@@ -43,6 +43,14 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   expect(r.body.result.tools.every(t=>t.name.startsWith('workspace_')&&!t.writes)).toBe(true);
   expect(toInternal('workspace_gmail_list_messages')).toBe('gmail_list_messages');
  });
+ it('paginates HTTP catalogs without dropping remaining tools',async()=>{
+  const first=await invoke('GET',{door:'tools',listing:'catalog',limit:'2',page:'1'});
+  expect(first.body.result.tools).toHaveLength(2);
+  expect(first.body.result.next).toBe('2');
+  const second=await invoke('GET',{door:'tools',listing:'catalog',limit:'2',page:'2'});
+  expect(second.body.result.tools).toHaveLength(2);
+  expect(second.body.result.tools[0].name).not.toBe(first.body.result.tools[0].name);
+ });
  it('refuses direct writes and mixed write batches before executing handlers',async()=>{
   expect((await invoke('POST',{tool:'workspace_gmail_send_email'},{to:'a@example.test',confirm:true})).body.error.code).toBe('refused_by_guard');
   const batch=await invoke('POST',{tool:'_batch'},{calls:[{name:'workspace_list_accounts'},{name:'workspace_gmail_send_email',args:{confirm:true}}]});
