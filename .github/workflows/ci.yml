@@ -25,9 +25,15 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Robinson-AI-Systems/robinsons-toolkit-hub
+          ref: 570e597ab865359072db43d1ab884ab456832207
+          path: .rtc-hub
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - run: npm ci
       - run: npm run check
@@ -35,3 +41,5 @@ jobs:
       - run: npm run test:db
         env:
           TEST_DATABASE_URL: postgres://postgres:ci-only-not-a-secret@127.0.0.1:5432/postgres
+      - run: npm run test:rtc
+      - run: node scripts/rtc-conformance-ci.mjs
