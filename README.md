@@ -35,7 +35,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 <!-- BEGIN GENERATED TOOL CATALOG -->
 <!-- Registry-derived; regenerate with `npm run gen:catalog`. Do not edit this section by hand. -->
 
-**375 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
+**376 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
 
 | Area | Registered tools |
 | --- | ---: |
@@ -53,7 +53,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 | mail | 60 |
 | tasks | 11 |
 | workflows | 12 |
-| workspace | 23 |
+| workspace | 24 |
 
 ### admin (111)
 
@@ -449,7 +449,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `workflow_set_up_business`
 - `workflow_weekly_digest`
 
-### workspace (23)
+### workspace (24)
 
 - `workspace_admin_overview`
 - `workspace_batch`
@@ -472,6 +472,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `workspace_search_tools`
 - `workspace_set_allowed_domains`
 - `workspace_set_default_account`
+- `workspace_undo_change`
 - `workspace_where_is_setting`
 - `workspace_whoami`
 <!-- END GENERATED TOOL CATALOG -->

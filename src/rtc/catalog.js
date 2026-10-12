@@ -36,7 +36,7 @@ export function audienceFor(name){
  return ['operator','builder'];
 }
 export function toolMetadata(t){
- const writes=isWrite(t.name),destructive=Boolean(GUARDS[t.name]?.destructive);
+ const writes=isWrite(t.name),destructive=Boolean(GUARDS[t.name]?.destructive)||t.name==='workspace_undo_change';
  return {...t,description:t.description.slice(0,160),area:rtcArea(t.name),profiles:writes?['everyday','full']:['read_only','everyday','full'],writes,money:false,destructive,audience:audienceFor(t.name),
  annotations:{readOnlyHint:!writes,destructiveHint:destructive,idempotentHint:!writes,openWorldHint:true}};
 }

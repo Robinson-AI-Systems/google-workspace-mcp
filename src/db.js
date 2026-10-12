@@ -720,3 +720,12 @@ export async function markDevObjectCleaned({runId,actingAs,connection,kind,googl
    RETURNING o.google_id`;
  if(rows.length!==1)throw new Error('Fixture cleanup ledger write was refused.');
 }
+
+/** Exact scoped log lookup for safe undo. */
+export async function getOwnedChange(id, actingAs, connection) {
+ if (!Number.isSafeInteger(Number(id)) || Number(id)<1 || !actingAs || !connection) return null;
+ const q=db();
+ const rows=await q`SELECT id, acting_as, connection, tool, target, summary, before, after, dry_run
+ FROM change_log WHERE id=${Number(id)} AND lower(acting_as)=${normalizeEmail(actingAs)} AND connection=${connection}`;
+ return rows[0] || null;
+}
