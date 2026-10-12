@@ -17,7 +17,7 @@ through the Google APIs. A separate, narrowly scoped service account (the
 "robot identity") lets a few tools act *inside* other users' Gmail settings,
 and is authorized for calendar and `drive.file` in reserve. Every tool that
 changes things goes through a safety layer (preview, confirmation, read-back,
-change log). The assembled catalog currently covers 371 operations (157 reviewed reads, 209 proven guarded writes, five protected meta dispatchers). The old local stdio mode was retired on Chris's decision
+change log). The assembled catalog currently covers 373 operations (159 reviewed reads, 209 proven guarded writes, five protected meta dispatchers). The old local stdio mode was retired on Chris's decision
 (2026-10-02); the server is hosted-only.
 
 ## Request path (hosted)
@@ -246,3 +246,8 @@ passphrase compare (P0-5), no connection list or revocation (P1-1).
 ### Reports audit expansion (P7-3)
 
 `reports_activity` reads only Google's allowlisted Admin SDK Reports application names (including Calendar, Meet, Chat, SAML/SSO, rules, security and login). It preserves the provider paging cursor, refuses unknown names locally and caps page size without enabling `includeSensitiveData`. Existing named Reports tools retain their previous response shape. One additional audited read is included in the assembled semantic inventory; plan availability and actual Google provider acceptance remain separately unverified.
+
+
+### P7-4 Gmail Postmaster read-only visibility
+
+The owner-approved `postmaster.readonly` OAuth scope is now requested for **user OAuth** at connection/reconnect, not for domain-wide delegation. `src/auth/google-auth-hosted.js` lazily creates the v1 `gmailpostmastertools` client. Two `src/tools/postmaster.js` read-only operations list owner-visible registered domains and domain-specific date-bounded statistics (spam reports, authentication and delivery errors) with proper page tokens and allowed-domain guarding; the RTC area is mail. Existing connected accounts need renewed consent at `/api/google/authorize`; real provider proof is pending. No v2 Postmaster write scopes are requested and the client does not modify verification state.

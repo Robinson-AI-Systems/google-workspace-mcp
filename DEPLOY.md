@@ -207,3 +207,8 @@ outcomes, UTC time and exact deployed commit for the Hub D-4 acceptance.
 After use revoke the pass and separately verify the revocation. Do not
 trigger a manual Vercel deployment to run this test; wait for the scheduled
 checked `main → live` promotion.
+
+
+## Gmail Postmaster Tools (P7-4, opt-in read-only)
+
+The owner approved the `https://www.googleapis.com/auth/postmaster.readonly` OAuth scope on October 2, 2026. The server advertises the new read-only domain and delivery-statistics tools, but **connecting a scope is not automatic for previously authorized accounts**. For each business account that elects to use Postmaster, an authorized owner visits `/api/google/authorize?account=<their-email>` and completes Google's OAuth consent again. No service-account delegation, broad mailbox access or production release is authorized by this step. Before using statistics, the domain must already be registered/verified in Google's Postmaster Tools console, and the account must be allowed to read it. A domain with insufficient traffic can legitimately have no published metrics. Never paste tokens or confidential reports into PRs. The v1 read-only scope is distinct from newer Postmaster v2 write/admin scopes, which remain unapproved. Real TEST provider evidence and deployed commit proof are tracked separately in `docs/plan/TASKS.md`.

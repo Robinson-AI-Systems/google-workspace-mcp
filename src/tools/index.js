@@ -23,6 +23,7 @@ import * as workflows from './workflows.js';
 import * as accounts from './accounts.js';
 import * as mailboxBranding from './mailbox-branding.js';
 import * as ops from './ops.js';
+import * as postmaster from './postmaster.js';
 import * as emailHealth from './email-health.js';
 import * as healthReport from './health-report.js';
 import * as digest from './digest.js';
@@ -36,5 +37,5 @@ import { applyResultRules } from '../rtc/results.js';
 
 export const registry = applyResultRules(applyDomainGuard(applyGuards(mergeNamespaces([
   rtcMeta, adminOverview, devIntegration, devFixtures, gmail, drive, sharedDrives, calendar, sheets, docs, slides, forms, tasks, people,
-  adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts, mailboxBranding, ops, emailHealth, healthReport, digest, inbox, staff, business, dnsTools, businessResources
+  adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts, mailboxBranding, ops, emailHealth, healthReport, digest, inbox, staff, business, dnsTools, postmaster, businessResources
 ]))));
