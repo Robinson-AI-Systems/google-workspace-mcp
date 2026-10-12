@@ -971,3 +971,8 @@ complete and 34% remaining.
 
 Not counted: the app-side half of the Appliance Desk integration
 (`APPLIANCE-DESK-INTEGRATION.md`), which lives in the appliance-desk repository.
+
+
+### RTC implementation checkpoint #30
+
+P8-2 started: selected profile/listing and optional area restrictions persist through OAuth code and refresh. MCP tool listing and dispatch enforce read-only and area restrictions. Legacy connector tokens retain full access for compatibility. RTC 1 integration and live testing are NOT yet verified; continue P8-1..P8-5.

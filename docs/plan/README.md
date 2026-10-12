@@ -134,3 +134,28 @@ ledger in `TASKS.md` for the exact state of every card.
 - The Appliance Desk app's own plan lives in that repo at
   `docs/plans/overhaul/` and its Google-integration work is Stage 4 of the
   "Appliance Desk Completion Plan" doc Chris holds in Claude.
+
+
+## Persistent five-PR implementation cadence (owner direction 2026-10-12)
+
+Use a substantive development PR for each unit of implementation. Normal new chat
+sessions deliver **five substantial PRs**, verify exact-head CI, reviews and
+post-merge main, and end at the next PR number divisible by five. The initial
+catch-up session from #29 is **six PRs, #30–#35**; subsequent sessions use five.
+If blocked, record what actually happened; never claim an unmerged PR is merged.
+
+**No documentation-only PRs.** Required docs and ledger changes accompany a
+substantial implementation PR; if all PRs have already merged, hand the docs
+work to the next session's first substantive PR.
+
+**No placeholders, fake functionality or TODO implementations presented as
+complete.** Implement real code, tests and security guards. A dependency
+owned by a later project is permitted only if its exact owner, contract,
+acceptance and follow-up are recorded in the roadmap/handoff. Partial
+acceptance is IN_PROGRESS, not DONE. Live RTC/relay acceptance may be claimed
+only after real authorized read-only proof and revocation.
+
+The final continuation prompt must instruct the next agent to verify fresh
+main/reviews/deployments, follow this folder and RTC 1 in the Toolkit Hub,
+complete five substantial PRs, preserve approval gates and no-doc-only/no-
+placeholder rules, then produce the same compact continuation prompt again.

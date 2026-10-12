@@ -9,6 +9,7 @@ import { errorResult } from '../src/tools/util.js';
 import { buildHostedApiClients, ensureMigrated } from '../src/auth/google-auth-hosted.js';
 import { getAccessToken, initSchema, touchAccessToken, connectionId, getAllowedDomains } from '../src/db.js';
 import { onceSuccessful } from '../src/once.js';
+import { listedTools, allowedTool, toolMetadata } from '../src/rtc/catalog.js';
 
 export const config = { api: { bodyParser: true } };
 
@@ -18,22 +19,23 @@ export const config = { api: { bodyParser: true } };
 const ensureSchemaReady = onceSuccessful(initSchema);
 const ensureLegacyMigration = onceSuccessful(ensureMigrated);
 
-function buildServer(googleAccount, connection) {
+function buildServer(googleAccount, connection, settings) {
   const server = new Server(
     { name: 'robinson-google-workspace-mcp', version: '1.0.0' },
     { capabilities: { tools: {} } }
   );
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: registry.tools }));
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: listedTools(registry.tools, settings).map(toolMetadata) }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
-    const toolHandler = registry.handlers[name];
+    const toolHandler = allowedTool(name, settings) && registry.handlers[name];
     if (!toolHandler) {
       return { content: [{ type: 'text', text: `Unknown tool: ${name}` }], isError: true };
     }
     try {
       const clients = await buildHostedApiClients(googleAccount);
+      clients.rtcPolicy = settings; // Server-trusted policy; never sourced from tool arguments.
       clients.connection = connection; // which Claude connection is asking, for the change log
       clients.allowedDomains = await getAllowedDomains(clients.actingAs); // which business domains this connection may manage (src/tools/domain-guard.js)
       return await toolHandler(args || {}, clients);
@@ -72,7 +74,7 @@ export default async function handler(req, res) {
   // Every tool call on this connection acts as the Google account chosen at
   // login time (NULL = the server's default account, for older connections).
   try { await touchAccessToken(token); } catch { /* "last used" is informational; never fail a request over it */ }
-  const server = buildServer(tokenRecord.google_account || undefined, `${String(tokenRecord.client_id).slice(0, 12)}/${connectionId(token)}`);
+  const server = buildServer(tokenRecord.google_account || undefined, `${String(tokenRecord.client_id).slice(0, 12)}/${connectionId(token)}`, tokenRecord);
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   res.on('close', () => {
     transport.close();
