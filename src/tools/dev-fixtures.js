@@ -2,7 +2,7 @@
 import crypto from 'node:crypto';
 import { defineWrite } from './write.js';
 import { ok } from './util.js';
-import { startDevRun, recordDevObject, getDevRun } from '../db.js';
+import { startDevRun, recordDevObject, getDevRun, markDevObjectCleaned } from '../db.js';
 
 const FOLDER='application/vnd.google-apps.folder';
 const DOC='application/vnd.google-apps.document';
@@ -80,5 +80,88 @@ const built=defineWrite({
   readAfter:readTagged,
   verify:(_args,_before,after)=>after?.verified===true
 });
-export const tools=[built.tool];
-export const handlers={[built.tool.name]:built.handler};
+
+const KIND_MIME={folder:FOLDER,doc:DOC,sheet:SHEET};
+const cleanOrder={sheet:0,doc:1,folder:2};
+function assertFixtureIdentity(run,obj,data,identity) {
+ if(!data||data.id!==obj.google_id||data.mimeType!==KIND_MIME[obj.kind]||
+   data.appProperties?.rtc_run!==run.id||
+   !Array.isArray(data.owners)||!data.owners.some(o=>String(o.emailAddress).toLowerCase()===identity.actingAs))
+   throw Error('Fixture identity or ownership changed; refused to trash '+obj.kind+' '+obj.google_id+'.');
+}
+async function loadRun(args,clients) {
+ const identity=owner(clients);
+ if(typeof args.runId!=='string'||!/^[0-9a-f]{8}-[0-9a-f-]{27,38}$/.test(args.runId))throw Error('Provide a valid recorded fixture run ID.');
+ const run=await getDevRun({runId:args.runId,...identity});
+ if(!run)throw Error('Fixture run does not exist for this account and connection.');
+ if(run.scenario!=='files')throw Error('Only Drive file fixture cleanup is implemented.');
+ if(!Array.isArray(run.objects)||run.objects.length===0)throw Error('No recorded objects; refusing cleanup.');
+ if(run.objects.some(o=>!Object.hasOwn(KIND_MIME,o.kind)))throw Error('Unknown fixture kind; refusing cleanup.');
+ return {run,identity};
+}
+async function inspectCleanup(args,clients) {
+ const {run,identity}=await loadRun(args,clients);
+ const objects=[...run.objects].sort((a,b)=>cleanOrder[a.kind]-cleanOrder[b.kind]);
+ const proof=[];
+ for(const obj of objects) {
+   const res=await clients.drive.files.get({fileId:obj.google_id,
+     fields:'id,mimeType,trashed,owners(emailAddress),appProperties',supportsAllDrives:false});
+   assertFixtureIdentity(run,obj,res?.data,identity);
+   proof.push({kind:obj.kind,id:obj.google_id,trashed:res.data.trashed===true,recordedCleaned:!!obj.cleaned_at});
+ }
+ return {run,identity,objects,proof};
+}
+export async function trashRecordedFixtures(args,clients) {
+ const {run,identity,objects}=await inspectCleanup(args,clients);
+ const completed=[],failures=[];
+ for(const obj of objects) {
+   try {
+     const existing=await clients.drive.files.get({fileId:obj.google_id,
+       fields:'id,mimeType,trashed,owners(emailAddress),appProperties',supportsAllDrives:false});
+     assertFixtureIdentity(run,obj,existing?.data,identity);
+     if(existing.data.trashed!==true) {
+       await clients.drive.files.update({fileId:obj.google_id,
+         requestBody:{trashed:true},fields:'id,trashed',supportsAllDrives:false});
+     }
+     const check=await clients.drive.files.get({fileId:obj.google_id,
+       fields:'id,mimeType,trashed,owners(emailAddress),appProperties',supportsAllDrives:false});
+     assertFixtureIdentity(run,obj,check?.data,identity);
+     if(check.data.trashed!==true)throw Error('Google did not confirm trash state.');
+     await markDevObjectCleaned({runId:run.id,...identity,kind:obj.kind,googleId:obj.google_id});
+     completed.push({kind:obj.kind,id:obj.google_id,trashed:true});
+   } catch {
+     failures.push({kind:obj.kind,id:obj.google_id,reason:'Identity, provider write, read-back or ledger confirmation failed.'});
+     break; // Never proceed to the parent folder if a child was not confirmed.
+   }
+ }
+ return {runId:run.id,completed,failures,fullyCleaned:failures.length===0&&completed.length===objects.length};
+}
+const cleanupBuilt=defineWrite({
+ name:'workspace_dev_cleanup',
+ description:'Preview and, with owner confirmation, move only precisely recorded owned RTC test files to Drive trash.',
+ destructive:true,
+ inputSchema:{type:'object',properties:{runId:{type:'string',description:'Run ID from workspace_dev_create_fixtures.'}},required:['runId']},
+ plan:async(args,clients)=>{
+   const checked=await inspectCleanup(args,clients);
+   return {target:checked.run.id,summary:'Trash exactly '+checked.proof.length+' recorded and verified RTC fixture files (no permanent deletion).',
+     readBefore:async()=>({runId:checked.run.id,objects:checked.proof})};
+ },
+ apply:async(args,clients)=>ok(await trashRecordedFixtures(args,clients)),
+ readAfter:async(args,clients)=>{
+   const {run,identity,objects}=await loadRun(args,clients);
+   const checks=[];
+   for(const obj of objects){
+     try {
+       const response=await clients.drive.files.get({fileId:obj.google_id,
+         fields:'id,mimeType,trashed,owners(emailAddress),appProperties',supportsAllDrives:false});
+       assertFixtureIdentity(run,obj,response?.data,identity);
+       checks.push({id:obj.google_id,trashed:response.data.trashed===true,recordedCleaned:!!obj.cleaned_at});
+     } catch {checks.push({id:obj.google_id,trashed:false,recordedCleaned:false});}
+   }
+   return {runId:run.id,checks,allTrashed:checks.length>0&&checks.every(o=>o.trashed&&o.recordedCleaned)};
+ },
+ verify:(_args,_before,after,details)=>after?.allTrashed===true&&details?.fullyCleaned===true
+});
+
+export const tools=[built.tool,cleanupBuilt.tool];
+export const handlers={[built.tool.name]:built.handler,[cleanupBuilt.tool.name]:cleanupBuilt.handler};

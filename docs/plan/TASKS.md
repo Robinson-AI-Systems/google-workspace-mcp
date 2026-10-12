@@ -921,7 +921,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-4 | IN_PROGRESS | #32–#34 | Pass-only RTC manifest/HTTPS routes and DB limit implemented; deployed boundary, two-instance and D-4 acceptance not verified |
 | P8-5 | IN_PROGRESS | #34 | Pinned Hub reference conformance and local gateway tests in CI; full conformance against this service and real D-4 routes still unverified |
 | P8-6 | WAITING | | Needs `robinson-mcp-core` (robinsons-toolkit-hub K-3) |
-| P8-7 | IN_PROGRESS | #40, #42 | Integration checker plus tagged Drive/Docs/Sheets fixture creation and exact-ID account/connection ledger; Gmail/calendar scenarios and confirmed cleanup still pending |
+| P8-7 | IN_PROGRESS | #40, #42–#43 | Integration checker, tagged Drive/Docs/Sheets fixtures, exact-ID run ledger and confirmed Drive-trash-only cleanup implemented; Gmail/calendar scenarios and real acceptance remain |
 | P8-8 | IN_PROGRESS | #36 | Owner overview, structured guidance and audience tags implemented; full settings coverage and actual read-only live evidence pending |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
@@ -1107,3 +1107,8 @@ Object-specific read summaries reduce typical Gmail message/thread, Drive file, 
 ### RTC P8-7 fixture run ledger — PR #42
 
 Additive `dev_runs` and `dev_run_objects` tables record each created Drive/Docs/Sheets development fixture by provider ID and `rtc_run` tag for isolated recovery. `workspace_dev_create_fixtures({scenario:'files'})` uses the authenticated OAuth mailbox, optional owned parent, read-back and change log. Read-only/TEST profiles refuse writes; no external invitations, messages, scope changes or production rollout. Partial failures remain observable through their run ID, and **calendar/Gmail fixtures, precise confirmed cleanup, live/provider acceptance remain IN_PROGRESS**. GitHub `test` and `release-policy` are exact-head gates, with production promotion scheduled only.
+
+
+### RTC P8-7 precise cleanup — PR #43
+
+`workspace_dev_cleanup` previews exact recorded run objects and requires `confirm:true`; it rechecks run tag, MIME and acting account ownership before moving only recorded objects into Drive trash. Children are processed before the parent; each is marked cleaned only after provider read-back, and a failure aborts before touching the parent. No permanent deletion or untagged/same-name matches. Provider integration and Gmail/calendar fixture acceptance remain unverified, with owner-independent production/spending restrictions unchanged.
