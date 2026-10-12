@@ -11,13 +11,13 @@ describe('RTC connection policy',()=>{
 describe('RTC guarded meta dispatch',()=>{
  it('blocks direct writes through workspace_call on read-only policy',async()=>{
   const {handlers}=await import('../../src/tools/rtc-meta.js');
-  const result=await handlers.workspace_call({name:'gmail_send_message',args:{confirm:true}}, {rtcPolicy:{profile:'read_only',listing:'compact'}});
+  const result=await handlers.workspace_call({name:'gmail_send_email',args:{confirm:true}}, {rtcPolicy:{profile:'read_only',listing:'compact'}});
   expect(result.isError).toBe(true);
   expect(result.content[0].text).toMatch(/outside_scope/);
  });
  it('prevalidates every batch call before doing any work',async()=>{
   const {handlers}=await import('../../src/tools/rtc-meta.js');
-  const result=await handlers.workspace_batch({calls:[{name:'gmail_list_messages'},{name:'gmail_send_message',args:{confirm:true}}]}, {rtcPolicy:{profile:'full'}});
+  const result=await handlers.workspace_batch({calls:[{name:'gmail_list_messages'},{name:'gmail_send_email',args:{confirm:true}}]}, {rtcPolicy:{profile:'full'}});
   expect(result.isError).toBe(true);
   expect(result.content[0].text).toMatch(/refused_by_guard/);
  });
