@@ -2,14 +2,21 @@
 import crypto from 'node:crypto';
 import { defineWrite } from './write.js';
 import { ok } from './util.js';
+import { allowedTool } from '../rtc/catalog.js';
 import { startDevRun, recordDevObject, getDevRun, markDevObjectCleaned } from '../db.js';
 
 const FOLDER='application/vnd.google-apps.folder';
 const DOC='application/vnd.google-apps.document';
 const SHEET='application/vnd.google-apps.spreadsheet';
 const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function requireDriveArea(clients) {
+ const policy=clients?.rtcPolicy||{};
+ if(!allowedTool('drive_get_file',policy)||!allowedTool('drive_create_folder',policy))
+   throw Error('outside_scope: This connection cannot create or inspect Drive fixtures.');
+}
 function owner(clients) {
   if(!EMAIL.test(clients?.actingAs||'')||!clients?.connection)throw Error('Fixture changes need an authenticated connection and acting mailbox.');
+  requireDriveArea(clients);
   return {actingAs:clients.actingAs.toLowerCase(),connection:clients.connection};
 }
 export function validateFixtureRequest(args={}) {
