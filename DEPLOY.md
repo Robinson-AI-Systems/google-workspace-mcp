@@ -153,3 +153,33 @@ an implemented surface with offline tests, **not** proof of deployed
 RTC conformance, an authenticated Hub connection or GitHub encrypted
 relay/Sandbox acceptance. The Hub D-4 card specifies the real testing
 and pass revocation required before claiming success.
+
+
+## Authorized non-production RTC route check
+
+With a connected scratch mailbox explicitly listed in
+`RTC_TEST_ACCOUNT_EMAILS`, create a short-lived read-only TEST pass on
+`/api/rtc/passes`. Store the pass in the protected runner environment as
+`RTC_TEST_PASS` (never in a repository, URL, command argument or chat).
+Set `RTC_ORIGIN` to the server's exact public HTTPS origin. Optionally
+select a harmless read with `RTC_READ_TOOL` and provide its JSON input via
+`RTC_READ_ARGS_JSON`. Then:
+
+```bash
+node scripts/rtc-live-probe.mjs --authorized-read-only
+```
+
+The command checks manifest, authenticated identity, scoped tool metadata
+and a real read via the HTTPS door. It prints no secrets or provider result
+body. The run does **not** certify the encrypted GitHub relay or Vercel
+Sandbox. Record time, route, deployed commit and outcome privately for the
+Hub D-4 handoff. Revoke the pass with
+`workspace_revoke_connection` using its `pass_...` identifier and
+`confirm:true`; then run:
+
+```bash
+node scripts/rtc-live-probe.mjs --verify-revoked
+```
+
+Only an observed revoked-pass refusal counts as revocation proof.
+Do not run real tests without an approved non-production scratch pass.
