@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import { defineWrite } from './write.js';
 import { ok } from './util.js';
 import { allowedTool } from '../rtc/catalog.js';
-import { validateCalendarRequest, createCalendarFixture, calendarReadback,inspectCalendarCleanup,deleteRecordedCalendarFixture,confirmCalendarGone } from './dev-calendar.js';
+import { validateCalendarRequest, requireTestCalendar, createCalendarFixture, calendarReadback,inspectCalendarCleanup,deleteRecordedCalendarFixture,confirmCalendarGone } from './dev-calendar.js';
 import { startDevRun, reserveDevStep, recordDevObject, markDevStepRecorded, getDevRun, listDevRuns, markDevObjectCleaned } from '../db.js';
 
 const FOLDER='application/vnd.google-apps.folder';
@@ -146,6 +146,7 @@ const built=defineWrite({
     validateFixtureRequest(args);owner(clients);
     if(args.scenario==='calendar'){
       if(!allowedTool('calendar_get_event',clients.rtcPolicy)||!allowedTool('calendar_create_event',clients.rtcPolicy))throw Error('Calendar area not permitted.');
+      await requireTestCalendar(clients,args.calendarId,owner(clients));
       return {summary:'Create one tagged non-production event on an owned TEST calendar without invitees; run ID '+(args.runId||'will be generated'),target:args.calendarId};
     }
     requireDriveArea(clients);await checkParent(clients,args.folder);
