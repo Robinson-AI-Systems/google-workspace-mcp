@@ -246,6 +246,10 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       state.changes.push({ id, at: at(), acting_as: actingAs || null, connection: connection || null, tool, target: target || null, summary: summary || null, before: copy(before), after: copy(after), dry_run: !!dryRun });
       return id;
     },
+    async getOwnedChange(id, actingAs, connection) {
+      if(!Number.isSafeInteger(Number(id))||Number(id)<1||!actingAs||!connection)return null;
+      return state.changes.find(c=>Number(c.id)===Number(id)&&norm(c.acting_as)===norm(actingAs)&&c.connection===connection)||null;
+    },
     async listRecentChanges({ since, tool, actingAs, limit = 50, includeDryRuns = true } = {}) {
       const n = Math.min(Math.max(Number(limit) || 50, 1), 500);
       const from = since ? new Date(since).getTime() : null;

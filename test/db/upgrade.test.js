@@ -261,4 +261,14 @@ describe.skipIf(!url)('database (real Postgres)', () => {
     },
     seedLegacy: async (_db, tokens) => { await rawQuery(`INSERT INTO google_auth (id, tokens) VALUES (1, $1::jsonb)`, [JSON.stringify(tokens)]); }
   });
+  it('isolates exact undo entries by account and connection', async()=>{
+    await db.initSchema();
+    const id=await db.recordChange({actingAs:'owner@example.test',connection:'undo-c',tool:'gmail_update_label',target:'Label_1',before:{name:'old'},after:{name:'new'}});
+    expect((await db.getOwnedChange(Number(id),'OWNER@example.test','undo-c')).target).toBe('Label_1');
+    expect(await db.getOwnedChange(Number(id),'other@example.test','undo-c')).toBeNull();
+    expect(await db.getOwnedChange(Number(id),'owner@example.test','other')).toBeNull();
+    expect(await db.getOwnedChange(-1,'owner@example.test','undo-c')).toBeNull();
+  });
+
+
 });
