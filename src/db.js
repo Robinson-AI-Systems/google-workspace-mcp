@@ -109,6 +109,28 @@ export async function initSchema() {
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`;
   await q`CREATE INDEX IF NOT EXISTS rtc_results_expiry ON rtc_results(expires_at)`;
+  // RTC 1 owner-issued passes are hashed at rest; plaintext is never stored.
+  await q`CREATE TABLE IF NOT EXISTS rtc_passes (
+    id TEXT PRIMARY KEY,
+    token_hash TEXT UNIQUE NOT NULL,
+    google_account TEXT NOT NULL,
+    profile TEXT NOT NULL DEFAULT 'read_only',
+    areas TEXT[],
+    listing TEXT NOT NULL DEFAULT 'compact',
+    mode TEXT NOT NULL DEFAULT 'test',
+    allow_writes BOOLEAN NOT NULL DEFAULT false,
+    rate_limit_per_minute INTEGER NOT NULL DEFAULT 120,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    revoked_at TIMESTAMPTZ
+  )`;
+  await q`CREATE INDEX IF NOT EXISTS rtc_passes_expiry ON rtc_passes(expires_at)`;
+  await q`CREATE TABLE IF NOT EXISTS rtc_rate_limits (
+    pass_id TEXT NOT NULL,
+    window_start TIMESTAMPTZ NOT NULL,
+    count INTEGER NOT NULL,
+    PRIMARY KEY(pass_id,window_start)
+  )`;
   // Connection bookkeeping: when a Claude connection last did something, and whether it was switched off by hand.
   await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMPTZ`;
   await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ`;
@@ -416,13 +438,15 @@ export async function touchAccessToken(accessToken) {
 /** Every connection token that has not expired, newest first. Only the first 8 characters of a token are ever returned. */
 export async function listConnections() {
   const q = db();
-  return q`
+  const connectors=await q`
     SELECT left(t.access_token, 8) AS token_prefix, left(encode(sha256(convert_to(t.access_token, 'UTF8')), 'hex'), 8) AS connection_id, t.client_id, c.client_name, t.google_account, t.profile, t.listing, t.areas,
            t.created_at, t.expires_at, t.last_used_at, t.revoked_at
     FROM oauth_tokens t LEFT JOIN oauth_clients c ON c.client_id = t.client_id
     WHERE t.expires_at > now()
     ORDER BY t.created_at DESC
   `;
+  const passes=await listRtcPasses();
+  return [...connectors.map(c=>({...c,kind:'connector'})),...passes.map(p=>({...p,token_prefix:p.id}))].sort((x,y)=>new Date(y.created_at)-new Date(x.created_at));
 }
 
 /**
@@ -434,6 +458,7 @@ export async function revokeConnection(prefix) {
   const q = db();
   const p = String(prefix || '');
   if (p.length < 8) return { revoked: 0, reason: 'too_short' };
+  if (p.startsWith('pass_')) return { revoked: await revokeRtcPass(p) };
   const found = await q`SELECT access_token, refresh_token FROM oauth_tokens WHERE left(access_token, ${p.length}) = ${p}`;
   if (found.length === 0) return { revoked: 0, reason: 'not_found' };
   if (found.length > 1) return { revoked: 0, reason: 'ambiguous' };
@@ -510,4 +535,55 @@ export async function getRtcResult(handle,connection){
  const q=db();
  const rows=await q`SELECT payload FROM rtc_results WHERE handle=${handle} AND connection=${connection} AND expires_at > now()`;
  return rows[0]?.payload ?? null;
+}
+
+// RTC 1 passes: test-mode read-only issuance with owner-managed revocation.
+// Secrets are returned exactly once to the owner setup page; only SHA256 digests persist.
+export async function createRtcPass({googleAccount,areas=null,rateLimit=120,hours=24,forHub=false}){
+ const account=normalizeEmail(googleAccount);
+ if(!account)throw new Error('Missing connected account.');
+ const allowlist=String(process.env.RTC_TEST_ACCOUNT_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
+ if(!allowlist.includes(account))throw new Error('Account is not authorized for RTC non-production TEST passes. Configure RTC_TEST_ACCOUNT_EMAILS with the approved scratch mailbox.');
+ const limit=Number(rateLimit),ttl=Number(hours);
+ if(!Number.isInteger(limit)||limit<1||limit>600)throw new Error('Rate limit must be 1–600 per minute.');
+ if(!Number.isInteger(ttl)||ttl<1||ttl>(forHub?365*24:30*24))throw new Error('Pass duration exceeds the allowed range.');
+ if(areas!==null&&(!Array.isArray(areas)||areas.some(x=>typeof x!=='string')))throw new Error('Invalid areas.');
+ const q=db();
+ const accountRows=await q`SELECT 1 FROM google_accounts WHERE email=${account}`;
+ if(!accountRows[0])throw new Error('Unknown connected account.');
+ const token='rtc_pass_'+crypto.randomBytes(32).toString('base64url');
+ const hash=crypto.createHash('sha256').update(token).digest('hex');
+ const id='pass_'+hash.slice(0,20);
+ await q`INSERT INTO rtc_passes(id,token_hash,google_account,areas,rate_limit_per_minute,expires_at)
+ VALUES (${id},${hash},${account},${areas},${limit},now() + (${ttl} || ' hours')::interval)`;
+ return {token,id};
+}
+export async function getRtcPass(token){
+ if(typeof token!=='string'||!/^rtc_pass_[A-Za-z0-9_-]{43}$/.test(token))return null;
+ const hash=crypto.createHash('sha256').update(token).digest('hex');
+ const q=db();
+ const rows=await q`SELECT id,google_account,profile,areas,listing,mode,allow_writes,rate_limit_per_minute,expires_at
+ FROM rtc_passes WHERE token_hash=${hash} AND revoked_at IS NULL AND expires_at>now()`;
+ return rows[0]||null;
+}
+export async function revokeRtcPass(id){
+ const q=db();
+ const rows=await q`UPDATE rtc_passes SET revoked_at=now() WHERE id=${id} AND revoked_at IS NULL RETURNING id`;
+ return rows.length;
+}
+export async function listRtcPasses(){
+ const q=db();
+ return q`SELECT id AS connection_id, 'pass' AS kind,google_account,profile,listing,areas,mode,allow_writes,
+ rate_limit_per_minute,created_at,expires_at,revoked_at FROM rtc_passes ORDER BY created_at DESC`;
+}
+export async function chargeRtcPass(id,limit){
+ const q=db();
+ // The database ON CONFLICT lock serializes overlapping calls across Vercel instances.
+ const rows=await q`INSERT INTO rtc_rate_limits(pass_id,window_start,count)
+ VALUES (${id},date_trunc('minute',now()),1)
+ ON CONFLICT(pass_id,window_start) DO UPDATE
+ SET count=rtc_rate_limits.count+1
+ WHERE rtc_rate_limits.count<${limit}
+ RETURNING count`;
+ return rows.length===1;
 }

@@ -22,7 +22,9 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     changes: [],
     resources: [],
     nextChangeId: 1,
-    rtcResults: new Map()
+    rtcResults: new Map(),
+    rtcPasses: new Map(),
+    rtcLimits: new Map()
   };
   const at = () => new Date(clock());
   const afterSeconds = (s) => new Date(clock() + s * 1000);
@@ -141,17 +143,39 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       const row = state.tokens.find((t) => t.access_token === accessToken);
       if (row && (!row.last_used_at || row.last_used_at.getTime() < clock() - 60 * 1000)) row.last_used_at = at();
     },
+    async createRtcPass({googleAccount,areas=null,rateLimit=120,hours=24,forHub=false}){
+      const account=norm(googleAccount),limit=Number(rateLimit),ttl=Number(hours);
+      if(!state.accounts.has(account))throw new Error('Unknown connected account.');
+      if(!String(process.env.RTC_TEST_ACCOUNT_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).includes(account))throw new Error('Scratch account not authorized.');
+      if(!Number.isInteger(limit)||limit<1||limit>600)throw new Error('Invalid rate limit.');
+      if(!Number.isInteger(ttl)||ttl<1||ttl>(forHub?365*24:30*24))throw new Error('Invalid duration.');
+      const token='rtc_pass_'+crypto.randomBytes(32).toString('base64url');
+      const hash=crypto.createHash('sha256').update(token).digest('hex'),id='pass_'+hash.slice(0,20);
+      state.rtcPasses.set(id,{id,token_hash:hash,google_account:account,areas,profile:'read_only',listing:'compact',mode:'test',allow_writes:false,rate_limit_per_minute:limit,created_at:at(),expires_at:afterSeconds(ttl*3600),revoked_at:null});
+      return {token,id};
+    },
+    async getRtcPass(token){
+      if(typeof token!=='string'||!/^rtc_pass_[A-Za-z0-9_-]{43}$/.test(token))return null;
+      const hash=crypto.createHash('sha256').update(token).digest('hex');
+      const row=[...state.rtcPasses.values()].find(x=>x.token_hash===hash&&!x.revoked_at&&x.expires_at>at());
+      return row?{...row}:null;
+    },
+    async revokeRtcPass(id){const row=state.rtcPasses.get(id);if(!row||row.revoked_at)return 0;row.revoked_at=at();return 1;},
+    async listRtcPasses(){return [...state.rtcPasses.values()].map(({token_hash,...rest})=>({...rest,connection_id:rest.id,kind:'pass'}));},
+    async chargeRtcPass(id,limit){const key=id+':'+Math.floor(clock()/60000);const n=state.rtcLimits.get(key)||0;if(n>=limit)return false;state.rtcLimits.set(key,n+1);return true;},
     async listConnections() {
-      return state.tokens.filter((t) => t.expires_at > at())
+      const connectors=state.tokens.filter((t) => t.expires_at > at())
         .sort((a, b) => b.created_at - a.created_at)
         .map((t) => ({
-          token_prefix: t.access_token.slice(0, 8), connection_id: crypto.createHash('sha256').update(t.access_token, 'utf8').digest('hex').slice(0, 8), client_id: t.client_id, client_name: state.clients.get(t.client_id)?.client_name ?? null,
+          kind: 'connector',token_prefix: t.access_token.slice(0, 8), connection_id: crypto.createHash('sha256').update(t.access_token, 'utf8').digest('hex').slice(0, 8), client_id: t.client_id, client_name: state.clients.get(t.client_id)?.client_name ?? null,
           google_account: t.google_account, profile: t.profile, listing: t.listing, areas: t.areas, created_at: t.created_at, expires_at: t.expires_at, last_used_at: t.last_used_at, revoked_at: t.revoked_at
         }));
+      return [...connectors,...(await api.listRtcPasses()).map(p=>({...p,token_prefix:p.id}))].sort((x,y)=>new Date(y.created_at)-new Date(x.created_at));
     },
     async revokeConnection(prefix) {
       const p = String(prefix || '');
       if (p.length < 8) return { revoked: 0, reason: 'too_short' };
+      if(p.startsWith('pass_'))return {revoked:await api.revokeRtcPass(p)};
       const found = state.tokens.filter((t) => t.access_token.startsWith(p));
       if (found.length === 0) return { revoked: 0, reason: 'not_found' };
       if (found.length > 1) return { revoked: 0, reason: 'ambiguous' };

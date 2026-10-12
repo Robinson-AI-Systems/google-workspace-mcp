@@ -73,6 +73,25 @@ describe.skipIf(!url)('database (real Postgres)', () => {
     });
   });
 
+  describe('RTC hashed read-only passes and atomic limits',()=>{
+    it('stores only a hash, honors revocation, and counts concurrent calls atomically',async()=>{
+      await db.initSchema();
+      await db.saveGoogleTokensFor('rtc-pass@example.test',{access_token:'fake-google-access'});
+      process.env.RTC_TEST_ACCOUNT_EMAILS='rtc-pass@example.test';
+      const {token,id}=await db.createRtcPass({googleAccount:'rtc-pass@example.test',rateLimit:120,hours:24});
+      const active=await db.getRtcPass(token);
+      expect(active).toMatchObject({id,profile:'read_only',mode:'test',allow_writes:false,rate_limit_per_minute:120});
+      expect((await rawQuery('SELECT token_hash FROM rtc_passes WHERE id=$1',[id]))[0].token_hash).not.toBe(token);
+      expect(JSON.stringify(await db.listConnections())).not.toContain(token);
+      const results=await Promise.all(Array.from({length:150},()=>db.chargeRtcPass(id,120)));
+      expect(results.filter(Boolean)).toHaveLength(120);
+      expect(results.filter(x=>!x)).toHaveLength(30);
+      expect((await db.revokeConnection(id)).revoked).toBe(1);
+      expect(await db.getRtcPass(token)).toBeNull();
+      await rawQuery('DELETE FROM rtc_rate_limits WHERE pass_id=$1',[id]);
+      await rawQuery('DELETE FROM rtc_passes WHERE id=$1',[id]);
+    });
+  });
   describe('RTC oversized result storage', () => {
     it('keeps handles private to the issuing connection and rejects expired records',async()=>{
       await db.initSchema();
