@@ -4,6 +4,13 @@
 import { errorResult } from '../tools/util.js';
 const string={type:'string'},strings={type:'array',items:string};
 const handle={required:['handle','bytes','count','summary']};
+const healthStatus={type:'string',enum:['PASS','WARN','FAIL','INFO']};
+const healthSummary={type:'object',properties:{pass:{type:'integer',minimum:0},warn:{type:'integer',minimum:0},fail:{type:'integer',minimum:0},info:{type:'integer',minimum:0}},
+ required:['pass','warn','fail','info'],additionalProperties:true};
+const healthChecks={type:'array',items:{type:'object',properties:{
+ check:string,status:healthStatus,found:string,fix:{type:['string','null']}
+ },required:['check','status','found'],additionalProperties:true}};
+
 export const OUTPUT_SCHEMAS=Object.freeze({
  // P8-1 read-only typed results for the newly integrated Reports,
  // Postmaster and Cloud Identity policy features. Do not type writes by name.
@@ -26,6 +33,20 @@ export const OUTPUT_SCHEMAS=Object.freeze({
  identity_policy_audit:{
    type:'object',properties:{domain:string,customerWide:{type:'boolean'},complete:{type:'boolean'},policiesRead:{type:'integer'},baselineRules:{type:'integer'},areasWithRules:strings,scopeNote:string,results:{type:'array',items:{type:'object',properties:{setting:string,policySetting:string,field:string,status:{type:'string',enum:['ok','needs_attention','not_readable']},observations:{type:'array',items:{type:'object'}}},required:['setting','policySetting','field','status','observations']}},summary:{type:'object',properties:{needsAttention:{type:'integer'},notReadable:{type:'integer'},matchingExplicitPolicies:{type:'integer'}},required:['needsAttention','notReadable','matchingExplicitPolicies']}},
    anyOf:[{required:['domain','customerWide','complete','policiesRead','baselineRules','areasWithRules','scopeNote','results','summary']},handle],additionalProperties:true
+ },
+ workflow_health_report:{
+  type:'object',properties:{scope:string,summary:healthSummary,checks:healthChecks,report:string},
+  anyOf:[{required:['scope','summary','checks','report']},handle],additionalProperties:true
+ },
+ workflow_email_health:{
+  type:'object',properties:{domain:string,summary:healthSummary,checks:healthChecks,report:string},
+  anyOf:[{required:['domain','summary','checks','report']},handle],additionalProperties:true
+ },
+ workspace_plan_summary:{
+  type:'object',properties:{customerId:string,totalLicensesAssigned:{type:'integer',minimum:0},
+   plans:{type:'array',items:{type:'object',properties:{skuId:string,plan:string,assigned:{type:'integer',minimum:0}},required:['skuId','plan','assigned']}},
+   geminiIncluded:string,note:string},
+  anyOf:[{required:['customerId','totalLicensesAssigned','plans','geminiIncluded','note']},handle],additionalProperties:true
  },
  workflow_security_snapshot:{
    type:'object',properties:{totalUsers:{type:'integer'},usersWithout2StepVerification:strings,superAdmins:strings,recentAlerts:{type:'array',items:{type:'object'}}},
@@ -72,6 +93,22 @@ export function matchesStructuredShape(name,value){
        ['ok','needs_attention','not_readable'].includes(v.status)&&array(v.observations))&&
      value.summary&&typeof value.summary==='object'&&
      ['needsAttention','notReadable','matchingExplicitPolicies'].every(k=>Number.isInteger(value.summary[k])&&value.summary[k]>=0);
+ case 'workflow_health_report':
+ case 'workflow_email_health': {
+   const key=name==='workflow_health_report'?'scope':'domain';
+   if(typeof value[key]!=='string'||!value[key]||typeof value.report!=='string'||!array(value.checks)||!value.summary||typeof value.summary!=='object')return false;
+   const statuses=['PASS','WARN','FAIL','INFO'];
+   if(!value.checks.every(c=>c&&typeof c==='object'&&!array(c)&&typeof c.check==='string'&&typeof c.found==='string'&&statuses.includes(c.status)&&
+      (c.fix===undefined||c.fix===null||typeof c.fix==='string')))return false;
+   return ['pass','warn','fail','info'].every(k=>Number.isInteger(value.summary[k])&&value.summary[k]>=0&&
+     value.summary[k]===value.checks.filter(c=>c.status===k.toUpperCase()).length);
+ }
+ case 'workspace_plan_summary':
+   return typeof value.customerId==='string'&&value.customerId.length>0&&Number.isInteger(value.totalLicensesAssigned)&&value.totalLicensesAssigned>=0&&
+     array(value.plans)&&value.plans.every(p=>p&&typeof p==='object'&&typeof p.skuId==='string'&&
+       typeof p.plan==='string'&&Number.isInteger(p.assigned)&&p.assigned>=0)&&
+     value.plans.reduce((n,p)=>n+p.assigned,0)===value.totalLicensesAssigned&&
+     typeof value.geminiIncluded==='string'&&typeof value.note==='string';
  case 'workflow_security_snapshot':
    return Number.isInteger(value.totalUsers)&&array(value.usersWithout2StepVerification)&&array(value.superAdmins)&&array(value.recentAlerts);
  case 'workflow_audit_external_sharing':
