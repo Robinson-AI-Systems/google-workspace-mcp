@@ -24,11 +24,59 @@
     "consoleQuery": "gmail phishing safety"
   },
   {
+    "area": "gmail",
+    "type": "settings/gmail.spoofing_and_authentication",
+    "field": "detect_domain_spoofing_from_unauthenticated_senders",
+    "expected": true,
+    "label": "Detect unauthenticated senders spoofing this domain",
+    "consoleQuery": "gmail phishing safety"
+  },
+  {
+    "area": "gmail",
+    "type": "settings/gmail.spoofing_and_authentication",
+    "field": "enable_attachment_with_scripts_protection",
+    "expected": true,
+    "label": "Protect against attachments containing untrusted scripts",
+    "consoleQuery": "gmail attachment malware safety"
+  },
+  {
+    "area": "gmail",
+    "type": "settings/gmail.spoofing_and_authentication",
+    "field": "enable_anomalous_attachment_protection",
+    "expected": true,
+    "label": "Protect against anomalous attachment types",
+    "consoleQuery": "gmail attachment malware safety"
+  },
+  {
+    "area": "gmail",
+    "type": "settings/gmail.enhanced_pre_delivery_message_scanning",
+    "field": "enable_improved_suspicious_content_detection",
+    "expected": true,
+    "label": "Enable enhanced suspicious-content detection",
+    "consoleQuery": "gmail spam phishing malware"
+  },
+  {
     "area": "drive_and_docs",
     "type": "settings/drive_and_docs.external_sharing",
     "field": "warn_for_external_sharing",
     "expected": true,
     "label": "Warn when files are shared outside the organization",
+    "consoleQuery": "external drive sharing"
+  },
+  {
+    "area": "drive_and_docs",
+    "type": "settings/drive_and_docs.external_sharing",
+    "field": "allow_non_google_invites",
+    "expected": false,
+    "label": "Review visitor sharing of Drive files outside the company",
+    "consoleQuery": "external drive sharing"
+  },
+  {
+    "area": "drive_and_docs",
+    "type": "settings/drive_and_docs.external_sharing",
+    "field": "allow_publishing_files",
+    "expected": false,
+    "label": "Review allowing public link and web publishing of Drive files",
     "consoleQuery": "external drive sharing"
   },
   {
@@ -44,7 +92,80 @@
     "type": "settings/chat.chat_history",
     "field": "history_on_by_default",
     "expected": true,
-    "label": "Default chat history on for organizational recordkeeping (review retention policy)",
+    "label": "Review default Chat history for your retention policy",
     "consoleQuery": "chat history"
+  },
+  {
+    "area": "meet",
+    "type": "settings/meet.safety_external_participants",
+    "field": "enable_external_label",
+    "expected": true,
+    "label": "Label external or unverified meeting participants",
+    "consoleQuery": "meet safety external participants"
+  },
+  {
+    "area": "meet",
+    "type": "settings/meet.safety_host_management",
+    "field": "enable_host_management",
+    "expected": true,
+    "label": "Enable Meet host-management protections by default",
+    "consoleQuery": "meet host management"
+  },
+  {
+    "area": "devices",
+    "type": "settings/devices.encryption",
+    "field": "device_encryption_option",
+    "expected": "REQUIRED",
+    "label": "Require managed device encryption",
+    "consoleQuery": "device encryption"
+  },
+  {
+    "area": "devices",
+    "type": "settings/devices.compromised_devices",
+    "field": "compromised_android_devices_blocked",
+    "expected": true,
+    "label": "Block compromised Android devices",
+    "consoleQuery": "mobile device security"
+  },
+  {
+    "area": "devices",
+    "type": "settings/devices.compromised_devices",
+    "field": "jailbroken_ios_devices_blocked",
+    "expected": true,
+    "label": "Block jailbroken iOS devices",
+    "consoleQuery": "mobile device security"
+  },
+  {
+    "area": "security",
+    "type": "settings/security.password",
+    "field": "allowReuse",
+    "expected": false,
+    "label": "Disallow password reuse",
+    "consoleQuery": "password policy"
+  },
+  {
+    "area": "security",
+    "type": "settings/security.password",
+    "field": "enforceRequirementsAtLogin",
+    "expected": true,
+    "label": "Enforce password requirements at login",
+    "consoleQuery": "password policy"
+  },
+  {
+    "area": "security",
+    "type": "settings/security.password",
+    "field": "minimumLength",
+    "comparator": "atLeast",
+    "expected": 12,
+    "label": "Review minimum password length (baseline 12)",
+    "consoleQuery": "password length"
+  },
+  {
+    "area": "security",
+    "type": "settings/security.password",
+    "field": "allowedStrength",
+    "expected": "STRONG",
+    "label": "Require strong passwords",
+    "consoleQuery": "password policy"
   }
 ]
