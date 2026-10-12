@@ -8,6 +8,9 @@ export const SCOPE_GROUPS = {
     'https://www.googleapis.com/auth/gmail.settings.basic',
     'https://www.googleapis.com/auth/gmail.settings.sharing'
   ],
+  // Owner-approved read-only Postmaster access (2026-10-02). Existing
+  // connected accounts must explicitly re-authorize at /api/google/authorize.
+  postmaster: ['https://www.googleapis.com/auth/postmaster.readonly'],
   drive: [
     'https://www.googleapis.com/auth/drive'
   ],

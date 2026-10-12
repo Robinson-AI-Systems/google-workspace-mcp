@@ -35,7 +35,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 <!-- BEGIN GENERATED TOOL CATALOG -->
 <!-- Registry-derived; regenerate with `npm run gen:catalog`. Do not edit this section by hand. -->
 
-**371 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
+**373 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
 
 | Area | Registered tools |
 | --- | ---: |
@@ -50,7 +50,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 | domain | 3 |
 | files | 102 |
 | identity | 3 |
-| mail | 58 |
+| mail | 60 |
 | tasks | 11 |
 | workflows | 12 |
 | workspace | 23 |
@@ -355,7 +355,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `identity_get_security_settings`
 - `identity_list_group_transitive_membership`
 
-### mail (58)
+### mail (60)
 
 - `gmail_add_delegate`
 - `gmail_add_forwarding_address`
@@ -415,6 +415,8 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `gmail_update_pop_settings`
 - `gmail_update_send_as`
 - `gmail_update_vacation_settings`
+- `postmaster_list_domains`
+- `postmaster_list_traffic_stats`
 
 ### tasks (11)
 
@@ -524,3 +526,8 @@ changing Google data. It returns observed `ready`, `missing`
 and `not_readable` findings; Admin-console-only permissions remain
 unverified until separately checked. This is a complete read-only
 integration check, not fixture creation/cleanup; all three P8-7 fixture families are now implemented with exact-ID cleanup and crash reconciliation tests. Real Google TEST acceptance and full Hub routes remain open in `docs/plan/TASKS.md`.
+
+
+### Gmail Postmaster (read-only, owner-approved scope)
+
+`postmaster_list_domains` and `postmaster_list_traffic_stats` use Google's Gmail Postmaster Tools **v1** read-only API. They require the explicitly approved `postmaster.readonly` permission, which **existing accounts must separately grant by reconnecting at `/api/google/authorize`**; registration in the catalog is not consent or proof that a sending domain is verified. Missing traffic can reflect low volume or provider restrictions. A signed-in business-domain boundary is enforced for domain-targeted statistics. No Gmail message content is read, no delegated service-account scope was added, and no mail is sent.

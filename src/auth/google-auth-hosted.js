@@ -139,6 +139,7 @@ export function buildApiClients(auth) {
   const clients = { auth, actingAs: auth.actingAs };
   const services = {
     gmail: () => google.gmail({ version: 'v1', auth }),
+    postmaster: () => google.gmailpostmastertools({ version: 'v1', auth }),
     drive: () => google.drive({ version: 'v3', auth }),
     calendar: () => google.calendar({ version: 'v3', auth }),
     sheets: () => google.sheets({ version: 'v4', auth }),
