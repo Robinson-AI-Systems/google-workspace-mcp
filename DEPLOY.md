@@ -133,3 +133,23 @@ permission beyond the bound account. For non-production Toolkit Hub D-4
 acceptance, a deployed RTC HTTPS tool door and actual direct/relay/Sandbox
 checks with revocation are still required. No production or write pass
 issuance is enabled by this setup page.
+
+
+## RTC 1 HTTPS tool API (pass-only)
+
+The Vercel rewrites expose public `GET /api/contract` and
+`GET /api/openapi.json`; with an owner-issued TEST pass in the
+`Authorization: Bearer` header they expose `GET /api/tools`,
+`GET /api/tools/{name}`, `POST /api/tools/{name}`,
+`POST /api/tools/_batch`, `GET /api/whoami`, and
+`GET /api/results/{handle}`. Calls reuse the *same guarded registry*
+as the standalone `POST /api/mcp` connector. Legacy MCP names remain
+unchanged; the HTTPS catalog exposes collision-safe `workspace_`
+aliases. Ordinary OAuth connector tokens are rejected by HTTPS.
+
+Read-only TEST passes cannot perform any changes, including through
+meta dispatch or batch. Rate limits are atomic in Postgres. This is
+an implemented surface with offline tests, **not** proof of deployed
+RTC conformance, an authenticated Hub connection or GitHub encrypted
+relay/Sandbox acceptance. The Hub D-4 card specifies the real testing
+and pass revocation required before claiming success.
