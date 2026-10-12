@@ -1117,3 +1117,8 @@ Additive `dev_runs` and `dev_run_objects` tables record each created Drive/Docs/
 ### RTC P8-1 typed read workflow results — PR #44
 
 Four stable JSON read workflows now advertise concrete `outputSchema` and return validated `structuredContent` derived from their final bounded MCP result. Oversized results return a connection-owned handle, not a duplicated full payload; malformed successful workflow results fail closed instead of producing misleading typed readiness. This is service-side tests only, not full hub acceptance. More workflows (including writes and text/Markdown reports) still need explicit object-specific schemas and evidence; P8-1 stays IN_PROGRESS. Scheduled-only production promotion, TEST-only passes, owner/spending gates and existing scopes are unchanged.
+
+
+### P8-7 security follow-up co-delivered with PR #44
+
+A review found the fixture write handlers required full Workspace/Drive area permissions but had not required a trusted `rtcPolicy.mode='test'`. Both creation and cleanup now fail closed before provider reads or writes for OAuth/full-profile connections without a server-trusted TEST mode, and for LIVE/production modes. This does not grant any TEST write credential or waive owner approval: current D-4 passes remain read-only, and live fixture execution remains prohibited/unverified. The existing read-only integration checker is not falsely certified as complete RTC developer mode.

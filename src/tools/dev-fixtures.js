@@ -9,6 +9,11 @@ const FOLDER='application/vnd.google-apps.folder';
 const DOC='application/vnd.google-apps.document';
 const SHEET='application/vnd.google-apps.spreadsheet';
 const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function requireDevMode(clients) {
+ // Trusted connection settings, never caller-provided tool args, set mode.
+ if(clients?.rtcPolicy?.mode!=='test')
+   throw Error('outside_scope: RTC fixture mutations require a trusted non-production TEST connection.');
+}
 function requireDriveArea(clients) {
  const policy=clients?.rtcPolicy||{};
  if(!allowedTool('drive_get_file',policy)||!allowedTool('drive_create_folder',policy))
@@ -16,6 +21,7 @@ function requireDriveArea(clients) {
 }
 function owner(clients) {
   if(!EMAIL.test(clients?.actingAs||'')||!clients?.connection)throw Error('Fixture changes need an authenticated connection and acting mailbox.');
+  requireDevMode(clients);
   requireDriveArea(clients);
   return {actingAs:clients.actingAs.toLowerCase(),connection:clients.connection};
 }
