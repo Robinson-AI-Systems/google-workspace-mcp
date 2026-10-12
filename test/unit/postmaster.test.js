@@ -12,7 +12,7 @@ describe('P7-4 approved Postmaster read-only v1 integration',()=>{
  });
  it('lists only domains within an existing business boundary, preserving pagination',async()=>{
    const clients=fake();const result=JSON.parse((await registry.handlers.postmaster_list_domains({},clients)).content[0].text);
-   expect(result.domains).toEqual([{name:'domains/allowed.example'}]);expect(result.nextPageToken).toBe('p');expect(result.scopeFiltered).toBe(true);
+   expect(result.domains).toEqual([{name:'domains/allowed.example'}]);expect(result.count).toBe(1);expect(result.nextPageToken).toBe('p');expect(result.scopeFiltered).toBe(true);
  });
  it('requests precise daily stats without changing provider state',async()=>{
    const clients=fake();const out=JSON.parse((await registry.handlers.postmaster_list_traffic_stats({domain:'allowed.example',startDate:'2026-10-01',endDate:'2026-10-10',pageSize:5},clients)).content[0].text);

@@ -87,7 +87,13 @@ export function applyResultRules(registry){
   const original=registry.handlers[tool.name];
   registry.handlers[tool.name]=async(args={},clients)=>{
    const {fields,detail,...input}=args;
-   try{return attachStructuredResult(tool.name,await shapeReadResult(await original(input,clients),{fields,detail,toolName:tool.name},clients?.connection));}
+   try{
+    const shaped=await shapeReadResult(await original(input,clients),{fields,detail,toolName:tool.name},clients?.connection);
+    // Field projection is an explicit request for only selected keys. The
+    // normal full-object outputSchema does not describe that partial result;
+    // preserve the requested projected content without claiming typed shape.
+    return fields&&OUTPUT_SCHEMAS[tool.name]?shaped:attachStructuredResult(tool.name,shaped);
+   }
    catch(e){return errorResult(e);}
   };
   return {...tool,inputSchema:{...tool.inputSchema,properties:props},...(OUTPUT_SCHEMAS[tool.name]?{outputSchema:OUTPUT_SCHEMAS[tool.name]}:{})};
