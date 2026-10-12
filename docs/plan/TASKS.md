@@ -915,7 +915,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P7-6 | SUPERSEDED | | Delivered by P8-2 (read_only profile) — Phase 8 added 2026-10-10 |
 | P7-7 | SUPERSEDED | | Delivered by P8-2 (profiles, area filters, compact listing) — Phase 8 added 2026-10-10 |
 | P7-8 | TODO | | Bulk and cross-domain operations; design note first |
-| P8-1 | IN_PROGRESS | #31, #34 | Projected, connection-isolated expiring handles and annotations implemented; common-object summary mappers / structured workflow output still pending |
+| P8-1 | IN_PROGRESS | #31, #34, #41 | Common Gmail/Drive/Calendar/Admin/Sheets summaries and full-result handles added; workflow structured output and further proof remain |
 | P8-2 | IN_PROGRESS | #30 | Profile persistence, read-only dispatch, compact meta-tools and filters implemented; full service conformance / profile acceptance remains pending |
 | P8-3 | IN_PROGRESS | #32 | Owner-protected hashed, short-lived, scratch-account TEST read-only passes, revocation, limit guards; live issuance acceptance unverified |
 | P8-4 | IN_PROGRESS | #32–#34 | Pass-only RTC manifest/HTTPS routes and DB limit implemented; deployed boundary, two-instance and D-4 acceptance not verified |
@@ -1097,3 +1097,8 @@ permanent deletion); read-back/change log and comprehensive fake/
 throwaway Postgres tests. This repository owns those implementations
 and the external Hub D-4 acceptance still needs separate actual owner-
 approved scratch-account/direct/relay/Sandbox/revocation evidence.
+
+
+### P8-1 compact object summaries — PR #41
+
+Object-specific read summaries reduce typical Gmail message/thread, Drive file, Calendar event, directory user/group and Sheet-range results. Large full results remain retrievable using connection-isolated expiring handles, so summaries do not silently discard originals. `detail: full` and explicit `fields` take precedence. Fake tests cover data minimization, paging handles and full retrieval. This is code-only local acceptance; provider/Hub D-4 acceptance and structured workflow output remain in progress. Infrastructure settings and release approval policy are unchanged.
