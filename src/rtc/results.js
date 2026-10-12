@@ -1,6 +1,7 @@
 import { summarizeGoogleResult } from './summary.js';
 // RTC 1 result shaping: no silent data loss, short-lived connection-isolated retrieval.
 import crypto from 'node:crypto';
+import { OUTPUT_SCHEMAS, attachStructuredResult } from './structured.js';
 import { storeRtcResult, getRtcResult } from '../db.js';
 import { isWrite, RTC_META } from './catalog.js';
 import { ok, errorResult } from '../tools/util.js';
@@ -86,10 +87,10 @@ export function applyResultRules(registry){
   const original=registry.handlers[tool.name];
   registry.handlers[tool.name]=async(args={},clients)=>{
    const {fields,detail,...input}=args;
-   try{return await shapeReadResult(await original(input,clients),{fields,detail,toolName:tool.name},clients?.connection);}
+   try{return attachStructuredResult(tool.name,await shapeReadResult(await original(input,clients),{fields,detail,toolName:tool.name},clients?.connection));}
    catch(e){return errorResult(e);}
   };
-  return {...tool,inputSchema:{...tool.inputSchema,properties:props}};
+  return {...tool,inputSchema:{...tool.inputSchema,properties:props},...(OUTPUT_SCHEMAS[tool.name]?{outputSchema:OUTPUT_SCHEMAS[tool.name]}:{})};
  });
  return registry;
 }
