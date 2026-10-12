@@ -921,7 +921,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-4 | IN_PROGRESS | #32–#34 | Pass-only RTC manifest/HTTPS routes and DB limit implemented; deployed boundary, two-instance and D-4 acceptance not verified |
 | P8-5 | IN_PROGRESS | #34 | Pinned Hub reference conformance and local gateway tests in CI; full conformance against this service and real D-4 routes still unverified |
 | P8-6 | WAITING | | Needs `robinson-mcp-core` (robinsons-toolkit-hub K-3) |
-| P8-7 | IN_PROGRESS | #40, #42–#43, #46–#47 | Integration checker, tagged Drive/Docs/Sheets fixtures, exact-ID run ledger and confirmed Drive-trash-only cleanup implemented; Gmail/calendar scenarios and real acceptance remain |
+| P8-7 | IN_PROGRESS | #40, #42–#43, #46–#48 | Integration checker, tagged Drive/Docs/Sheets fixtures, exact-ID run ledger and confirmed Drive-trash-only cleanup implemented; Gmail/calendar scenarios and real acceptance remain |
 | P8-8 | IN_PROGRESS | #36 | Owner overview, structured guidance and audience tags implemented; full settings coverage and actual read-only live evidence pending |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
@@ -1145,3 +1145,8 @@ Further review in PR #46 enforces a unique `(run_id,kind)` provider ID in the ol
 ### P8-7 isolated Calendar fixture scenario — PR #47
 
 Adds one 30-minute future event in an explicitly named, **non-primary**, test-only calendar that the acting mailbox owns. The event is tagged using `extendedProperties.private.rtc_run` and `rtc_kind`, with durable reservation-first ID recording and exact-tag reconciliation after a timeout. No attendees, invitations, delegates or notifications are permitted. Existing guarded `workspace_dev_cleanup` adds calendar-specific owner/tag verification, `confirm` and event-deletion readback. Only TEST connections with Calendar area permissions are eligible; no owner write credentials or live acceptance are claimed. Gmail label/self-message scenarios remain pending; do not widen scopes or certify P8-7 yet.
+
+
+### P8-7 Gmail mailbox-local scenario — PR #48
+
+Create one unique `rtc-<runId>` label and two **self-addressed, inserted-not-sent** Gmail messages with `users.messages.insert` under the already-consented `gmail.modify` scope; no external recipients, new credentials or delegated accounts. Each operation is reserved before Google is contacted, retries search exact run label/MIME marker IDs and fail closed on ambiguous matches. Cleanup previews and asks for confirmation; only recorded message IDs move to Trash, then only the recorded generated label is removed, with provider read-back. Same-account/connection TEST mode and mail-area guards remain. Real TEST provider acceptance and Toolkit Hub direct/relay/Sandbox/revocation are unverified; P8-7 remains IN_PROGRESS.
