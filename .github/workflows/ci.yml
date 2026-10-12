@@ -7,9 +7,15 @@ on:
 permissions:
   contents: read
 
+# Replace superseded PR runs, but preserve every exact post-merge main run.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     # A throwaway Postgres that lives only for this run, so the database tests
     # run on every change without touching the real (Neon) database.
     services:
@@ -25,6 +31,8 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/checkout@v4
         with:
           repository: Robinson-AI-Systems/robinsons-toolkit-hub
@@ -35,7 +43,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      - run: npm ci --no-audit --no-fund
       - run: npm run check
       - run: npm test
       - run: npm run test:db
