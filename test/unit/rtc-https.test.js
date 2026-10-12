@@ -1,0 +1,61 @@
+import {describe,it,expect,vi,beforeAll} from 'vitest';
+import {createFakeDb} from '../helpers/fake-db.js';
+const holder=vi.hoisted(()=>({db:null}));
+vi.mock('../../src/db.js',async importActual=>{
+ const real=await importActual();
+ return Object.fromEntries(Object.keys(real).map(name=>[name,(...args)=>holder.db[name](...args)]));
+});
+vi.mock('../../src/auth/google-auth-hosted.js',()=>({
+ buildHostedApiClients:async email=>({actingAs:email,gmail:{users:{getProfile:async()=>({data:{emailAddress:email}})}}})
+}));
+const {default:handler,manifest,toInternal}=await import('../../api/rtc-gateway.js');
+let token;
+function res(){
+ const r={statusCode:200,body:null,headers:{}};
+ r.setHeader=(k,v)=>{r.headers[k]=v;};r.status=n=>{r.statusCode=n;return r;};
+ r.json=x=>{r.body=x;return r;};return r;
+}
+async function invoke(method,query={},body={},authorization=token){
+ const r=res();
+ await handler({method,query,body,headers:{authorization:authorization?'Bearer '+authorization:''}},r);
+ return r;
+}
+beforeAll(async()=>{
+ holder.db=createFakeDb();
+ await holder.db.saveGoogleTokensFor('ops@example.test',{access_token:'fake'});
+ process.env.RTC_TEST_ACCOUNT_EMAILS='ops@example.test';
+ ({token}=await holder.db.createRtcPass({googleAccount:'ops@example.test',rateLimit:120}));
+});
+describe('RTC HTTPS contract and pass authorization',()=>{
+ it('advertises the exact raw public RTC manifest',async()=>{
+  const r=await invoke('GET',{door:'contract'}, {}, '');
+  expect(r.statusCode).toBe(200);expect(r.body).toMatchObject({rtc:1,prefix:'workspace_'});
+  expect(manifest().counts.tools).toBeGreaterThan(350);
+ });
+ it('rejects missing, connector-shaped and invalid bearers',async()=>{
+  expect((await invoke('GET',{door:'tools'},{},'')).statusCode).toBe(401);
+  expect((await invoke('GET',{door:'tools'},{},'connector-shaped-token')).statusCode).toBe(401);
+ });
+ it('uses only prefixed aliases and filters by read-only pass',async()=>{
+  const r=await invoke('GET',{door:'tools',listing:'catalog',q:'list',limit:'20'});
+  expect(r.statusCode).toBe(200);
+  expect(r.body.result.tools.length).toBeGreaterThan(0);
+  expect(r.body.result.tools.every(t=>t.name.startsWith('workspace_')&&!t.writes)).toBe(true);
+  expect(toInternal('workspace_gmail_list_messages')).toBe('gmail_list_messages');
+ });
+ it('refuses direct writes and mixed write batches before executing handlers',async()=>{
+  expect((await invoke('POST',{tool:'workspace_gmail_send_email'},{to:'a@example.test',confirm:true})).body.error.code).toBe('outside_scope');
+  const batch=await invoke('POST',{tool:'_batch'},{calls:[{name:'workspace_list_accounts'},{name:'workspace_gmail_send_email',args:{confirm:true}}]});
+  expect(batch.statusCode).toBe(403);
+ });
+ it('runs an authorized read via the existing guarded registry',async()=>{
+  const r=await invoke('POST',{tool:'workspace_list_accounts'},{});
+  expect(r.statusCode).toBe(200);expect(r.body.ok).toBe(true);
+  expect(r.body.result[0].email).toBe('ops@example.test');
+ });
+ it('rejects a revoked pass immediately',async()=>{
+  const pass=await holder.db.getRtcPass(token);
+  await holder.db.revokeRtcPass(pass.id);
+  expect((await invoke('GET',{door:'whoami'})).statusCode).toBe(401);
+ });
+});
