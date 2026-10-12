@@ -143,7 +143,7 @@ export async function healthReport(scope, clients, { gmailFor = realGmailFor, de
   const rawUsers = await allPages((pageToken) => clients.admin.users.list({ domain: domain || undefined, customer: domain ? undefined : 'my_customer', maxResults: 500, pageToken, projection: 'full', fields: 'nextPageToken,users(primaryEmail,creationTime,isAdmin,isEnrolledIn2Sv,isEnforcedIn2Sv,suspended,archived,lastLoginTime,recoveryEmail,recoveryPhone,orgUnitPath)' }), 'users', { pages: Math.ceil(MAX_USERS / 500) + 1 });
   const users = rawUsers.slice(0, MAX_USERS);
   const partial = rawUsers.length > MAX_USERS || rawUsers.more;
-  if (!users.length) return { scope: domain || 'all', summary: { pass: 0, warn: 0, fail: 0, info: 0 }, checks: [item('Users', 'WARN', 'Google returned no users for this scope.', 'Check the domain name, and that this account is an admin.')], report: 'No users found.' };
+  if (!users.length) return { scope: domain || 'all', summary: { pass: 0, warn: 1, fail: 0, info: 0 }, checks: [item('Users', 'WARN', 'Google returned no users for this scope.', 'Check the domain name, and that this account is an admin.')], report: 'No users found.' };
   if (partial) note.push(`Only the first ${MAX_USERS} users were read; run the report for one domain at a time to cover the rest.`);
   results.push(...scoreUsers(users, now, { partial }));
 
