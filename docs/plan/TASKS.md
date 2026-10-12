@@ -1033,3 +1033,30 @@ conformance checks all remain mandatory. Node 24 development instructions match
 CI and hosting. No live database, credentials, provider scopes, production
 activation, or daily main-to-live release controls change. PR and main CI must
 pass before this operational change is considered verified.
+
+
+### RTC checkpoint #35 — owner overview, guided settings and D-4 direct test runner
+
+Implemented `workspace_admin_overview` from actual existing Google
+diagnostics with distinct `ok`, `needs_attention`, and
+`not_readable` sections; domain/area-aware reads; structured console
+setting instructions alongside old responses; audience metadata;
+fully paginated HTTPS catalog; and an opt-in genuine TEST-only direct
+route/revocation runner with protected environment inputs and no provider
+result/secret logging. Unit tests cover each. Never substitutes missing
+owner API access with a fake success.
+
+**Still required in Hub D-4**: a deployed exact commit reachable over
+HTTPS, approved scratch account and short-lived read_only pass configured
+outside chat, owner-sanctioned direct CLI/SDK test, GitHub encrypted relay
+test in a truly restricted workspace, Vercel Sandbox allowlisted test,
+revocation proof, and a full service-level RTC conformance assessment.
+The Hub agent owns relay configuration and complete three-route evidence;
+Google Workspace repository owns this service's endpoints, credentials
+and deployment. All are UNVERIFIED until actually observed. No
+production, spending, destructive or money-out approval has been given.
+
+
+### Hosting-cost operating checkpoint — 2026-10-12
+
+The owner-directed hosting operating policy is now incorporated in a substantive RTC PR. Saved verified GitHub protection requires exact-head GitHub Actions **test** and **release-policy** for PRs into `main`. Only the checked scheduled daily `main → live` workflow promotes to Vercel production; automatic previews are disabled, with Basic/queued builds and existing Neon 0.25-CU/300-second idle limits retained. **Unverified:** first scheduled live promotion and its READY commit, Basic build performance, live RTC Hub direct/relay/Sandbox and revocation acceptance. No new paid resources, production activation, writes or owner approval.
