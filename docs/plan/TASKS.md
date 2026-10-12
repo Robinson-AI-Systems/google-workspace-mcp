@@ -1073,3 +1073,27 @@ tests prove the full invocation and denial boundaries. This closes the
 **implementation** portion of P0-2; live acceptance still IN_PROGRESS and
 requires an approved scratch account, protected credentials and a recorded
 actual run. No production/paid access was activated.
+
+
+### RTC developer integration verification — PR #40
+
+P8-7 **IN_PROGRESS**. Implemented real `workspace_dev_check_integration`
+with authenticated, strictly read-only probes for Gmail, Drive, Calendar
+and Tasks; tokeninfo-based OAuth scope observation; service-account client
+ID comparison; explicitly unverified Admin console domain-wide delegation
+grant; and optional calendar/Drive-folder existence and account access
+checks. Each check returns `ready`, `missing` or `not_readable`
+with safe actionable setup steps and no credential/provider payloads.
+Connection-area restrictions are checked before *every* sub-read.
+Fakes cover successful reads, 403s, absent OAuth grants, inaccessible
+resources, domain-area restrictions and malformed specs. No scopes were
+changed, production/write operations activated, or real API calls made.
+
+**Remaining P8-7 work for a subsequent substantive PR:** safe, tagged
+Google Drive/Docs/Sheets/Gmail/calendar test fixture creation with a
+durable `dev_runs` / `dev_run_objects` object ledger; preview,
+confirmed precise cleanup affecting recorded IDs only (Drive trash, not
+permanent deletion); read-back/change log and comprehensive fake/
+throwaway Postgres tests. This repository owns those implementations
+and the external Hub D-4 acceptance still needs separate actual owner-
+approved scratch-account/direct/relay/Sandbox/revocation evidence.
