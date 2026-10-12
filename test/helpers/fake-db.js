@@ -43,6 +43,13 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       if(r.objects.some(o=>o.kind===kind&&o.google_id===googleId))throw Error('Duplicate fixture object.');
       r.objects.push({kind,google_id:googleId,parent_id:parentId,cleaned_at:null});
     },
+    async markDevObjectCleaned({runId,actingAs,connection,kind,googleId}){
+      const r=state.devRuns.get(runId);
+      if(!r||r.acting_as!==norm(actingAs)||r.connection!==connection)throw Error('Fixture cleanup ledger write was refused.');
+      const o=r.objects.find(x=>x.kind===kind&&x.google_id===googleId);
+      if(!o)throw Error('Fixture cleanup ledger write was refused.');
+      o.cleaned_at=at();
+    },
     async getDevRun({runId,actingAs,connection}){
       const r=state.devRuns.get(runId);
       return r&&r.acting_as===norm(actingAs)&&r.connection===connection?{...r,objects:r.objects.map(o=>({...o}))}:null;

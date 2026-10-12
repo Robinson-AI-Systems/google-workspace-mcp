@@ -63,3 +63,65 @@ describe('P8-7 Drive test fixtures',()=>{
    expect(allowedTool('workspace_dev_create_fixtures',{profile:'everyday'})).toBe(false);
  });
 });
+
+describe('P8-7 precise confirmed cleanup',()=>{
+ function ready(){
+   const {clients,calls,when}=makeFakeClients();clients.connection='owner-A';
+   const byId=new Map();
+   const run='4ab45b6c-013e-4f66-8c4a-ccccccccccca';
+   const objects=[['folder','f-root','application/vnd.google-apps.folder'],['doc','d-1','application/vnd.google-apps.document'],['sheet','s-1','application/vnd.google-apps.spreadsheet']];
+   const owner={emailAddress:clients.actingAs};
+   for(const [kind,id,mimeType] of objects)byId.set(id,{id,mimeType,appProperties:{rtc_run:run},owners:[owner],trashed:false});
+   byId.set('sibling',{id:'sibling',mimeType:'application/vnd.google-apps.document',appProperties:{},owners:[owner],trashed:false});
+   when('drive.files.get').resolves(({fileId})=>({data:{...byId.get(fileId)}}));
+   when('drive.files.update').resolves(({fileId,requestBody})=>{byId.set(fileId,{...byId.get(fileId),...requestBody});return {data:{id:fileId,trashed:true}};});
+   return {clients,calls,when,byId,run,objects,owner};
+ }
+ async function seeded(s){
+   await state.db.startDevRun({id:s.run,actingAs:s.clients.actingAs,connection:s.clients.connection,scenario:'files'});
+   for(const [kind,googleId] of s.objects)await state.db.recordDevObject({runId:s.run,actingAs:s.clients.actingAs,connection:s.clients.connection,kind,googleId});
+ }
+ it('no confirmation means zero writes; dry-run lists only recorded IDs',async()=>{
+   const s=ready();await seeded(s);
+   const preview=body(await handlers.workspace_dev_cleanup({runId:s.run,dryRun:true},s.clients));
+   expect(preview.dryRun).toBe(true);
+   expect(preview.before.objects.map(x=>x.id).sort()).toEqual(['d-1','f-root','s-1']);
+   expect(body(await handlers.workspace_dev_cleanup({runId:s.run},s.clients)).needsConfirmation).toBe(true);
+   expect(s.calls.filter(x=>x.path==='drive.files.update')).toHaveLength(0);
+ });
+ it('trashes only exact recorded IDs in children-first order, no permanent deletion',async()=>{
+   const s=ready();await seeded(s);
+   const result=body(await handlers.workspace_dev_cleanup({runId:s.run,confirm:true},s.clients));
+   expect(result.confirmed).toBe(true);
+   expect(result.details.fullyCleaned).toBe(true);
+   expect(s.calls.filter(x=>x.path==='drive.files.update').map(x=>x.args[0].fileId)).toEqual(['s-1','d-1','f-root']);
+   expect(s.calls.filter(x=>x.path==='drive.files.delete')).toHaveLength(0);
+   expect(s.byId.get('sibling').trashed).toBe(false);
+   expect((await state.db.getDevRun({runId:s.run,actingAs:s.clients.actingAs,connection:s.clients.connection})).objects.every(x=>!!x.cleaned_at)).toBe(true);
+ });
+ it('refuses tampered tags and foreign connections without any destructive call',async()=>{
+   const s=ready();await seeded(s);
+   s.byId.get('d-1').appProperties.rtc_run='some-other-run';
+   await expect(handlers.workspace_dev_cleanup({runId:s.run,confirm:true},s.clients)).rejects.toThrow(/identity/);
+   await expect(handlers.workspace_dev_cleanup({runId:s.run,confirm:true},{...s.clients,connection:'stranger'})).rejects.toThrow(/does not exist/);
+   expect(s.calls.filter(x=>x.path==='drive.files.update')).toHaveLength(0);
+ });
+ it('marks partial failures as not confirmed and stops before parent',async()=>{
+   const s=ready();await seeded(s);
+   s.when('drive.files.update').resolves(({fileId,requestBody})=>{
+     if(fileId!=='s-1')return {data:{id:fileId,trashed:false}};
+     s.byId.set(fileId,{...s.byId.get(fileId),...requestBody});
+     return {data:{id:fileId,trashed:true}};
+   });
+   const r=body(await handlers.workspace_dev_cleanup({runId:s.run,confirm:true},s.clients));
+   expect(r.confirmed).toBe(false);
+   expect(r.details.fullyCleaned).toBe(false);
+   expect(s.calls.filter(x=>x.path==='drive.files.update').map(x=>x.args[0].fileId)).toEqual(['s-1','d-1']);
+   expect(s.byId.get('f-root').trashed).toBe(false);
+ });
+ it('advertises required user confirmation and read-only refusal',()=>{
+   const t=tools.find(t=>t.name==='workspace_dev_cleanup');
+   expect(t.inputSchema.properties.confirm.type).toBe('boolean');
+   expect(allowedTool(t.name,{profile:'read_only'})).toBe(false);
+ });
+});

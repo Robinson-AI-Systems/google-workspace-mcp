@@ -646,3 +646,16 @@ export async function getDevRun({runId,actingAs,connection}){
     WHERE run_id=${runId} ORDER BY created_at,kind,google_id`;
   return {...runs[0],objects};
 }
+
+
+// Only an object's initiating account and connection can mark that exact fixture cleaned.
+export async function markDevObjectCleaned({runId,actingAs,connection,kind,googleId}){
+ if(!runId||!actingAs||!connection||!kind||!googleId)throw new Error('Complete fixture identity required.');
+ const q=db();
+ const rows=await q`UPDATE dev_run_objects AS o SET cleaned_at=now()
+ FROM dev_runs AS r WHERE o.run_id=r.id AND o.run_id=${runId}
+   AND r.acting_as=${normalizeEmail(actingAs)} AND r.connection=${connection}
+   AND o.kind=${kind} AND o.google_id=${googleId}
+   RETURNING o.google_id`;
+ if(rows.length!==1)throw new Error('Fixture cleanup ledger write was refused.');
+}
