@@ -1021,3 +1021,15 @@ scratch passes, actual direct/relay/Vercel Sandbox calls and revocation;
 two-instance pass rate-limit is separately tested against throwaway
 Postgres. Full service-level conformance remains IN_PROGRESS until its
 remaining integration probes genuinely pass.
+
+
+### Owner-requested stack optimization — 2026-10-12
+
+CI now cancels superseded runs of the same PR, preserves independent post-merge
+main runs, and bounds the complete verification job at 20 minutes. Checkout does
+not retain its token in git configuration. npm install skips unsolicited audit
+and funding lookups; syntax/safety, unit, disposable Postgres, RTC and pinned Hub
+conformance checks all remain mandatory. Node 24 development instructions match
+CI and hosting. No live database, credentials, provider scopes, production
+activation, or daily main-to-live release controls change. PR and main CI must
+pass before this operational change is considered verified.

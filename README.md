@@ -15,13 +15,13 @@ with `docs/plan/README.md`.
 
 ## Developing
 
-Use Node 20 (what the automatic checks on GitHub use; `package.json` accepts 18 or newer).
+Use Node 24 (the version used by GitHub CI and the hosted Vercel project).
 
 ```
 npm ci            # install
 npm run check     # syntax check every source file, plus the "every changing tool is safe" check
 npm test          # unit tests (36 files, 1050 tests, about half a minute, touches nothing real)
-npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at any Postgres or a Neon branch
+npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposable local/CI Postgres
 ```
 
 - Tests never call Google or the real database. `test/helpers/fake-google.js` stands in for the Google clients and `test/helpers/fake-db.js` for `src/db.js`; `test/contract/db-contract.js` runs the same checks against both so the fake cannot drift from the real thing. Database tests work inside their own temporary schema and clean up after themselves.
