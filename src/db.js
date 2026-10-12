@@ -100,6 +100,15 @@ export async function initSchema() {
   `;
   await q`CREATE INDEX IF NOT EXISTS login_attempts_ip_time ON login_attempts (ip, attempted_at)`;
   await q`CREATE INDEX IF NOT EXISTS login_attempts_time ON login_attempts (attempted_at)`;
+  // Every large result is isolated by its issuing connection and expires automatically.
+  await q`CREATE TABLE IF NOT EXISTS rtc_results (
+    handle TEXT PRIMARY KEY,
+    connection TEXT NOT NULL,
+    payload JSONB NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`;
+  await q`CREATE INDEX IF NOT EXISTS rtc_results_expiry ON rtc_results(expires_at)`;
   // Connection bookkeeping: when a Claude connection last did something, and whether it was switched off by hand.
   await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMPTZ`;
   await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMPTZ`;
@@ -486,4 +495,19 @@ export async function saveBusinessResource({ business, kind, key, googleId }) {
     VALUES (${business}, ${kind}, ${key}, ${googleId})
     ON CONFLICT (business, kind, key) DO UPDATE SET google_id = EXCLUDED.google_id, updated_at = now()
   `;
+}
+
+export async function storeRtcResult({handle,connection,payload,ttlHours=24}){
+ if(!handle||!connection)throw new Error('Missing result owner.');
+ const q=db();
+ await q`DELETE FROM rtc_results WHERE expires_at < now()`;
+ await q`INSERT INTO rtc_results(handle,connection,payload,expires_at)
+ VALUES (${handle},${connection},${JSON.stringify(payload)}::jsonb,now() + (${ttlHours} || ' hours')::interval)`;
+ return handle;
+}
+export async function getRtcResult(handle,connection){
+ if(!handle||!connection)return null;
+ const q=db();
+ const rows=await q`SELECT payload FROM rtc_results WHERE handle=${handle} AND connection=${connection} AND expires_at > now()`;
+ return rows[0]?.payload ?? null;
 }

@@ -29,8 +29,9 @@ import * as business from './business.js';
 import * as dnsTools from './dns.js';
 import * as businessResources from './business-resources.js';
 import { applyDomainGuard } from './domain-guard.js';
+import { applyResultRules } from '../rtc/results.js';
 
-export const registry = applyDomainGuard(applyGuards(mergeNamespaces([
+export const registry = applyResultRules(applyDomainGuard(applyGuards(mergeNamespaces([
   rtcMeta, gmail, drive, sharedDrives, calendar, sheets, docs, slides, forms, tasks, people,
   adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts, mailboxBranding, ops, emailHealth, healthReport, digest, inbox, staff, business, dnsTools, businessResources
-])));
+]))));

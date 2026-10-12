@@ -1,6 +1,7 @@
 // Compact discovery and dispatch share the exact same wrapped registry as MCP.
 // A call cannot escape a connection's profile, areas, domain guards or write guards.
 import { ok, errorResult } from './util.js';
+import { readStoredResult } from '../rtc/results.js';
 import { allowedTool, listedTools, toolMetadata, rtcArea, isWrite, RTC_META } from '../rtc/catalog.js';
 const schema = (props,required=[])=>({type:'object',properties:props,required});
 const str={type:'string'};
@@ -9,6 +10,7 @@ export const tools=[
  {name:'workspace_search_tools',description:'Search the Workspace tool catalog within this connection’s permissions.',inputSchema:schema({query:str,area:str,audience:{type:'string',enum:['builder','owner','operator']},limit:{type:'integer',default:10,minimum:1,maximum:30}})},
  {name:'workspace_describe_tool',description:'Describe the input schema and permissions for one allowed Workspace tool.',inputSchema:schema({name:str},['name'])},
  {name:'workspace_call',description:'Invoke an allowed Workspace tool using the same safety and domain guards as MCP direct calls.',inputSchema:callSchema},
+ {name:'workspace_get_result',description:'Read one page of an oversized result owned by this connection.',inputSchema:schema({handle:str,page:{type:'integer',minimum:1},fields:str},['handle'])},
  {name:'workspace_batch',description:'Run up to ten read-only tool calls with the same connection permissions and guards.',inputSchema:schema({calls:{type:'array',items:callSchema,minItems:1,maxItems:10}},['calls'])}
 ];
 async function catalog(){return (await import('./index.js')).registry;}
@@ -20,6 +22,7 @@ async function lookup(name,clients,{readsOnly=false}={}){
  return registry.handlers[name];
 }
 export const handlers={
+ async workspace_get_result(args={},clients){return readStoredResult(args,clients?.connection);},
  async workspace_search_tools(args={},clients){
    const {tools}=await catalog();
    const query=String(args.query||'').trim().toLowerCase();

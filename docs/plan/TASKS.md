@@ -976,3 +976,8 @@ Not counted: the app-side half of the Appliance Desk integration
 ### RTC implementation checkpoint #30
 
 P8-2 started: selected profile/listing and optional area restrictions persist through OAuth code and refresh. MCP tool listing and dispatch enforce read-only and area restrictions. Legacy connector tokens retain full access for compatibility. RTC 1 integration and live testing are NOT yet verified; continue P8-1..P8-5.
+
+
+### RTC checkpoint #31 — P8-1 result handles
+
+Implemented: read-tool field projection, 8KB response storage with 24-hour handles, owner-isolated PostgreSQL result retrieval, 4KB pages through workspace_get_result, fake and real-DB tests. No live Google access or full Hub conformance claimed. Summary mappers and endpoint-level conformance remain requirements, not placeholders: P8-1 and P8-5 acceptance must be closed with evidence in future substantive PRs.

@@ -73,6 +73,16 @@ describe.skipIf(!url)('database (real Postgres)', () => {
     });
   });
 
+  describe('RTC oversized result storage', () => {
+    it('keeps handles private to the issuing connection and rejects expired records',async()=>{
+      await db.initSchema();
+      await db.storeRtcResult({handle:'test-result-handle',connection:'client-a',payload:{data:{messages:[1,2]},bytes:42}});
+      expect(await db.getRtcResult('test-result-handle','client-a')).toMatchObject({bytes:42});
+      expect(await db.getRtcResult('test-result-handle','client-b')).toBeNull();
+      await rawQuery("UPDATE rtc_results SET expires_at=now()-interval '1 second' WHERE handle='test-result-handle'");
+      expect(await db.getRtcResult('test-result-handle','client-a')).toBeNull();
+    });
+  });
   describe('lockout window', () => {
     it('stops counting failures older than the window', async () => {
       await rawQuery(`DELETE FROM login_attempts`);
