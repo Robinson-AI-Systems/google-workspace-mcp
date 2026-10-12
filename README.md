@@ -35,7 +35,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 <!-- BEGIN GENERATED TOOL CATALOG -->
 <!-- Registry-derived; regenerate with `npm run gen:catalog`. Do not edit this section by hand. -->
 
-**373 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
+**375 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
 
 | Area | Registered tools |
 | --- | ---: |
@@ -49,7 +49,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 | dns | 3 |
 | domain | 3 |
 | files | 102 |
-| identity | 3 |
+| identity | 5 |
 | mail | 60 |
 | tasks | 11 |
 | workflows | 12 |
@@ -349,11 +349,13 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `slides_insert_text`
 - `slides_replace_all_text`
 
-### identity (3)
+### identity (5)
 
 - `identity_check_membership`
 - `identity_get_security_settings`
 - `identity_list_group_transitive_membership`
+- `identity_list_policies`
+- `identity_policy_audit`
 
 ### mail (60)
 
@@ -531,3 +533,8 @@ integration check, not fixture creation/cleanup; all three P8-7 fixture families
 ### Gmail Postmaster (read-only, owner-approved scope)
 
 `postmaster_list_domains` and `postmaster_list_traffic_stats` use Google's Gmail Postmaster Tools **v1** read-only API. They require the explicitly approved `postmaster.readonly` permission, which **existing accounts must separately grant by reconnecting at `/api/google/authorize`**; registration in the catalog is not consent or proof that a sending domain is verified. Missing traffic can reflect low volume or provider restrictions. A signed-in business-domain boundary is enforced for domain-targeted statistics. No Gmail message content is read, no delegated service-account scope was added, and no mail is sent.
+
+
+### Cloud Identity policy inspection (P7-2, read-only)
+
+`identity_list_policies` lists explicitly configured organization policies; `identity_policy_audit` compares selected Gmail, Drive, Calendar and Chat settings against the **editable** `src/data/policy-baseline.json`. Mismatches trigger attention, but missing, inherited, inaccessible or incomplete policy data is marked **not_readable**, never green. Policies apply to the Workspace *customer*, not directly to an email domain, and organizational-unit/group overrides matter. Consequently a business-restricted connection needs explicit `crossDomain: true` and owner authorization before reading customer-wide policies. Google requires a Super Admin, a supported Policy API setup, and new OAuth consent to `cloud-identity.policies.readonly`. The previously approved scope is not proof that any account has connected, or that an effective per-domain baseline has been verified.

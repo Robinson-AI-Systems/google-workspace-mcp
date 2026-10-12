@@ -66,6 +66,9 @@ export const SCOPE_GROUPS = {
     'https://www.googleapis.com/auth/admin.reports.usage.readonly',
     'https://www.googleapis.com/auth/admin.reports.audit.readonly'
   ],
+  // Approved in writing 2026-10-02; requires new user OAuth consent and
+  // Google Super Admin role. Do not add to DELEGATED_SCOPES.
+  cloudIdentityPolicies: ['https://www.googleapis.com/auth/cloud-identity.policies.readonly'],
   adminSecurity: [
     'https://www.googleapis.com/auth/admin.directory.user.security'
   ],
