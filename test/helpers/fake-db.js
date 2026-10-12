@@ -98,11 +98,11 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       return state.clients.get(clientId) || null;
     },
 
-    async createAuthCode({ code, clientId, redirectUri, codeChallenge, codeChallengeMethod, googleAccount, ttlSeconds = 600 }) {
+    async createAuthCode({ code, clientId, redirectUri, codeChallenge, codeChallengeMethod, googleAccount, profile = 'full', listing = 'catalog', areas = null, ttlSeconds = 600 }) {
       state.codes.set(code, {
         code, client_id: clientId, redirect_uri: redirectUri,
         code_challenge: codeChallenge || null, code_challenge_method: codeChallengeMethod || null,
-        google_account: googleAccount ? norm(googleAccount) : null,
+        google_account: googleAccount ? norm(googleAccount) : null, profile, listing, areas,
         expires_at: afterSeconds(ttlSeconds), used: false
       });
     },
@@ -114,17 +114,17 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       return snapshot;
     },
 
-    async createAccessToken({ accessToken, refreshToken, clientId, googleAccount, ttlSeconds = 3600 * 24 * 30 }) {
+    async createAccessToken({ accessToken, refreshToken, clientId, googleAccount, profile = 'full', listing = 'catalog', areas = null, ttlSeconds = 3600 * 24 * 30 }) {
       state.tokens.push({
         access_token: accessToken, refresh_token: refreshToken || null, client_id: clientId,
-        google_account: googleAccount ? norm(googleAccount) : null,
+        google_account: googleAccount ? norm(googleAccount) : null, profile, listing, areas,
         expires_at: afterSeconds(ttlSeconds), created_at: at(), last_used_at: null, revoked_at: null
       });
     },
     async getTokenByRefreshToken(refreshToken) {
       if (!refreshToken) return null;
-      const rows = state.tokens.filter((t) => t.refresh_token === refreshToken && !t.revoked_at).sort((a, b) => b.created_at - a.created_at);
-      return rows[0] ? { client_id: rows[0].client_id, google_account: rows[0].google_account } : null;
+      const rows = state.tokens.filter((t) => t.refresh_token === refreshToken && !t.revoked_at && t.expires_at > at()).sort((a, b) => b.created_at - a.created_at);
+      return rows[0] ? { client_id: rows[0].client_id, google_account: rows[0].google_account, profile: rows[0].profile, listing: rows[0].listing, areas: rows[0].areas } : null;
     },
     async getAccessToken(accessToken) {
       const row = state.tokens.find((t) => t.access_token === accessToken && t.expires_at > at() && !t.revoked_at);
