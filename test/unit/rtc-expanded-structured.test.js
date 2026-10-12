@@ -32,6 +32,9 @@ describe('P8-1 typed read API results',()=>{
    const providerFailure={...ok('no permission'),isError:true};
    expect(attachStructuredResult(n,providerFailure)).toBe(providerFailure);
   }
+  const guarded=attachStructuredResult('identity_policy_audit',ok('Refused: outside what this connection may manage. Nothing was read.'));
+  expect(guarded.isError).toBe(true);expect(guarded.structuredContent).toBeUndefined();
+  expect(guarded.content[0].text).toMatch(/outside what this connection/);
   const falseReady=attachStructuredResult('identity_policy_audit',ok({...audit,results:[{...audit.results[0],status:'certified'}]}));
   expect(falseReady.isError).toBe(true);
  });

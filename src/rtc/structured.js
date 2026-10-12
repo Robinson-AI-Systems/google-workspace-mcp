@@ -89,6 +89,9 @@ export function attachStructuredResult(name,response){
  if(!Object.hasOwn(OUTPUT_SCHEMAS,name)||response?.isError)return response;
  if(response?.structuredContent)return response;
  const raw=response?.content?.find(c=>c.type==='text')?.text;
+ // Domain-guard denial is intentionally a human-readable refusal, not JSON.
+ // Never disguise it as a generic schema failure or attach typed success.
+ if(typeof raw==='string'&&/^Refused:\s/.test(raw))return {...response,isError:true};
  let parsed;
  try{parsed=JSON.parse(raw)}catch{return errorResult(new Error('Schema error: workflow returned non-JSON output.'))}
  if(!matchesStructuredShape(name,parsed))
