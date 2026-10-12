@@ -6,6 +6,7 @@ import { neon } from '@neondatabase/serverless';
 import crypto from 'node:crypto';
 import { loadKey, encryptJson, decryptJson } from './crypto.js';
 import { normalizeDomains, domainOfEmail } from './domains.js';
+import {passOptions} from './rtc/pass-options.js';
 
 let sql;
 function db() {
@@ -125,6 +126,7 @@ export async function initSchema() {
     revoked_at TIMESTAMPTZ
   )`;
   await q`CREATE INDEX IF NOT EXISTS rtc_passes_expiry ON rtc_passes(expires_at)`;
+  await q`ALTER TABLE rtc_passes ADD COLUMN IF NOT EXISTS for_hub BOOLEAN NOT NULL DEFAULT false`;
   await q`CREATE TABLE IF NOT EXISTS rtc_rate_limits (
     pass_id TEXT NOT NULL,
     window_start TIMESTAMPTZ NOT NULL,
@@ -574,30 +576,26 @@ export async function getRtcResult(handle,connection){
 
 // RTC 1 passes: test-mode read-only issuance with owner-managed revocation.
 // Secrets are returned exactly once to the owner setup page; only SHA256 digests persist.
-export async function createRtcPass({googleAccount,areas=null,rateLimit=120,hours=24,forHub=false}){
- const account=normalizeEmail(googleAccount);
+export async function createRtcPass(options){
+ const {account,areas,limit,ttl,forHub,allowWrites,profile}=passOptions(options);
  if(!account)throw new Error('Missing connected account.');
  const allowlist=String(process.env.RTC_TEST_ACCOUNT_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
  if(!allowlist.includes(account))throw new Error('Account is not authorized for RTC non-production TEST passes. Configure RTC_TEST_ACCOUNT_EMAILS with the approved scratch mailbox.');
- const limit=Number(rateLimit),ttl=Number(hours);
- if(!Number.isInteger(limit)||limit<1||limit>600)throw new Error('Rate limit must be 1–600 per minute.');
- if(!Number.isInteger(ttl)||ttl<1||ttl>(forHub?365*24:30*24))throw new Error('Pass duration exceeds the allowed range.');
- if(areas!==null&&(!Array.isArray(areas)||areas.some(x=>typeof x!=='string')))throw new Error('Invalid areas.');
  const q=db();
  const accountRows=await q`SELECT 1 FROM google_accounts WHERE email=${account}`;
  if(!accountRows[0])throw new Error('Unknown connected account.');
  const token='rtc_pass_'+crypto.randomBytes(32).toString('base64url');
  const hash=crypto.createHash('sha256').update(token).digest('hex');
  const id='pass_'+hash.slice(0,20);
- await q`INSERT INTO rtc_passes(id,token_hash,google_account,areas,rate_limit_per_minute,expires_at)
- VALUES (${id},${hash},${account},${areas},${limit},now() + (${ttl} || ' hours')::interval)`;
+ await q`INSERT INTO rtc_passes(id,token_hash,google_account,areas,rate_limit_per_minute,expires_at,for_hub,allow_writes,profile)
+ VALUES (${id},${hash},${account},${areas},${limit},now() + (${ttl} || ' hours')::interval,${forHub},${allowWrites},${profile})`;
  return {token,id};
 }
 export async function getRtcPass(token){
  if(typeof token!=='string'||!/^rtc_pass_[A-Za-z0-9_-]{43}$/.test(token))return null;
  const hash=crypto.createHash('sha256').update(token).digest('hex');
  const q=db();
- const rows=await q`SELECT id,google_account,profile,areas,listing,mode,allow_writes,rate_limit_per_minute,expires_at
+ const rows=await q`SELECT id,google_account,profile,areas,listing,mode,allow_writes,for_hub,rate_limit_per_minute,expires_at
  FROM rtc_passes WHERE token_hash=${hash} AND revoked_at IS NULL AND expires_at>now()`;
  return rows[0]||null;
 }
@@ -608,7 +606,7 @@ export async function revokeRtcPass(id){
 }
 export async function listRtcPasses(){
  const q=db();
- return q`SELECT id AS connection_id, 'pass' AS kind,google_account,profile,listing,areas,mode,allow_writes,
+ return q`SELECT id AS connection_id, 'pass' AS kind,google_account,profile,listing,areas,mode,allow_writes,for_hub,
  rate_limit_per_minute,created_at,expires_at,revoked_at FROM rtc_passes ORDER BY created_at DESC`;
 }
 export async function chargeRtcPass(id,limit){

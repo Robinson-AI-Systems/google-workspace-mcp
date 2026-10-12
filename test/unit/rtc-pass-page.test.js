@@ -51,4 +51,36 @@ describe('owner RTC pass setup',()=>{
   expect((await holder.db.revokeConnection(pass.id)).revoked).toBe(1);
   expect(await holder.db.getRtcPass(token)).toBeNull();
  });
+ it('issues explicit short-lived area-restricted TEST writes only after account confirmation',async()=>{
+  const res=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'ops@example.test',hours:'1',areas:'workspace,files,calendar,mail',allow_writes:'yes',confirmed_account:'ops@example.test'});
+  expect(res.statusCode).toBe(200);
+  const token=res.body.match(/rtc_pass_[A-Za-z0-9_-]{43}/)[0];
+  expect(await holder.db.getRtcPass(token)).toMatchObject({mode:'test',profile:'full',allow_writes:true,areas:['workspace','files','calendar','mail'],for_hub:false});
+  expect(res.headers['Cache-Control']).toContain('no-store');
+  expect(JSON.stringify(await holder.db.listRtcPasses())).not.toContain(token);
+ });
+ it.each([
+  {allow_writes:'yes',areas:'mail'},
+  {allow_writes:'yes',areas:'mail',confirmed_account:'other@example.test'},
+  {allow_writes:'yes',confirmed_account:'ops@example.test'},
+  {allow_writes:'yes',areas:'mail',confirmed_account:'ops@example.test',hours:'25'},
+  {allow_writes:'yes',areas:'mail',confirmed_account:'ops@example.test',hours:'8760',for_hub:'yes'},
+  {areas:'unknown'}
+ ])('refuses unsafe pass choices %j',async options=>{
+  const res=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'ops@example.test',...options});
+  expect(res.statusCode).toBe(400);expect(await holder.db.listRtcPasses()).toHaveLength(0);
+ });
+ it('keeps non-allowlisted real accounts refused even with write confirmation',async()=>{
+  await holder.db.saveGoogleTokensFor('real@example.test',{access_token:'fake'});
+  const res=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'real@example.test',allow_writes:'yes',confirmed_account:'real@example.test',areas:'mail'});
+  expect(res.statusCode).toBe(400);expect(await holder.db.listRtcPasses()).toHaveLength(0);
+ });
+ it('persists explicitly chosen year-long read-only Toolkit passes, with revocation and expiry',async()=>{
+  const res=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'ops@example.test',for_hub:'yes',hours:'8760'});
+  const token=res.body.match(/rtc_pass_[A-Za-z0-9_-]{43}/)[0];
+  expect(await holder.db.getRtcPass(token)).toMatchObject({for_hub:true,profile:'read_only',allow_writes:false});
+  expect((await holder.db.revokeConnection((await holder.db.getRtcPass(token)).id)).revoked).toBe(1);
+  expect(await holder.db.getRtcPass(token)).toBeNull();
+ });
+
 });

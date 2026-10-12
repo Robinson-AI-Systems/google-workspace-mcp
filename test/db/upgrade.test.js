@@ -271,4 +271,18 @@ describe.skipIf(!url)('database (real Postgres)', () => {
   });
 
 
+ it('stores explicit TEST write settings and Toolkit eligibility with additive migration',async()=>{
+  await db.initSchema();await db.initSchema();
+  await db.saveGoogleTokensFor('write-pass@example.test',{access_token:'fake'});process.env.RTC_TEST_ACCOUNT_EMAILS='write-pass@example.test';
+  await expect(db.createRtcPass({googleAccount:'write-pass@example.test',allowWrites:true,areas:['mail']})).rejects.toThrow('confirmation');
+  const {token,id}=await db.createRtcPass({googleAccount:'write-pass@example.test',allowWrites:true,confirmedAccount:'write-pass@example.test',areas:['workspace','mail'],hours:1});
+  expect(await db.getRtcPass(token)).toMatchObject({mode:'test',profile:'full',allow_writes:true,for_hub:false,areas:['workspace','mail']});
+  expect((await db.listRtcPasses()).find(p=>p.connection_id===id)).toMatchObject({allow_writes:true,for_hub:false});
+  await rawQuery('UPDATE rtc_passes SET expires_at=now()-interval \'1 second\' WHERE id=$1',[id]);
+  expect(await db.getRtcPass(token)).toBeNull();
+  const hub=await db.createRtcPass({googleAccount:'write-pass@example.test',forHub:true,hours:8760});
+  expect(await db.getRtcPass(hub.token)).toMatchObject({for_hub:true,allow_writes:false,profile:'read_only'});
+  await db.revokeRtcPass(hub.id);expect(await db.getRtcPass(hub.token)).toBeNull();
+ });
+
 });

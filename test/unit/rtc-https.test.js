@@ -1,12 +1,16 @@
 import {describe,it,expect,vi,beforeAll} from 'vitest';
 import {createFakeDb} from '../helpers/fake-db.js';
-const holder=vi.hoisted(()=>({db:null}));
+const holder=vi.hoisted(()=>({db:null,labels:new Map(),writes:0}));
 vi.mock('../../src/db.js',async importActual=>{
  const real=await importActual();
  return Object.fromEntries(Object.keys(real).map(name=>[name,(...args)=>holder.db[name](...args)]));
 });
 vi.mock('../../src/auth/google-auth-hosted.js',()=>({
- buildHostedApiClients:async email=>({actingAs:email,gmail:{users:{getProfile:async()=>({data:{emailAddress:email}})}}})
+ buildHostedApiClients:async email=>({actingAs:email,gmail:{users:{getProfile:async()=>({data:{emailAddress:email}}),labels:{
+ create:async r=>{holder.writes++;const label={id:'Label_test',...r.requestBody};holder.labels.set(label.id,label);return {data:label};},
+ get:async r=>{if(!holder.labels.has(r.id))throw Object.assign(Error('not found'),{code:404});return {data:holder.labels.get(r.id)};},
+ delete:async r=>{holder.writes++;holder.labels.delete(r.id);return {data:{}};}
+}}}})
 }));
 const {default:handler,manifest,toInternal}=await import('../../api/rtc-gateway.js');
 let token;
@@ -70,4 +74,21 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   await holder.db.revokeRtcPass(pass.id);
   const r=await invoke('GET',{door:'whoami'});expect(r.statusCode).toBe(401);expect(r.body.error.code).toBe('pass_revoked');
  });
+ it('executes TEST writes through real HTTPS dispatch while preserving preview, confirmation, areas and revocation',async()=>{
+  const write=await holder.db.createRtcPass({googleAccount:'ops@example.test',allowWrites:true,confirmedAccount:'ops@example.test',areas:['mail'],hours:1});
+  let r=await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'rtc-test',dryRun:true},write.token);
+  expect(r.body.result.done).toBe(false);expect(holder.writes).toBe(0);
+  r=await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'rtc-test'},write.token);
+  expect(r.body.result).toMatchObject({done:true,confirmed:true,logged:true});expect(holder.writes).toBe(1);
+  r=await invoke('POST',{tool:'workspace_gmail_delete_label'},{labelId:'Label_test'},write.token);
+  expect(r.body.result.needsConfirmation).toBe(true);expect(holder.writes).toBe(1);
+  r=await invoke('POST',{tool:'workspace_call'},{name:'workspace_drive_create_folder',args:{name:'denied'}},write.token);
+  expect(r.body.ok).toBe(false);expect(holder.writes).toBe(1);
+  r=await invoke('POST',{tool:'workspace_gmail_delete_label'},{labelId:'Label_test',confirm:true},write.token);
+  expect(r.body.result.confirmed).toBe(true);expect(holder.writes).toBe(2);
+  await holder.db.revokeRtcPass(write.id);
+  expect((await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'denied'},write.token)).statusCode).toBe(401);
+  expect(holder.writes).toBe(2);
+ });
+
 });
