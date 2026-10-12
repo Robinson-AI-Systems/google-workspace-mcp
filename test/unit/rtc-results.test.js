@@ -73,3 +73,10 @@ describe('RTC object-specific compact results',()=>{
    expect(JSON.parse(projected.content[0].text).messages[0].id).toBe('m1');
  });
 });
+
+it('does not summarize unrelated Google account, Gmail profile or Calendar setting metadata',()=>{
+  for(const name of ['gmail_get_profile','gmail_get_label','calendar_get_settings','drive_list_shared_drives','admin_get_building']){
+    const value={important:'must retain'};
+    expect(summarizeGoogleResult(name,value)).toBe(value);
+  }
+});

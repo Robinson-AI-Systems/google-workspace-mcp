@@ -50,8 +50,17 @@ export async function shapeReadResult(output,args,connection,store=storeRtcResul
  const handle='rtc_result_'+crypto.randomBytes(24).toString('base64url');
  await store({handle,connection,payload:{data,bytes}});
  const summary=compactData===data?'Stored for 24 hours for this connection; call workspace_get_result.':'Compact object summary, with full result available for 24 hours.';
+ let shown=compactData;
+ // Never inflate a small result handle into a second oversized response.
+ // Full original content remains retrievable by the owner of this connection.
+ if(compactData!==data&&Buffer.byteLength(JSON.stringify(shown),'utf8')>3500){
+   if(Array.isArray(shown))shown=shown.slice(0,8);
+   else if(shown&&typeof shown==='object'){
+     shown=Object.fromEntries(Object.entries(shown).map(([key,value])=>[key,Array.isArray(value)?value.slice(0,8):value]));
+   }
+ }
  return ok({handle,bytes,count:resultCount(data),summary,
-   ...(compactData!==data?{data:compactData}:{}),
+   ...(compactData!==data?{data:shown}:{}),
    preview:compactData===data?full.slice(0,768):undefined});
 }
 

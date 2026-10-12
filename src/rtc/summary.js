@@ -32,12 +32,13 @@ function one(kind,o){
 }
 export function googleSummaryKind(name){
  const prefix=String(name||'').split('_')[0];
- if(prefix==='gmail')return /thread/.test(name)?'thread':'message';
- if(prefix==='drive')return 'file';
- if(prefix==='calendar')return 'event';
- if(prefix==='admin'&&/group/.test(name))return 'group';
- if(prefix==='admin'&&/user/.test(name))return 'user';
- if(prefix==='sheets'&&/(range|values)/.test(name))return 'sheet';
+ if(/^gmail_(get_thread|list_threads)$/.test(name))return 'thread';
+ if(/^gmail_(get_message|list_messages|search)$/.test(name))return 'message';
+ if(/^drive_(list_files|search_files|get_file)$/.test(name))return 'file';
+ if(/^calendar_(list_events|get_event)$/.test(name))return 'event';
+ if(/^admin_(list_groups|get_group)$/.test(name))return 'group';
+ if(/^admin_(list_users|get_user)$/.test(name))return 'user';
+ if(/^sheets_(get_values|batch_get)$/.test(name))return 'sheet';
  return null;
 }
 export function summarizeGoogleResult(name,data){
