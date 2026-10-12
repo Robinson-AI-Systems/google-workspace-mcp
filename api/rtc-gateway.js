@@ -89,9 +89,13 @@ export default async function handler(req,res){
  if(req.method==='GET'&&door==='tools'){
   const q=String(req.query?.q||'').toLowerCase(),area=req.query?.area,audience=req.query?.audience;
   const limit=Math.min(100,Math.max(1,Number(req.query?.limit)||10));
-  const tools=listedTools(registry.tools,pass,req.query?.listing||pass.listing)
-   .map(expose).filter(t=>(!q||(t.name+' '+t.description).toLowerCase().includes(q))&&(!area||t.area===area)&&(!audience||t.audience.includes(audience))).slice(0,limit);
-  return success(res,{tools,next:null});
+  const page=Math.max(1,Math.min(100000,Number(req.query?.page)||1));
+  if(!Number.isInteger(page))return fail(res,400,'invalid_args','Page must be an integer.');
+  const all=listedTools(registry.tools,pass,req.query?.listing||pass.listing)
+   .map(expose).filter(t=>(!q||(t.name+' '+t.description).toLowerCase().includes(q))&&(!area||t.area===area)&&(!audience||t.audience.includes(audience)));
+  const start=(page-1)*limit;
+  const tools=all.slice(start,start+limit);
+  return success(res,{tools,next:start+limit<all.length?String(page+1):null});
  }
  if(req.method==='GET'&&handle){
   const result=decodeMcp(await readStoredResult({handle,page:req.query?.page,fields:req.query?.fields},pass.id));
