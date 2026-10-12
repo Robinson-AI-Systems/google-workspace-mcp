@@ -115,6 +115,8 @@ The appliance desk app must **not** borrow the connector's robot. It gets its ow
 
 ## RTC 1 read-only TEST passes (owner setup)
 
+First set `RTC_TEST_ACCOUNT_EMAILS` to an explicit comma-separated list of approved **non-production scratch mailboxes** that are connected through Google OAuth. Do not list an ordinary production mailbox. Without this setting, pass creation is denied.
+
 After deployment, visit `/api/rtc/passes` on the configured `PUBLIC_BASE_URL`
 HTTPS origin. Enter the existing owner passphrase and an already-connected
 Google account; optionally narrow the allowed areas, hours (default 24, max
