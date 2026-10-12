@@ -7,7 +7,7 @@ import { startDevRun, recordDevObject, getDevRun } from '../db.js';
 const FOLDER='application/vnd.google-apps.folder';
 const DOC='application/vnd.google-apps.document';
 const SHEET='application/vnd.google-apps.spreadsheet';
-const EMAIL=/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function owner(clients) {
   if(!EMAIL.test(clients?.actingAs||'')||!clients?.connection)throw Error('Fixture changes need an authenticated connection and acting mailbox.');
   return {actingAs:clients.actingAs.toLowerCase(),connection:clients.connection};
