@@ -30,7 +30,7 @@ export function validateIntegrationSpec(input={}){
    out[field]=[...new Set(values)];
  }
  if(out.apis.some(x=>!Object.hasOwn(API_SPECS,x)))throw Error('Unsupported API. Use gmail, drive, calendar or tasks.');
- if([...out.oauthScopes,...out.delegatedScopes].some(s=>!(['openid','email','profile'].includes(s)||/^https:\/\/www\.googleapis\.com\/auth\/[A-Za-z0-9._/-]+$/.test(s)))throw Error('Scopes must use approved Google auth scope syntax.');
+ if([...out.oauthScopes,...out.delegatedScopes].some(s=>!(['openid','email','profile'].includes(s)||/^https:\/\/www\.googleapis\.com\/auth\/[A-Za-z0-9._/-]+$/.test(s))))throw Error('Scopes must use approved Google auth scope syntax.');
  if([...out.calendars,...out.driveFolders].some(x=>!GOOGLE_ID.test(x)))throw Error('Invalid Google resource identifier.');
  if(input.serviceAccountClientId!==undefined&&
    (typeof input.serviceAccountClientId!=='string'||!/^[0-9]{10,32}$/.test(input.serviceAccountClientId)))
