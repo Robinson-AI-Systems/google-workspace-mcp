@@ -2,7 +2,7 @@
 // search-presence check. (The email health check is in email-health.js.)
 import { ok } from './util.js';
 import { defineWrite } from './write.js';
-import { CONSOLE_MAP, CONSOLE_HOME } from '../data/console-map.js';
+import { CONSOLE_MAP, CONSOLE_HOME, CONSOLE_VERIFICATION } from '../data/console-map.js';
 
 // ---------- P2-4: where is this setting? ----------
 const GENERIC = new Set(['email', 'mail', 'user', 'users', 'file', 'files', 'account', 'people', 'person', 'staff']); // too common to point at one page by themselves
@@ -36,7 +36,7 @@ export function matchSettings(query, limit = 3) {
   return scored.slice(0, limit).map((s) => ({ ...s.entry, score: s.score }));
 }
 
-const whereIsSetting = async (args) => {
+const whereIsSetting = async (args, clients) => {
   const query = String(args.query || '').trim();
   if (!query) return ok('Say which setting you are looking for, e.g. "turn on DKIM" or "block external sharing".');
   const hits = matchSettings(query);
@@ -45,13 +45,21 @@ const whereIsSetting = async (args) => {
   }
   const matches=hits.map(({score,...h})=>({...h,link:h.link||`${CONSOLE_HOME} (follow the clicks below)`,
     steps:h.path.map((p,i)=>`${i+1}. ${p}`)}));
-  const guides=hits.map(({score,...h})=>({
-    setting:h.title,
-    url:h.link||CONSOLE_HOME,
-    steps:h.path.map((p,i)=>({n:i+1,action:'Navigate to',target:p})),
-    expected:'The identified settings page is visible. No setting has been changed or verified.',
-    ...(h.verifyWith?{verifyWith:h.verifyWith}:{})
-  }));
+  // The setting finder never executes the linked read. Match each optional
+  // readback against this connection's actual profile/area restrictions.
+  const {allowedTool,isWrite}=await import('../rtc/catalog.js');
+  const guides=hits.map(({score,...h})=>{
+    const verification=CONSOLE_VERIFICATION[h.id];
+    const available=verification&&!isWrite(verification.tool)&&allowedTool(verification.tool,clients?.rtcPolicy||{});
+    return {
+      setting:h.title,
+      url:h.link||CONSOLE_HOME,
+      steps:h.path.map((p,i)=>({n:i+1,action:'Navigate to',target:p})),
+      expected:'The identified settings page is visible. No setting has been changed or verified.',
+      ...(available?{verifyWith:verification.tool,verificationNote:verification.note}:
+        verification?{verificationNote:'The suggested read-back is outside this connection’s allowed areas or profile. Use an authorized connection or check the console manually; nothing was verified.'}:{})
+    };
+  });
   return ok({found:true,matches,...guides[0],alternatives:guides.slice(1),
     note:'Menu names can move; use Admin console search if a path changes. No changes are claimed.'});
 
