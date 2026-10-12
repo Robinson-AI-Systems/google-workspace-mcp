@@ -1,14 +1,15 @@
 {
   "name": "robinson-google-workspace-mcp",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Standalone MCP server giving Claude full control of Google Workspace: Gmail, Drive, Calendar, Sheets, Docs, Slides, Forms, Tasks, Contacts, Chat, plus complete Admin SDK (users, groups, domains, aliases, org units, devices, roles, security, reports, licensing) across multiple domains.",
   "type": "module",
   "main": "api/mcp.js",
   "scripts": {
-    "check": "find src api -name '*.js' -exec node --check {} \\; && node scripts/check-writes.mjs && node scripts/check-rtc-budget.mjs",
+    "check": "find src api -name '*.js' -exec node --check {} \\; && node scripts/check-writes.mjs && node scripts/check-rtc-budget.mjs && node scripts/gen-catalog.mjs --check",
     "test": "vitest run",
     "test:db": "vitest run --config vitest.db.config.js",
-    "test:rtc": "vitest run --config vitest.rtc.config.js"
+    "test:rtc": "vitest run --config vitest.rtc.config.js",
+    "gen:catalog": "node scripts/gen-catalog.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
