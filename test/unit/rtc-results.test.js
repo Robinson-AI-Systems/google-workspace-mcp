@@ -37,7 +37,7 @@ describe('RTC object-specific compact results',()=>{
  it('supports events, files, users, groups, threads and sheet ranges',()=>{
    const cases=[
     ['calendar_list_events',{items:[{id:'e',summary:'meeting',attendees:[{email:'x'}],secret:'x'}]},'attendeeCount'],
-    ['drive_list_files',{files:[{id:'d',name:'doc',content:'private'}]},'mimeType'],
+    ['drive_list_files',{files:[{id:'d',name:'doc',mimeType:'application/pdf',content:'private'}]},'mimeType'],
     ['admin_list_users',{users:[{primaryEmail:'ops@example.test',unknown:'private'}]},'primaryEmail'],
     ['admin_list_groups',{groups:[{email:'g@example.test',memberEmails:['x']}]},'email'],
     ['gmail_get_thread',{id:'t',messages:[{id:'m'}]},'messageCount'],
