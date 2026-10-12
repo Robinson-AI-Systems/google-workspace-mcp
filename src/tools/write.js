@@ -11,9 +11,15 @@ import { ok } from './util.js';
 import { recordChange } from '../changelog.js';
 
 // Provenance marker is applied by defineWrite, not by a tool's input schema.
-export const GUARDED_WRITE = Symbol.for('robinson.workspace.guarded-write.v1');
-export const isGuardedWrite = fn => typeof fn==='function'&&fn[GUARDED_WRITE]===true;
-export const markGuardedWrite = fn => Object.defineProperty(fn,GUARDED_WRITE,{value:true});
+// Only this module may grant mutation-guard provenance. A public Symbol or
+// schema property can be forged; a private WeakSet cannot be set by a tool.
+const protectedHandlers=new WeakSet();
+export const isGuardedWrite = fn => typeof fn==='function'&&protectedHandlers.has(fn);
+function markGuardedWrite(fn){protectedHandlers.add(fn);return fn;}
+export function inheritGuardedWrite(original,wrapper){
+ if(!isGuardedWrite(original))throw Error('Cannot inherit guarded-write provenance from an unguarded handler.');
+ return markGuardedWrite(wrapper);
+}
 export function withGuardedPrecheck(handler,check) {
  if(!isGuardedWrite(handler))throw Error('Precheck requires a genuine defineWrite handler.');
  return markGuardedWrite(async(args={},clients)=>{

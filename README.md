@@ -83,8 +83,7 @@ It runs hosted, on Vercel, with your login token stored in Neon (Postgres), so c
 - **Nothing here is placeholder code.** Every tool calls the real Google API method it claims to. A handful of things Google's public APIs genuinely cannot do (some settings only exist in the admin console UI) are left out rather than faked. `workspace_where_is_setting` gives the console clicks for those.
 - **Three Alert Center tools cannot be used yet.** `admin_list_alerts`, `admin_get_alert` and `admin_delete_alert` are in the list, but Google's sign-in screen refuses the Alert Center permission (it is a limited-availability API), so the sign-in does not ask for it and Google will turn these three calls down. `workflow_security_snapshot` carries on without alerts. They start working if Google allows the permission for this project or the robot identity is given the permission later.
 - **Data Transfer API** (`datatransfer_*` tools, used by `workflow_offboard_employee`) isn't in Google's current client library, so it's implemented as a direct REST call — same effect, just built by hand instead of generated.
-- **The safety layer covers almost every tool that changes things.** Deletes, suspensions, revocations, transfers, sending, sharing and the other changes all use the dry-run / confirmation / read-back / change-log layer described above, and every new changing tool is built with it. Eleven small tools still change things without it, and the name-based check does not catch them because their names use verbs it does not list: `gmail_untrash_message`, `gmail_untrash_thread`, `sheets_duplicate_sheet`, `sheets_format_cells`, `sheets_freeze_rows`, `sheets_autoresize_columns`, `sheets_sort_range`, `sheets_merge_cells`, `sheets_unmerge_cells`, `sheets_protect_range` and `domain_confirm_verification`. None of them deletes anything; wrapping them is the remaining part of card P5-1.
-
+- **Safety classification fails closed.** The P5-1 audit now guards all eleven previously omitted Gmail restoration, Sheets and domain-verification mutations. The assembled handler inventory explicitly reviews 156 read-only tools; every new/unknown ordinary tool defaults to a mutation until reviewed, and CI requires genuine guarded-write provenance — a name like `get` or the presence of a `dryRun` field does not qualify. Actions support preview, appropriate confirmation, read-back and change logs. Fakes/green CI are not live provider acceptance, which remains separately tracked in the roadmap.
 
 ## Robinson's Toolkit Hub / RTC 1
 
@@ -113,5 +112,4 @@ scopes, plus optional Calendar IDs and Drive folder IDs, without
 changing Google data. It returns observed `ready`, `missing`
 and `not_readable` findings; Admin-console-only permissions remain
 unverified until separately checked. This is a complete read-only
-integration check, not fixture creation/cleanup; those P8-7 features
-remain scheduled and tracked in `docs/plan/TASKS.md`.
+integration check, not fixture creation/cleanup; all three P8-7 fixture families are now implemented with exact-ID cleanup and crash reconciliation tests. Real Google TEST acceptance and full Hub routes remain open in `docs/plan/TASKS.md`.

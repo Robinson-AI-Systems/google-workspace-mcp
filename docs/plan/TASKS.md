@@ -902,7 +902,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P4-2 | DONE | #21 | `delegatedClients(userEmail, scopes)` returns only the clients for the scopes asked; anything outside `DELEGATED_SCOPES` throws (tested). Nothing uses it yet beyond the status tool: the business tools act as the connection's own account, so the robot's new permissions are held in reserve |
 | P4-3 | MERGED | #20 | `workspace_business_calendar`, `workspace_business_folders` + `business_resources` table (contract-tested on the in-memory fake and on a real Postgres 16, 44 DB tests passing). Acts as the connection's own account, so it needs no delegation. Idempotent; a remembered ID that no longer exists is not trusted; the main folder is searched across all of Drive and two matches stop it rather than guess; the preview and the read-back look at Drive itself. Manual check still to do: returns the existing `c_dd214eeb…` calendar and `13yNQodb…` folder tree |
 | P4-4 | MERGED | #21 | DEPLOY.md Part 5 updated and Part 8 added (the app's own service account, its four scopes, the Vercel variables, how it finds the IDs). Cross-linked to APPLIANCE-DESK-INTEGRATION.md. Chris can follow it in about 15 minutes |
-| P5-1 | IN_REVIEW | #45 | Eleven missing Gmail/Sheets/domain mutators wrapped; assembled registry CI now verifies actual guarded-handler provenance, not names/`dryRun` alone. Readback and audit-failure proofs added; full regression evidence gated on exact-head CI. |
+| P5-1 | DONE (automated safety acceptance) | #45, #49 | All eleven missing mutators guarded (#45); #49's exhaustive assembled-registry contract reviews 156 exact read-only tools and proves 209 handler-provenance-guarded writes; unknown name effects fail closed regardless of `dryRun`. Private WeakSet provenance is not forgeable with a public Symbol. Exact-head `test`+`release-policy` and automated fake-Google/Postgres/RTC tests passed; actual provider/Hub routes remain separate P0-2/P8 acceptance and are NOT claimed. |
 | P5-2 | TODO | | Not before 30 days after encryption went live (key set 2026-10-02, so not before 2026-11-01) |
 | P5-3 | DONE | | Chris decided to retire local mode (2026-10-02). Local files, scripts and README sections removed; hosted only. README, DEPLOY and ARCHITECTURE checked against the code in the 2026-10-02 audit and match. |
 | P5-4 | TODO | | #19 corrects README drift; generated catalog/version/changelog work remains TODO. |
@@ -921,7 +921,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-4 | IN_PROGRESS | #32–#34 | Pass-only RTC manifest/HTTPS routes and DB limit implemented; deployed boundary, two-instance and D-4 acceptance not verified |
 | P8-5 | IN_PROGRESS | #34 | Pinned Hub reference conformance and local gateway tests in CI; full conformance against this service and real D-4 routes still unverified |
 | P8-6 | WAITING | | Needs `robinson-mcp-core` (robinsons-toolkit-hub K-3) |
-| P8-7 | IN_PROGRESS | #40, #42–#43, #46–#48 | Integration checker, tagged Drive/Docs/Sheets fixtures, exact-ID run ledger and confirmed Drive-trash-only cleanup implemented; Gmail/calendar scenarios and real acceptance remain |
+| P8-7 | IN_PROGRESS | #40, #42–#43, #46–#48 | Drive folder/Docs/Sheets, owned TEST Calendar event, and mailbox-local inserted-not-sent Gmail fixtures now implemented and fake-tested, with reservation-first recovery and exact-ID cleanup. Real authorized Google provider acceptance, crash/orphan reconciliation and Hub direct/relay/Sandbox/revocation remain unverified. |
 | P8-8 | IN_PROGRESS | #36 | Owner overview, structured guidance and audience tags implemented; full settings coverage and actual read-only live evidence pending |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
@@ -1150,3 +1150,77 @@ Adds one 30-minute future event in an explicitly named, **non-primary**, test-on
 ### P8-7 Gmail mailbox-local scenario — PR #48
 
 Create one unique `rtc-<runId>` label and two **self-addressed, inserted-not-sent** Gmail messages with `users.messages.insert` under the already-consented `gmail.modify` scope; no external recipients, new credentials or delegated accounts. Each operation is reserved before Google is contacted, retries search exact run label/MIME marker IDs and fail closed on ambiguous matches. Cleanup previews and asks for confirmation; only recorded message IDs move to Trash, then only the recorded generated label is removed, with provider read-back. Same-account/connection TEST mode and mail-area guards remain. Real TEST provider acceptance and Toolkit Hub direct/relay/Sandbox/revocation are unverified; P8-7 remains IN_PROGRESS.
+
+
+## Actionable blockers and automatic re-entry (owner workflow 2026-10-12)
+
+Every deferred item must be revisited at session start and after relevant
+owner input, dependency merge or environment change. Reconcile prior owner
+decisions against code and the roadmap; do not request them again.
+When its re-entry condition is satisfied, restore the item to the eligible
+queue *automatically*. Add new blocked work here using every column.
+
+| Work and state | Exact blocker | Evidence / owner decision needed | Dependencies | Re-entry trigger | Next eligible action |
+| --- | --- | --- | --- | --- | --- |
+| P5-2 — **TIME-GATED** | P0-6 encryption activated 2026-10-02, so full 30 days have not elapsed; both `tokens_enc` accounts remain unverified | Not before **2026-11-01**, plus verified encrypted refresh/backfill of every connected account without exposing tokens | P0-6, actual production encrypted refresh | Required live duration **and** per-account encryption evidence proven | Validate retirement on disposable DB, then guarded rollout; never remove column/legacy table early |
+| P8-7 — **EXTERNAL ACCEPTANCE OPEN** | No genuine owner-permitted isolated TEST Google fixture write/cleanup proof across Drive, Calendar, Gmail | Exact deployed SHA, TEST account/areas, provider IDs and readback, confirmed cleanup, failure/replay and audit evidence | P5-1 safe writes, TEST mode and authorized test resources | Protected TEST credentials/resources are available under the existing owner gate | Run one approved scenario with exact provider IDs; prove no duplicate retry, reconcile uncertain outcome; never delete by name |
+| P8-3/4/5, P0-2 — **RTC ROUTES/DEPLOYMENT OPEN** | Reference conformance and fake providers do not establish deployed service identity or real direct/restricted GitHub relay/Sandbox acceptance | Actual service SHA and TEST identity, approved read-only credentials, denied account/area tests, revocation and full service-level conformance | Hub D-4 consumer contract, protected deployed ingress, owner-authorized TEST pass | Real accessible TEST service/identity/limited credentials verified | Prove direct, relay and Sandbox independently; never treat preview identity as test or weaken authorization |
+| P8-6 — **HUB K-3 WAITING** | `robinson-mcp-core` private/unpublished, NOT_READY; package/adapters and approvals still unproven | Owner-approved pinned private artifact with source/test/adapter proof and K-3 release gates | Hub K-3 | Hub supplies approved private pinned package with evidence | Integrate real adapter; no speculative dependency or publish |
+| P8-7 legacy/uncertain cleanup — **REFUSE UNTIL RECONCILED** | Pre-reservation run or zero/ambiguous/incomplete tag enumeration, foreign owner, changed provider ID or missing ledger entry | Complete exact-ID, ownership and immutable tag evidence with readback; authorized cleanup confirmation | Durable reservation/provider read permissions | Every conflicting/missing ID reconciled and no foreign target | Restore authoritative object ledger; only then preview and execute exact-ID cleanup (never by filename/title) |
+| P5-4 — **ELIGIBLE INDEPENDENT** | No external blocker; generated catalog/version/changelog still absent | Automated catalog matches assembled runtime; truthful changelog/version upgrade | Stable P5-1 coverage | PR #49 semantic checks/reviews completed | Generate versioned catalog/changelog with tests in substantive PR |
+| P7-2/P7-4 — **OWNER SCOPE DECISION ALREADY SUPPLIED** | Feature code absent, not owner-decision-blocked; later Google consent may be unavailable | Owner approved named read-only scopes 2026-10-02. Any per-account OAuth reauth/API readiness is separate evidence | Existing OAuth/delegated scope restrictions | P5-1 priority clears; safe consent path confirmed | Implement an approved read-only slice and report only any *new* actual consent blocker |
+| Daily checked `main → live` — **RELEASE PROOF PENDING** | Green main CI alone cannot prove live promotion/READY | Scheduled promotion tag/live commit, deployment/HTTPS observation | Saved release policy, existing Vercel project settings | Normal scheduled checked run completes | Record exact release/deploy evidence; no manual deployment or preview |
+| External Codex review — **CAPACITY LIMIT OBSERVED** | Prior PR review bot replied usage limit, not substantive approval | Review capacity or actual review findings if it becomes available | GitHub connector review service | Capacity recovers or an authorized reviewer provides findings | Resolve any threads; continue exact-head required CI and independent self-review without claiming bot approval |
+
+## Permanent handoff (update with each substantive implementation PR)
+
+**Latest observed before #49:** GitHub main
+`71f0ddcf3efe1403a10fd299ebe2111ec4fb8794`;
+PRs #45–#48 merged, post-merge `test` and `release-policy` green,
+no open PRs/reviews before #49. `live` was separately observed at
+`c7472dd71fce266391496bd657608cff0ef440de`; not proof of
+deployed HTTPS acceptance. Actual SHA/status must be re-read after merges.
+
+**Current outcome:** P5-1's residual misclassification risk is addressed
+by exhaustive read semantics and a private guarded-write provenance
+registry in #49, including forged-handler/unknown-name regression tests. Permanently apply
+the outcome-first session and five-PR planning standard in the existing
+plan/implementer/ledger as part of that substantive PR.
+
+**Evidence layers:** Code already merged for all three P8-7 fixture
+families; mocked Google, unit and disposable-Postgres proof exists.
+#49's pre-ledger final head `39bc73f89362c3810e4bdbecc464052b25aaf1cd`
+passed required checks and 1,181 unit / 48 disposable-Postgres /
+18 RTC tests; this last ledger-only adjustment must pass exact-head
+checks again before merge. Actual scheduled live SHA, genuine Google
+TEST fixture creation/cleanup, RTC direct/restricted relay/Sandbox
+and revocation have **not** been demonstrated and are not DONE.
+
+**Next eligible work:** Finish #49 tests/review/merge and verify
+post-merge main; then implement P5-4's generated accurate catalog
+and versioning while rechecking owner/dependency triggers above.
+Separate authentic TEST acceptance once protected owner-approved
+credentials are legitimately available. Keep P5-2 deferred until
+the date and encrypted-row evidence both pass.
+
+**Continuation contract:** Verify actual main/concurrent agents and
+unresolved reviews; read the plan, blocker table and this permanent
+handoff; select the next concrete eligible outcome; normally complete
+up to five coherent substantive PRs without padding; prove each
+acceptance layer; preserve hosting/scope/owner gates; update this
+handoff and issue another compact prompt following IMPLEMENTER.md.
+
+
+### P5-1 audited outcome and proof — PR #49
+
+The next security gate does **not** infer read-only behavior from prefixes,
+underscores, regular expressions or input-schema `dryRun`. It uses a
+reviewed 156-operation exact read inventory, treats new/unknown names
+as writes, verifies the actual assembled handlers are backed by
+`defineWrite`/approved wrapper provenance, and rejects a forged public
+Symbol marker using a private WeakSet. A misleading `gmail_get_and_send`
+name and fabricated schema are explicit failing regression cases.
+Observed exact-head Actions run [38306582547](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/runs/38306582547):
+`test` and `release-policy` successful, 1,181 unit tests, 48 real disposable
+Postgres tests and 18 RTC tests pass. Deployed service identity and real
+Google fixture/Hub acceptance are not covered by these successes.

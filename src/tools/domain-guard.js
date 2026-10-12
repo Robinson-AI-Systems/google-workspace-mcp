@@ -7,7 +7,7 @@
 // A bare user ID, "me" or "all" carries no domain, so it is let through, and so are list tools that are
 // not aimed at one person (they list the whole Workspace the account administers).
 import { ok } from './util.js';
-import { isGuardedWrite,markGuardedWrite } from './write.js';
+import { isGuardedWrite,inheritGuardedWrite } from './write.js';
 import { domainOfEmail } from '../domains.js';
 
 const EMAIL_ARGS = ['emailTo', 'userKey', 'userId', 'primaryEmail', 'email', 'groupKey', 'groupEmail', 'memberEmail', 'alias', 'userEmail', 'fromUserId', 'toUserId', 'managerEmail', 'transferDriveAndCalendarTo', 'assignedToUserKey', 'recoveryEmail'];
@@ -58,7 +58,7 @@ export function applyDomainGuard(registry) {
       }
       return inner(rest, crossDomain === true ? Object.create(clients || {}, { crossDomain: { value: true, enumerable: true } }) : clients);
     };
-    registry.handlers[tool.name]=isGuardedWrite(inner)?markGuardedWrite(wrapper):wrapper;
+    registry.handlers[tool.name]=isGuardedWrite(inner)?inheritGuardedWrite(inner,wrapper):wrapper;
     return { ...tool, description: `${tool.description} Limited to this connection's own business domains unless crossDomain: true.`, inputSchema: { ...tool.inputSchema, properties: { ...props, crossDomain: CROSS_DOMAIN_FIELD } } };
   });
   return registry;

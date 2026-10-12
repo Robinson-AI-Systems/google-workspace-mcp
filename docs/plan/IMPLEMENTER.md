@@ -1,48 +1,45 @@
 # Implementer guide: prompts, PR template, checklists
 
-**Owner's later standing workflow (2026-10-12) supersedes the old one-card stop instruction below:** sessions complete five substantial PRs and hand off; the initial #30–#35 session completes six. No docs-only PRs; no placeholder functionality; every incomplete external dependency remains tracked. See plan README.
+**Standing owner workflow (2026-10-12):** plan around a useful outcome; five substantial PRs is the normal upper planning boundary, not a quota or proof of acceptance. No docs-only PRs or placeholders; track each external dependency and its precise re-entry trigger. See the authoritative plan README.
 
 
-## Prompt to paste into the implementing model (Sonnet 5.5, medium effort)
+## Canonical compact continuation prompt
 
-Replace `<CARD>` with the card ID, for example `P0-3`.
+Use this format at the end of every session. Replace only the
+milestone-specific details; the full rules live in the authoritative
+README.md, IMPLEMENTER.md and TASKS.md. Do not copy their entirety
+into the prompt or create parallel instruction files.
 
 ```
-You are implementing one task card in the Robinson Google Workspace MCP
-repository (github.com/Robinson-AI-Systems/google-workspace-mcp).
+Resume Robinson-AI-Systems/google-workspace-mcp from actual current main.
+Inspect concurrent branches/PRs, CI at the exact head, unresolved reviews,
+owner decisions and the permanent handoff. Follow docs/plan/README.md,
+IMPLEMENTER.md, TASKS.md and docs/HOSTING-COST-POLICY.md.
 
-Read, in this order, before writing any code:
-1. docs/plan/README.md
-2. docs/plan/ARCHITECTURE.md
-3. docs/plan/TESTING.md
-4. The card <CARD> in docs/plan/TASKS.md, and any card it says it may group with.
-5. The actual source files the card names. Trust the code over the docs; if
-   they disagree, fix the doc in the same PR.
+Outcome: <CONCRETE USER/DEVELOPER MILESTONE>.
+Remaining acceptance: <CODE, TEST, DEPLOYED AND LIVE INTEGRATION CRITERIA>.
+Next eligible action: <ONE PRECISE IMPLEMENTATION OR AUTHORIZED PROOF>.
+Recheck TASKS.md blocked/deferred items when dependency merges, owner input
+or environment changes resolve their conditions. Do not re-request
+previously recorded decisions.
 
-Then:
-- Create branch ai/sonnet/<CARD>-<short-slug> from the latest main.
-- Implement exactly what the card says. Do not add features it does not ask
-  for; if you think something is missing, write it under "Suggested follow-up"
-  in the PR body instead of building it.
-- Write the tests the card's acceptance checks require. Run `npm run check`
-  and `npm test` and paste the real output summary into the PR body.
-- Update the status ledger row for <CARD> in docs/plan/TASKS.md in the same
-  PR (IN_REVIEW, with the PR number once known).
-- Open a PR using the template in docs/plan/IMPLEMENTER.md. Write it for Chris,
-  who is not a developer: plain English, no unexplained jargon.
+Complete the next normal five-PR batch around coherent useful outcomes
+without padding; fewer PRs is acceptable if gates or actual work require
+it. Preserve review and exact-head CI, authorization, data integrity,
+recovery, scoped TEST accounts, scheduled checked daily main→live,
+disabled previews, idle resource limits and owner gates. Distinguish
+fakes/reference tests from deployed and real-provider acceptance.
 
-Hard rules (from docs/plan/README.md, repeated because they matter):
-- Never widen DELEGATED_SCOPES without Chris's written approval in the PR.
-- Never log, print, return, or put in a test fixture a real token, passphrase,
-  key, or connection string.
-- Schema changes are additive only; old and new code must run together.
-- Every write tool reads back and returns what Google now holds.
-- Destructive tools require confirm: true and support dryRun: true.
-- If you cannot finish, say so plainly: mark the card IN_PROGRESS with what is
-  missing. Never present partial work as done.
-
-When you finish, stop. Do not start the next card unless told to.
+Update the existing permanent handoff and blocker register through a
+substantive PR. Report verified main, actual capability and acceptance,
+merged PRs, remaining failures and exact external proof required.
+Generate the next compact continuation prompt using this same standard.
 ```
+
+At session start choose the highest-priority eligible milestone and
+explicitly reconnect any newly unblocked card to the roadmap.
+Do not stop at the PR boundary if an important partial safety defect
+still needs fixing; do not bypass gates merely to fill a batch.
 
 ## Prompt for the phase-gate review (Opus 5.5 or Fable 5.1, read-only)
 
@@ -67,8 +64,8 @@ write code. End with GO or NO-GO for the next phase.
 ## PR template
 
 ```
-## Card
-<CARD ID and title>
+## Outcome and card
+<USABLE CAPABILITY, CARD ID(S), AND REQUIRED ACCEPTANCE>
 
 ## What this does (for Chris)
 Two to five sentences in plain English. What changes for you, what it will
@@ -78,29 +75,32 @@ click) spelled out as numbered steps.
 ## What changed (for the next developer)
 - file: what and why
 
-## Proof
+## Proof by layer
+- Merged implementation at exact commit: verified / pending
 - `npm run check`: pass/fail
 - `npm test`: N passed, N failed (paste the summary line)
 - Database tests (`npm run test:db`; CI runs them on a throwaway Postgres): ran / not needed because <reason>
 - Smoke report (once P0-2 exists): attached at docs/plan/smoke-report-<date>.md / not needed because <reason>
-- Manual check from the card's acceptance list: what you did and what you saw
+- Deployed HTTPS service at exact commit: verified / not verified
+- Real connected Google / custom MCP / Hub route acceptance: verified / blocked, exact authorized account and denial tests
+- Manual check: exact results and redacted evidence
 
-## Not done / known gaps
-Honest list, or "None".
+## Deferred work, blockers and next action
+For each gap: exact blocker, evidence or decision, dependency, re-entry condition and next action.
 
 ## Suggested follow-up
 Ideas you had but deliberately did not build.
 
-## Ledger
-TASKS.md row updated to IN_REVIEW.
+## Ledger and permanent handoff
+TASKS.md card, re-entry table and next eligible action reconciled.
 
-🤖 Generated with Claude <model>
+
 ```
 
 ## Checklist before opening any PR
 
 - [ ] Branch from fresh `main`; one card (or an allowed group).
-- [ ] `npm run check` passes (it includes `scripts/check-writes.mjs`, which fails if a changing tool has no `dryRun`).
+- [ ] `npm run check` passes: assembled semantic inventory requires audited exact read-only declarations and genuine guarded-write provenance; `dryRun` alone proves nothing.
 - [ ] `npm test` passes and new behavior has new tests.
 - [ ] No secret in code, tests, fixtures, logs, or PR body.
 - [ ] Any new table/column uses `IF NOT EXISTS`; nothing renamed or dropped.
@@ -119,9 +119,8 @@ TASKS.md row updated to IN_REVIEW.
 2. The Proof section shows real test output, not just "tests pass".
 3. If the PR asks you to add an env var or click something in Google, do that
    first, then merge.
-4. Vercel shows a green production deploy after merge. Open the server's home
-   page: the tool count should match what the PR says.
-5. Say "merged <CARD>" to the implementing model so it starts the next card.
+4. The exact PR head passes `test` and `release-policy`, including applicable reviews. A successful main merge is not a production deployment; only scheduled checked main→live promotion provides that evidence.
+5. The agent updates the outcome-based handoff and resumes the next eligible work without needing a redundant merge announcement.
 
 ## When the model gets stuck
 
