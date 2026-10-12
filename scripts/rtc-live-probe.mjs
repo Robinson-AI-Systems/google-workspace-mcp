@@ -37,9 +37,9 @@ export async function main(args=process.argv.slice(2),env=process.env){
   }
   if(who.status!==200||who.value.result?.profile!=='read_only'||who.value.result?.mode!=='test'||who.value.result?.allow_writes!==false)throw Error('scope');
   step='catalog';
-  const catalog=await json(origin,token,'/api/tools?listing=catalog&limit=100');
-  if(catalog.status!==200||!Array.isArray(catalog.value.result?.tools))throw Error('catalog');
   const name=env.RTC_READ_TOOL||'workspace_where_is_setting';
+  const catalog=await json(origin,token,'/api/tools?listing=catalog&limit=20&q='+encodeURIComponent(name));
+  if(catalog.status!==200||!Array.isArray(catalog.value.result?.tools))throw Error('catalog');
   const chosen=chooseReadTool(catalog.value.result.tools,name);
   step='read';
   let data;
