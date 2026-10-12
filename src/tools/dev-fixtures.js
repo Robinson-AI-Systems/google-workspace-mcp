@@ -226,7 +226,7 @@ const cleanupBuilt=defineWrite({
  inputSchema:{type:'object',properties:{runId:{type:'string',description:'Run ID from workspace_dev_create_fixtures.'}},required:['runId']},
  plan:async(args,clients)=>{
    const checked=await inspectCleanup(args,clients);
-   return {target:checked.run.id,summary:'Trash exactly '+checked.proof.length+' recorded and verified RTC fixture files (no permanent deletion).',
+   return {target:checked.run.id,summary:checked.run.scenario==='calendar'?'Delete the one exactly recorded TEST calendar event after owner/tag verification (no guest notifications).':'Trash exactly '+checked.proof.length+' recorded and verified RTC fixture files (no permanent deletion).',
      readBefore:async()=>({runId:checked.run.id,objects:checked.proof})};
  },
  apply:async(args,clients)=>ok(await trashRecordedFixtures(args,clients)),
