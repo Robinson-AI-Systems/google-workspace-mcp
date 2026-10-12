@@ -47,14 +47,15 @@ export async function shapeReadResult(output,args,connection,store=storeRtcResul
  await store({handle,connection,payload:{data,bytes}});
  return ok({handle,bytes,count:resultCount(data),summary:'Stored for 24 hours for this connection; call workspace_get_result.',preview:full.slice(0,768)});
 }
-export async function readStoredResult({handle,page=1,fields}={},connection,read=getRtcResult){
+export async function readStoredResult({handle,page=null,fields}={},connection,read=getRtcResult){
  if(typeof handle!=='string'||!/^rtc_result_[a-zA-Z0-9_-]{32}$/.test(handle))return errorResult(new Error('invalid_args: invalid handle'));
  const saved=await read(handle,connection);
  if(!saved)return errorResult(new Error('not_found: expired, missing or different connection'));
- const n=Number(page);
- if(!Number.isInteger(n)||n<1||n>100000)return errorResult(new Error('invalid_args: invalid page'));
  const data=fields?projectFields(saved.data,fields):saved.data;
  const serialized=typeof data==='string'?data:JSON.stringify(data);
+ if(page==null)return ok({handle,bytes:saved.bytes,payload:serialized});
+ const n=Number(page);
+ if(!Number.isInteger(n)||n<1||n>100000)return errorResult(new Error('invalid_args: invalid page'));
  const bytes=4096,pages=Math.max(1,Math.ceil(serialized.length/bytes));
  if(n>pages)return errorResult(new Error('not_found: page does not exist'));
  return ok({handle,page:n,pages,bytes:saved.bytes,content:serialized.slice((n-1)*bytes,n*bytes),next:n<pages?n+1:null});
