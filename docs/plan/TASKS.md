@@ -873,7 +873,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | Card | Status | PR | Notes |
 | --- | --- | --- | --- |
 | P0-1 | MERGED | #6 | Tests, fakes, DB tests, CI added (on `main`; 993 unit tests pass in the 2026-10-02 audit). CI runs DB tests on a throwaway Postgres on every PR (no secret needed). Not yet proven: red-on-failure demo (do once on the PR) |
-| P0-2 | TODO | | `scripts/smoke-readonly.mjs` does not exist. Until it does, tools that never worked against real Google are not found |
+| P0-2 | IN_PROGRESS | #39 | Multi-service scratch TEST read-only smoke implemented and fake-tested; actual owner-approved Google run, deployed commit and recorded evidence still missing |
 | P0-3 | MERGED | #6 | Fix + unit test done. Manual Drive upload check needs Chris's go-ahead (writes to his Drive) |
 | P0-4 | MERGED | #7 | Tool + unit tests done (token host check, size/redirect/timeout/private-address limits). Manual copy of the brand PDF needs Chris's go-ahead (writes to his Drive) |
 | P0-5 | MERGED | #6 | Lockout + constant-time compare + tests. Manual 5-wrong-tries check on the preview still to do |
@@ -915,14 +915,14 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P7-6 | SUPERSEDED | | Delivered by P8-2 (read_only profile) — Phase 8 added 2026-10-10 |
 | P7-7 | SUPERSEDED | | Delivered by P8-2 (profiles, area filters, compact listing) — Phase 8 added 2026-10-10 |
 | P7-8 | TODO | | Bulk and cross-domain operations; design note first |
-| P8-1 | TODO | | Small results (fields, detail, handles, annotations) |
-| P8-2 | TODO | | Profiles, read-only, catalog/compact listing, meta-tools; delivers P7-6, P7-7 |
-| P8-3 | TODO | | Passes (RTC §2) |
-| P8-4 | TODO | | HTTPS tool API, contract manifest, OpenAPI |
-| P8-5 | WAITING | | Needs the hub's conformance package (robinsons-toolkit-hub K-2) |
+| P8-1 | IN_PROGRESS | #31, #34 | Projected, connection-isolated expiring handles and annotations implemented; common-object summary mappers / structured workflow output still pending |
+| P8-2 | IN_PROGRESS | #30 | Profile persistence, read-only dispatch, compact meta-tools and filters implemented; full service conformance / profile acceptance remains pending |
+| P8-3 | IN_PROGRESS | #32 | Owner-protected hashed, short-lived, scratch-account TEST read-only passes, revocation, limit guards; live issuance acceptance unverified |
+| P8-4 | IN_PROGRESS | #32–#34 | Pass-only RTC manifest/HTTPS routes and DB limit implemented; deployed boundary, two-instance and D-4 acceptance not verified |
+| P8-5 | IN_PROGRESS | #34 | Pinned Hub reference conformance and local gateway tests in CI; full conformance against this service and real D-4 routes still unverified |
 | P8-6 | WAITING | | Needs `robinson-mcp-core` (robinsons-toolkit-hub K-3) |
-| P8-7 | TODO | | Developer workflows: tagged test fixtures, precise cleanup, app integration check |
-| P8-8 | TODO | | Owner side to contract §11: admin overview, structured guided settings, audience tags |
+| P8-7 | IN_PROGRESS | #40 | Real read-only app integration checker implemented; tagged fixtures / precise confirmed cleanup with durable object ledger remain to build |
+| P8-8 | IN_PROGRESS | #36 | Owner overview, structured guidance and audience tags implemented; full settings coverage and actual read-only live evidence pending |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 (PR #1), account-choice fix (PR #2), domain-wide delegation + mailbox branding
@@ -1073,3 +1073,27 @@ tests prove the full invocation and denial boundaries. This closes the
 **implementation** portion of P0-2; live acceptance still IN_PROGRESS and
 requires an approved scratch account, protected credentials and a recorded
 actual run. No production/paid access was activated.
+
+
+### RTC developer integration verification — PR #40
+
+P8-7 **IN_PROGRESS**. Implemented real `workspace_dev_check_integration`
+with authenticated, strictly read-only probes for Gmail, Drive, Calendar
+and Tasks; tokeninfo-based OAuth scope observation; service-account client
+ID comparison; explicitly unverified Admin console domain-wide delegation
+grant; and optional calendar/Drive-folder existence and account access
+checks. Each check returns `ready`, `missing` or `not_readable`
+with safe actionable setup steps and no credential/provider payloads.
+Connection-area restrictions are checked before *every* sub-read.
+Fakes cover successful reads, 403s, absent OAuth grants, inaccessible
+resources, domain-area restrictions and malformed specs. No scopes were
+changed, production/write operations activated, or real API calls made.
+
+**Remaining P8-7 work for a subsequent substantive PR:** safe, tagged
+Google Drive/Docs/Sheets/Gmail/calendar test fixture creation with a
+durable `dev_runs` / `dev_run_objects` object ledger; preview,
+confirmed precise cleanup affecting recorded IDs only (Drive trash, not
+permanent deletion); read-back/change log and comprehensive fake/
+throwaway Postgres tests. This repository owns those implementations
+and the external Hub D-4 acceptance still needs separate actual owner-
+approved scratch-account/direct/relay/Sandbox/revocation evidence.
