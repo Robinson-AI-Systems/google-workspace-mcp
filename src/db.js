@@ -168,6 +168,25 @@ export async function initSchema() {
       PRIMARY KEY (business, kind, key)
     )
   `;
+  // P8-7: only objects created for a named development run can be cleaned up.
+  await q`CREATE TABLE IF NOT EXISTS dev_runs (
+    id TEXT PRIMARY KEY,
+    acting_as TEXT NOT NULL,
+    connection TEXT NOT NULL,
+    scenario TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`;
+  await q`CREATE TABLE IF NOT EXISTS dev_run_objects (
+    run_id TEXT NOT NULL REFERENCES dev_runs(id),
+    kind TEXT NOT NULL,
+    google_id TEXT NOT NULL,
+    parent_id TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    cleaned_at TIMESTAMPTZ,
+    PRIMARY KEY(run_id,kind,google_id)
+  )`;
+  await q`CREATE INDEX IF NOT EXISTS dev_run_objects_run ON dev_run_objects(run_id)`;
+
 }
 
 // ---------- Google accounts (one row per mailbox the server can act as) ----------
@@ -598,4 +617,32 @@ export async function rtcPassFailureCode(token){
  if(rows[0].revoked_at)return 'pass_revoked';
  if(new Date(rows[0].expires_at).getTime()<=Date.now())return 'pass_expired';
  return 'permission';
+}
+
+
+// Exact-account and exact-connection fixture ledger; Google IDs are never guessed.
+export async function startDevRun({id,actingAs,connection,scenario}){
+  if(!id||!actingAs||!connection)throw new Error('Authenticated fixture owner required.');
+  const q=db();
+  await q`INSERT INTO dev_runs(id,acting_as,connection,scenario)
+    VALUES (${id},${normalizeEmail(actingAs)},${connection},${scenario})`;
+}
+export async function recordDevObject({runId,actingAs,connection,kind,googleId,parentId=null}){
+  if(!googleId)throw new Error('Provider did not return a fixture ID.');
+  const q=db();
+  const rows=await q`INSERT INTO dev_run_objects(run_id,kind,google_id,parent_id)
+    SELECT id,${kind},${googleId},${parentId} FROM dev_runs
+    WHERE id=${runId} AND acting_as=${normalizeEmail(actingAs)} AND connection=${connection}
+    ON CONFLICT DO NOTHING RETURNING google_id`;
+  if(rows.length!==1)throw new Error('Fixture was not recorded for the requesting connection.');
+}
+export async function getDevRun({runId,actingAs,connection}){
+  if(!runId||!actingAs||!connection)return null;
+  const q=db();
+  const runs=await q`SELECT id,scenario,created_at FROM dev_runs
+    WHERE id=${runId} AND acting_as=${normalizeEmail(actingAs)} AND connection=${connection}`;
+  if(!runs[0])return null;
+  const objects=await q`SELECT kind,google_id,parent_id,cleaned_at FROM dev_run_objects
+    WHERE run_id=${runId} ORDER BY created_at,kind,google_id`;
+  return {...runs[0],objects};
 }

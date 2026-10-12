@@ -24,7 +24,8 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     nextChangeId: 1,
     rtcResults: new Map(),
     rtcPasses: new Map(),
-    rtcLimits: new Map()
+    rtcLimits: new Map(),
+    devRuns: new Map()
   };
   const at = () => new Date(clock());
   const afterSeconds = (s) => new Date(clock() + s * 1000);
@@ -32,6 +33,21 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
   const api = {
     connectionId: (accessToken) => crypto.createHash('sha256').update(String(accessToken), 'utf8').digest('hex').slice(0, 8),
     async initSchema() {},
+    async startDevRun({id,actingAs,connection,scenario}){
+      if(!id||!actingAs||!connection||state.devRuns.has(id))throw Error('Authenticated unique run required.');
+      state.devRuns.set(id,{id,acting_as:norm(actingAs),connection,scenario,created_at:at(),objects:[]});
+    },
+    async recordDevObject({runId,actingAs,connection,kind,googleId,parentId=null}){
+      const r=state.devRuns.get(runId);
+      if(!r||r.acting_as!==norm(actingAs)||r.connection!==connection||!googleId)throw Error('Fixture was not recorded for the requesting connection.');
+      if(r.objects.some(o=>o.kind===kind&&o.google_id===googleId))throw Error('Duplicate fixture object.');
+      r.objects.push({kind,google_id:googleId,parent_id:parentId,cleaned_at:null});
+    },
+    async getDevRun({runId,actingAs,connection}){
+      const r=state.devRuns.get(runId);
+      return r&&r.acting_as===norm(actingAs)&&r.connection===connection?{...r,objects:r.objects.map(o=>({...o}))}:null;
+    },
+
     async storeRtcResult({handle,connection,payload,ttlHours=24}) {state.rtcResults.set(handle,{connection,payload,expires_at:afterSeconds(ttlHours)});return handle;},
     async getRtcResult(handle,connection){const r=state.rtcResults.get(handle);return r&&r.connection===connection&&r.expires_at>at()?r.payload:null;},
 
