@@ -6,7 +6,7 @@ import {isGuardedWrite} from '../../src/tools/write.js';
 const checks={isWrite,isGuardedWrite,RTC_META};
 describe('exhaustive semantic mutation classification',()=>{
  it('covers every assembled handler, including the real 11 P5-1 omissions',()=>{
-   expect(READ_ONLY_TOOL_NAMES.size).toBe(156);
+   expect(READ_ONLY_TOOL_NAMES.size).toBe(157);
    expect(mutationCoverageErrors(registry,checks)).toEqual([]);
    for(const name of ['gmail_untrash_message','gmail_untrash_thread','sheets_duplicate_sheet','sheets_sort_range','sheets_merge_cells','sheets_unmerge_cells','sheets_protect_range','domain_confirm_verification']){
      expect(isWrite(name),name).toBe(true);
