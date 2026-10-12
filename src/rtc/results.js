@@ -5,6 +5,7 @@ import { OUTPUT_SCHEMAS, attachStructuredResult } from './structured.js';
 import { storeRtcResult, getRtcResult } from '../db.js';
 import { isWrite, RTC_META } from './catalog.js';
 import { ok, errorResult } from '../tools/util.js';
+import {isGuardedWrite,inheritGuardedWrite} from '../tools/write.js';
 export const INLINE_BYTES = 8192;
 function pick(value,parts) {
  if (!parts.length) return value;
@@ -80,7 +81,15 @@ export async function readStoredResult({handle,page=null,fields}={},connection,r
 }
 export function applyResultRules(registry){
  registry.tools=registry.tools.map(tool=>{
-  if(isWrite(tool.name)||RTC_META.has(tool.name))return tool;
+  if(RTC_META.has(tool.name))return tool;
+  if(isWrite(tool.name)){
+   if(!OUTPUT_SCHEMAS[tool.name])return tool;
+   const original=registry.handlers[tool.name];
+   if(!isGuardedWrite(original))throw Error('Typed write workflow requires guarded-write provenance.');
+   registry.handlers[tool.name]=inheritGuardedWrite(original,async(args={},clients)=>
+    attachStructuredResult(tool.name,await original(args,clients)));
+   return {...tool,outputSchema:OUTPUT_SCHEMAS[tool.name]};
+  }
   const props={...(tool.inputSchema?.properties||{})};
   if(!props.fields)props.fields={type:'string',description:'Optional comma-separated dotted paths.'};
   if(!props.detail)props.detail={type:'string',enum:['summary','full'],default:'summary'};

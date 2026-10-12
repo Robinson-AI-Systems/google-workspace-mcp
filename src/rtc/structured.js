@@ -1,4 +1,4 @@
-// P8-1: typed MCP outputs for verified JSON-returning read workflows.
+// P8-1: typed MCP outputs for reviewed read and guarded-write workflows.
 // The same structured value is derived from the post-projection, post-handle
 // response, never from the original oversized content.
 import { errorResult } from '../tools/util.js';
@@ -11,9 +11,29 @@ const healthChecks={type:'array',items:{type:'object',properties:{
  check:string,status:healthStatus,found:string,fix:{type:['string','null']}
  },required:['check','status','found'],additionalProperties:true}};
 
+export const WRITE_WORKFLOWS=new Set(['workflow_onboard_employee','workflow_offboard_employee',
+ 'workflow_add_domain_and_start_verification','workflow_brand_mailbox','workflow_weekly_digest',
+ 'workflow_add_staff_member','workflow_set_up_business']);
+const lifecycle={type:'object',properties:{done:{type:'boolean'},summary:string,target:{type:['string','null']},
+ dryRun:{type:'boolean'},needsConfirmation:{type:'boolean'},refused:string,logged:{type:'boolean'},
+ confirmed:{type:['boolean','null']},auditFailure:{type:'boolean'},warning:string,
+ before:{},after:{},details:{},note:string},
+ anyOf:[{required:['done','summary','confirmed','logged'],properties:{done:{const:true}}},
+  {required:['done','summary','dryRun','logged'],properties:{done:{const:false},dryRun:{const:true}}},
+  {required:['done','summary','needsConfirmation'],properties:{done:{const:false},needsConfirmation:{const:true}}},
+  {required:['done','refused'],properties:{done:{const:false}}}],additionalProperties:true};
+
 export const OUTPUT_SCHEMAS=Object.freeze({
+ ...Object.fromEntries([...WRITE_WORKFLOWS].map(name=>[name,lifecycle])),
+ workflow_search_presence_check:{
+  type:'object',properties:{domain:string,status:{type:'string',enum:['PASS','WARN','FAIL']},
+   verified:{type:'object',properties:{root:{type:'object',properties:{name:string,verified:{type:'boolean'}},required:['name','verified']},
+    www:{type:'object',properties:{name:string,verified:{type:'boolean'}},required:['name','verified']}},required:['root','www']},
+   searchConsole:string,businessProfile:string,note:string},
+  anyOf:[{required:['domain','status','verified','searchConsole','businessProfile','note']},handle],additionalProperties:true
+ },
  // P8-1 read-only typed results for the newly integrated Reports,
- // Postmaster and Cloud Identity policy features. Do not type writes by name.
+ // Postmaster and Cloud Identity policy features. Write wrappers above retain provenance.
  reports_activity:{
    type:'object',properties:{application:string,activities:{type:'array',items:{type:'object'}},nextPageToken:string},
    anyOf:[{required:['application','activities']},handle],additionalProperties:true
@@ -68,10 +88,22 @@ export const OUTPUT_SCHEMAS=Object.freeze({
 const array=v=>Array.isArray(v);
 export function matchesStructuredShape(name,value){
  if(!value||typeof value!=='object'||array(value))return false;
+ if(WRITE_WORKFLOWS.has(name)){
+  if(typeof value.done!=='boolean')return false;
+  if(value.done===false&&typeof value.refused==='string')return true;
+  if(typeof value.summary!=='string')return false;
+  if(value.done===false)return value.needsConfirmation===true||value.dryRun===true&&typeof value.logged==='boolean';
+  return typeof value.logged==='boolean'&&(value.confirmed===null||typeof value.confirmed==='boolean')&&
+    (value.confirmed!==true||value.logged===true&&value.auditFailure!==true);
+ }
  if(typeof value.handle==='string')
    return /^rtc_result_[A-Za-z0-9_-]{32}$/.test(value.handle)&&
      Number.isFinite(value.bytes)&&Number.isFinite(value.count)&&typeof value.summary==='string';
  switch(name){
+ case 'workflow_search_presence_check':
+   return typeof value.domain==='string'&&value.domain.length>0&&['PASS','WARN','FAIL'].includes(value.status)&&
+    ['root','www'].every(k=>value.verified?.[k]&&typeof value.verified[k].name==='string'&&typeof value.verified[k].verified==='boolean')&&
+    ['searchConsole','businessProfile','note'].every(k=>typeof value[k]==='string');
  case 'reports_activity':
    return typeof value.application==='string'&&value.application.length>0&&array(value.activities)&&value.activities.every(v=>v!==null&&typeof v==='object'&&!array(v))&&
      (value.nextPageToken===undefined||typeof value.nextPageToken==='string');
@@ -124,7 +156,8 @@ export function matchesStructuredShape(name,value){
 }
 export function attachStructuredResult(name,response){
  if(!Object.hasOwn(OUTPUT_SCHEMAS,name)||response?.isError)return response;
- if(response?.structuredContent)return response;
+ if(response?.structuredContent)return matchesStructuredShape(name,response.structuredContent)?response:
+   errorResult(new Error('Schema error: workflow structured output does not satisfy its advertised structure.'));
  const raw=response?.content?.find(c=>c.type==='text')?.text;
  // Domain-guard denial is intentionally a human-readable refusal, not JSON.
  // Never disguise it as a generic schema failure or attach typed success.
