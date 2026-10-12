@@ -26,6 +26,7 @@ beforeEach(async()=>{
  await holder.db.saveGoogleTokensFor('ops@example.test',{access_token:'fake'});
  process.env.PUBLIC_BASE_URL='https://rtc.example.test';
  process.env.ADMIN_PASSPHRASE='test-passphrase-not-a-secret';
+ process.env.RTC_TEST_ACCOUNT_EMAILS='ops@example.test';
 });
 describe('owner RTC pass setup',()=>{
  it('rejects cross-site issuance before reading the passphrase',async()=>{
