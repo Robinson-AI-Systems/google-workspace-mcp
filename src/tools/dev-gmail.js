@@ -104,7 +104,7 @@ async function inspect(run,c,owner,cleanup=false){
   messages.push({kind,id:row.google_id,trashed:m.labelIds.includes('TRASH'),cleaned:!!row.cleaned_at});
  }
  if(labelGone&&messages.some(m=>!m.trashed))throw Error('Gmail label removed before messages were safely trashed.');
- return {run,owner,messages,label:{id:label.google_id,kind:'label',missing:labelGone,cleaned:!!label.cleaned_at}};
+ return {run,identity:owner,messages,label:{id:label.google_id,kind:'label',missing:labelGone,cleaned:!!label.cleaned_at}};
 }
 export async function gmailReadback(c,owner,id){
  try{
