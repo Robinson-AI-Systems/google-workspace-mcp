@@ -102,3 +102,16 @@ D-4 direct/relay/Sandbox connection tests and revocation must be
 **actually verified** before claiming live Hub compatibility. See
 `DEPLOY.md` and the Phase 8 ledger. These new RTC meta/owner tools
 are additional to the historical service-category counts above.
+
+
+### Developer integration readiness
+
+For a connected app builder, `workspace_dev_check_integration`
+checks requested Google API availability, currently granted OAuth
+scopes, connected service-account client ID and declared delegated
+scopes, plus optional Calendar IDs and Drive folder IDs, without
+changing Google data. It returns observed `ready`, `missing`
+and `not_readable` findings; Admin-console-only permissions remain
+unverified until separately checked. This is a complete read-only
+integration check, not fixture creation/cleanup; those P8-7 features
+remain scheduled and tracked in `docs/plan/TASKS.md`.
