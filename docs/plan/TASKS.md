@@ -1060,3 +1060,16 @@ production, spending, destructive or money-out approval has been given.
 ### Hosting-cost operating checkpoint — 2026-10-12
 
 The owner-directed hosting operating policy is now incorporated in a substantive RTC PR. Saved verified GitHub protection requires exact-head GitHub Actions **test** and **release-policy** for PRs into `main`. Only the checked scheduled daily `main → live` workflow promotes to Vercel production; automatic previews are disabled, with Basic/queued builds and existing Neon 0.25-CU/300-second idle limits retained. **Unverified:** first scheduled live promotion and its READY commit, Basic build performance, live RTC Hub direct/relay/Sandbox and revocation acceptance. No new paid resources, production activation, writes or owner approval.
+
+
+### P0-2 RTC non-production read-only smoke — PR #39
+
+Real opt-in `scripts/smoke-readonly.mjs --authorized-read-only` implementation
+checks the TEST pass scope, correct scratch mailbox, read-only Gmail,
+Drive, Calendar and Tasks tools, and any oversized result handles. A skipped
+area is recorded as NOT_AVAILABLE, not passed; a provider read/identity
+failure fails the script, with no data or pass tokens logged. Fake HTTP
+tests prove the full invocation and denial boundaries. This closes the
+**implementation** portion of P0-2; live acceptance still IN_PROGRESS and
+requires an approved scratch account, protected credentials and a recorded
+actual run. No production/paid access was activated.

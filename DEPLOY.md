@@ -183,3 +183,27 @@ node scripts/rtc-live-probe.mjs --verify-revoked
 
 Only an observed revoked-pass refusal counts as revocation proof.
 Do not run real tests without an approved non-production scratch pass.
+
+
+## Multi-service scratch-account smoke (P0-2)
+
+The read-only smoke script does **not** run against real Google in CI.
+Once the owner has approved a connected non-production mailbox and created
+a scoped TEST pass through the protected page, set `RTC_ORIGIN` (exact HTTPS
+origin), `RTC_TEST_PASS` (protected secret), and `RTC_EXPECTED_ACCOUNT`
+(the exact scratch mailbox) in the authorized runner environment. Do not
+paste the pass into shell arguments, code, PRs, chat or logs. Then run:
+
+```bash
+node scripts/smoke-readonly.mjs --authorized-read-only
+```
+
+It verifies the actual Google identity and asks only safe one-item Gmail,
+Drive, Calendar and Tasks listings for areas the pass authorizes. Missing
+areas are explicitly NOT_AVAILABLE; permission/provider failures are FAIL,
+not success. An oversized result is retrieved through its expiring handle.
+It outputs outcomes only, never personal Google records. Save the observed
+outcomes, UTC time and exact deployed commit for the Hub D-4 acceptance.
+After use revoke the pass and separately verify the revocation. Do not
+trigger a manual Vercel deployment to run this test; wait for the scheduled
+checked `main → live` promotion.
