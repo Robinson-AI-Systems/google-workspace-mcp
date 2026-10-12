@@ -10,6 +10,7 @@ describe('RTC owner overview and structured settings',()=>{
   const calls=[];
   const fake=async(name)=>{
    calls.push(name);
+   if(name==='workspace_whoami')return ok({actingAs:'ops@example.test',gmailReports:'ops@example.test',matches:true});
    if(name==='workflow_security_snapshot')return ok({totalUsers:4,usersWithout2StepVerification:['user@example.test']});
    if(name==='workflow_email_health')return ok('WARN: DKIM needs attention');
    return ok({healthy:true});
