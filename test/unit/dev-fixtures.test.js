@@ -195,3 +195,98 @@ it('blocks legacy run without reservations rather than duplicating or blind-clea
  await expect(handlers.workspace_dev_cleanup({runId,confirm:true},s.clients)).rejects.toThrow(/reservations/);
  expect(s.calls.filter(c=>c.path==='drive.files.create')).toHaveLength(0);
 });
+
+describe('P8-7 TEST Calendar event fixtures',()=>{
+ const runId='55555555-2222-4444-8666-777777777777';
+ const calendarId='owned-test-calendar';
+ const args={scenario:'calendar',calendarId,runId};
+ function cal(){
+  const {clients,calls,when}=makeFakeClients();
+  clients.connection='test-cal-connection';
+  clients.rtcPolicy={mode:'test',profile:'full',areas:['workspace','calendar']};
+  const byId=new Map();
+  let n=0;
+  when('calendar.calendarList.get').resolves({data:{id:calendarId,accessRole:'owner'}});
+  when('calendar.events.insert').resolves(({requestBody})=>{
+   const id='event-'+(++n);
+   const event={...requestBody,id,creator:{email:clients.actingAs},status:'confirmed'};
+   byId.set(id,event);return {data:event};
+  });
+  when('calendar.events.get').resolves(({eventId})=>({data:byId.get(eventId)||{}}));
+  when('calendar.events.list').resolves(()=>({data:{items:[...byId.values()].filter(e=>e.extendedProperties?.private?.rtc_run===runId)}}));
+  when('calendar.events.delete').resolves(({eventId})=>{byId.get(eventId).status='cancelled';return {data:{}};});
+  return {clients,calls,when,byId};
+ }
+ it('previews without creating anything and rejects primary or reader calendars',async()=>{
+  const s=cal();
+  const preview=body(await handlers.workspace_dev_create_fixtures({...args,dryRun:true},s.clients));
+  expect(preview.dryRun).toBe(true);
+  expect(s.calls.some(c=>c.path==='calendar.events.insert')).toBe(false);
+  await expect(handlers.workspace_dev_create_fixtures({...args,calendarId:'primary',dryRun:true},s.clients)).rejects.toThrow(/non-primary|separate test/);
+  s.when('calendar.calendarList.get').resolves({data:{id:calendarId,accessRole:'reader'}});
+  await expect(handlers.workspace_dev_create_fixtures({...args,dryRun:true},s.clients)).rejects.toThrow(/separately owned/);
+  expect(s.calls.filter(c=>c.path==='calendar.events.insert')).toHaveLength(0);
+ });
+ it('creates one owned, private-tagged event with zero invites, and exact replay creates none',async()=>{
+  const s=cal();
+  const first=body(await handlers.workspace_dev_create_fixtures(args,s.clients));
+  expect(first.confirmed).toBe(true);
+  expect(first.details.objects).toHaveLength(1);
+  const sent=s.calls.filter(c=>c.path==='calendar.events.insert');
+  expect(sent).toHaveLength(1);
+  expect(sent[0].args[0].sendUpdates).toBe('none');
+  expect(sent[0].args[0].requestBody).toMatchObject({attendees:[],extendedProperties:{private:{rtc_run:runId,rtc_kind:'event'}}});
+  const again=body(await handlers.workspace_dev_create_fixtures(args,s.clients));
+  expect(again.confirmed).toBe(true);
+  expect(s.calls.filter(c=>c.path==='calendar.events.insert')).toHaveLength(1);
+ });
+ it('recovers after successful Google insert but failed ledger recording, by exact event tags',async()=>{
+  const s=cal();
+  const original=state.db.recordDevObject.bind(state.db);
+  let once=false;
+  state.db.recordDevObject=async p=>{if(!once){once=true;throw Error('database write failed')}return original(p);};
+  await expect(handlers.workspace_dev_create_fixtures(args,s.clients)).rejects.toThrow(/uncertain/);
+  state.db.recordDevObject=original;
+  const r=body(await handlers.workspace_dev_create_fixtures(args,s.clients));
+  expect(r.confirmed).toBe(true);
+  expect(s.calls.filter(c=>c.path==='calendar.events.list')).toHaveLength(1);
+  expect(s.calls.filter(c=>c.path==='calendar.events.insert')).toHaveLength(1);
+ });
+ it('deletes only a verified event with confirmation and post-delete provider proof',async()=>{
+  const s=cal();
+  await handlers.workspace_dev_create_fixtures(args,s.clients);
+  const p=body(await handlers.workspace_dev_cleanup({runId,dryRun:true},s.clients));
+  expect(p.dryRun).toBe(true);
+  expect(body(await handlers.workspace_dev_cleanup({runId},s.clients)).needsConfirmation).toBe(true);
+  expect(s.calls.filter(c=>c.path==='calendar.events.delete')).toHaveLength(0);
+  const cleaned=body(await handlers.workspace_dev_cleanup({runId,confirm:true},s.clients));
+  expect(cleaned.confirmed).toBe(true);
+  expect(cleaned.details.fullyCleaned).toBe(true);
+  expect(s.calls.filter(c=>c.path==='calendar.events.delete')).toHaveLength(1);
+  expect(s.byId.get('event-1').status).toBe('cancelled');
+ });
+ it('refuses event with changed run tag and never deletes a foreign event',async()=>{
+  const s=cal();await handlers.workspace_dev_create_fixtures(args,s.clients);
+  s.byId.get('event-1').extendedProperties.private.rtc_run='other-run';
+  await expect(handlers.workspace_dev_cleanup({runId,confirm:true},s.clients)).rejects.toThrow(/tag|creator|run ID/);
+  expect(s.calls.filter(c=>c.path==='calendar.events.delete')).toHaveLength(0);
+ });
+});
+
+it('retries a Calendar cleanup after provider deletion without deleting any other event',async()=>{
+ const {clients,calls,when}=makeFakeClients();
+ clients.connection='test-cal-connection';
+ clients.rtcPolicy={mode:'test',profile:'full',areas:['workspace','calendar']};
+ const runId='55555555-2222-4444-8666-999999999999',calendarId='owned-test-calendar',eventId='already-gone';
+ when('calendar.calendarList.get').resolves({data:{id:calendarId,accessRole:'owner'}});
+ when('calendar.events.get').resolves({data:{id:eventId,status:'cancelled'}});
+ const owner={actingAs:clients.actingAs,connection:clients.connection};
+ await state.db.startDevRun({id:runId,...owner,scenario:'calendar',calendarId});
+ await state.db.reserveDevStep({runId,...owner,kind:'event'});
+ await state.db.recordDevObject({runId,...owner,kind:'event',googleId:eventId,parentId:calendarId});
+ await state.db.markDevStepRecorded({runId,...owner,kind:'event',googleId:eventId});
+ const r=body(await handlers.workspace_dev_cleanup({runId,confirm:true},clients));
+ expect(r.confirmed).toBe(true);
+ expect(calls.filter(c=>c.path==='calendar.events.delete')).toHaveLength(0);
+ expect((await state.db.getDevRun({runId,...owner})).objects[0].cleaned_at).toBeTruthy();
+});
