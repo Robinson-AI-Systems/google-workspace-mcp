@@ -147,7 +147,12 @@ describe('real Node HTTP to Workspace gateway using checked-in Vercel route tabl
  it('denies unknown route and invalid result handle without changing state',async()=>{
   expect((await request('/api/tools/workspace_missing')).status).toBe(404);
   const result=await request('/api/results/not-a-valid-handle');
-  expect(result.status).toBe(404);expect(holder.writes).toBe(0);
+  expect(result.status).toBe(400);
+  expect(result.value.error.code).toBe('invalid_args');
+  expect(holder.writes).toBe(0);
+  const missing=await request('/api/results/rtc_result_'+'z'.repeat(32));
+  expect(missing.status).toBe(404);
+  expect(missing.value.error.code).toBe('not_found');
  });
 
  it('blocks accidental service-pass disclosure through direct, nested and batch reads',async()=>{
