@@ -28,7 +28,7 @@ const MAILBOX=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const GOOGLE_ID=/^[^\s]{1,256}$/;
 export function validateIntegrationSpec(input={}){
  if(!input||typeof input!=='object'||Array.isArray(input))throw Error('spec must be an object.');
- const fields=['apis','oauthScopes','delegatedScopes','calendars','driveFolders'];
+ const fields=['apis','oauthScopes','delegatedScopes','calendars','driveFolders','documents','spreadsheets','presentations','forms'];
  const out={};
  for(const field of fields){
    const values=input[field]===undefined?(field==='apis'?['gmail','drive','calendar']:[]):input[field];
@@ -37,7 +37,7 @@ export function validateIntegrationSpec(input={}){
  }
  if(out.apis.some(x=>!Object.hasOwn(API_SPECS,x)))throw Error('Unsupported API. Use gmail, drive, calendar, tasks, chat, people or postmaster.');
  if([...out.oauthScopes,...out.delegatedScopes].some(s=>!(['openid','email','profile'].includes(s)||/^https:\/\/www\.googleapis\.com\/auth\/[A-Za-z0-9._/-]+$/.test(s))))throw Error('Scopes must use approved Google auth scope syntax.');
- if([...out.calendars,...out.driveFolders].some(x=>!GOOGLE_ID.test(x)))throw Error('Invalid Google resource identifier.');
+ if([...out.calendars,...out.driveFolders,...out.documents,...out.spreadsheets,...out.presentations,...out.forms].some(x=>!GOOGLE_ID.test(x)))throw Error('Invalid Google resource identifier.');
  if(input.serviceAccountClientId!==undefined&&
    (typeof input.serviceAccountClientId!=='string'||!/^[0-9]{10,32}$/.test(input.serviceAccountClientId)))
    throw Error('serviceAccountClientId must be a Google numeric client ID.');
@@ -112,6 +112,38 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
      checks.push({kind:'calendar',...value});
    }
  }
+ // Document-service APIs have no safe general-purpose list probe. Check exact
+ // app-owned resources instead: a Drive file listing cannot prove that Docs,
+ // Sheets, Slides or Forms actually permits this account to open the object.
+ const resourceChecks=[
+   {kind:'document',ids:request.documents,tool:'docs_get_document',service:'docs',
+     read:(c,id)=>c.docs.documents.get({documentId:id,fields:'documentId,title'}),id:'documentId',
+     url:'https://docs.google.com'},
+   {kind:'spreadsheet',ids:request.spreadsheets,tool:'sheets_get_spreadsheet',service:'sheets',
+     read:(c,id)=>c.sheets.spreadsheets.get({spreadsheetId:id,fields:'spreadsheetId,properties.title'}),id:'spreadsheetId',
+     url:'https://sheets.google.com'},
+   {kind:'presentation',ids:request.presentations,tool:'slides_get_presentation',service:'slides',
+     read:(c,id)=>c.slides.presentations.get({presentationId:id,fields:'presentationId,title'}),id:'presentationId',
+     url:'https://slides.google.com'},
+   {kind:'form',ids:request.forms,tool:'forms_get',service:'forms',
+     read:(c,id)=>c.forms.forms.get({formId:id}),id:'formId',
+     url:'https://forms.google.com'}
+ ];
+ for(const kind of resourceChecks){
+   for(const id of kind.ids){
+     if(!allowedTool(kind.tool,policy)){
+       checks.push({kind:kind.kind,name:id,status:'not_readable',reason:'connection_area_excluded'});continue;
+     }
+     const checked=await observe(id,async()=>{
+       const response=await kind.read(clients,id);
+       // Access to a different or unidentified item is not readiness for
+       // the exact app fixture requested by the caller.
+       if(response?.data?.[kind.id]!==id)throw Error('No exact resource identity returned');
+       return response;
+     },guide(kind.url,'Confirm the exact '+kind.kind+' exists and is shared with this mailbox.'));
+     checks.push({kind:kind.kind,...checked});
+   }
+ }
  if(request.driveFolders.length){
    for(const id of request.driveFolders){
      if(!allowedTool('drive_get_file',policy)){
@@ -135,12 +167,14 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
 }
 export const tools=[{
  name:'workspace_dev_check_integration',
- description:'Verify an app’s current Google API access, OAuth scopes, delegated identity, calendars and Drive folders without modifying anything.',
+ description:'Verify an app’s Google API access, scopes, calendars, Drive folders and exact Docs, Sheets, Slides or Forms resources without changes.',
  inputSchema:{type:'object',properties:{
    spec:{type:'object',description:'Requirements the app needs from the existing Google account.',properties:{
      apis:{type:'array',items:{type:'string',enum:Object.keys(API_SPECS)}},
      oauthScopes:{type:'array',items:{type:'string'}},delegatedScopes:{type:'array',items:{type:'string'}},
-     serviceAccountClientId:{type:'string'},calendars:{type:'array',items:{type:'string'}},driveFolders:{type:'array',items:{type:'string'}}
+     serviceAccountClientId:{type:'string'},calendars:{type:'array',items:{type:'string'}},driveFolders:{type:'array',items:{type:'string'}},
+     documents:{type:'array',items:{type:'string'}},spreadsheets:{type:'array',items:{type:'string'}},
+     presentations:{type:'array',items:{type:'string'}},forms:{type:'array',items:{type:'string'}}
    }}
  },required:['spec']}
 }];
