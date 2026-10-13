@@ -186,6 +186,36 @@ describe('real Node HTTP to Workspace gateway using checked-in Vercel route tabl
   expect(new Set(actual).size).toBe(actual.length);
   expect(actual).toEqual(expected);
  });
+
+ it('rejects an oversized batch before executing its otherwise valid reads',async()=>{
+  const before=holder.writes;
+  const r=await request('/api/tools/_batch',{method:'POST',body:{calls:[
+   {name:'workspace_list_accounts',args:{oversize:'x'.repeat(70000)}}
+  ]}});
+  expect(r.status).toBe(413);
+  expect(r.value.error.code).toBe('invalid_args');
+  expect(holder.writes).toBe(before);
+ });
+ it('keeps large read batches behind private 24-hour handles instead of returning them inline',async()=>{
+  const original=registry.handlers.workspace_list_accounts;
+  registry.handlers.workspace_list_accounts=async()=>({
+   content:[{type:'text',text:JSON.stringify({value:'🦉'.repeat(6000)})}]});
+  try{
+   const r=await request('/api/tools/_batch',{method:'POST',
+    body:{calls:[{name:'workspace_list_accounts'}]}});
+   expect(r.status).toBe(200);
+   expect(Buffer.byteLength(JSON.stringify(r.value),'utf8')).toBeLessThanOrEqual(8192);
+   const handle=r.value.handle;
+   expect(handle).toMatch(/^rtc_result_/);
+   expect(r.value.result.handle).toBe(handle);
+   const page=await request('/api/results/'+handle+'?page=1');
+   expect(page.status).toBe(200);
+   expect(page.value.result.page).toBe(1);
+   expect(Buffer.byteLength(page.value.result.content,'utf8')).toBeLessThanOrEqual(4096);
+   const stranger=await request('/api/results/'+handle+'?page=1',{bearer:wideToken});
+   expect(stranger.status).toBe(404);
+  }finally{registry.handlers.workspace_list_accounts=original;}
+ });
  it('enforces immediate revocation over HTTP',async()=>{
   await holder.db.revokeRtcPass(passId);
   const r=await request('/api/whoami');
