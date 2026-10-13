@@ -109,6 +109,8 @@ describe('workflow_health_report end to end', () => {
     const { clients, calls, opts } = setup();
     const out = await hr.healthReport('x.test', clients, opts);
     for (const name of ['2-Step Verification', 'Super admins', 'Third-party app access', 'Automatic forwarding', 'Groups open', 'Paid licences', 'Drive files']) expect(find(out.checks, name), name).toBeTruthy();
+    expect(find(out.checks, 'Directory coverage').status).toBe('PASS');
+    expect(find(out.checks, 'Directory coverage').found).toMatch(/Every available Directory user page/);
     expect(find(out.checks, 'Third-party app access').status).toBe('WARN');
     expect(out.report).toContain('## Workspace health report: x.test');
     expect(out.report).toContain('### What to do');
@@ -179,6 +181,7 @@ describe('limits and edge cases', () => {
     f.when('admin.users.list').resolves({ data: { users: many } });
     const out = await hr.healthReport('all', f.clients, opts);
     expect(out.report).toMatch(/Only the first 500 users were read/);
+    expect(find(out.checks, 'Directory coverage').status).toBe('WARN');
     expect(find(out.checks, 'Super admins').status).toBe('WARN');
   });
   it('a second page of users that Google still has is also reported as cut short', async () => {
