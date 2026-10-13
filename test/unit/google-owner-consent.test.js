@@ -85,11 +85,19 @@ describe('protected owner-initiated Google setup',()=>{
  it('rejects fully attacker-chosen state AND cookie without a server-issued signature',async()=>{
   const nonce='A'.repeat(32);
   const forged=new URLSearchParams({setup:'1',nonce,issued:String(Date.now()),label:'Injected',mac:'Z'.repeat(43)}).toString();
-  const cookie='google_setup_nonce='+nonce;
+  const cookie='google_setup_nonce='+'B'.repeat(43);
   expect(verifyGoogleSetup(forged,cookie)).toBeNull();
   const refused=response();await callback({method:'GET',query:{state:forged,code:'attacker-consent-code'},headers:{cookie}},refused);
   expect(refused.statusCode).toBe(400);
   expect(holder.connected).toBe(0);
+ });
+ it('requires the actual private browser cookie even when signed OAuth state is known',async()=>{
+  const issued=startGoogleSetup('Owner');
+  const nonce=new URLSearchParams(issued.state).get('nonce');
+  expect(issued.cookie).not.toContain('='+nonce+';');
+  expect(verifyGoogleSetup(issued.state,'google_setup_nonce='+'Z'.repeat(43))).toBeNull();
+  expect(verifyGoogleSetup(issued.state,'google_setup_nonce='+nonce)).toBeNull();
+  expect(verifyGoogleSetup(issued.state,issued.cookie.split(';')[0])).toMatchObject({label:'Owner'});
  });
  it('fails closed when the service signing key is absent or rotated',async()=>{
   const issued=startGoogleSetup('Owner');
