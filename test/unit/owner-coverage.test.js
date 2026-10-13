@@ -4,7 +4,8 @@ import {planSummary} from '../../src/tools/ops.js';
 import {ok} from '../../src/tools/util.js';
 const c={actingAs:'ops@example.test',rtcPolicy:{profile:'full'}};
 const names=['2-Step Verification','Super admins','2-Step enforcement','Third-party app access','Automatic forwarding of mail','Groups open to outsiders'];
-const checks=names.map(check=>({check,status:'PASS',found:'Observed',fix:null}));
+const checks=[...names.map(check=>({check,status:'PASS',found:'Observed',fix:null})),
+ {check:'Directory coverage',status:'PASS',found:'Every Directory page was read',fix:null}];
 function sources(override={}){
  return {
   workspace_whoami:{matches:true,gmailReports:c.actingAs},
@@ -31,8 +32,28 @@ describe('complete owner-side evidence sections',()=>{
   expect(r.items.forwarding.status).toBe('not_readable');expect(r.items.domains.status).toBe('needs_attention');
  });
  it('never promotes passing user checks from an incomplete Directory scan',async()=>{
-  const r=await run({workflow_health_report:{scope:'example.test',summary:{pass:6,warn:1,fail:0,info:0},checks:[...checks,{check:'Directory coverage',status:'WARN',found:'More users remain'}]}});
+  const incomplete=checks.map(c=>c.check==='Directory coverage'?{...c,status:'WARN',found:'More users remain'}:c);
+  const r=await run({workflow_health_report:{scope:'example.test',summary:{pass:checks.length-1,warn:1,fail:0,info:0},checks:incomplete}});
   expect(r.items.two_step_enforcement.status).toBe('not_readable');expect(r.items.users_admins.status).toBe('not_readable');
+ });
+ it('never treats missing or duplicated Directory completion evidence as a green owner check',async()=>{
+  for(const observed of [
+    checks.filter(c=>c.check!=='Directory coverage'),
+    [...checks,{check:'Directory coverage',status:'PASS',found:'duplicate'}]
+  ]){
+   const r=await run({workflow_health_report:{
+    scope:'example.test',summary:{pass:observed.length,warn:0,fail:0,info:0},checks:observed}});
+   for(const name of ['users_admins','two_step_enforcement','third_party_app_access','forwarding'])
+    expect(r.items[name].status,name).toBe('not_readable');
+  }
+ });
+ it('keeps a confirmed user security failure visible when Directory coverage is absent',async()=>{
+  const observed=checks.filter(c=>c.check!=='Directory coverage')
+    .map(c=>c.check==='2-Step Verification'?{...c,status:'FAIL',found:'One user lacks 2SV'}:c);
+  const r=await run({workflow_health_report:{
+   scope:'example.test',summary:{pass:observed.length-1,warn:0,fail:1,info:0},checks:observed}});
+  expect(r.items.users_admins.status).toBe('needs_attention');
+  expect(r.items.two_step_enforcement.status).toBe('not_readable');
  });
  it('refuses missing checks, partial licensing, incomplete alerts and malformed organization',async()=>{
   const r=await run({workflow_health_report:{checks:[]},workspace_plan_summary:{totalLicensesAssigned:2,plans:[{assigned:2}],truncated:true},
