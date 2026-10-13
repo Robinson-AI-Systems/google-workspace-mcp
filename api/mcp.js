@@ -13,6 +13,18 @@ import { listedTools, allowedTool, toolMetadata } from '../src/rtc/catalog.js';
 
 export const config = { api: { bodyParser: true } };
 
+// OAuth discovery must advertise only the owner-configured service identity.
+// An unauthenticated Host/X-Forwarded-Host header is attacker controlled and
+// cannot be allowed to turn this standalone MCP into a metadata phishing hint.
+export function trustedMcpOrigin(value=process.env.PUBLIC_BASE_URL){
+ if(typeof value!=='string')return null;
+ try{
+  const u=new URL(value);
+  return u.protocol==='https:'&&!u.username&&!u.password&&!u.search&&!u.hash&&
+    u.pathname==='/'&&!u.port&&u.hostname?u.origin:null;
+ }catch{return null;}
+}
+
 // DDL and the legacy-account migration do not need to run on every request in
 // the same warm function instance. A failure clears the cache so the next
 // request retries instead of leaving the instance permanently broken.
@@ -52,17 +64,17 @@ export default async function handler(req, res) {
 
   const authHeader = req.headers['authorization'] || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  const base = (process.env.PUBLIC_BASE_URL || `https://${req.headers.host}`).replace(/\/$/, '');
+  const base = trustedMcpOrigin();
 
   if (!token) {
-    res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
+    if(base)res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
     res.status(401).json({ error: 'unauthorized', error_description: 'Missing bearer token.' });
     return;
   }
 
   const tokenRecord = await getAccessToken(token);
   if (!tokenRecord) {
-    res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
+    if(base)res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
     res.status(401).json({ error: 'invalid_token' });
     return;
   }
