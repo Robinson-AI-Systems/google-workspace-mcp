@@ -13,6 +13,7 @@ vi.mock('../../src/auth/google-auth-hosted.js',()=>({
   messages:{send:async()=>{holder.writes++;return {data:{id:'sent'}};}}}}})
 }));
 const {default:gateway}=await import('../../api/rtc-gateway.js');
+const {registry}=await import('../../src/tools/index.js');
 const config=JSON.parse(await readFile(new URL('../../vercel.json',import.meta.url),'utf8'));
 let server,origin,token,passId;
 function route(url){
@@ -112,6 +113,42 @@ describe('real Node HTTP to Workspace gateway using checked-in Vercel route tabl
   const result=await request('/api/results/not-a-valid-handle');
   expect(result.status).toBe(404);expect(holder.writes).toBe(0);
  });
+
+ it('blocks accidental service-pass disclosure through direct, nested and batch reads',async()=>{
+  const original=registry.handlers.workspace_list_accounts;
+  registry.handlers.workspace_list_accounts=async()=>({content:[{type:'text',text:JSON.stringify({pass:token})}]});
+  try{
+   for(const [path,body] of [
+    ['/api/tools/workspace_list_accounts',{}],
+    ['/api/tools/workspace_call',{name:'workspace_list_accounts'}],
+    ['/api/tools/_batch',{calls:[{name:'workspace_list_accounts'}]}]
+   ]){
+    const r=await request(path,{method:'POST',body});
+    expect(r.status,path).toBe(403);
+    expect(r.value.error.code).toBe('refused_by_guard');
+    expect(JSON.stringify(r.value)).not.toContain(token);
+   }
+  }finally{registry.handlers.workspace_list_accounts=original;}
+ });
+ it('redacts a service pass even if a provider-shaped error includes one',async()=>{
+  const original=registry.handlers.workspace_list_accounts;
+  registry.handlers.workspace_list_accounts=async()=>({
+   isError:true,content:[{type:'text',text:'service_error: unexpected '+token}]});
+  try{
+   const r=await request('/api/tools/workspace_list_accounts',{method:'POST',body:{}});
+   expect(r.status).toBe(400);
+   expect(JSON.stringify(r.value)).not.toContain(token);
+   expect(r.value.error.what).toContain('[redacted service pass]');
+  }finally{registry.handlers.workspace_list_accounts=original;}
+ });
+ it('blocks sensitive values retrieved through a valid connection-owned result handle',async()=>{
+  const handle='rtc_result_'+'a'.repeat(32);
+  await holder.db.storeRtcResult({handle,connection:passId,payload:{data:{accidentalPass:token},bytes:55}});
+  const r=await request('/api/results/'+handle);
+  expect(r.status).toBe(403);expect(r.value.error.code).toBe('refused_by_guard');
+  expect(JSON.stringify(r.value)).not.toContain(token);
+ });
+
  it('enforces immediate revocation over HTTP',async()=>{
   await holder.db.revokeRtcPass(passId);
   const r=await request('/api/whoami');
