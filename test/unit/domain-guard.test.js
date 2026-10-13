@@ -83,6 +83,44 @@ describe('the admin tools, called from the rentals connection', () => {
   });
 });
 
+describe('cross-business Reports privacy', () => {
+  it('refuses organization-wide and opaque-ID Reports reads from a restricted business before Google is called', async () => {
+    const { clients, calls } = rentals();
+    const cases = [
+      ['reports_activity', { application:'login' }],
+      ['reports_activity', { application:'admin', userKey:'all' }],
+      ['reports_activity', { application:'drive', userKey:'user-id-without-domain' }],
+      ['reports_login_activity', {}],
+      ['reports_admin_activity', {userKey:'all'}],
+      ['reports_usage_customer', {date:'2026-10-10'}],
+      ['reports_usage_user', {userKey:'12345678',date:'2026-10-10'}]
+    ];
+    for(const [name,args] of cases) {
+      const out=text(await registry.handlers[name](args,clients));
+      expect(out,name).toMatch(/^Refused: This Reports request/);
+      expect(out,name).toContain('Nothing was read.');
+    }
+    expect(calls).toEqual([]);
+  });
+  it('allows exact own-domain Reports reads and explicit owner-authorized customer-wide reads without leaking crossDomain to Google', async () => {
+    const { clients,calls }=rentals();
+    const own=body(await registry.handlers.reports_activity({application:'login',userKey:'ops@rentals.test'},clients));
+    expect(own.application).toBe('login');
+    expect(calls.some(c=>c.path==='adminReports.activities.list')).toBe(true);
+    expect(calls.at(-1).args[0].userKey).toBe('ops@rentals.test');
+    await registry.handlers.reports_activity({application:'login',userKey:'all',crossDomain:true},clients);
+    expect(calls.at(-1).args[0].userKey).toBe('all');
+    await registry.handlers.reports_usage_customer({date:'2026-10-10',crossDomain:true},clients);
+    expect(calls.at(-1).path).toBe('adminReports.customerUsageReports.get');
+    expect(JSON.stringify(calls)).not.toContain('crossDomain');
+  });
+  it('does not impose domain limits on connections that have no allowed-domains restriction',async()=>{
+    const {clients,calls}=makeFakeClients({actingAs:'ops@rentals.test'});
+    await registry.handlers.reports_activity({application:'login'},clients);
+    expect(calls.some(c=>c.path==='adminReports.activities.list')).toBe(true);
+  });
+});
+
 describe('workspace_set_allowed_domains', () => {
   it('changes nothing without confirm, and says what it would do', async () => {
     const out = body(await accounts.workspace_set_allowed_domains({ email: 'ops@rentals.test', domains: ['rentals.test', 'ai-systems.test'] }, rentals().clients));
