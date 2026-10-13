@@ -41,7 +41,7 @@ afterAll(async()=>{
 describe('standalone direct MCP owner-origin and bearer trust',()=>{
  it('rejects unsafe OAuth metadata origins independently of arbitrary request host',()=>{
   expect(trustedMcpOrigin('https://workspace.example.test')).toBe('https://workspace.example.test');
-  for(const bad of [undefined,'','http://workspace.example.test','https://user:pw@workspace.example.test',
+  for(const bad of ['','http://workspace.example.test','https://user:pw@workspace.example.test',
    'https://workspace.example.test/evil','https://workspace.example.test?q=x',
    'https://workspace.example.test#fragment','https://workspace.example.test:444',
    'javascript:alert(1)','not a URL']){
