@@ -57,7 +57,8 @@ export function manifest(){
  return {rtc:1,server:'google-workspace-mcp',prefix:'workspace_',version:'1.0.0',
   areas:RTC_AREAS,counts:{tools:metadata.length,writes:metadata.filter(t=>t.writes).length,money:0},
   profiles:['read_only','everyday','full'],listingModes:['catalog','compact'],modes:['test'],
-  devTools:true,conformance:{status:'pending_real_D4_acceptance'}};
+  devTools:true,conformance:{status:'pending_real_D4_acceptance'},
+  deployment:{sourceRevision:/^[a-f0-9]{40}$/.test(process.env.VERCEL_GIT_COMMIT_SHA||'')?process.env.VERCEL_GIT_COMMIT_SHA:null}};
 }
 export function openapi(){
  return {openapi:'3.1.0',info:{title:'Robinson Google Workspace RTC tools',version:'1.0.0'},servers:[{url:process.env.PUBLIC_BASE_URL||''}],
@@ -85,7 +86,7 @@ export default async function handler(req,res){
  const pass=await getRtcPass(token);
  if(!pass)return fail(res,401,await rtcPassFailureCode(token),'Valid non-production RTC pass required.');
  if(!await chargeRtcPass(pass.id,pass.rate_limit_per_minute))return fail(res,429,'rate_limited','Pass call limit reached.','Retry after this minute.',60);
- if(req.method==='GET'&&door==='whoami')return success(res,{connection:pass.id,profile:pass.profile,areas:pass.areas,listing:pass.listing,mode:pass.mode,allow_writes:pass.allow_writes});
+ if(req.method==='GET'&&door==='whoami')return success(res,{connection:pass.id,account:pass.google_account,profile:pass.profile,areas:pass.areas,listing:pass.listing,mode:pass.mode,allow_writes:pass.allow_writes});
  if(req.method==='GET'&&door==='tools'){
   const q=String(req.query?.q||'').toLowerCase(),area=req.query?.area,audience=req.query?.audience;
   const limit=Math.min(100,Math.max(1,Number(req.query?.limit)||10));
