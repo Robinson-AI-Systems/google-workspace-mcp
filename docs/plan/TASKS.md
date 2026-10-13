@@ -1422,6 +1422,12 @@ The original owner-authorized, syntax-only WIP at `ai/codex/p8-google-acceptance
 Read-only Vercel inspection during this Batch P session found the latest listed READY historical production deployment from source `171144d223f878b2541a055337ece845b591b998` (older than PR #66); it does **not** establish the current public domain's exact live source, a checked daily live promotion of Batch P, or authenticated Google acceptance. No deployment was initiated; recheck the actual assigned production domain, independently reported source revision, READY state and scheduled promotion after release. The manifest claim alone is not release provenance.
 
 
+### P8-7 broader app integration preflight — PR #89 candidate (2026-10-13)
+
+The read-only `workspace_dev_check_integration` previously checked only Gmail, Drive, Calendar and Tasks, despite this standalone server offering Chat, People/Contacts and Postmaster operations too. App developers can now explicitly test those three APIs as well using bounded no-write probes under the same connection area/profile guard, approved account and OAuth scopes. Only readiness/denial status is returned; no contacts, conversations or cross-domain Postmaster domain names are included. Regression tests cover successful probes, area denials and mixed provider failures. The default API list and existing callers remain unchanged.
+
+**Acceptance still needed:** exact-head `test` and `release-policy`, qualified review, safe merge, post-merge final-main checks, independently verified deployed SHA and an authenticated real custom-MCP run against approved Google account. No scopes, owner sign-ins, production releases or infrastructure costs changed. Note open #86/#87/#88 and independent review quota; this PR is not proof those merged.
+
 ### P8-7 calendar prerequisite and preservation evidence — PR #68 candidate, October 13
 
 Actual main at session entry: `783d19259143d28e7dddc505dccf8e480b70b882` (#67 merged); exact-main CI and release-policy succeeded. Owner cadence now targets five significant PRs adjusted to a final PR-number multiple of five: this session plans three, #68–#70, without padding and subject to concurrent numbering.
