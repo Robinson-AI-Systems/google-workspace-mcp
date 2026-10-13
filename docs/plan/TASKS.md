@@ -930,7 +930,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P7-6 | SUPERSEDED | | Delivered by P8-2 (read_only profile) — Phase 8 added 2026-10-10 |
 | P7-7 | SUPERSEDED | | Delivered by P8-2 (profiles, area filters, compact listing) — Phase 8 added 2026-10-10 |
 | P7-8 | TODO | | Bulk and cross-domain operations; design note first |
-| P8-1 | IN_PROGRESS | #31, #34, #41, #44, #55, #57 | Compact results/handles and twelve typed read operations merged through #57 after exact-head test/release-policy; broader end-to-end Hub/Google TEST conformance and full read coverage remain open. |
+| P8-1 | DONE | #31, #34, #41, #44, #55, #57, #63 | Stated automated acceptance passed: all 161 read names bounded with 100-item wrapper fakes, projection, real-DB handle isolation, annotation parity, 13 typed reads and all seven guarded write workflows. Genuine deployed Google/Hub routes remain separate P8-3/4/5 acceptance. |
 | P8-2 | IN_PROGRESS | #30 | Profile persistence, read-only dispatch, compact meta-tools and filters implemented; full service conformance / profile acceptance remains pending |
 | P8-3 | IN_PROGRESS | #32 | Owner-protected hashed, short-lived, scratch-account TEST read-only passes, revocation, limit guards; live issuance acceptance unverified |
 | P8-4 | IN_PROGRESS | #32–#34 | Pass-only RTC manifest/HTTPS routes and DB limit implemented; deployed boundary, two-instance and D-4 acceptance not verified |
@@ -1357,3 +1357,8 @@ P8-1 acceptance evidence additionally covers **all 161 registered read names** t
 ## Service-specific gateway recovery acceptance — 2026-10-12
 
 P8-5 actual-service conformance and genuine Google/Hub acceptance remain independent of optional P8-6. Preserve domain/delegation scopes, write provenance, result ownership and plaintext-token retirement time gate. Reconcile active PR #64 before merge; owner-reported standalone Google operation is not proof of latest deployed RTC/TEST routes.
+
+
+### P8-8 owner overview evidence reconciliation — implementation PR #64
+
+Owner overview reports organization, registered domain verification, user/admin findings, two-step enforcement, third-party app access, forwarding, outside-access groups, DNS/mail authentication, license/plan and recent security alerts as separate evidence-aware sections. Customer-wide organization/domains retain explicit intent and area guards. Missing or partial Directory, Alert Center and license evidence is not marked healthy; license pagination cycles terminate and report incomplete coverage. No permission widened. Unit tests cover positive, warning, unreadable, permission and partial/pagination cases. Comprehensive real Admin-console map walk and authenticated deployed RTC/Google/Hub checks remain outstanding. This section is subordinate to the October 12 gateway recovery boundary above; shared-core adoption remains optional.
