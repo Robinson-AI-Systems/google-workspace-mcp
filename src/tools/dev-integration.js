@@ -14,7 +14,13 @@ const API_SPECS=Object.freeze({
  calendar:{tool:'calendar_list_calendars',label:'Calendar',url:'https://console.cloud.google.com/apis/library/calendar-json.googleapis.com',
    probe:clients=>clients.calendar.calendarList.list({maxResults:1})},
  tasks:{tool:'tasks_list_tasklists',label:'Tasks',url:'https://console.cloud.google.com/apis/library/tasks.googleapis.com',
-   probe:clients=>clients.tasks.tasklists.list({maxResults:1})}
+   probe:clients=>clients.tasks.tasklists.list({maxResults:1})},
+ chat:{tool:'chat_list_spaces',label:'Google Chat',url:'https://console.cloud.google.com/apis/library/chat.googleapis.com',
+   probe:clients=>clients.chat.spaces.list({pageSize:1})},
+ people:{tool:'contacts_get',label:'People/Contacts',url:'https://console.cloud.google.com/apis/library/people.googleapis.com',
+   probe:clients=>clients.people.people.get({resourceName:'people/me',personFields:'names,emailAddresses'})},
+ postmaster:{tool:'postmaster_list_domains',label:'Gmail Postmaster',url:'https://console.cloud.google.com/apis/library/gmailpostmastertools.googleapis.com',
+   probe:clients=>clients.postmaster.domains.list({pageSize:1})}
 });
 const SAFE_SCOPES=new Set(DELEGATED_SCOPES);
 const MAX_ITEMS=12;
@@ -29,7 +35,7 @@ export function validateIntegrationSpec(input={}){
    if(!Array.isArray(values)||values.length>MAX_ITEMS||values.some(v=>typeof v!=='string'||!v.trim()||v.length>512))throw Error(field+' must be an array of up to 12 nonempty strings.');
    out[field]=[...new Set(values)];
  }
- if(out.apis.some(x=>!Object.hasOwn(API_SPECS,x)))throw Error('Unsupported API. Use gmail, drive, calendar or tasks.');
+ if(out.apis.some(x=>!Object.hasOwn(API_SPECS,x)))throw Error('Unsupported API. Use gmail, drive, calendar, tasks, chat, people or postmaster.');
  if([...out.oauthScopes,...out.delegatedScopes].some(s=>!(['openid','email','profile'].includes(s)||/^https:\/\/www\.googleapis\.com\/auth\/[A-Za-z0-9._/-]+$/.test(s))))throw Error('Scopes must use approved Google auth scope syntax.');
  if([...out.calendars,...out.driveFolders].some(x=>!GOOGLE_ID.test(x)))throw Error('Invalid Google resource identifier.');
  if(input.serviceAccountClientId!==undefined&&
