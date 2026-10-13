@@ -54,7 +54,7 @@ describe('P8-1 typed read API results',()=>{
  });
  it('returns actual typed runtime data for Reports and Postmaster fake reads',async()=>{
   const clients={adminReports:{activities:{list:vi.fn(async()=>({data:{items:[{id:'x'}],nextPageToken:'n'}}))}},postmaster:{domains:{list:vi.fn(async()=>({data:{domains:[{name:'domains/rentals.example'}]}})),trafficStats:{list:vi.fn(async()=>({data:{trafficStats:[{name:'stat'}]}}))}}},actingAs:'ops@rentals.example',allowedDomains:['rentals.example'],connection:'c1'};
-  const reports=await registry.handlers.reports_activity({application:'calendar'},clients);
+  const reports=await registry.handlers.reports_activity({application:'calendar',userKey:'ops@rentals.example'},clients);
   expect(reports.structuredContent.activities).toHaveLength(1);
   const domains=await registry.handlers.postmaster_list_domains({},clients);
   expect(domains.structuredContent.domains).toHaveLength(1);expect(domains.structuredContent.count).toBe(1);
