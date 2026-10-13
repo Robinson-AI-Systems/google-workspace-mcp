@@ -42,3 +42,41 @@ describe('P7-2 evidence-based Cloud Identity policy checks',()=>{
   await expect(handlers.identity_policy_audit({domain:'rentals.example'},{...clients,crossDomain:true})).rejects.toThrow(/incomplete/);
  });
 });
+
+
+describe('P7-2 explicit OU policy override observations',()=>{
+ const json=out=>JSON.parse(out.content[0].text);
+ const setting='settings/gmail.external_recipient_warning';
+ const policy=(orgUnit,enabled,name)=>({name,policyQuery:{orgUnit},setting:{type:setting,value:{enabled}},type:'ADMIN'});
+ it('shows only exact OU overrides and explicitly refuses to claim reduced/effective settings',async()=>{
+  const clients=mk([policy('orgUnits/one',false,'policies/one'),policy('orgUnits/two',true,'policies/two'),
+   {name:'policies/complex',policyQuery:{query:'entity.org_units.exists(...)'},setting:{type:setting,value:{enabled:true}}}]);
+  const listed=json(await handlers.identity_list_policies({domain:'rentals.example',orgUnit:'orgUnits/one'},{...clients,crossDomain:true}));
+  expect(listed.policies.map(p=>p.name)).toEqual(['policies/one']);
+  expect(listed).toMatchObject({orgUnit:'orgUnits/one',scopeMode:'exact_explicit_org_unit_overrides',effective:false});
+  expect(listed.scopeNote).toMatch(/complex CEL policies/);
+  const audited=json(await handlers.identity_policy_audit({domain:'rentals.example',orgUnit:'orgUnits/one',area:'gmail'},{...clients,crossDomain:true}));
+  expect(audited.effective).toBe(false);
+  const finding=audited.results.find(r=>r.policySetting===setting);
+  expect(finding.status).toBe('needs_attention');
+  expect(finding.observations.map(o=>o.name)).toEqual(['policies/one']);
+  const absent=json(await handlers.identity_policy_audit({domain:'rentals.example',orgUnit:'orgUnits/absent',area:'gmail'},{...clients,crossDomain:true}));
+  expect(absent.results.every(r=>r.status==='not_readable')).toBe(true);
+ });
+ it('preserves opaque provider pagination even when the requested OU is absent from a page',async()=>{
+  const clients=mk();
+  clients.cloudidentity.policies.list.mockResolvedValue({data:{policies:[policy('orgUnits/two',true,'policies/two')],nextPageToken:'next'}});
+  const page=json(await handlers.identity_list_policies({domain:'rentals.example',orgUnit:'orgUnits/one',pageToken:'original'},{...clients,crossDomain:true}));
+  expect(page.policies).toEqual([]);
+  expect(page.nextPageToken).toBe('next');
+  expect(clients.cloudidentity.policies.list).toHaveBeenCalledWith({filter:'customer == "customers/my_customer"',pageSize:100,pageToken:'original'});
+ });
+ it('rejects invalid OU identifiers and prevents unauthorized customer-wide reads',async()=>{
+  const clients=mk();
+  for(const orgUnit of ['', 'sales', '../orgUnits/test', 'orgUnits/x;DROP', 'orgUnits/', 123]){
+   await expect(handlers.identity_list_policies({domain:'rentals.example',orgUnit},{...clients,crossDomain:true})).rejects.toThrow(/orgUnit/);
+  }
+  await expect(handlers.identity_list_policies({domain:'rentals.example',orgUnit:'orgUnits/one'},clients)).rejects.toThrow(/crossDomain/);
+  expect(clients.cloudidentity.policies.list).not.toHaveBeenCalled();
+ });
+});
