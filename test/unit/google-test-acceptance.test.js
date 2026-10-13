@@ -15,7 +15,7 @@ const passInfo=new Map([
 ]);
 const good=result=>({ok:true,result});
 const response=(status,value)=>({status,json:async()=>value});
-function harness({actualRevision=revision,createFailure=null,cleanupFailure=null,existing={}}={}){
+function harness({actualRevision=revision,createFailure=null,cleanupFailure=null,existing={},calendarFailure=false,calendarChanged=false}={}){
  const created=new Map(Object.entries(existing)),revoked=new Set(),calls=[];
  const fetchImpl=async(url,options={})=>{
   const path=new URL(url).pathname,method=options.method||'GET';
@@ -31,6 +31,12 @@ function harness({actualRevision=revision,createFailure=null,cleanupFailure=null
   const tool=decodeURIComponent(path.split('/').at(-1));
   if(token===readPass)return response(403,{ok:false,error:{code:tool==='workspace_calendar_list_calendars'?'outside_scope':'refused_by_guard'}});
   if(tool==='workspace_whoami')return response(200,good({matches:true,gmailReports:account}));
+  if(tool==='workspace_calendar_dev_snapshot'){
+   if(calendarFailure)return response(400,{ok:false});
+   const changed=calendarChanged&&created.size>0;
+   return response(200,good({calendarId,owned:true,primary:false,complete:true,eventCount:0,
+    metadataDigest:'a'.repeat(64),aclDigest:'b'.repeat(64),eventsDigest:(changed?'d':'c').repeat(64)}));
+  }
   if(tool==='workspace_dev_create_fixtures'){
    if(args.dryRun)return response(200,good({done:false,dryRun:true}));
    if(!created.has(args.runId))created.set(args.runId,{scenario:args.scenario,objects:names[args.scenario].map(id=>({id}))});
@@ -92,6 +98,20 @@ describe('owner-approved real-mailbox acceptance runner',()=>{
   expect(report.runs[0].status).toBe('cleaned');
   expect(report.runs[1].status).toBe('cleaned');
   expect(report.runs[2].status).toBe('planned');
+  expect(h.revoked.size).toBe(0);
+ });
+ it('refuses invalid calendar ownership before any scenario creates provider objects',async()=>{
+  const h=harness({calendarFailure:true});
+  expect(await run(h)).toMatchObject({status:'failed',failedPhase:'calendar_preservation_baseline'});
+  expect(h.created.size).toBe(0);
+  expect(h.calls.some(x=>x.path.endsWith('workspace_dev_cleanup'))).toBe(false);
+ });
+ it('does not certify preservation or revoke recovery access when unrelated calendar state changed',async()=>{
+  const h=harness({calendarChanged:true});
+  const report=await run(h);
+  expect(report).toMatchObject({status:'failed',failedPhase:'calendar_preservation_readback'});
+  expect(report.runs.every(x=>x.status==='cleaned')).toBe(true);
+  expect(report.calendarPreservationVerified).not.toBe(true);
   expect(h.revoked.size).toBe(0);
  });
  it('preserves incomplete cleanup as reconciliation and keeps recovery access',async()=>{

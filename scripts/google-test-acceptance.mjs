@@ -71,6 +71,20 @@ export async function runGoogleAcceptance({origin,account,expectedRevision,write
   const area=await request('/api/tools/workspace_calendar_list_calendars',readPass,{method:'POST',body:{}});
   if(denied.status!==403||denied.value.error?.code!=='refused_by_guard'||area.status!==403||area.value.error?.code!=='outside_scope')throw Error('missing_permission_denial');
   report.denials={readOnly:true,area:true};await save();}
+  if(!cleanupOnly){
+   phase='calendar_preservation_baseline';
+   const baseline=await call('workspace_calendar_dev_snapshot',{calendarId});
+   if(baseline?.calendarId!==calendarId||baseline.owned!==true||baseline.primary!==false||baseline.complete!==true||
+    !['metadataDigest','aclDigest','eventsDigest'].every(key=>/^[a-f0-9]{64}$/.test(baseline[key]||'')))throw Error('invalid_calendar_baseline');
+   report.calendarBaseline=baseline;await save();
+   // Validate every scenario (including ownership) before creating any files.
+   phase='fixture_prerequisites';
+   for(const run of report.runs){
+    const preview=await call('workspace_dev_create_fixtures',{scenario:run.scenario,runId:run.runId,
+     ...(run.scenario==='calendar'?{calendarId}:{}),dryRun:true});
+    if(preview.done!==false||preview.dryRun!==true)throw Error('invalid_preview');
+   }
+  }
   preflightReady=true;
   if(!cleanupOnly)for(const run of report.runs){
    phase='fixture_'+run.scenario;
@@ -109,6 +123,14 @@ export async function runGoogleAcceptance({origin,account,expectedRevision,write
   }catch{run.status='needs_reconciliation';report.status='failed';report.failedPhase||=phase;}
  }
  const complete=report.runs.every(r=>r.status==='cleaned');
+ if(complete&&!cleanupOnly){
+  try{
+   phase='calendar_preservation_readback';
+   const after=await call('workspace_calendar_dev_snapshot',{calendarId});
+   if(JSON.stringify(after)!==JSON.stringify(report.calendarBaseline))throw Error('calendar_changed');
+   report.calendarPreservationVerified=true;
+  }catch{report.status='failed';report.failedPhase||=phase;}
+ }
  if(complete&&report.status!=='failed'&&writeIdentity&&(cleanupOnly||readIdentity)){
   try{
    phase='pass_revocation';
