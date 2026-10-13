@@ -1,7 +1,7 @@
 // RTC 1 HTTPS door, sharing the exact wrapped handlers used by /api/mcp.
 // Existing legacy MCP tool names remain untouched; HTTPS uses workspace_ aliases.
 import { registry } from '../src/tools/index.js';
-import { RTC_AREAS,allowedTool,listedTools,toolMetadata,isWrite } from '../src/rtc/catalog.js';
+import { RTC_AREAS,RTC_META,allowedTool,listedTools,toolMetadata,isWrite } from '../src/rtc/catalog.js';
 import { initSchema,getRtcPass,rtcPassFailureCode,chargeRtcPass,getAllowedDomains } from '../src/db.js';
 import { onceSuccessful } from '../src/once.js';
 import { buildHostedApiClients } from '../src/auth/google-auth-hosted.js';
@@ -121,7 +121,7 @@ export default async function handler(req,res){
   // A named write, unknown target or nested meta-tool must fail closed here.
   if(internal==='workspace_call'&&!pass.allow_writes){
    const target=toInternal(req.body?.name);
-   if(!target||target==='workspace_call'||target==='workspace_batch'||isWrite(target)||!allowedTool(target,pass))
+   if(!target||RTC_META.has(target)||isWrite(target)||!allowedTool(target,pass))
     return fail(res,403,'refused_by_guard','Only authorized reads are allowed through this pass.');
   }else if(isWrite(internal)&&!pass.allow_writes){
    return fail(res,403,'refused_by_guard','This pass is read only.');
