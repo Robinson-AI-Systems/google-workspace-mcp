@@ -30,8 +30,8 @@ function fakeRes() {
   return res;
 }
 
-function post({ passphrase, account = 'rentals@example.test', ip = '1.1.1.1' }) {
-  const form = new URLSearchParams({ client_id: 'claude', redirect_uri: REDIRECT, state: 'st', passphrase, google_account: account });
+function post({ passphrase, account = 'rentals@example.test', ip = '1.1.1.1', profile='read_only' }) {
+  const form = new URLSearchParams({ client_id: 'claude', redirect_uri: REDIRECT, state: 'st', profile, passphrase, google_account: account });
   const req = Readable.from([form.toString()]);
   req.method = 'POST';
   req.headers = { 'content-type': 'application/x-www-form-urlencoded', 'x-vercel-forwarded-for': ip };
@@ -55,6 +55,16 @@ beforeEach(async () => {
 });
 
 describe('passphrase page lockout', () => {
+  it('prefills requested access and preserves the owner choice after errors',async()=>{
+    for(const profile of ['full','everyday',undefined]){
+      const res=fakeRes();await handler({method:'GET',headers:{},query:{client_id:'claude',redirect_uri:REDIRECT,profile}},res);
+      expect(res.body).toContain(`<option value="${profile||'read_only'}" selected>`);
+      expect(res.body).not.toContain('type="hidden" name="profile"');
+    }
+    const failed=await login({passphrase:'wrong',profile:'full'});expect(failed.body).toContain('<option value="full" selected>');
+    const res=await login({passphrase:PASSPHRASE,profile:'everyday'});const code=new URL(res.headers.Location).searchParams.get('code');
+    expect(code).toHaveLength(32);expect((await fake.consumeAuthCode(code)).profile).toBe('everyday');
+  });
   it('signs in with the right passphrase and binds the connection to the chosen account', async () => {
     const res = await login({ passphrase: PASSPHRASE });
     expect(res.statusCode).toBe(302);
