@@ -41,6 +41,14 @@ describe('RTC result handles',()=>{
    expect(first.bytes).toBeGreaterThan(4096);
    expect(first).not.toHaveProperty('payload');
  });
+ it('treats invalid projected fields as a controlled MCP error instead of throwing',async()=>{
+   const fake=createFakeDb();
+   const shaped=await shapeReadResult(ok({rows:Array.from({length:100},()=>({body:'x'.repeat(100)}))}),{},'owner',fake.storeRtcResult);
+   const {handle}=JSON.parse(shaped.content[0].text);
+   const output=await readStoredResult({handle,fields:'__proto__.polluted'},'owner',fake.getRtcResult);
+   expect(output.isError).toBe(true);
+   expect(output.content[0].text).toMatch(/invalid_args/);
+ });
  it('does not change small legacy MCP responses',async()=>{
    const original=ok({hello:'world'});
    expect(await shapeReadResult(original,{},'connection-1',async()=>{throw Error('must not store')})).toEqual(original);
