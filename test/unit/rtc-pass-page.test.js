@@ -41,9 +41,9 @@ describe('owner RTC pass setup',()=>{
   expect((await holder.db.listRtcPasses())).toHaveLength(1);
  });
  it('refuses origin-less POSTs unless the HTTPS referrer is from an approved same-origin page',async()=>{
-  const fail=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'ops@example.test'},undefined,{origin:undefined});
+  const fail=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'ops@example.test'},null,{origin:undefined});
   expect(fail.statusCode).toBe(403);
-  const ok=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'ops@example.test',areas:'mail',hours:'1'},undefined,{origin:undefined,referer:'https://rtc.example.test/api/rtc/passes'});
+  const ok=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'ops@example.test',areas:'mail',hours:'1'},null,{origin:undefined,referer:'https://rtc.example.test/api/rtc/passes'});
   expect(ok.statusCode).toBe(200);
   expect((await holder.db.listRtcPasses())).toHaveLength(1);
  });
