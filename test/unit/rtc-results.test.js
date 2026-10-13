@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {projectFields,shapeReadResult,readStoredResult,INLINE_BYTES} from '../../src/rtc/results.js';
+import {projectFields,shapeReadResult,readStoredResult,utf8Page,INLINE_BYTES} from '../../src/rtc/results.js';
 import {ok} from '../../src/tools/util.js';
 import {summarizeGoogleResult} from '../../src/rtc/summary.js';
 import {createFakeDb} from '../helpers/fake-db.js';
@@ -80,4 +80,47 @@ it('does not summarize unrelated Google account, Gmail profile or Calendar setti
     const value={important:'must retain'};
     expect(summarizeGoogleResult(name,value)).toBe(value);
   }
+});
+
+
+describe('RTC byte-safe international result pages',()=>{
+ it('does not split UTF-8, even when a four-byte emoji straddles the byte limit',()=>{
+  const text='a'.repeat(4095)+'🦉'+'é'.repeat(2100)+'漢字'+ '🌎'.repeat(1200);
+  const parts=[];let index=1;
+  for(;;){
+   const page=utf8Page(text,index++);
+   expect(page).not.toBeNull();
+   expect(Buffer.byteLength(page.content,'utf8')).toBeLessThanOrEqual(4096);
+   expect(page.content).not.toContain('\uFFFD');
+   parts.push(page.content);
+   if(page.next===null){expect(index-1).toBe(page.pages);break;}
+  }
+  expect(parts.join('')).toBe(text);
+  expect(utf8Page(text,index)).toBeNull();
+ });
+ it('recovers multilingual stored JSON losslessly through numbered, owner-isolated pages',async()=>{
+  const fake=createFakeDb(),owner='international-connection';
+  const original={rows:Array.from({length:300},(_,i)=>({id:i,notes:'é漢🌎🦉'.repeat(40)}))};
+  const out=await shapeReadResult(ok(original),{detail:'full'},owner,fake.storeRtcResult);
+  const handle=JSON.parse(out.content[0].text).handle;
+  expect(handle).toMatch(/^rtc_result_/);
+  let page=1,full='',pages=0;
+  while(page){
+   const resp=await readStoredResult({handle,page},owner,fake.getRtcResult);
+   expect(resp.isError).not.toBe(true);
+   const result=JSON.parse(resp.content[0].text);
+   expect(Buffer.byteLength(result.content,'utf8')).toBeLessThanOrEqual(4096);
+   expect(result.content).not.toContain('\uFFFD');
+   full+=result.content;page=result.next;pages++;
+   expect(pages).toBeLessThan(200);
+  }
+  expect(JSON.parse(full)).toEqual(original);
+  expect((await readStoredResult({handle,page:pages+1},owner,fake.getRtcResult)).isError).toBe(true);
+  expect((await readStoredResult({handle,page:1},'other-connection',fake.getRtcResult)).isError).toBe(true);
+ });
+ it('keeps empty and exact-boundary results consistent',()=>{
+  expect(utf8Page('',1)).toMatchObject({pages:1,content:'',next:null});
+  expect(utf8Page('x'.repeat(4096),1)).toMatchObject({pages:1,next:null});
+  expect(utf8Page('x'.repeat(4097),1)).toMatchObject({pages:2,next:2});
+ });
 });

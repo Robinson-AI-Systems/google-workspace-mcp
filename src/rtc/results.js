@@ -66,6 +66,27 @@ export async function shapeReadResult(output,args,connection,store=storeRtcResul
    preview:compactData===data?full.slice(0,768):undefined});
 }
 
+// Use byte-bounded UTF-8 pages without splitting code points. JavaScript
+// string offsets are UTF-16 code units, not bytes: slicing there may split
+// surrogate pairs and corrupt Google/Sheets/Calendar international text.
+export function utf8Page(text,page,maxBytes=4096){
+ const bytes=Buffer.from(text,'utf8');
+ const bounds=[0];
+ let start=0;
+ while(start<bytes.length){
+  let end=Math.min(start+maxBytes,bytes.length);
+  // Never end inside a multi-byte UTF-8 sequence.
+  while(end<bytes.length&&(bytes[end]&0xc0)===0x80)end--;
+  if(end<=start)throw new Error('Invalid page size for UTF-8.');
+  bounds.push(end);start=end;
+ }
+ if(bounds.length===1)bounds.push(0); // Empty payload still has one page.
+ const pages=bounds.length-1;
+ if(page>pages)return null;
+ return {pages,content:bytes.subarray(bounds[page-1],bounds[page]).toString('utf8'),
+  next:page<pages?page+1:null};
+}
+
 export async function readStoredResult({handle,page=null,fields}={},connection,read=getRtcResult){
  if(typeof handle!=='string'||!/^rtc_result_[a-zA-Z0-9_-]{32}$/.test(handle))return errorResult(new Error('invalid_args: invalid handle'));
  const saved=await read(handle,connection);
@@ -75,9 +96,9 @@ export async function readStoredResult({handle,page=null,fields}={},connection,r
  if(page==null)return ok({handle,bytes:saved.bytes,payload:serialized});
  const n=Number(page);
  if(!Number.isInteger(n)||n<1||n>100000)return errorResult(new Error('invalid_args: invalid page'));
- const bytes=4096,pages=Math.max(1,Math.ceil(serialized.length/bytes));
- if(n>pages)return errorResult(new Error('not_found: page does not exist'));
- return ok({handle,page:n,pages,bytes:saved.bytes,content:serialized.slice((n-1)*bytes,n*bytes),next:n<pages?n+1:null});
+ const chunk=utf8Page(serialized,n);
+ if(!chunk)return errorResult(new Error('not_found: page does not exist'));
+ return ok({handle,page:n,pages:chunk.pages,bytes:saved.bytes,content:chunk.content,next:chunk.next});
 }
 export function applyResultRules(registry){
  registry.tools=registry.tools.map(tool=>{
