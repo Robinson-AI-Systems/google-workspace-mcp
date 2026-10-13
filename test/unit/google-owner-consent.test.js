@@ -39,7 +39,7 @@ beforeEach(()=>{
  holder.db=createFakeDb();holder.grants=0;holder.connected=0;holder.account=null;
  process.env.PUBLIC_BASE_URL=origin;
  process.env.ADMIN_PASSPHRASE=passphrase;
- process.env.TOKEN_ENCRYPTION_KEY='not-real-test-signing-key-with-ample-length';
+ process.env.TOKEN_ENCRYPTION_KEY=Buffer.alloc(32,7).toString('base64');
 });
 describe('protected owner-initiated Google setup',()=>{
  it('requires owner passphrase before it ever starts Google OAuth',async()=>{
@@ -102,8 +102,11 @@ describe('protected owner-initiated Google setup',()=>{
  it('fails closed when the service signing key is absent or rotated',async()=>{
   const issued=startGoogleSetup('Owner');
   const cookie=issued.cookie.split(';')[0];
-  process.env.TOKEN_ENCRYPTION_KEY='a-different-test-key-with-ample-length';
+  process.env.TOKEN_ENCRYPTION_KEY=Buffer.alloc(32,8).toString('base64');
   expect(verifyGoogleSetup(issued.state,cookie)).toBeNull();
+  process.env.TOKEN_ENCRYPTION_KEY='malformed-placeholder';
+  expect(verifyGoogleSetup(issued.state,cookie)).toBeNull();
+  expect(()=>startGoogleSetup()).toThrow(/signing key/);
   delete process.env.TOKEN_ENCRYPTION_KEY;
   expect(verifyGoogleSetup(issued.state,cookie)).toBeNull();
   expect(()=>startGoogleSetup()).toThrow(/signing key/);
