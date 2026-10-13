@@ -1,3 +1,11 @@
+## PR #87 candidate — RTC lossless authorized catalog discovery and owner workflow guidance (2026-10-13)
+
+**Implementation scope:** Existing `workspace_search_tools` returned only the first 30 matched tools, even for a full-profile agent searching a large registry. Add validated `offset` pagination with `totalMatched` and `nextOffset`, preserving the existing `tools` and `count` fields, ordering, compact metadata and per-connection authorization filtering. Repeated calls can now discover every permitted tool without loading 377 schemas or exposing restricted tool counts. Regression tests include full retrieval, filtered read-only scope, empty/out-of-range pages and invalid input.
+
+**Owner workflow correction:** README.md/IMPLEMENTER.md remain repository-owned authoritative pipeline. Continuation prompts carry the next completion milestone and session count but never substitute for instructions, invent a hardening task, or relabel an incomplete batch as complete. Review/CI, deployment and authentic provider acceptance are distinct. #86 is open at the time this candidate branches; its review quota blocker does not block independently eligible work. This PR is not a claim that #86 merged or custom Google acceptance passed.
+
+**Evidence to complete after PR:** exact-head `test` and `release-policy`, qualified code review, merge and final-main CI; later independently verified deployed HTTPS and actual custom MCP discovery. No new Google scopes, writes, stored data, spending or production releases.
+
 ## Owner setup handoff and preferred acceptance mailbox — 2026-10-13
 
 Owner directs future approved provider/RTC fixture testing toward
