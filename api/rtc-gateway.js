@@ -1,7 +1,7 @@
 // RTC 1 HTTPS door, sharing the exact wrapped handlers used by /api/mcp.
 // Existing legacy MCP tool names remain untouched; HTTPS uses workspace_ aliases.
 import { registry } from '../src/tools/index.js';
-import { RTC_AREAS,allowedTool,listedTools,toolMetadata,isWrite } from '../src/rtc/catalog.js';
+import { RTC_AREAS,RTC_META,allowedTool,listedTools,toolMetadata,isWrite } from '../src/rtc/catalog.js';
 import { initSchema,getRtcPass,rtcPassFailureCode,chargeRtcPass,getAllowedDomains } from '../src/db.js';
 import { onceSuccessful } from '../src/once.js';
 import { buildHostedApiClients } from '../src/auth/google-auth-hosted.js';
@@ -115,7 +115,17 @@ export default async function handler(req,res){
   }
   const internal=toInternal(name);
   if(!internal)return fail(res,404,'not_found','Unknown RTC tool.');
-  if(isWrite(internal)&&!pass.allow_writes)return fail(res,403,'refused_by_guard','This pass is read only.');
+  // workspace_call is a dispatcher, not an unconditional write. For a read-only
+  // pass authorize its exact target BEFORE building Google clients. The inner
+  // registry dispatcher independently enforces profile, areas and no recursion.
+  // A named write, unknown target or nested meta-tool must fail closed here.
+  if(internal==='workspace_call'&&!pass.allow_writes){
+   const target=toInternal(req.body?.name);
+   if(!target||RTC_META.has(target)||isWrite(target)||!allowedTool(target,pass))
+    return fail(res,403,'refused_by_guard','Only authorized reads are allowed through this pass.');
+  }else if(isWrite(internal)&&!pass.allow_writes){
+   return fail(res,403,'refused_by_guard','This pass is read only.');
+  }
   if(!allowedTool(internal,pass))return fail(res,403,'outside_scope','Tool is outside the pass permissions.');
   if(req.method==='GET')return success(res,expose(registry.tools.find(t=>t.name===internal)));
   if(req.method!=='POST')return fail(res,405,'invalid_args','Tool invocation requires POST.');

@@ -1,0 +1,120 @@
+import {describe,it,expect,vi,beforeAll,afterAll} from 'vitest';
+import {createServer} from 'node:http';
+import {readFile} from 'node:fs/promises';
+import {createFakeDb} from '../helpers/fake-db.js';
+
+const holder=vi.hoisted(()=>({db:null,writes:0}));
+vi.mock('../../src/db.js',async importActual=>{
+ const real=await importActual();
+ return Object.fromEntries(Object.keys(real).map(name=>[name,(...args)=>holder.db[name](...args)]));
+});
+vi.mock('../../src/auth/google-auth-hosted.js',()=>({
+ buildHostedApiClients:async email=>({actingAs:email,gmail:{users:{getProfile:async()=>({data:{emailAddress:email}}),
+  messages:{send:async()=>{holder.writes++;return {data:{id:'sent'}};}}}}})
+}));
+const {default:gateway}=await import('../../api/rtc-gateway.js');
+const config=JSON.parse(await readFile(new URL('../../vercel.json',import.meta.url),'utf8'));
+let server,origin,token,passId;
+function route(url){
+ // Apply the *checked-in* Vercel rewrites, not invented independent routes.
+ for(const rewrite of config.rewrites){
+  const parts=rewrite.source.split('/').filter(Boolean);
+  const actual=url.pathname.split('/').filter(Boolean);
+  if(parts.length!==actual.length)continue;
+  const params={};let matches=true;
+  for(let i=0;i<parts.length;i++){
+   if(parts[i].startsWith(':'))params[parts[i].slice(1)]=actual[i];
+   else if(parts[i]!==actual[i])matches=false;
+  }
+  if(!matches)continue;
+  const destination=new URL(rewrite.destination,'https://internal.invalid');
+  const query=Object.fromEntries(destination.searchParams.entries());
+  for(const [key,value] of Object.entries(query))if(value.startsWith(':'))query[key]=params[value.slice(1)];
+  for(const [key,value] of url.searchParams)query[key]=value;
+  return {pathname:destination.pathname,query};
+ }
+ return {pathname:'',query:{}};
+}
+async function request(path,{method='GET',bearer=token,body}={}){
+ const resp=await fetch(origin+path,{method,headers:{...(bearer?{authorization:'Bearer '+bearer}:{}),
+  ...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,redirect:'error'});
+ return {status:resp.status,headers:resp.headers,value:await resp.json()};
+}
+beforeAll(async()=>{
+ holder.db=createFakeDb();
+ process.env.RTC_TEST_ACCOUNT_EMAILS='ops@example.test';
+ await holder.db.saveGoogleTokensFor('ops@example.test',{access_token:'fixture-not-a-real-token'});
+ ({token,id:passId}=await holder.db.createRtcPass({googleAccount:'ops@example.test',areas:['workspace'],rateLimit:120}));
+ server=createServer(async(req,res)=>{
+  const url=new URL(req.url,'http://localhost');
+  const matched=route(url);
+  if(matched.pathname!=='/api/rtc-gateway'){res.statusCode=404;res.end('not found');return;}
+  const chunks=[];for await(const chunk of req)chunks.push(chunk);
+  let body={};if(chunks.length){try{body=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{res.statusCode=400;res.end();return;}}
+  req.query=matched.query;req.body=body;
+  res.status=function(n){this.statusCode=n;return this;};
+  res.json=function(value){this.end(JSON.stringify(value));return this;};
+  try{await gateway(req,res);}catch{res.statusCode=500;res.end(JSON.stringify({ok:false,error:{code:'unexpected'}}));}
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ origin='http://127.0.0.1:'+server.address().port;
+});
+afterAll(async()=>{if(server)await new Promise(resolve=>server.close(resolve));});
+describe('real Node HTTP to Workspace gateway using checked-in Vercel route table',()=>{
+ it('serves a public raw manifest without secret material',async()=>{
+  const r=await request('/api/contract',{bearer:null});
+  expect(r.status).toBe(200);
+  expect(r.value).toMatchObject({rtc:1,prefix:'workspace_'});
+  expect(r.headers.get('cache-control')).toBe('no-store');
+  expect(JSON.stringify(r.value)).not.toContain('rtc_pass_');
+ });
+ it('does not authorize a tool catalog or identity without the service pass',async()=>{
+  for(const path of ['/api/whoami','/api/tools']){
+   const r=await request(path,{bearer:null});
+   expect(r.status).toBe(401);expect(r.value.ok).toBe(false);
+  }
+  const r=await request('/api/whoami',{bearer:'unrelated-connector-token'});
+  expect(r.status).toBe(401);
+ });
+ it('proves the actual route returns scoped identity and a usable read catalog',async()=>{
+  const who=await request('/api/whoami');
+  expect(who.value.result).toMatchObject({account:'ops@example.test',profile:'read_only',mode:'test',allow_writes:false});
+  const tools=await request('/api/tools?listing=catalog&limit=2');
+  expect(tools.status).toBe(200);
+  expect(tools.value.result.tools).toHaveLength(2);
+  expect(tools.value.result.next).toBe('2');
+ });
+ it('permits the read-only meta dispatcher only for the exact authorized read',async()=>{
+  const direct=await request('/api/tools/workspace_list_accounts',{method:'POST',body:{}});
+  const nested=await request('/api/tools/workspace_call',{method:'POST',body:{name:'workspace_list_accounts',args:{}}});
+  expect(direct.status).toBe(200);
+  expect(nested.status).toBe(200);
+  expect(nested.value.result).toEqual(direct.value.result);
+  expect(holder.writes).toBe(0);
+ });
+ it('rejects nested writes, out-of-area targets, recursion and raw unprefixed names',async()=>{
+  for(const name of ['workspace_gmail_send_email','workspace_drive_create_folder',
+   'workspace_call','workspace_batch','gmail_list_messages','workspace_not_real']){
+   const r=await request('/api/tools/workspace_call',{method:'POST',body:{name,args:{confirm:true}}});
+   expect(r.status,name).toBe(403);
+  }
+  const write=await request('/api/tools/workspace_gmail_send_email',{method:'POST',body:{confirm:true}});
+  expect(write.status).toBe(403);expect(holder.writes).toBe(0);
+ });
+ it('refuses mixed read/write batches before any execution',async()=>{
+  const r=await request('/api/tools/_batch',{method:'POST',body:{calls:[
+   {name:'workspace_list_accounts'}, {name:'workspace_gmail_send_email',args:{confirm:true}}
+  ]}});
+  expect(r.status).toBe(403);expect(holder.writes).toBe(0);
+ });
+ it('denies unknown route and invalid result handle without changing state',async()=>{
+  expect((await request('/api/tools/workspace_missing')).status).toBe(404);
+  const result=await request('/api/results/not-a-valid-handle');
+  expect(result.status).toBe(404);expect(holder.writes).toBe(0);
+ });
+ it('enforces immediate revocation over HTTP',async()=>{
+  await holder.db.revokeRtcPass(passId);
+  const r=await request('/api/whoami');
+  expect(r.status).toBe(401);expect(r.value.error.code).toBe('pass_revoked');
+ });
+});
