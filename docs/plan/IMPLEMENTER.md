@@ -23,9 +23,10 @@ Recheck TASKS.md blocked/deferred items when dependency merges, owner input
 or environment changes resolve their conditions. Do not re-request
 previously recorded decisions.
 
-Complete the next normal five-PR batch around coherent useful outcomes
-without padding; fewer PRs is acceptable if gates or actual work require
-it. Preserve review and exact-head CI, authorization, data integrity,
+Target five significant PRs; adjust this session count so its final PR
+number ends on the next multiple of five, recalculating current numbering
+and concurrency. No padding; fewer PRs is acceptable if safe eligible work
+or required gates prevent reaching that boundary. Preserve review and exact-head CI, authorization, data integrity,
 recovery, scoped TEST accounts, scheduled checked daily main→live,
 disabled previews, idle resource limits and owner gates. Distinguish
 fakes/reference tests from deployed and real-provider acceptance.

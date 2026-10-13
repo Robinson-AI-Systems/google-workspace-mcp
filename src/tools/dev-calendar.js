@@ -15,7 +15,7 @@ export function validateCalendarRequest(args={}){
 export async function requireTestCalendar(clients,calendarId,identity){
  const result=await clients.calendar.calendarList.get({calendarId});
  if(result?.data?.id!==calendarId||result.data.accessRole!=='owner'||
-    calendarId==='primary'||calendarId===identity.actingAs)
+    result.data.primary===true||calendarId==='primary'||calendarId===identity.actingAs)
    throw Error('Fixture calendar must be separately owned by the acting mailbox.');
 }
 export function exactCalendarEvent(event,id,identity){

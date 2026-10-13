@@ -189,9 +189,10 @@ ledger in `TASKS.md` for the exact state of every card.
 ## Substantive session cadence and continuation
 
 The old October 12 exact-PR-number target is historical, not a binding
-success metric. Normally complete up to five coherent substantial PRs
-around a useful milestone; do not manufacture work to reach a multiple
-of five. No documentation-only PRs or placeholder implementation.
+success metric. Owner update October 13: target five significant PRs per session, adjusting
+the session count to end the final PR number on the next multiple of five.
+Recalculate against actual current PR numbering and concurrent work. This
+is a planning boundary; never manufacture work or weaken acceptance to reach it. No documentation-only PRs or placeholder implementation.
 Mark externally blocked acceptance IN_PROGRESS with exact requirements
 while advancing independently eligible work.
 

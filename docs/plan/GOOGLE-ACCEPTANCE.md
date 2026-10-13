@@ -15,6 +15,8 @@ Once all prerequisites are actually evidenced, run:
 node scripts/google-test-acceptance.mjs --owner-authorized-fixtures
 ```
 
+Before any fixture creation, the script fingerprints the owned non-primary calendar, its sharing rules and every active event across at most ten 100-item pages, and previews all scenarios. Missing or repeated pages fail closed. It compares the same fingerprints after cleanup and refuses acceptance if unrelated calendar state changed; it never attempts to restore unrelated changes. Only digests and counts enter the private report, not event contents or sharing addresses. This proves the observed calendar baseline, not a mailbox-wide or Drive-wide no-change audit. Cleanup-only deliberately uses the durable fixture ledger without requiring a new baseline.
+
 The script verifies the service manifest source revision and separate write/read identities, asks Gmail to confirm the real mailbox, proves read-only and area-denial cases, previews tagged Drive/calendar/Gmail fixtures, creates by stable UUID, verifies exact returned IDs and repeats the same UUID rather than creating uncertain duplicates. Gmail fixtures are inserted locally into the account, not sent to anyone. It uses guarded cleanup with exact IDs, checks provider read-backs, and revokes both passes after successful cleanup. A local PASS means only **this direct authorized mailbox flow** was exercised. It does **not** prove a dedicated isolated TEST account, all Google tools, the Hub relay, Sandbox, or independently verified deployment.
 
 ## Failed run and recovery

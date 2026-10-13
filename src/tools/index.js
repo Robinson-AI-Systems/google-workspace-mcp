@@ -5,6 +5,7 @@ import * as undo from './undo.js';
 import * as adminOverview from './admin-overview.js';
 import * as devIntegration from './dev-integration.js';
 import * as devFixtures from './dev-fixtures.js';
+import * as devCalendarSnapshot from './dev-calendar-snapshot.js';
 import * as gmail from './gmail.js';
 import * as drive from './drive.js';
 import * as sharedDrives from './shared-drives.js';
@@ -38,6 +39,6 @@ import { applyDomainGuard } from './domain-guard.js';
 import { applyResultRules } from '../rtc/results.js';
 
 export const registry = applyResultRules(applyDomainGuard(applyGuards(mergeNamespaces([
-  rtcMeta, undo, adminOverview, devIntegration, devFixtures, gmail, drive, sharedDrives, calendar, sheets, docs, slides, forms, tasks, people,
+  rtcMeta, undo, adminOverview, devIntegration, devFixtures, devCalendarSnapshot, gmail, drive, sharedDrives, calendar, sheets, docs, slides, forms, tasks, people,
   adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts, mailboxBranding, ops, emailHealth, healthReport, digest, inbox, staff, business, dnsTools, postmaster, policyAudit, businessResources
 ]))));
