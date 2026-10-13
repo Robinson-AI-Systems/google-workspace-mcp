@@ -15,6 +15,12 @@ const EMAIL_LIST_ARGS = ['groupEmails', 'aliases', 'accountEmails'];
 const DOMAIN_ARGS = ['domainName', 'domainAliasName', 'parentDomainName', 'domain', 'scope']; // scope: a domain, or the word "all" (which targets no domain)
 const TOOL_FAMILY = /^(admin|licensing|datatransfer|workflow|identity|reports|vault|dns|domain|postmaster)_/;
 const CROSS_DOMAIN_FIELD = { type: 'boolean', description: 'Set to true only when you really mean to act on an address or domain outside the domains this connection is limited to.' };
+// Reports API "all" queries and customer-wide usage reports may expose activity
+// from other businesses even when no outside email appears in the arguments.
+// An opaque Google user ID is not proof of membership in the allowed domain.
+const reportsNeedOrganizationConsent = (name, args) =>
+  name.startsWith('reports_') && (name === 'reports_usage_customer' ||
+    !domainOfEmail(args.userKey));
 
 const clean = (v) => String(v ?? '').trim().toLowerCase();
 
@@ -44,12 +50,15 @@ export function applyDomainGuard(registry) {
   registry.tools = registry.tools.map((tool) => {
     if (!TOOL_FAMILY.test(tool.name)) return tool;
     const props = tool.inputSchema?.properties || {};
-    const aimed = [...EMAIL_ARGS, ...EMAIL_LIST_ARGS, ...DOMAIN_ARGS].some((a) => a in props);
+    const aimed = tool.name.startsWith('reports_') || [...EMAIL_ARGS, ...EMAIL_LIST_ARGS, ...DOMAIN_ARGS].some((a) => a in props);
     if (!aimed) return tool;
     const inner = registry.handlers[tool.name];
     const wrapper = async (args = {}, clients) => {
       const { crossDomain, ...rest } = args;
       if (crossDomain !== true && Array.isArray(clients?.allowedDomains)) {
+        if (reportsNeedOrganizationConsent(tool.name, rest)) {
+          return ok('Refused: This Reports request can include activity from other business domains. Nothing was read. Use an email in an allowed domain, or ask the owner before using crossDomain: true for the customer-wide report.');
+        }
         if ('scope' in props && (!String(rest.scope ?? '').trim() || clean(rest.scope) === 'all')) {
           return ok(`Refused: scope "all" covers every domain in the Workspace, but this connection acts as ${clients.actingAs}, which is limited to ${clients.allowedDomains.join(', ')}. Nothing was read. Give one of those domains as the scope, or run it again with crossDomain: true (ask the person first).`);
         }
