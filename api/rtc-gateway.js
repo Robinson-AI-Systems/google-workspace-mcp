@@ -120,11 +120,20 @@ export default async function handler(req,res){
  }
  if(req.method==='GET'&&handle){
   const result=decodeMcp(await readStoredResult({handle,page:req.query?.page,fields:req.query?.fields},pass.id));
-  return result?.error?fail(res,404,result.error.code,result.error.what):success(res,result);
+  if(result?.error)return fail(res,result.error.code==='invalid_args'?400:404,result.error.code,result.error.what);
+  return success(res,result);
  }
  if(name){
   if(name==='_batch'){
    if(req.method!=='POST')return fail(res,405,'invalid_args','Batch accepts POST only.');
+   // Reject null/non-object entries and their arguments before alias mapping:
+   // malformed user JSON must never crash the service or reach a provider.
+   const calls=req.body?.calls;
+   if(!Array.isArray(calls)||calls.length<1||calls.length>10||
+      calls.some(c=>!c||typeof c!=='object'||Array.isArray(c)||
+        typeof c.name!=='string'||!c.name.trim()||
+        (c.args!==undefined&&(!c.args||typeof c.args!=='object'||Array.isArray(c.args)))))
+    return fail(res,400,'invalid_args','Batch requires 1–10 named calls with object arguments.');
    const args=aliasArgs('workspace_batch',req.body||{});
    // Enforce the same 64 KiB argument budget as single calls. Ten nested
    // reads do not get an unlimited body simply by using the batch route.
@@ -146,7 +155,7 @@ export default async function handler(req,res){
   // pass authorize its exact target BEFORE building Google clients. The inner
   // registry dispatcher independently enforces profile, areas and no recursion.
   // A named write, unknown target or nested meta-tool must fail closed here.
-  if(internal==='workspace_call'&&!pass.allow_writes){
+  if(req.method==='POST'&&internal==='workspace_call'&&!pass.allow_writes){
    const target=toInternal(req.body?.name);
    if(!target||RTC_META.has(target)||isWrite(target)||!allowedTool(target,pass))
     return fail(res,403,'refused_by_guard','Only authorized reads are allowed through this pass.');
