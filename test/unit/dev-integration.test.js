@@ -15,7 +15,10 @@ function clients({denyApi=null,areas=null,tokenScopes=[]}={}){
    gmail:{users:{getProfile:async v=>api('gmail',v)}},
    drive:{files:{list:async v=>api('drive',v),get:async v=>api('folder',v)}},
    calendar:{calendarList:{list:async v=>api('calendar',v)},calendars:{get:async v=>api('calendarResource',v)}},
-   tasks:{tasklists:{list:async v=>api('tasks',v)}}
+   tasks:{tasklists:{list:async v=>api('tasks',v)}},
+   chat:{spaces:{list:async v=>api('chat',v)}},
+   people:{people:{get:async v=>api('people',v)}},
+   postmaster:{domains:{list:async v=>api('postmaster',v)}}
  };
  return {c,accessed};
 }
@@ -89,5 +92,33 @@ describe('RTC app development integration inspection',()=>{
  it('advertises the checker as a builder-facing read without relaxing any write approval',()=>{
    expect(isWrite('workspace_dev_check_integration')).toBe(false);
    expect(audienceFor('workspace_dev_check_integration')).toEqual(['builder']);
+ });
+});
+
+
+describe('P8-7 full supported app readiness probes',()=>{
+ it('observes Chat, People and Postmaster through real read-only service calls',async()=>{
+  const {c,accessed}=clients();
+  const out=await inspectGoogleIntegration({apis:['chat','people','postmaster']},c);
+  expect(out.status).toBe('ready');expect(out.changesMade).toBe(false);
+  expect(out.checks.map(x=>x.name)).toEqual(['chat','people','postmaster']);
+  expect(accessed.map(x=>x.name)).toEqual(['chat','people','postmaster']);
+  expect(accessed[0].payload).toEqual({pageSize:1});
+  expect(accessed[1].payload).toEqual({resourceName:'people/me',personFields:'names,emailAddresses'});
+  expect(accessed[2].payload).toEqual({pageSize:1});
+ });
+ it('prevents profile area escape and preserves incomplete permission evidence',async()=>{
+  const {c,accessed}=clients({areas:['mail']});
+  const out=await inspectGoogleIntegration({apis:['chat','people','postmaster']},c);
+  expect(out.status).toBe('not_readable');
+  expect(out.checks.filter(x=>x.reason==='connection_area_excluded').map(x=>x.name)).toEqual(['chat','people']);
+  expect(accessed.map(x=>x.name)).toEqual(['postmaster']);
+ });
+ it('reports denied Chat API separately instead of hiding it behind other successful API probes',async()=>{
+  const {c}=clients({denyApi:'chat'});
+  const out=await inspectGoogleIntegration({apis:['gmail','chat','people']},c);
+  expect(out.status).toBe('not_readable');
+  expect(out.checks.map(x=>x.status)).toEqual(['ready','not_readable','ready']);
+  expect(out.checks[1].reason).toBe('scope_or_access_denied');
  });
 });
