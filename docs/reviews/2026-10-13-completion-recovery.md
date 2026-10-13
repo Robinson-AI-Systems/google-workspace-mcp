@@ -124,3 +124,29 @@ revocation and precise cleanup receipts; all planned broad bulk/policy
 capabilities; and plaintext-token retirement no earlier than November 1,
 2026 **and** after verified encryption for every account. This note records
 owner preferences and cleanup evidence without claiming any missing proof.
+
+## Google account-enrollment consent security follow-up — October 13, 2026
+
+After reviewing the unmerged Google OAuth setup changes on former draft #81,
+one additional security boundary required an independently reviewed fix:
+the earlier public GET `/api/google/authorize` immediately started Google
+OAuth without first authenticating the MCP owner. An external caller could
+try to enroll their own mailbox into the owner's multi-account registry.
+A browser-only nonce did not remedy authorization of *who* may start setup.
+
+This follow-up now requires the existing database-rate-limited owner
+passphrase before the Google redirect. Every request gets a short-lived
+cookie-bound nonce and a signed-in-browser callback; unsolicited,
+cross-browser, expired and malformed callbacks are refused before a
+provider token exchange. Alternate Vercel aliases redirect to the
+already-configured canonical Google origin first. Error messages omit
+provider secrets. Existing already-connected mailboxes, provider tokens,
+OAuth client redirect configuration, native MCP/RTC and renewable developer
+authorization flows are not changed. The new gate applies to adding or
+reconnecting a Google *provider mailbox*, which is appropriately a
+separate owner operation, not normal AI developer retesting.
+
+Security acceptance requires code tests and exact-head CI/review; the
+actual mobile/browser consent flow and Google callback still need
+live validation before a full end-to-end acceptance claim. Legacy draft
+#81's broader Host-derived origin acceptance is deliberately not adopted.
