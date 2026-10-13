@@ -5,7 +5,7 @@ import { RTC_AREAS,RTC_META,allowedTool,listedTools,toolMetadata,isWrite } from 
 import { initSchema,getRtcPass,rtcPassFailureCode,chargeRtcPass,getAllowedDomains } from '../src/db.js';
 import { onceSuccessful } from '../src/once.js';
 import { buildHostedApiClients } from '../src/auth/google-auth-hosted.js';
-import { readStoredResult } from '../src/rtc/results.js';
+import { readStoredResult,shapeReadResult } from '../src/rtc/results.js';
 const schemaReady=onceSuccessful(initSchema);
 const prefix='workspace_';
 export const toExternal=name=>name.startsWith(prefix)?name:prefix+name;
@@ -126,11 +126,18 @@ export default async function handler(req,res){
   if(name==='_batch'){
    if(req.method!=='POST')return fail(res,405,'invalid_args','Batch accepts POST only.');
    const args=aliasArgs('workspace_batch',req.body||{});
+   // Enforce the same 64 KiB argument budget as single calls. Ten nested
+   // reads do not get an unlimited body simply by using the batch route.
+   if(Buffer.byteLength(JSON.stringify(args),'utf8')>65536)
+    return fail(res,413,'invalid_args','Arguments too large.');
    if(!Array.isArray(args.calls)||!args.calls.length||args.calls.length>10)return fail(res,400,'invalid_args','Batch accepts 1–10 read calls.');
    for(const call of args.calls){
     if(!call.name||!allowedTool(call.name,pass)||isWrite(call.name))return fail(res,403,'refused_by_guard','Batch permits only authorized read tools.');
    }
-   const result=decodeMcp(await registry.handlers.workspace_batch(args,await clientsFor(pass)));
+   // The batch meta handler bypasses ordinary read wrappers: explicitly
+   // apply their same small-result/connection-owned expiring-handle rule.
+   const raw=await registry.handlers.workspace_batch(args,await clientsFor(pass));
+   const result=decodeMcp(await shapeReadResult(raw,{toolName:'workspace_batch'},pass.id));
    return result?.error?fail(res,403,result.error.code,result.error.what):success(res,result);
   }
   const internal=toInternal(name);
