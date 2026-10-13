@@ -1,6 +1,7 @@
 // Owner-authorized opt-in DIRECT RTC probe. No secret in argv, stdout or code.
 // Relay/Sandbox routes must be exercised separately by the Hub's D-4 runner.
 import {fileURLToPath} from 'node:url';
+import {runReadOnlySmoke} from './smoke-readonly.mjs';
 export function validateRtcOrigin(value){
  const u=new URL(value);
  if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||!u.hostname||u.port)throw new Error('Use an exact HTTPS origin.');
@@ -28,7 +29,8 @@ export async function main(args=process.argv.slice(2),env=process.env){
  let step='manifest';
  try{
   const contract=await json(origin,null,'/api/contract');
-  if(contract.status!==200||contract.value.rtc!==1)throw Error('manifest');
+  if(!/^[a-f0-9]{40}$/.test(env.RTC_EXPECTED_REVISION||'')||contract.status!==200||contract.value.rtc!==1||
+   contract.value.deployment?.sourceRevision!==env.RTC_EXPECTED_REVISION)throw Error('manifest');
   step='whoami';
   const who=await json(origin,token,'/api/whoami');
   if(verifyRevoked){
@@ -45,9 +47,9 @@ export async function main(args=process.argv.slice(2),env=process.env){
   let data;
   try{data=env.RTC_READ_ARGS_JSON?JSON.parse(env.RTC_READ_ARGS_JSON):name==='workspace_where_is_setting'?{query:'DKIM'}:{};}
   catch{throw Error('invalid_args');}
-  const actual=await json(origin,token,'/api/tools/'+encodeURIComponent(chosen.name),
-   {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});
-  if(actual.status!==200||actual.value.ok!==true)throw Error('read');
+  const actual=await runReadOnlySmoke({origin,token,expectedAccount:env.RTC_EXPECTED_ACCOUNT,
+   expectedRevision:env.RTC_EXPECTED_REVISION,probes:[{name:chosen.name,area:chosen.area,args:data}]});
+  if(!actual.ok||actual.outcomes.some(x=>x.status!=='PASS'))throw Error('read');
   console.log('PASS RTC 1 direct TEST read-only route; tool='+chosen.name+'; UTC '+new Date().toISOString());
   console.log('Pass revocation, private encrypted relay and Vercel Sandbox direct route remain separately UNVERIFIED.');
   return 0;

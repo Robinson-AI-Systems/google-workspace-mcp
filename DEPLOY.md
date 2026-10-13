@@ -190,7 +190,8 @@ Do not run real tests without an approved non-production scratch pass.
 The read-only smoke script does **not** run against real Google in CI.
 Once the owner has approved a connected non-production mailbox and created
 a scoped TEST pass through the protected page, set `RTC_ORIGIN` (exact HTTPS
-origin), `RTC_TEST_PASS` (protected secret), and `RTC_EXPECTED_ACCOUNT`
+origin), `RTC_TEST_PASS` (protected secret), `RTC_EXPECTED_REVISION` (the
+independently verified 40-character READY deployment source SHA), and `RTC_EXPECTED_ACCOUNT`
 (the exact scratch mailbox) in the authorized runner environment. Do not
 paste the pass into shell arguments, code, PRs, chat or logs. Then run:
 
@@ -221,3 +222,5 @@ The owner approved `https://www.googleapis.com/auth/cloud-identity.policies.read
 ### Explicit TEST write passes
 
 The owner-only `/api/rtc/passes` page defaults to read-only. It may issue a **TEST-only** write pass only for an account already connected and explicitly listed in `RTC_TEST_ACCOUNT_EMAILS`. In the owner-authenticated form, choose areas, check the TEST writes authorization box, repeat the exact account email, and choose 1–24 hours. For fixture work choose `workspace,files,calendar,mail`; never change unrelated business settings. Keep the one-time secret in a protected agent environment, never chat or a report; record only the non-secret pass identifier and revoke it after acceptance. Tool confirmation, domain restrictions, durable fixture IDs and cleanup still apply. Read-only passes marked for Robinson’s Toolkit can explicitly last up to 365 days; that flag and all permissions are shown in connection metadata. This does not authorize a live release, scope expansion or production access. Use the scheduled checked release to obtain the implementing revision.
+
+Both read-only runners require RTC_EXPECTED_REVISION from independent deployment inspection, never from the public manifest alone. RTC_EXPECTED_ACCOUNT is mandatory for reads. A read pass must include workspace for identity verification; Gmail must report the exact expected mailbox before other provider reads proceed. Revocation-only checks also verify the source revision, without making a Google call. Scheduled promotion provenance remains a separate gate. No response data or secret is printed.

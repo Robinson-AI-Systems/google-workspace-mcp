@@ -17,10 +17,15 @@ export function chooseProbe(catalog,name){
  const match=catalog?.find(t=>t.name===name);
  return match&&match.writes===false&&match.annotations?.readOnlyHint===true?match:null;
 }
-export async function runReadOnlySmoke({origin,token,expectedAccount,fetcher=fetch,probes=DEFAULT_PROBES}={}){
+export async function runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher=fetch,probes=DEFAULT_PROBES}={}){
  const url=originFromEnv(origin);
  if(!bearer.test(token||''))throw Error('Missing protected RTC TEST pass');
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(expectedAccount||''))throw Error('Expected scratch account is required');
+ if(!/^[a-f0-9]{40}$/.test(expectedRevision||''))throw Error('Independently verified deployed source revision is required');
+ const manifestResponse=await fetcher(url+'/api/contract',{method:'GET',redirect:'error',signal:AbortSignal.timeout(12000)});
+ const manifest=await manifestResponse.json();
+ if(manifestResponse.status!==200||manifest.rtc!==1||manifest.deployment?.sourceRevision!==expectedRevision)
+  throw Error('Deployed source revision mismatch');
  const request=async(path,body)=>{
    const response=await fetcher(url+path,{method:body===undefined?'GET':'POST',redirect:'error',signal:AbortSignal.timeout(12000),
     headers:{authorization:'Bearer '+token,...(body===undefined?{}:{'content-type':'application/json'})},
@@ -29,10 +34,18 @@ export async function runReadOnlySmoke({origin,token,expectedAccount,fetcher=fet
    return {status:response.status,data};
  };
  const who=await request('/api/whoami');
- if(who.status!==200||who.data?.result?.profile!=='read_only'||who.data?.result?.mode!=='test'||who.data?.result?.allow_writes!==false)throw Error('Not an approved read-only TEST pass.');
+ if(who.status!==200||who.data?.ok!==true||who.data?.result?.account!==expectedAccount||who.data?.result?.profile!=='read_only'||who.data?.result?.mode!=='test'||who.data?.result?.allow_writes!==false)throw Error('Not an approved read-only TEST pass.');
  const allowed=who.data.result.areas;
- const outcomes=[];
+ if(allowed!==null&&(!Array.isArray(allowed)||!allowed.includes('workspace')))throw Error('Identity verification requires workspace area');
+ // Verify Gmail itself BEFORE any other provider read. The token's local
+ // actingAs claim alone does not establish which Google mailbox is connected.
+ const identity=await request('/api/tools/workspace_whoami',{});
+ if(identity.status!==200||identity.data.ok!==true||identity.data.result?.actingAs!==expectedAccount||
+  identity.data.result?.gmailReports!==expectedAccount||identity.data.result?.matches!==true)
+  return {ok:false,outcomes:[{tool:'workspace_whoami',status:'FAIL',reason:'unexpected_google_identity'}]};
+ const outcomes=[{tool:'workspace_whoami',status:'PASS'}];
  for(const probe of probes){
+   if(probe.name==='workspace_whoami')continue;
    if(Array.isArray(allowed)&&!allowed.includes(probe.area)){
      outcomes.push({tool:probe.name,status:'NOT_AVAILABLE',reason:'area_not_granted'});continue;
    }
@@ -65,11 +78,11 @@ export async function main(argv=process.argv.slice(2),env=process.env){
  if(argv.length!==1||argv[0]!=='--authorized-read-only'){
    console.error('Usage: node scripts/smoke-readonly.mjs --authorized-read-only');return 2;
  }
- if(!env.RTC_TEST_PASS||!env.RTC_ORIGIN||!env.RTC_EXPECTED_ACCOUNT){
-   console.error('Missing protected RTC_TEST_PASS, RTC_ORIGIN or RTC_EXPECTED_ACCOUNT');return 2;
+ if(!env.RTC_TEST_PASS||!env.RTC_ORIGIN||!env.RTC_EXPECTED_ACCOUNT||!env.RTC_EXPECTED_REVISION){
+   console.error('Missing protected pass, origin, expected account or independently verified source revision');return 2;
  }
  try{
-   const result=await runReadOnlySmoke({origin:env.RTC_ORIGIN,token:env.RTC_TEST_PASS,expectedAccount:env.RTC_EXPECTED_ACCOUNT});
+   const result=await runReadOnlySmoke({origin:env.RTC_ORIGIN,token:env.RTC_TEST_PASS,expectedAccount:env.RTC_EXPECTED_ACCOUNT,expectedRevision:env.RTC_EXPECTED_REVISION});
    for(const entry of result.outcomes)console.log(entry.status+' '+entry.tool+(entry.reason?' ('+entry.reason+')':''));
    console.log('RTC scratch-account read-only smoke: '+(result.ok?'PASS':'FAIL')+'; UTC '+new Date().toISOString());
    return result.ok?0:1;
