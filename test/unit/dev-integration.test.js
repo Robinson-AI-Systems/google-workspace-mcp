@@ -122,3 +122,56 @@ describe('P8-7 full supported app readiness probes',()=>{
   expect(out.checks[1].reason).toBe('scope_or_access_denied');
  });
 });
+
+
+describe('P8-7 exact Google Docs, Sheets, Slides and Forms app checks',()=>{
+ const fixtureIds={documents:['doc-owned-1'],spreadsheets:['sheet-owned-1'],presentations:['deck-owned-1'],forms:['form-owned-1']};
+ function resources(c,calls,{wrong=null,deny=null}={}){
+  const make=(kind,key)=>async args=>{
+   calls.push({kind,args});
+   if(deny===kind){const e=Error('Provider secret must stay private');e.response={status:403};throw e;}
+   return {data:{[key]:wrong===kind?'another-resource':Object.values(args)[0]}};
+  };
+  c.docs={documents:{get:make('document','documentId')}};
+  c.sheets={spreadsheets:{get:make('spreadsheet','spreadsheetId')}};
+  c.slides={presentations:{get:make('presentation','presentationId')}};
+  c.forms={forms:{get:make('form','formId')}};
+ }
+ it('reads exact four app-owned resources without creating or updating them',async()=>{
+  const {c}=clients();const calls=[];resources(c,calls);
+  const result=await inspectGoogleIntegration({apis:[],...fixtureIds},c);
+  expect(result.status).toBe('ready');
+  expect(result.changesMade).toBe(false);
+  expect(result.checks.map(x=>x.kind)).toEqual(['document','spreadsheet','presentation','form']);
+  expect(result.checks.every(x=>x.status==='ready')).toBe(true);
+  expect(calls).toEqual([
+   {kind:'document',args:{documentId:'doc-owned-1',fields:'documentId,title'}},
+   {kind:'spreadsheet',args:{spreadsheetId:'sheet-owned-1',fields:'spreadsheetId,properties.title'}},
+   {kind:'presentation',args:{presentationId:'deck-owned-1',fields:'presentationId,title'}},
+   {kind:'form',args:{formId:'form-owned-1'}}
+  ]);
+ });
+ it('never mistakes a mismatched resource or failed provider permission for readiness',async()=>{
+  const {c}=clients();const calls=[];resources(c,calls,{wrong:'document',deny:'form'});
+  const result=await inspectGoogleIntegration({apis:[],...fixtureIds},c);
+  expect(result.status).toBe('not_readable');
+  expect(result.checks.map(x=>x.status)).toEqual(['not_readable','ready','ready','not_readable']);
+  expect(result.checks[0].reason).toBe('google_probe_failed');
+  expect(result.checks[3].reason).toBe('scope_or_access_denied');
+  expect(JSON.stringify(result)).not.toContain('Provider secret');
+ });
+ it('blocks all document checks before provider calls outside the files area',async()=>{
+  const {c}=clients({areas:['mail']});const calls=[];resources(c,calls);
+  const result=await inspectGoogleIntegration({apis:[],...fixtureIds},c);
+  expect(result.checks.every(x=>x.reason==='connection_area_excluded')).toBe(true);
+  expect(result.status).toBe('not_readable');
+  expect(calls).toHaveLength(0);
+ });
+ it('validates app document identifiers and request size before inspecting Google',()=>{
+  expect(()=>validateIntegrationSpec({apis:[],documents:[''] })).toThrow('documents');
+  expect(()=>validateIntegrationSpec({apis:[],forms:[ 'x'.repeat(257) ]})).toThrow('Invalid Google resource identifier');
+  expect(()=>validateIntegrationSpec({apis:[],presentations:Array(13).fill('deck')})).toThrow('presentations');
+  const v=validateIntegrationSpec({apis:[],spreadsheets:['sheet-1','sheet-1']});
+  expect(v.spreadsheets).toEqual(['sheet-1']);
+ });
+});
