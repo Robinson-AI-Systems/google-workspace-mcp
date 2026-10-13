@@ -158,9 +158,13 @@ export async function healthReport(scope, clients, { gmailFor = realGmailFor, de
   if (!users.length) return { scope: domain || 'all', summary: { pass: 0, warn: 1, fail: 0, info: 0 }, checks: [item('Users', 'WARN', 'Google returned no users for this scope.', 'Check the domain name, and that this account is an admin.')], report: 'No users found.' };
   if (partial) note.push(`Only the first ${MAX_USERS} users were read; run the report for one domain at a time to cover the rest.`);
   results.push(...scoreUsers(users, now, { partial }));
-  if (partial) results.push(item('Directory coverage', 'WARN',
-    `Only the first ${users.length} users were inspected; Google reported additional directory records.`,
-    'Run per-domain reports or paginate all users before concluding the Workspace is healthy.'));
+  results.push(partial
+    ? item('Directory coverage', 'WARN',
+      `Only the first ${users.length} users were inspected; Google reported additional directory records.`,
+      'Run per-domain reports or paginate all users before concluding the Workspace is healthy.')
+    : item('Directory coverage', 'PASS',
+      `Every available Directory user page was read for this requested scope (${users.length} users).`,
+      ''));
 
   const active = users.filter((u) => !u.suspended && !u.archived);
   const deep = active.slice(0, MAX_DEEP_CHECKS);
