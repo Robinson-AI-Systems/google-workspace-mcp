@@ -266,3 +266,9 @@ The editable `src/data/policy-baseline.json` contains 21 vetted, uniquely identi
 ### P8-1 typed read compatibility — nine operations after planned #55
 
 The registry advertises schemas for four existing JSON workflows and five newer read-only report surfaces (`reports_activity`, `postmaster_list_domains`, `postmaster_list_traffic_stats`, `identity_list_policies`, `identity_policy_audit`). A schema-checked successful full JSON response receives `structuredContent`; malformed returned success becomes an error. Large results retain the same connection-owned expiring handle with typed handle validation, not duplicated sensitive payloads. Explicit user `fields` projection remains partial JSON without pretending to fulfill the full-object schema; existing typed consumers must request full keys when requiring typed results. This is unit/service-side proof only, not live deployed Google/Hub acceptance.
+
+## Gateway/shared-code boundary — 2026-10-12
+
+Hub talks to this server's RTC HTTPS doors; direct `/api/mcp` remains independent. Provider identity, credentials,
+delegation scopes, domain guard, write provenance and durable state remain service-owned. P8-6 is optional
+published-export reuse, not an external protocol or deployment prerequisite. See README and TASKS recovery sections.

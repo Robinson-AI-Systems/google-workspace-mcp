@@ -1,5 +1,17 @@
 # Task cards
 
+## Current gateway recovery disposition — 2026-10-12
+
+Owner requested cross-repository architecture/planning correction. Prioritize independently usable provider tools
+and existing approved RTC/isolation acceptance; do not wait for K-3 publication or force internal code adoption.
+Hub agent owns fixed broker surface, registry, routing, grant mapping, cache, forwarding audit and scale testing.
+This service agent owns authenticated RTC/mode/resource isolation, original direct-MCP parity and safe deployed
+read/denial/revocation evidence. A public manifest, reference conformance or private-core rehearsal is not proof
+of actual hosted acceptance. Full provider roadmap and existing external gates remain; no card is closed here.
+Next: reconcile current implementation/concurrency and existing RTC acceptance gaps, obtain exact deployed
+revision and authorized short-lived read_only non-production pass securely, and run the supported harmless read
+and denials through Hub when available. Never alias preview to TEST without real isolation or expose credentials.
+
 Work the cards in order. Prefer one card per PR, but tightly related cards may
 be grouped when doing so reduces CI churn without weakening review or acceptance
 checks. Every card has acceptance checks; a card is done only when all of them
@@ -811,13 +823,16 @@ refused on `/api/tools`. Manual: `rtool whoami` against the preview with a test 
 
 **Acceptance.** The hub's `packages/conformance` passes in this repo's CI against a local server with fake Google.
 
-### P8-6 · Adopt the shared package `robinson-mcp-core` (M) — after the hub extracts it from the Stripe MCP
+### P8-6 · Optional shared-package adoption (M) — after immutable publication and export-specific parity
 
-**Build.** Replace this repo's copies of the contract-generic code (login and lockout, `defineWrite`/`guard`, result
-rules, meta-tools, passes, HTTPS doors, error envelope) with the shared package at a pinned version. Google-specific code
-(clients, delegation, domain guard, Google error rules, tools) stays here. Behavior unchanged.
+**Build.** Optional service-owned card selecting only portable published exports with immutable pin/digest,
+original Google unit/SQL/HTTP parity and reversible rollout. Retain local dispatch, delegation, domain/profile
+policy, OAuth account claims, storage and approval behavior wherever equivalence is not demonstrated.
+No all-file replacement requirement; P8-5/RTC/deployed Hub acceptance does not depend on P8-6.
 
-**Acceptance.** The full unit and database suites pass unchanged; conformance passes; the diff removes the copied files.
+**Acceptance.** Original assertions, standalone direct MCP, durable refresh/revocation, guards, result ownership
+and actual-service conformance remain intact for chosen exports; published dependency independently verified.
+Private candidate rehearsal is separate from release and adoption. Until then this server operates independently.
 
 ### P8-7 · Developer workflows: test fixtures, cleanup, app integration check (M)
 
@@ -915,12 +930,12 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P7-6 | SUPERSEDED | | Delivered by P8-2 (read_only profile) — Phase 8 added 2026-10-10 |
 | P7-7 | SUPERSEDED | | Delivered by P8-2 (profiles, area filters, compact listing) — Phase 8 added 2026-10-10 |
 | P7-8 | TODO | | Bulk and cross-domain operations; design note first |
-| P8-1 | DONE | #31, #34, #41, #44, #55, #57, #63 | Stated automated acceptance passed: all 161 read names bounded with 100-item wrapper fakes, projection, real-DB handle isolation, annotation parity, 13 typed reads and all seven guarded write workflows. Exact-head CI and merge verified. Genuine deployed Google/Hub routes remain separate P8-3/4/5 acceptance. |
+| P8-1 | DONE | #31, #34, #41, #44, #55, #57, #63 | Stated automated acceptance passed: all 161 read names bounded with 100-item wrapper fakes, projection, real-DB handle isolation, annotation parity, 13 typed reads and all seven guarded write workflows. Genuine deployed Google/Hub routes remain separate P8-3/4/5 acceptance. |
 | P8-2 | IN_PROGRESS | #30 | Profile persistence, read-only dispatch, compact meta-tools and filters implemented; full service conformance / profile acceptance remains pending |
 | P8-3 | IN_PROGRESS | #32 | Owner-protected hashed, short-lived, scratch-account TEST read-only passes, revocation, limit guards; live issuance acceptance unverified |
 | P8-4 | IN_PROGRESS | #32–#34 | Pass-only RTC manifest/HTTPS routes and DB limit implemented; deployed boundary, two-instance and D-4 acceptance not verified |
 | P8-5 | IN_PROGRESS | #34 | Pinned Hub reference conformance and local gateway tests in CI; full conformance against this service and real D-4 routes still unverified |
-| P8-6 | WAITING | | Needs `robinson-mcp-core` (robinsons-toolkit-hub K-3) |
+| P8-6 | WAITING (optional reuse) | | Published immutable core and export-specific original-service parity; does not block P8-5, RTC routing or real Hub acceptance |
 | P8-7 | IN_PROGRESS | #40, #42–#43, #46–#48 | Drive folder/Docs/Sheets, owned TEST Calendar event, and mailbox-local inserted-not-sent Gmail fixtures now implemented and fake-tested, with reservation-first recovery and exact-ID cleanup. Real authorized Google provider acceptance, crash/orphan reconciliation and Hub direct/relay/Sandbox/revocation remain unverified. |
 | P8-8 | IN_PROGRESS | #36, #56, #58, #59, #60 (candidate) | Evidence-aware owner overview (#56), 24 permission-aware console readbacks (#58), accurate incomplete health scans (#59); #60 candidate paginates quick Directory/Alert Center security snapshot with bounded, explicit, fail-closed coverage. Actual authorized Google/Hub acceptance and comprehensive settings map remain open. |
 
@@ -1339,6 +1354,11 @@ Every `workflow_*` now declares an output schema: reviewed write workflows expos
 
 P8-1 acceptance evidence additionally covers **all 161 registered read names** through the shared result wrapper with 100-item oversized provider-shaped fakes: bounded transport responses, full 100-record stored payloads and issuing connection identity. This is wrapper acceptance, not execution of each real Google handler. Registry-wide annotation parity, existing dotted projection tests and disposable-Postgres handle ownership remain required. No live certification is inferred.
 
-### P8-8 complete owner overview categories — next substantive PR candidate
+## Service-specific gateway recovery acceptance — 2026-10-12
 
-Owner overview now surfaces organization, registered domain verification, user/admin findings, 2-step enforcement, app access, forwarding, outside-access groups, mailbox-domain DNS, license/plan and recent alerts as separate evidence-aware sections. Organization/domains retain customer-wide intent and area checks; missing provider checks, incomplete Directory/alerts and partial licenses are never green. Existing broad sections remain compatible. License scan cycles now stop before reading a repeated page; partial scan coverage is returned and owner totals are explicitly unverified. No permissions were added. Tests exercise all three states, denied boundaries, missing/partial evidence and actual pagination-cycle handling. Remaining P8-8 requirement is the comprehensive real Admin-console map walk; unit/provider acceptance layers remain separate.
+P8-5 actual-service conformance and genuine Google/Hub acceptance remain independent of optional P8-6. Preserve domain/delegation scopes, write provenance, result ownership and plaintext-token retirement time gate. Reconcile active PR #64 before merge; owner-reported standalone Google operation is not proof of latest deployed RTC/TEST routes.
+
+
+### P8-8 owner overview evidence reconciliation — implementation PR #64
+
+Owner overview reports organization, registered domain verification, user/admin findings, two-step enforcement, third-party app access, forwarding, outside-access groups, DNS/mail authentication, license/plan and recent security alerts as separate evidence-aware sections. Customer-wide organization/domains retain explicit intent and area guards. Missing or partial Directory, Alert Center and license evidence is not marked healthy; license pagination cycles terminate and report incomplete coverage. No permission widened. Unit tests cover positive, warning, unreadable, permission and partial/pagination cases. Comprehensive real Admin-console map walk and authenticated deployed RTC/Google/Hub checks remain outstanding. This section is subordinate to the October 12 gateway recovery boundary above; shared-core adoption remains optional.
