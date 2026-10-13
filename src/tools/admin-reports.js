@@ -56,9 +56,39 @@ export const tools = [
   { name: 'reports_usage_user', description: "Per-user daily usage summary (Gmail/Drive/Meet activity, storage used)", inputSchema: { type: 'object', properties: { userKey: { type: 'string' }, date: { type: 'string', description: 'YYYY-MM-DD' } }, required: ['userKey', 'date'] } }
 ];
 
-async function activities(admin, { applicationName, userKey, startTime, maxResults }) {
-  const res = await admin.activities.list({ userKey: userKey || 'all', applicationName, startTime, maxResults: maxResults || 100 });
-  return res.data.items || [];
+
+const LEGACY_ACTIVITY_APPS = Object.freeze({
+  reports_login_activity: 'login',
+  reports_admin_activity: 'admin',
+  reports_drive_activity: 'drive',
+  reports_groups_activity: 'groups',
+  reports_oauth_token_activity: 'token',
+  reports_mobile_activity: 'mobile'
+});
+// Preserve the original array result unless the caller explicitly opts in
+// to pagination metadata. Older agents can upgrade one invocation at a time.
+for (const tool of tools) {
+  if (!Object.hasOwn(LEGACY_ACTIVITY_APPS, tool.name)) continue;
+  Object.assign(tool.inputSchema.properties, {
+    endTime: { type: 'string', description: 'Optional ISO date-time ending the audit range; requires startTime.' },
+    pageToken: { type: 'string', description: 'Google continuation token from an earlier paged response.' },
+    withPageInfo: { type: 'boolean', description: 'Return {application, activities, nextPageToken} instead of the legacy array.' }
+  });
+  tool.description += ' Returns the first page by default. Set withPageInfo:true to see nextPageToken and follow all pages without losing history.';
+}
+
+async function activities(admin, args, applicationName) {
+  if (args?.withPageInfo !== undefined && typeof args.withPageInfo !== 'boolean')
+    throw new Error('withPageInfo must be true or false.');
+  const query = reportActivityArgs({ ...args, application: applicationName });
+  const res = await admin.activities.list(query);
+  const items = res.data?.items ?? [];
+  const nextPageToken = res.data?.nextPageToken;
+  if (!Array.isArray(items) || (nextPageToken != null && typeof nextPageToken !== 'string'))
+    throw new Error('Google returned malformed audit pagination data. The result cannot be trusted.');
+  if (args?.withPageInfo === true)
+    return { application: applicationName, activities: items, ...(nextPageToken ? { nextPageToken } : {}) };
+  return items;
 }
 
 export const handlers = {
@@ -67,12 +97,12 @@ export const handlers = {
     const response = await adminReports.activities.list(query);
     return ok({ application: query.applicationName, activities: response.data?.items || [], ...(response.data?.nextPageToken ? { nextPageToken: response.data.nextPageToken } : {}) });
   },
-  reports_login_activity: async (args, { adminReports }) => ok(await activities(adminReports, { ...args, applicationName: 'login' })),
-  reports_admin_activity: async (args, { adminReports }) => ok(await activities(adminReports, { ...args, applicationName: 'admin' })),
-  reports_drive_activity: async (args, { adminReports }) => ok(await activities(adminReports, { ...args, applicationName: 'drive' })),
-  reports_groups_activity: async (args, { adminReports }) => ok(await activities(adminReports, { ...args, applicationName: 'groups' })),
-  reports_oauth_token_activity: async (args, { adminReports }) => ok(await activities(adminReports, { ...args, applicationName: 'token' })),
-  reports_mobile_activity: async (args, { adminReports }) => ok(await activities(adminReports, { ...args, applicationName: 'mobile' })),
+  reports_login_activity: async (args, { adminReports }) => ok(await activities(adminReports, args, 'login')),
+  reports_admin_activity: async (args, { adminReports }) => ok(await activities(adminReports, args, 'admin')),
+  reports_drive_activity: async (args, { adminReports }) => ok(await activities(adminReports, args, 'drive')),
+  reports_groups_activity: async (args, { adminReports }) => ok(await activities(adminReports, args, 'groups')),
+  reports_oauth_token_activity: async (args, { adminReports }) => ok(await activities(adminReports, args, 'token')),
+  reports_mobile_activity: async (args, { adminReports }) => ok(await activities(adminReports, args, 'mobile')),
   reports_usage_customer: async (args, { adminReports }) => {
     const res = await adminReports.customerUsageReports.get({ date: args.date });
     return ok(res.data.usageReports || []);
