@@ -3,11 +3,11 @@
 // The encryption key is a server-only secret already required for hosted token
 // safety; a domain-separated HMAC never exposes or alters stored Google tokens.
 import {randomBytes,timingSafeEqual,createHmac,createHash} from 'node:crypto';
+import {loadKey} from '../crypto.js';
 const NAME='google_setup_nonce',TTL=600000;
-function signingKey(){
- const k=process.env.TOKEN_ENCRYPTION_KEY;
- return typeof k==='string'&&k.length>=16?k:null;
-}
+// The same canonical parser used by token encryption refuses malformed
+// base64/length; never sign enrollment under an invalid backup key.
+function signingKey(){return loadKey();}
 function mac(nonce,issued,label,browserDigest,key){
  return createHmac('sha256',key).update('robinson-google-mcp/owner-google-setup/v1\n')
    .update(JSON.stringify([nonce,issued,label,browserDigest])).digest('base64url');
