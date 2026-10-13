@@ -59,6 +59,17 @@ Do not use Haiku for anything touching auth, tokens, delegation, or
 destructive tools. Do not use Opus/Fable to write code here; the plan already
 contains the design decisions and the cheaper model should execute them.
 
+
+### Repository-owned execution pipeline and completion discipline — owner clarification 2026-10-13
+
+This repository's README.md, IMPLEMENTER.md, TASKS.md, approved task cards and hosting policy **control** implementation. A continuation prompt is only a lightweight checkpoint/cadence guardrail: it never supersedes source evidence, policy, approvals or acceptance, and cannot invent new scope.
+
+- **Advance the finish line:** choose an unfinished approved capability or acceptance item with a concrete owner/developer benefit. For each substantive PR, record the capability gained, what completion criterion it closes or advances, and what remains. Follow existing task dependencies and prioritize finishing a complete workflow over revisiting the same hardened area.
+- **No hardening treadmill:** do not rework passing guards, tests, authentication, configuration or architecture without a reproducible defect, a failed acceptance criterion or a previously approved task. Record its specific evidence and fix; close it once verified, then move to the next approved milestone. Do not invent speculative tweaks to reach a PR number.
+- **Blocked is local:** isolate missing qualified review, external authorization, provider evidence, deployment or other dependency to affected PR/check. Investigate a permitted remedy, preserve the gate and work on independently eligible roadmap items. Do not represent a created/open PR as merged.
+- **Session accounting:** target five meaningful, reviewed, CI-green merged PRs with last PR number aligned to the next multiple of five, adjusting for existing PRs and concurrent agents. The boundary is a planning goal rather than permission to pad. If the full batch cannot safely merge, leave the session **INCOMPLETE**; report exact outstanding PRs, owner actions (if any), re-entry triggers and the remaining work instead of presenting a continuation prompt as completion.
+- **Handoff pipeline:** verify main and open/draft PRs; run and review exact-head checks; merge safely; verify post-merge main and live/deployed provenance separately; update the existing TASKS.md ledger inside substantive implementation; produce a compact prompt naming the next unmet finish criterion. New agents must read repository instructions first and recompute the checkpoint rather than trusting the prompt.
+
 ## Outcome-first autonomous development (owner instruction 2026-10-12)
 
 This is the standing, authoritative development workflow; IMPLEMENTER.md

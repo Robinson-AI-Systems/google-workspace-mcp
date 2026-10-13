@@ -25,6 +25,8 @@ expired underlying grant, a new provider credential or a genuinely additional pe
 **Standing owner workflow (2026-10-12):** plan around a useful outcome; five substantial PRs is the normal upper planning boundary, not a quota or proof of acceptance. No docs-only PRs or placeholders; track each external dependency and its precise re-entry trigger. See the authoritative plan README.
 
 
+**Prompt role:** a progress guardrail, not a replacement for the repository's roadmap or a finished-session certificate. Include the next missing end-to-end capability and explicit evidence needed; avoid repetitive hardening or revisiting green work without an observed defect. If a PR is review-blocked, continue independent eligible milestones; mark the batch incomplete with specific re-entry instructions rather than handoff-as-completion. The source of truth remains README.md and TASKS.md.
+
 ## Canonical compact continuation prompt
 
 Use this format at the end of every session. Replace only the

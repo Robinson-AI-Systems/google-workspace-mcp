@@ -29,3 +29,48 @@ describe('RTC guarded meta dispatch',()=>{
   expect(value.tools.every(t=>t.writes===false&&t.area==='mail')).toBe(true);
  });
 });
+
+
+describe('RTC complete, permission-limited tool discovery',()=>{
+ const parse=output=>JSON.parse(output.content[0].text);
+ it('returns all accessible matches across bounded pages, without dropped or duplicate tools',async()=>{
+  const {handlers}=await import('../../src/tools/rtc-meta.js');
+  const clients={rtcPolicy:{profile:'full'}};
+  const seen=[],offsets=[];let offset=0,total;
+  for(let page=0;page<50;page++){
+   const data=parse(await handlers.workspace_search_tools({limit:23,offset},clients));
+   total??=data.totalMatched;
+   expect(data.totalMatched).toBe(total);
+   expect(data.offset).toBe(offset);
+   expect(data.count).toBe(data.tools.length);
+   expect(data.count).toBeLessThanOrEqual(23);
+   seen.push(...data.tools.map(t=>t.name));offsets.push(offset);
+   if(data.nextOffset===null)break;
+   expect(data.nextOffset).toBeGreaterThan(offset);
+   offset=data.nextOffset;
+  }
+  expect(seen.length).toBe(total);
+  expect(new Set(seen).size).toBe(total);
+  expect(offsets.length).toBeGreaterThan(1);
+  expect(new Set(seen)).toEqual(new Set(listedTools(registry.tools,{profile:'full'},'catalog').map(t=>t.name)));
+ });
+ it('filters by connection permissions before counting and paging, including empty and out-of-range pages',async()=>{
+  const {handlers}=await import('../../src/tools/rtc-meta.js');
+  const clients={rtcPolicy:{profile:'read_only',areas:['mail']}};
+  const first=parse(await handlers.workspace_search_tools({query:'gmail',limit:2},clients));
+  const all=listedTools(registry.tools,clients.rtcPolicy,'catalog').map(toolMetadata).filter(t=>(t.name+' '+t.description).toLowerCase().includes('gmail'));
+  expect(first.totalMatched).toBe(all.length);
+  expect(first.tools.every(t=>t.area==='mail'&&t.writes===false)).toBe(true);
+  expect(first.count).toBe(Math.min(2,all.length));
+  const beyond=parse(await handlers.workspace_search_tools({limit:2,offset:99999,query:'gmail'},clients));
+  expect(beyond).toMatchObject({tools:[],count:0,totalMatched:all.length,nextOffset:null});
+  const unknown=parse(await handlers.workspace_search_tools({query:'unreachable-never-matches',limit:2},clients));
+  expect(unknown).toMatchObject({tools:[],count:0,totalMatched:0,nextOffset:null});
+ });
+ it('rejects invalid pagination and query arguments rather than silently clipping or leaking catalog metadata',async()=>{
+  const {handlers}=await import('../../src/tools/rtc-meta.js');
+  for(const args of [{limit:0},{limit:31},{limit:1.2},{limit:'2'},{offset:-1},{offset:1.5},{offset:'3'},{offset:Number.MAX_SAFE_INTEGER+1},{query:0},{area:2},{audience:'other'}]){
+   await expect(handlers.workspace_search_tools(args,{rtcPolicy:{profile:'read_only'}})).rejects.toThrow(/invalid_args/);
+  }
+ });
+});

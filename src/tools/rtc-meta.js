@@ -7,7 +7,7 @@ const schema = (props,required=[])=>({type:'object',properties:props,required});
 const str={type:'string'};
 const callSchema=schema({name:str,args:{type:'object',description:'Arguments accepted by the selected tool.',additionalProperties:true}},['name']);
 export const tools=[
- {name:'workspace_search_tools',description:'Search the Workspace tool catalog within this connection’s permissions.',inputSchema:schema({query:str,area:str,audience:{type:'string',enum:['builder','owner','operator']},limit:{type:'integer',default:10,minimum:1,maximum:30}})},
+ {name:'workspace_search_tools',description:'Search only allowed Workspace tools. Continue with nextOffset until null to retrieve all matching tools without loading the entire catalog at once.',inputSchema:schema({query:str,area:str,audience:{type:'string',enum:['builder','owner','operator']},limit:{type:'integer',default:10,minimum:1,maximum:30},offset:{type:'integer',minimum:0,description:'Zero-based position in the filtered catalog. Pass nextOffset to continue.'}})},
  {name:'workspace_describe_tool',description:'Describe the input schema and permissions for one allowed Workspace tool.',inputSchema:schema({name:str},['name'])},
  {name:'workspace_call',description:'Invoke an allowed Workspace tool using the same safety and domain guards as MCP direct calls.',inputSchema:callSchema},
  {name:'workspace_get_result',description:'Read one page of an oversized result owned by this connection.',inputSchema:schema({handle:str,page:{type:'integer',minimum:1},fields:str},['handle'])},
@@ -25,10 +25,17 @@ export const handlers={
  async workspace_get_result(args={},clients){return readStoredResult(args,clients?.connection);},
  async workspace_search_tools(args={},clients){
    const {tools}=await catalog();
-   const query=String(args.query||'').trim().toLowerCase();
-   const n=Math.min(30,Math.max(1,Number(args.limit)||10));
-   const found=listedTools(tools,clients?.rtcPolicy||{},'catalog').map(toolMetadata).filter(t=>(!args.area||t.area===args.area)&&(!args.audience||t.audience.includes(args.audience))&&(!query||(t.name+' '+t.description).toLowerCase().includes(query))).slice(0,n);
-   return ok({tools:found.map(({inputSchema,...metadata})=>metadata),count:found.length});
+   if(args.query!==undefined&&typeof args.query!=='string')throw new Error('invalid_args: query must be a string.');
+   if(args.area!==undefined&&typeof args.area!=='string')throw new Error('invalid_args: area must be a string.');
+   if(args.audience!==undefined&&!['builder','owner','operator'].includes(args.audience))throw new Error('invalid_args: unknown audience.');
+   if(args.limit!==undefined&&(!Number.isInteger(args.limit)||args.limit<1||args.limit>30))throw new Error('invalid_args: limit must be an integer from 1 through 30.');
+   if(args.offset!==undefined&&(!Number.isSafeInteger(args.offset)||args.offset<0))throw new Error('invalid_args: offset must be a nonnegative safe integer.');
+   const query=(args.query||'').trim().toLowerCase();
+   const limit=args.limit??10, offset=args.offset??0;
+   // Always restrict the catalog to authorized tools before counting or paging.
+   const matches=listedTools(tools,clients?.rtcPolicy||{},'catalog').map(toolMetadata).filter(t=>(!args.area||t.area===args.area)&&(!args.audience||t.audience.includes(args.audience))&&(!query||(t.name+' '+t.description).toLowerCase().includes(query)));
+   const found=matches.slice(offset,offset+limit), next=offset+found.length;
+   return ok({tools:found.map(({inputSchema,...metadata})=>metadata),count:found.length,totalMatched:matches.length,offset,nextOffset:next<matches.length?next:null});
  },
  async workspace_describe_tool(args={},clients){
    const registry=await catalog();
