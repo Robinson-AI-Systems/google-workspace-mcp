@@ -39,6 +39,7 @@ beforeEach(()=>{
  holder.db=createFakeDb();holder.grants=0;holder.connected=0;holder.account=null;
  process.env.PUBLIC_BASE_URL=origin;
  process.env.ADMIN_PASSPHRASE=passphrase;
+ process.env.TOKEN_ENCRYPTION_KEY='not-real-test-signing-key-with-ample-length';
 });
 describe('protected owner-initiated Google setup',()=>{
  it('requires owner passphrase before it ever starts Google OAuth',async()=>{
@@ -80,6 +81,26 @@ describe('protected owner-initiated Google setup',()=>{
   expect(okay.statusCode).toBe(200);expect(holder.connected).toBe(1);
   expect(okay.body).toContain('ops@robinsonappliancerentals.com');
   expect(okay.headers['Set-Cookie']).toMatch(/Max-Age=0/);
+ });
+ it('rejects fully attacker-chosen state AND cookie without a server-issued signature',async()=>{
+  const nonce='A'.repeat(32);
+  const forged=new URLSearchParams({setup:'1',nonce,issued:String(Date.now()),label:'Injected',mac:'Z'.repeat(43)}).toString();
+  const cookie='google_setup_nonce='+nonce;
+  expect(verifyGoogleSetup(forged,cookie)).toBeNull();
+  const refused=response();await callback({method:'GET',query:{state:forged,code:'attacker-consent-code'},headers:{cookie}},refused);
+  expect(refused.statusCode).toBe(400);
+  expect(holder.connected).toBe(0);
+ });
+ it('fails closed when the service signing key is absent or rotated',async()=>{
+  const issued=startGoogleSetup('Owner');
+  const cookie=issued.cookie.split(';')[0];
+  process.env.TOKEN_ENCRYPTION_KEY='a-different-test-key-with-ample-length';
+  expect(verifyGoogleSetup(issued.state,cookie)).toBeNull();
+  delete process.env.TOKEN_ENCRYPTION_KEY;
+  expect(verifyGoogleSetup(issued.state,cookie)).toBeNull();
+  expect(()=>startGoogleSetup()).toThrow(/signing key/);
+  expect((await submit({passphrase})).statusCode).toBe(503);
+  expect(holder.grants).toBe(0);
  });
  it('rejects expired, tampered, repeated and malicious callback state',async()=>{
   const {state,cookie}=startGoogleSetup('test');
