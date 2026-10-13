@@ -101,9 +101,17 @@ export default async function handler(req,res){
  if(req.method==='GET'&&door==='whoami')return success(res,{connection:pass.id,account:pass.google_account,profile:pass.profile,areas:pass.areas,listing:pass.listing,mode:pass.mode,allow_writes:pass.allow_writes});
  if(req.method==='GET'&&door==='tools'){
   const q=String(req.query?.q||'').toLowerCase(),area=req.query?.area,audience=req.query?.audience;
-  const limit=Math.min(100,Math.max(1,Number(req.query?.limit)||10));
-  const page=Math.max(1,Math.min(100000,Number(req.query?.page)||1));
-  if(!Number.isInteger(page))return fail(res,400,'invalid_args','Page must be an integer.');
+  // Clamping/truncating malformed pagination can silently skip or repeat tools.
+  // Reject invalid pagination so Hub discovery can safely traverse all pages.
+  const parsePageNumber=(value,fallback,maximum)=>{
+   if(value===undefined||value===null||value==='')return fallback;
+   if(typeof value!=='string'&&typeof value!=='number')return null;
+   const n=Number(value);
+   return Number.isSafeInteger(n)&&n>=1&&n<=maximum?n:null;
+  };
+  const limit=parsePageNumber(req.query?.limit,10,100);
+  const page=parsePageNumber(req.query?.page,1,100000);
+  if(limit===null||page===null)return fail(res,400,'invalid_args','Page and limit must be bounded positive integers.');
   const all=listedTools(registry.tools,pass,req.query?.listing||pass.listing)
    .map(expose).filter(t=>(!q||(t.name+' '+t.description).toLowerCase().includes(q))&&(!area||t.area===area)&&(!audience||t.audience.includes(audience)));
   const start=(page-1)*limit;

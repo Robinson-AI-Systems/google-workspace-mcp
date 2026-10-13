@@ -15,7 +15,7 @@ vi.mock('../../src/auth/google-auth-hosted.js',()=>({
 const {default:gateway}=await import('../../api/rtc-gateway.js');
 const {registry}=await import('../../src/tools/index.js');
 const config=JSON.parse(await readFile(new URL('../../vercel.json',import.meta.url),'utf8'));
-let server,origin,token,passId;
+let server,origin,token,passId,wideToken;
 function route(url){
  // Apply the *checked-in* Vercel rewrites, not invented independent routes.
  for(const rewrite of config.rewrites){
@@ -31,7 +31,13 @@ function route(url){
   const destination=new URL(rewrite.destination,'https://internal.invalid');
   const query=Object.fromEntries(destination.searchParams.entries());
   for(const [key,value] of Object.entries(query))if(value.startsWith(':'))query[key]=params[value.slice(1)];
-  for(const [key,value] of url.searchParams)query[key]=value;
+  // Vercel/Node query decoders preserve repeated keys as arrays; a
+  // test adapter that overwrites them would miss parameter-smuggling bugs.
+  for(const [key,value] of url.searchParams){
+   if(Object.hasOwn(query,key)){
+    const old=query[key];query[key]=Array.isArray(old)?[...old,value]:[old,value];
+   }else query[key]=value;
+  }
   return {pathname:destination.pathname,query};
  }
  return {pathname:'',query:{}};
@@ -46,6 +52,7 @@ beforeAll(async()=>{
  process.env.RTC_TEST_ACCOUNT_EMAILS='ops@example.test';
  await holder.db.saveGoogleTokensFor('ops@example.test',{access_token:'fixture-not-a-real-token'});
  ({token,id:passId}=await holder.db.createRtcPass({googleAccount:'ops@example.test',areas:['workspace'],rateLimit:120}));
+ ({token:wideToken}=await holder.db.createRtcPass({googleAccount:'ops@example.test',rateLimit:600}));
  server=createServer(async(req,res)=>{
   const url=new URL(req.url,'http://localhost');
   const matched=route(url);
@@ -149,6 +156,36 @@ describe('real Node HTTP to Workspace gateway using checked-in Vercel route tabl
   expect(JSON.stringify(r.value)).not.toContain(token);
  });
 
+
+ it('rejects fractional, zero, negative, repeated, huge and nonnumeric pagination',async()=>{
+  for(const input of ['limit=0','limit=1.5','limit=-1','limit=101','limit=Infinity',
+    'limit=abc','limit=2&limit=3','page=0','page=-1','page=1.2',
+    'page=100001','page=Infinity','page=abc','page=1&page=2']){
+   const r=await request('/api/tools?'+input,{bearer:wideToken});
+   expect(r.status,input).toBe(400);
+   expect(r.value.error.code).toBe('invalid_args');
+  }
+ });
+ it('recovers every available service tool exactly once through bounded catalog pages',async()=>{
+  const {listedTools}=await import('../../src/rtc/catalog.js');
+  const {toExternal}=await import('../../api/rtc-gateway.js');
+  const pass=await holder.db.getRtcPass(wideToken);
+  const expected=listedTools(registry.tools,pass,'catalog').map(t=>toExternal(t.name));
+  const actual=[];
+  for(let page=1;page<100;page++){
+   const r=await request('/api/tools?listing=catalog&limit=7&page='+page,{bearer:wideToken});
+   expect(r.status).toBe(200);
+   expect(r.headers.get('cache-control')).toBe('no-store');
+   const found=r.value.result.tools;
+   expect(found.length).toBeLessThanOrEqual(7);
+   actual.push(...found.map(t=>t.name));
+   if(r.value.result.next===null)break;
+   expect(r.value.result.next).toBe(String(page+1));
+  }
+  expect(actual.length).toBeGreaterThan(100);
+  expect(new Set(actual).size).toBe(actual.length);
+  expect(actual).toEqual(expected);
+ });
  it('enforces immediate revocation over HTTP',async()=>{
   await holder.db.revokeRtcPass(passId);
   const r=await request('/api/whoami');
