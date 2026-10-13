@@ -3,6 +3,7 @@ import {RTC_AREAS} from './catalog.js';
 export function passOptions({areas=null,rateLimit=120,hours=24,forHub=false,allowWrites=false,confirmedAccount,googleAccount}={}){
  const account=String(googleAccount||'').trim().toLowerCase();
  if(typeof forHub!=='boolean'||typeof allowWrites!=='boolean')throw Error('Pass options must be explicit booleans.');
+ if(forHub&&allowWrites)throw Error('Toolkit passes are read only; create a separate temporary TEST write pass.');
  const limit=Number(rateLimit),ttl=Number(hours);
  if(!Number.isInteger(limit)||limit<1||limit>600)throw Error('Rate limit must be 1–600 per minute.');
  if(!Number.isInteger(ttl)||ttl<1||ttl>(forHub?365*24:30*24))throw Error('Pass duration exceeds the allowed range.');
