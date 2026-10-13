@@ -44,11 +44,16 @@ describe('P7-3 paginated multi-application audit', () => {
       {application:'calendar',startTime:'2026-10-12T00:00:00Z',endTime:'2026-10-10T00:00:00Z'},
       {application:'gmail',startTime:'2026-09-01T00:00:00Z',endTime:'2026-10-12T00:00:00Z'},
       {application:'gmail'},
-      {application:'rules',pageToken:''}
+      {application:'rules',pageToken:''},
+      {application:'rules',pageToken:'   '},
+      {application:'calendar',startTime:'2026-02-01T00:00:00Z',endTime:'2026-02-30T00:00:00Z'},
+      {application:'calendar',startTime:'2025-02-29T00:00:00Z'}
     ]) await expect(handlers.reports_activity(args,{adminReports:{activities:{list}}})).rejects.toThrow();
     expect(list).not.toHaveBeenCalled();
     const good=await invoke({application:'gmail',startTime:'2026-10-01T00:00:00Z',endTime:'2026-10-03T00:00:00Z'});
     expect(good.list).toHaveBeenCalledOnce();
+    const leap = await invoke({application:'calendar',startTime:'2024-02-29T23:59:59-07:00',endTime:'2024-03-01T00:01:00-07:00'});
+    expect(leap.list).toHaveBeenCalledOnce();
   });
 });
 
@@ -67,6 +72,7 @@ describe('P7-3 legacy audit logs: opt-in lossless provider pagination', () => {
       const schema = tools.find(t=>t.name===name).inputSchema.properties;
       expect(schema.withPageInfo.type).toBe('boolean');
       expect(schema.pageToken.type).toBe('string');
+      expect(schema.maxResults).toMatchObject({type:'integer',minimum:1,maximum:200});
       const list = vi.fn(async () => ({data:{items:[{id:'one'}],nextPageToken:'page-2'}}));
       const adminReports = {activities:{list}};
       const old = await handlers[name]({}, {adminReports});
@@ -92,7 +98,9 @@ describe('P7-3 legacy audit logs: opt-in lossless provider pagination', () => {
     const adminReports = {activities:{list}};
     for (const args of [
       {withPageInfo:'true'},{maxResults:201},{maxResults:0},
-      {pageToken:''},{endTime:'2026-10-02T00:00:00Z'},
+      {pageToken:''},{pageToken:'   '},{maxResults:1.5},
+      {endTime:'2026-10-02T00:00:00Z'},
+      {startTime:'2026-02-01T00:00:00Z',endTime:'2026-02-30T00:00:00Z'},
       {startTime:'2026-10-03T00:00:00Z',endTime:'2026-10-02T00:00:00Z'}
     ]) await expect(handlers.reports_login_activity(args,{adminReports})).rejects.toThrow();
     expect(list).not.toHaveBeenCalled();
