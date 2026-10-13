@@ -104,7 +104,7 @@ describe('owner-approved real-mailbox acceptance runner',()=>{
  it('recovers exact existing IDs with the original write pass after read pass expires',async()=>{
   const uuid='b2601abf-18ad-414f-9b77-bc294a2bca19';
   const h=harness({existing:{[uuid]:{scenario:'files',objects:names.files.map(id=>({id}))}}});
-  const report=await run(h,{cleanupOnly:true,readPass:undefined,runIds:{files:uuid}});
+  const report=await run(h,{cleanupOnly:true,readPass:undefined,calendarId:undefined,runIds:{files:uuid}});
   expect(report).toMatchObject({status:'passed',revocationVerified:true});
   expect(report.runs).toHaveLength(1);
   expect(h.calls.some(x=>x.tokenKind==='read')).toBe(false);
