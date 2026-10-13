@@ -17,9 +17,29 @@ describe('RTC result handles',()=>{
    expect((await fake.getRtcResult(info.handle,'connection-2'))).toBeNull();
    const page=await readStoredResult({handle:info.handle,page:1},'connection-1',fake.getRtcResult);
    expect(JSON.parse(page.content[0].text).next).toBe(2);
-   const full=await readStoredResult({handle:info.handle},'connection-1',fake.getRtcResult);
-   expect(JSON.parse(full.content[0].text).payload.length).toBeGreaterThan(INLINE_BYTES);
+   // Omitting page must never expose the entire oversized stored payload.
+   const first=await readStoredResult({handle:info.handle},'connection-1',fake.getRtcResult);
+   const firstData=JSON.parse(first.content[0].text);
+   expect(firstData.page).toBe(1);
+   expect(firstData.next).toBe(2);
+   expect(firstData).not.toHaveProperty('payload');
+   expect(Buffer.byteLength(firstData.content,'utf8')).toBeLessThanOrEqual(4096);
    expect((await readStoredResult({handle:info.handle},'connection-2',fake.getRtcResult)).isError).toBe(true);
+ });
+ it('keeps short projected handle retrieval inline, with truthful projected bytes',async()=>{
+   const fake=createFakeDb();
+   const shaped=await shapeReadResult(ok({rows:Array.from({length:100},(_,i)=>({id:i,body:'z'.repeat(100)})),version:7}),{},'owner',fake.storeRtcResult);
+   const {handle}=JSON.parse(shaped.content[0].text);
+   const r=await readStoredResult({handle,fields:'version'},'owner',fake.getRtcResult);
+   const result=JSON.parse(r.content[0].text);
+   expect(result.payload).toBe('{"version":7}');
+   expect(result.bytes).toBe(Buffer.byteLength(result.payload,'utf8'));
+   const large=await readStoredResult({handle,fields:'rows'},'owner',fake.getRtcResult);
+   const first=JSON.parse(large.content[0].text);
+   expect(first.page).toBe(1);
+   expect(first.next).toBeGreaterThan(1);
+   expect(first.bytes).toBeGreaterThan(4096);
+   expect(first).not.toHaveProperty('payload');
  });
  it('does not change small legacy MCP responses',async()=>{
    const original=ok({hello:'world'});
