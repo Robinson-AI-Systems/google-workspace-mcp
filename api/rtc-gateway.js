@@ -159,7 +159,7 @@ export default async function handler(req,res){
    const target=toInternal(req.body?.name);
    if(!target||RTC_META.has(target)||isWrite(target)||!allowedTool(target,pass))
     return fail(res,403,'refused_by_guard','Only authorized reads are allowed through this pass.');
-  }else if(isWrite(internal)&&!pass.allow_writes){
+  }else if(req.method==='POST'&&isWrite(internal)&&!pass.allow_writes){
    return fail(res,403,'refused_by_guard','This pass is read only.');
   }
   if(!allowedTool(internal,pass))return fail(res,403,'outside_scope','Tool is outside the pass permissions.');
