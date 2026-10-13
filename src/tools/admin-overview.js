@@ -107,8 +107,14 @@ function healthSection(health,names,{directory=false}={}){
  if(selected.some(c=>/could not check|not checked|unavailable/i.test(String(c.found||''))))
   return {status:'not_readable',reason:'The provider check could not be completed.',checks:selected};
  if(selected.some(c=>c.status==='WARN'))return {status:'needs_attention',checks:selected};
- if(directory&&checks.some(c=>c.check==='Directory coverage'&&c.status!=='PASS'))
-  return {status:'not_readable',reason:'The Directory scan is incomplete.',checks:selected};
+ // A missing coverage check is not proof that pagination finished.
+ // Exactly one complete explicit Directory result is needed before green.
+ // Confirmed FAIL/WARN in observed users remains visible above.
+ if(directory){
+  const coverage=checks.filter(c=>c.check==='Directory coverage');
+  if(coverage.length!==1||coverage[0].status!=='PASS')
+   return {status:'not_readable',reason:'Complete Directory scan coverage was not verified.',checks:selected};
+ }
  if(selected.some(c=>c.status==='INFO'))return {status:'not_readable',reason:'Informational evidence does not establish the setting.',checks:selected};
  return {status:'ok',checks:selected};
 }
