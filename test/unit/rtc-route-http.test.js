@@ -212,6 +212,11 @@ describe('real Node HTTP to Workspace gateway using checked-in Vercel route tabl
    expect(page.status).toBe(200);
    expect(page.value.result.page).toBe(1);
    expect(Buffer.byteLength(page.value.result.content,'utf8')).toBeLessThanOrEqual(4096);
+   const defaultPage=await request('/api/results/'+handle);
+   expect(defaultPage.status).toBe(200);
+   expect(defaultPage.value.result).toMatchObject({page:1,next:page.value.result.next});
+   expect(defaultPage.value.result).not.toHaveProperty('payload');
+   expect(Buffer.byteLength(JSON.stringify(defaultPage.value),'utf8')).toBeLessThanOrEqual(8192);
    const stranger=await request('/api/results/'+handle+'?page=1',{bearer:wideToken});
    expect(stranger.status).toBe(404);
   }finally{registry.handlers.workspace_list_accounts=original;}
