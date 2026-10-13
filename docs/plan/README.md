@@ -1,5 +1,16 @@
 # Robinson Google Workspace MCP: implementation plan
 
+## Independent MCP and optional gateway boundary — owner request 2026-10-12
+
+This server remains independently connectable, authenticated, deployed and testable. Robinson's Toolkit Hub
+is optional: one agent connection routes through this server's RTC HTTPS contract, not its internal dispatcher.
+Provider credentials, account/project state, canonical tools, permission/write/approval guards and results remain
+owned here. Hub credentials must not be accepted as service credentials; separately issued scoped service passes
+are required. Shared `robinson-mcp-core` adoption is optional, export-by-export, after immutable publication and
+original-service parity; it is not a prerequisite for RTC connectivity or real Hub acceptance.
+The owner explicitly requests this focused docs/planning repair; routine no-docs-only implementation cadence
+and every CI/review/security/production/deployment/spending gate remain unchanged.
+
 **Start here.** Written 2026-09-30 by Claude (Fable 5.1) for Chris Robinson, to be
 executed by a less expensive model. This folder is the whole brief: what the
 server is today, what it should become, the exact order of work, how each
