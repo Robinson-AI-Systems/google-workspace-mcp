@@ -1,3 +1,9 @@
+## P7-3: Complete legacy audit-log pagination without breaking existing callers — 2026-10-13 (#86 candidate)
+
+The six older Reports activity aliases returned only Google's first audit page; they discarded `nextPageToken`, leaving agents unable to follow large histories through those familiar tool names. This change keeps the existing array response by default while offering explicit `withPageInfo:true` to return `{application, activities, nextPageToken}`; optional `pageToken` and `endTime` are forwarded through the already approved bounded/date-validated Reports read-only selector. Invalid arguments or malformed pagination responses fail closed before claiming a complete history. New unit tests cover every alias, default compatibility, page continuation, range validation and malformed provider data.
+
+This is source/automated work only. Exact PR-head `test` and `release-policy`, review, post-merge main checks and production scheduled promotion still require separate verification. No new Google scopes, provider writes, OAuth setup, live activation, cost, catalog names or manual deployment. The custom Google service, preferred owner mailbox, approved isolated calendar, actual provider readbacks/denials/cleanup, renewal and separate Hub routing remain genuine external acceptance gates. P5-2 remains gated by November 1 plus verified encrypted backfill for every account.
+
 ## Owner setup handoff and preferred acceptance mailbox — 2026-10-13
 
 Owner directs future approved provider/RTC fixture testing toward
