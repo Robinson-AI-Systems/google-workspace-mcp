@@ -44,10 +44,69 @@ describe('P7-3 paginated multi-application audit', () => {
       {application:'calendar',startTime:'2026-10-12T00:00:00Z',endTime:'2026-10-10T00:00:00Z'},
       {application:'gmail',startTime:'2026-09-01T00:00:00Z',endTime:'2026-10-12T00:00:00Z'},
       {application:'gmail'},
-      {application:'rules',pageToken:''}
+      {application:'rules',pageToken:''},
+      {application:'rules',pageToken:'   '},
+      {application:'calendar',startTime:'2026-02-01T00:00:00Z',endTime:'2026-02-30T00:00:00Z'},
+      {application:'calendar',startTime:'2025-02-29T00:00:00Z'}
     ]) await expect(handlers.reports_activity(args,{adminReports:{activities:{list}}})).rejects.toThrow();
     expect(list).not.toHaveBeenCalled();
     const good=await invoke({application:'gmail',startTime:'2026-10-01T00:00:00Z',endTime:'2026-10-03T00:00:00Z'});
     expect(good.list).toHaveBeenCalledOnce();
+    const leap = await invoke({application:'calendar',startTime:'2024-02-29T23:59:59-07:00',endTime:'2024-03-01T00:01:00-07:00'});
+    expect(leap.list).toHaveBeenCalledOnce();
+  });
+});
+
+
+describe('P7-3 legacy audit logs: opt-in lossless provider pagination', () => {
+  const legacy = {
+    reports_login_activity:'login',
+    reports_admin_activity:'admin',
+    reports_drive_activity:'drive',
+    reports_groups_activity:'groups',
+    reports_oauth_token_activity:'token',
+    reports_mobile_activity:'mobile'
+  };
+  it('retains the old array contract but exposes an explicit paged mode for all six tools', async () => {
+    for (const [name, applicationName] of Object.entries(legacy)) {
+      const schema = tools.find(t=>t.name===name).inputSchema.properties;
+      expect(schema.withPageInfo.type).toBe('boolean');
+      expect(schema.pageToken.type).toBe('string');
+      expect(schema.maxResults).toMatchObject({type:'integer',minimum:1,maximum:200});
+      const list = vi.fn(async () => ({data:{items:[{id:'one'}],nextPageToken:'page-2'}}));
+      const adminReports = {activities:{list}};
+      const old = await handlers[name]({}, {adminReports});
+      expect(JSON.parse(old.content[0].text)).toEqual([{id:'one'}]);
+      const next = await handlers[name]({
+        withPageInfo:true,userKey:'test@example.com',
+        maxResults:12,startTime:'2026-10-01T00:00:00Z',endTime:'2026-10-02T00:00:00Z',
+        pageToken:'page-1'
+      }, {adminReports});
+      expect(JSON.parse(next.content[0].text)).toEqual({
+        application:applicationName,activities:[{id:'one'}],nextPageToken:'page-2'
+      });
+      expect(list).toHaveBeenLastCalledWith({
+        applicationName,userKey:'test@example.com',maxResults:12,
+        startTime:'2026-10-01T00:00:00Z',endTime:'2026-10-02T00:00:00Z',
+        pageToken:'page-1'
+      });
+      expect(isWrite(name)).toBe(false);
+    }
+  });
+  it('does not convert invalid pages, date windows, flags or provider responses to apparent success', async () => {
+    const list = vi.fn(async()=>({data:{items:[]}}));
+    const adminReports = {activities:{list}};
+    for (const args of [
+      {withPageInfo:'true'},{maxResults:201},{maxResults:0},
+      {pageToken:''},{pageToken:'   '},{maxResults:1.5},
+      {endTime:'2026-10-02T00:00:00Z'},
+      {startTime:'2026-02-01T00:00:00Z',endTime:'2026-02-30T00:00:00Z'},
+      {startTime:'2026-10-03T00:00:00Z',endTime:'2026-10-02T00:00:00Z'}
+    ]) await expect(handlers.reports_login_activity(args,{adminReports})).rejects.toThrow();
+    expect(list).not.toHaveBeenCalled();
+    list.mockResolvedValueOnce({data:{items:{not:'an array'},nextPageToken:'next'}});
+    await expect(handlers.reports_login_activity({withPageInfo:true},{adminReports})).rejects.toThrow(/malformed/);
+    list.mockResolvedValueOnce({data:{items:[],nextPageToken:123}});
+    await expect(handlers.reports_login_activity({withPageInfo:true},{adminReports})).rejects.toThrow(/malformed/);
   });
 });

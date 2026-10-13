@@ -16,6 +16,21 @@ export const REPORT_APPLICATIONS = Object.freeze([
   'user_accounts', 'vault', 'voice', 'workspace_studio'
 ]);
 
+// Date.parse normalizes February 30 and other impossible dates. Refuse them
+// locally before any Google Reports read, while preserving offsets and subsecond input.
+function validIsoDateTime(value) {
+  if (typeof value !== 'string') return false;
+  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(?:Z|[+-](\d{2}):(\d{2}))$/);
+  if (!m) return false;
+  const [year,month,day,hour,minute,second,zoneHour,zoneMinute] =
+    [m[1],m[2],m[3],m[4],m[5],m[6]??'0',m[7]??'0',m[8]??'0'].map(Number);
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
+  return month>=1 && month<=12 && day>=1 && day<=days[month-1] &&
+    hour<=23 && minute<=59 && second<=59 && zoneHour<=23 && zoneMinute<=59 &&
+    Number.isFinite(Date.parse(value));
+}
+
 function reportActivityArgs(args = {}) {
   const app = String(args.application || '').trim();
   if (!REPORT_APPLICATIONS.includes(app))
@@ -24,7 +39,7 @@ function reportActivityArgs(args = {}) {
   if (!Number.isInteger(maxResults) || maxResults < 1 || maxResults > 200)
     throw new Error('maxResults must be an integer from 1 to 200.');
   for (const prop of ['startTime', 'endTime']) {
-    if (args[prop] !== undefined && (!/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(args[prop]) || !Number.isFinite(Date.parse(args[prop]))))
+    if (args[prop] !== undefined && !validIsoDateTime(args[prop]))
       throw new Error(prop + ' must be a valid ISO date-time with a time-zone offset.');
   }
   if (args.endTime && !args.startTime) throw new Error('endTime requires startTime.');
@@ -34,7 +49,7 @@ function reportActivityArgs(args = {}) {
     throw new Error('Gmail audit requires startTime/endTime within a 30-day interval.');
   if (args.userKey !== undefined && (typeof args.userKey !== 'string' || !args.userKey.trim()))
     throw new Error('userKey must be a non-empty email, profile ID or "all".');
-  if (args.pageToken !== undefined && (typeof args.pageToken !== 'string' || !args.pageToken))
+  if (args.pageToken !== undefined && (typeof args.pageToken !== 'string' || !args.pageToken.trim()))
     throw new Error('pageToken must be a non-empty string.');
   return {
     applicationName: app, userKey: args.userKey || 'all', maxResults,
@@ -56,9 +71,40 @@ export const tools = [
   { name: 'reports_usage_user', description: "Per-user daily usage summary (Gmail/Drive/Meet activity, storage used)", inputSchema: { type: 'object', properties: { userKey: { type: 'string' }, date: { type: 'string', description: 'YYYY-MM-DD' } }, required: ['userKey', 'date'] } }
 ];
 
-async function activities(admin, { applicationName, userKey, startTime, maxResults }) {
-  const res = await admin.activities.list({ userKey: userKey || 'all', applicationName, startTime, maxResults: maxResults || 100 });
-  return res.data.items || [];
+
+const LEGACY_ACTIVITY_APPS = Object.freeze({
+  reports_login_activity: 'login',
+  reports_admin_activity: 'admin',
+  reports_drive_activity: 'drive',
+  reports_groups_activity: 'groups',
+  reports_oauth_token_activity: 'token',
+  reports_mobile_activity: 'mobile'
+});
+// Preserve the original array result unless the caller explicitly opts in
+// to pagination metadata. Older agents can upgrade one invocation at a time.
+for (const tool of tools) {
+  if (!Object.hasOwn(LEGACY_ACTIVITY_APPS, tool.name)) continue;
+  Object.assign(tool.inputSchema.properties, {
+    maxResults: { type: 'integer', minimum: 1, maximum: 200, default: 100 },
+    endTime: { type: 'string', description: 'Optional ISO date-time ending the audit range; requires startTime.' },
+    pageToken: { type: 'string', description: 'Google continuation token from an earlier paged response.' },
+    withPageInfo: { type: 'boolean', description: 'Return {application, activities, nextPageToken} instead of the legacy array.' }
+  });
+  tool.description += ' Returns the first page by default. Set withPageInfo:true to see nextPageToken and follow all pages without losing history.';
+}
+
+async function activities(admin, args, applicationName) {
+  if (args?.withPageInfo !== undefined && typeof args.withPageInfo !== 'boolean')
+    throw new Error('withPageInfo must be true or false.');
+  const query = reportActivityArgs({ ...args, application: applicationName });
+  const res = await admin.activities.list(query);
+  const items = res.data?.items ?? [];
+  const nextPageToken = res.data?.nextPageToken;
+  if (!Array.isArray(items) || (nextPageToken != null && typeof nextPageToken !== 'string'))
+    throw new Error('Google returned malformed audit pagination data. The result cannot be trusted.');
+  if (args?.withPageInfo === true)
+    return { application: applicationName, activities: items, ...(nextPageToken ? { nextPageToken } : {}) };
+  return items;
 }
 
 export const handlers = {
@@ -67,12 +113,12 @@ export const handlers = {
     const response = await adminReports.activities.list(query);
     return ok({ application: query.applicationName, activities: response.data?.items || [], ...(response.data?.nextPageToken ? { nextPageToken: response.data.nextPageToken } : {}) });
   },
-  reports_login_activity: async (args, { adminReports }) => ok(await activities(adminReports, { ...args, applicationName: 'login' })),
-  reports_admin_activity: async (args, { adminReports }) => ok(await activities(adminReports, { ...args, applicationName: 'admin' })),
-  reports_drive_activity: async (args, { adminReports }) => ok(await activities(adminReports, { ...args, applicationName: 'drive' })),
-  reports_groups_activity: async (args, { adminReports }) => ok(await activities(adminReports, { ...args, applicationName: 'groups' })),
-  reports_oauth_token_activity: async (args, { adminReports }) => ok(await activities(adminReports, { ...args, applicationName: 'token' })),
-  reports_mobile_activity: async (args, { adminReports }) => ok(await activities(adminReports, { ...args, applicationName: 'mobile' })),
+  reports_login_activity: async (args, { adminReports }) => ok(await activities(adminReports, args, 'login')),
+  reports_admin_activity: async (args, { adminReports }) => ok(await activities(adminReports, args, 'admin')),
+  reports_drive_activity: async (args, { adminReports }) => ok(await activities(adminReports, args, 'drive')),
+  reports_groups_activity: async (args, { adminReports }) => ok(await activities(adminReports, args, 'groups')),
+  reports_oauth_token_activity: async (args, { adminReports }) => ok(await activities(adminReports, args, 'token')),
+  reports_mobile_activity: async (args, { adminReports }) => ok(await activities(adminReports, args, 'mobile')),
   reports_usage_customer: async (args, { adminReports }) => {
     const res = await adminReports.customerUsageReports.get({ date: args.date });
     return ok(res.data.usageReports || []);
