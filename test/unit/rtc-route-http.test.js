@@ -31,7 +31,13 @@ function route(url){
   const destination=new URL(rewrite.destination,'https://internal.invalid');
   const query=Object.fromEntries(destination.searchParams.entries());
   for(const [key,value] of Object.entries(query))if(value.startsWith(':'))query[key]=params[value.slice(1)];
-  for(const [key,value] of url.searchParams)query[key]=value;
+  // Vercel/Node query decoders preserve repeated keys as arrays; a
+  // test adapter that overwrites them would miss parameter-smuggling bugs.
+  for(const [key,value] of url.searchParams){
+   if(Object.hasOwn(query,key)){
+    const old=query[key];query[key]=Array.isArray(old)?[...old,value]:[old,value];
+   }else query[key]=value;
+  }
   return {pathname:destination.pathname,query};
  }
  return {pathname:'',query:{}};
