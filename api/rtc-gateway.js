@@ -16,6 +16,10 @@ export function toInternal(name){
  return Object.hasOwn(registry.handlers,candidate)?candidate:null;
 }
 const expose=t=>({...toolMetadata(t),name:toExternal(t.name)});
+// A service-issued pass must never appear in any RTC JSON success or
+// provider error, including batch responses or retrieved stored results.
+const SERVICE_PASS_RE=/rtc_pass_[A-Za-z0-9_-]{43}/g;
+const redactPass=value=>String(value).replace(SERVICE_PASS_RE,'[redacted service pass]');
 function reply(res,status,data,retryAfter){
  res.setHeader('Cache-Control','no-store');
  res.setHeader('Content-Type','application/json; charset=utf-8');
@@ -30,9 +34,17 @@ const success=(res,result,mode='test')=>{
    data.count=result.count;
    data.summary=result.summary;
  }
+ // Check the entire serialized envelope, not only direct POST tool results:
+ // batch-read and result-handle paths can contain nested provider text.
+ if(SERVICE_PASS_RE.test(JSON.stringify(data))){
+  SERVICE_PASS_RE.lastIndex=0;
+  return fail(res,403,'refused_by_guard','Sensitive service pass cannot be returned.');
+ }
+ SERVICE_PASS_RE.lastIndex=0;
  return reply(res,200,data);
 };
-const fail=(res,status,code,what,todo='',retryAfter)=>reply(res,status,{ok:false,error:{what,cause:'',todo,technical:'',code}},retryAfter);
+const fail=(res,status,code,what,todo='',retryAfter)=>reply(res,status,{ok:false,error:{
+ what:redactPass(what),cause:'',todo:redactPass(todo),technical:'',code}},retryAfter);
 function decodeMcp(result){
  if(result?.isError){
   const text=result?.content?.find(x=>x.type==='text')?.text||'Tool failed';
@@ -131,8 +143,6 @@ export default async function handler(req,res){
   if(req.method!=='POST')return fail(res,405,'invalid_args','Tool invocation requires POST.');
   if(Buffer.byteLength(JSON.stringify(req.body||{}))>65536)return fail(res,413,'invalid_args','Arguments too large.');
   const result=decodeMcp(await registry.handlers[internal](aliasArgs(internal,req.body||{}),await clientsFor(pass)));
-  const serialized=JSON.stringify(result);
-  if(/rtc_pass_[A-Za-z0-9_-]{43}/.test(serialized))return fail(res,403,'refused_by_guard','Sensitive pass must not be returned.');
   return result?.error?fail(res,400,result.error.code,result.error.what):success(res,result);
  }
  return fail(res,404,'not_found','Unknown RTC route.');
