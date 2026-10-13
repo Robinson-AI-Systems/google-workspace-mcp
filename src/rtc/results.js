@@ -91,7 +91,9 @@ export async function readStoredResult({handle,page=null,fields}={},connection,r
  if(typeof handle!=='string'||!/^rtc_result_[a-zA-Z0-9_-]{32}$/.test(handle))return errorResult(new Error('invalid_args: invalid handle'));
  const saved=await read(handle,connection);
  if(!saved)return errorResult(new Error('not_found: expired, missing or different connection'));
- const data=fields?projectFields(saved.data,fields):saved.data;
+ let data;
+ try{data=fields?projectFields(saved.data,fields):saved.data;}
+ catch(e){return errorResult(e);}
  const serialized=typeof data==='string'?data:JSON.stringify(data);
  // A missing page cannot bypass the 4 KiB transport limit for large
  // stored results. Keep small projected/legacy responses inline; otherwise
