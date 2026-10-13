@@ -1,3 +1,25 @@
+## Owner setup handoff and preferred acceptance mailbox — 2026-10-13
+
+Owner directs future approved provider/RTC fixture testing toward
+`ops@robinsonappliancerentals.com` (active Appliance Desk work), while
+`ops@robinsonaisystems.com` remains an owner-controlled alternate that
+requires its own independent connection, allowed test resources and evidence.
+The reported calendar create/read/delete and exact-resource absence check on
+the alternate account is useful session evidence but lacks durable source,
+IDs, revocation and Hub proof; it does not close the formal acceptance ledger.
+
+Current active cleanup fixes wrong-alias TEST-pass form submission by
+redirecting to the configured canonical `PUBLIC_BASE_URL` on GET, without
+weakening same-origin POST checks or changing registered Google OAuth
+redirects. Owner PASS setup is a fallback to reusable native developer OAuth
+(#82/#83), not a prerequisite for routine repeated agent tests.
+Review and close or supersede draft #81 after retaining compatible changes.
+Legacy merged-PR branches are archival candidates, not active work; leave
+unreviewed or possibly concurrent refs untouched. Full investigation and
+branch categories: `docs/reviews/2026-10-13-completion-recovery.md`.
+No provider permissions, scopes, tenant data or live release authorized by
+this note. Resume highest-priority independent roadmap work after cleanup.
+
 ## Review corrections — 2026-10-13
 
 Developer connection retries retain encrypted codes until expiry, concurrent starts use an atomic trusted-IP quota, and backend failures remain retryable. Google consent preserves the requested profile and supports actual native code length. Windows protected credentials fit bounded chunks; cloud refresh locks recover after process exit. Evidence requires every layer and genuine custom-service read/write/denial/readback observations. Production functionality remains intact. Local regression checks passed; exact-head CI, deployed connection, provider, Hub, revocation and cleanup proofs remain separate.
