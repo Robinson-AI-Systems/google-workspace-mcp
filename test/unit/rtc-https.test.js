@@ -36,6 +36,24 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   expect(r.statusCode).toBe(200);expect(r.body).toMatchObject({rtc:1,prefix:'workspace_'});
   expect(manifest().counts.tools).toBeGreaterThan(350);
  });
+ it('exposes source revision as a validated manifest claim and authorized account only after pass auth',async()=>{
+  const original=process.env.VERCEL_GIT_COMMIT_SHA;
+  try{
+   process.env.VERCEL_GIT_COMMIT_SHA='a'.repeat(40);
+   expect(manifest().deployment.sourceRevision).toBe('a'.repeat(40));
+   process.env.VERCEL_GIT_COMMIT_SHA='not-a-source-revision';
+   expect(manifest().deployment.sourceRevision).toBeNull();
+  }finally{
+   if(original===undefined)delete process.env.VERCEL_GIT_COMMIT_SHA;
+   else process.env.VERCEL_GIT_COMMIT_SHA=original;
+  }
+  const who=await invoke('GET',{door:'whoami'});
+  expect(who.statusCode).toBe(200);
+  expect(who.body.result).toMatchObject({account:'ops@example.test',profile:'read_only',mode:'test',allow_writes:false});
+  const rejected=await invoke('GET',{door:'whoami'},{},'connector-shaped-token');
+  expect(rejected.statusCode).toBe(401);
+  expect(rejected.body.result).toBeUndefined();
+ });
  it('rejects missing, connector-shaped and invalid bearers',async()=>{
   expect((await invoke('GET',{door:'tools'},{},'')).statusCode).toBe(401);
   expect((await invoke('GET',{door:'tools'},{},'connector-shaped-token')).statusCode).toBe(401);
