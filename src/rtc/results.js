@@ -93,12 +93,16 @@ export async function readStoredResult({handle,page=null,fields}={},connection,r
  if(!saved)return errorResult(new Error('not_found: expired, missing or different connection'));
  const data=fields?projectFields(saved.data,fields):saved.data;
  const serialized=typeof data==='string'?data:JSON.stringify(data);
- if(page==null)return ok({handle,bytes:saved.bytes,payload:serialized});
- const n=Number(page);
+ // A missing page cannot bypass the 4 KiB transport limit for large
+ // stored results. Keep small projected/legacy responses inline; otherwise
+ // return the first numbered UTF-8 page so clients can follow next.
+ const bytes=Buffer.byteLength(serialized,'utf8');
+ if(page==null&&bytes<=4096)return ok({handle,bytes,payload:serialized});
+ const n=page==null?1:Number(page);
  if(!Number.isInteger(n)||n<1||n>100000)return errorResult(new Error('invalid_args: invalid page'));
  const chunk=utf8Page(serialized,n);
  if(!chunk)return errorResult(new Error('not_found: page does not exist'));
- return ok({handle,page:n,pages:chunk.pages,bytes:saved.bytes,content:chunk.content,next:chunk.next});
+ return ok({handle,page:n,pages:chunk.pages,bytes,content:chunk.content,next:chunk.next});
 }
 export function applyResultRules(registry){
  registry.tools=registry.tools.map(tool=>{
