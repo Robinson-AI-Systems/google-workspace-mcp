@@ -16,7 +16,8 @@ import { clientIp, evaluateLogin, LOCKOUT_WINDOW_MINUTES } from '../../src/oauth
 import { ensureMigrated } from '../../src/auth/google-auth-hosted.js';
 import { RTC_AREAS } from '../../src/rtc/catalog.js';
 
-function renderLoginPage({ error, hidden, accounts, selected }) {
+function renderLoginPage({ error, hidden, accounts, selected, profile }) {
+  const selectedProfile = ['read_only','everyday','full'].includes(profile) ? profile : 'read_only';
   const hiddenInputs = Object.entries(hidden).map(([k, v]) => `<input type="hidden" name="${k}" value="${escapeHtml(v || '')}">`).join('\n');
   const accountField = accounts.length === 0
     ? `<p class="note">No Google account is connected yet. Open <code>/api/google/authorize</code> first, then come back.</p>`
@@ -46,7 +47,7 @@ function renderLoginPage({ error, hidden, accounts, selected }) {
     ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
     ${accountField}
     <label for="profile">Permission level</label>
-    <select name="profile" id="profile"><option value="read_only">Read only</option><option value="everyday">Everyday</option><option value="full">Full</option></select>
+    <select name="profile" id="profile">${['read_only','everyday','full'].map(value=>`<option value="${value}"${selectedProfile===value ? ' selected' : ''}>${({read_only:'Read only',everyday:'Everyday',full:'Full'})[value]}</option>`).join('')}</select>
     <label for="listing">Tool listing</label>
     <select name="listing" id="listing"><option value="compact">Compact</option><option value="catalog">All tools</option></select>
     <label for="areas">Optional allowed areas (comma separated; leave blank for all)</label>
@@ -89,7 +90,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     res.setHeader('Content-Type', 'text/html');
-    res.status(200).send(renderLoginPage({ hidden, accounts }));
+    res.status(200).send(renderLoginPage({ hidden, accounts, profile: params.profile }));
     return;
   }
 
@@ -108,21 +109,21 @@ export default async function handler(req, res) {
   if (verdict.status === 'locked') {
     res.setHeader('Content-Type', 'text/html');
     res.setHeader('Retry-After', String(LOCKOUT_WINDOW_MINUTES * 60));
-    res.status(429).send(renderLoginPage({ error: `Too many wrong passphrases from this connection. Wait ${LOCKOUT_WINDOW_MINUTES} minutes before trying again.`, hidden, accounts, selected: keptAccount }));
+    res.status(429).send(renderLoginPage({ error: `Too many wrong passphrases from this connection. Wait ${LOCKOUT_WINDOW_MINUTES} minutes before trying again.`, hidden, accounts, selected: keptAccount, profile: params.profile }));
     return;
   }
   if (verdict.status === 'wrong') {
     res.setHeader('Content-Type', 'text/html');
     // Keep the account they picked so a passphrase typo doesn't silently flip it back to the default.
     const left = verdict.attemptsLeft > 0 ? ` ${verdict.attemptsLeft} ${verdict.attemptsLeft === 1 ? 'try' : 'tries'} left before a ${LOCKOUT_WINDOW_MINUTES}-minute lockout.` : ` The next wrong try starts a ${LOCKOUT_WINDOW_MINUTES}-minute lockout.`;
-    res.status(401).send(renderLoginPage({ error: `Incorrect passphrase. Your account choice was kept.${left}`, hidden, accounts, selected: keptAccount }));
+    res.status(401).send(renderLoginPage({ error: `Incorrect passphrase. Your account choice was kept.${left}`, hidden, accounts, selected: keptAccount, profile: params.profile }));
     return;
   }
   const chosen = keptAccount;
   if (!accounts.some((a) => a.email === chosen)) {
     // (passphrase check below happens first in practice; this guards a tampered form)
     res.setHeader('Content-Type', 'text/html');
-    res.status(400).send(renderLoginPage({ error: 'Pick one of the connected Google accounts.', hidden, accounts, selected: chosen }));
+    res.status(400).send(renderLoginPage({ error: 'Pick one of the connected Google accounts.', hidden, accounts, selected: chosen, profile: params.profile }));
     return;
   }
 

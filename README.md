@@ -545,3 +545,21 @@ integration check, not fixture creation/cleanup; all three P8-7 fixture families
 ### Machine-readable read-only results (RTC P8-1)
 
 Nine implemented read workflows now advertise validated MCP `outputSchema` and return `structuredContent` on full successful JSON responses. Added typed responses cover **Reports multi-application activity, Postmaster registered domains and delivery metrics, Cloud Identity policy list and the policy baseline audit**. Explicit `fields` projection still returns the selected JSON fields without pretending a partial object fulfills the full typed schema; `detail: full` keeps complete results, and large payloads use connection-owned, expiring retrieval handles. Error or missing-provider conditions cannot turn into typed success. The runtime tool registry remains 375 names; this does not certify live Google TEST or Hub conformance.
+
+## Coding-agent development access (2026-10-13)
+
+The implementing agent uses a renewable native OAuth connection, not a new copied RTC
+pass for every retest. `rtool developer-connect ALIAS --profile full` prepares one mobile
+link using the custom service. Choose the intended account/resources and authorize once;
+return to chat without copying secrets. The agent reruns the command to finish privately,
+then uses developer-check, developer-tools and developer-call. Existing original service
+write previews, owner approvals and resource guards still apply. This developer workflow
+does not reduce the finished product's tool capabilities.
+
+On a managed POSIX cloud runner, configure RTOOL_DEVELOPER_VAULT_DIR to an absolute private
+folder outside every Git checkout. The CLI creates a separate 0600 encryption key and
+AES-GCM encrypted connection files in a 0700 folder; keep that private runner state for
+resumes. OS credential managers remain the desktop default. Neither option places secrets
+in chats, prompts, Git or shared artifacts. Initial provider consent or an expired/revoked
+underlying authorization can still require a new owner sign-in. Source/tests are not
+proof that the new deployed workflow has been exercised against the real provider.
