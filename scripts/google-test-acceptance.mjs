@@ -24,7 +24,7 @@ export async function runGoogleAcceptance({origin,account,expectedRevision,write
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(account||'')||account!==APPROVED_MAILBOX||
   !/^[a-f0-9]{40}$/.test(expectedRevision||'')||!PASS.test(writePass||'')||(!cleanupOnly&&!PASS.test(readPass||''))||
   (readPass&&!PASS.test(readPass))||writePass===readPass||
-  !id(calendarId)||calendarId==='primary'||calendarId===account)throw Error('invalid_protected_configuration');
+  (!cleanupOnly&&(!id(calendarId)||calendarId==='primary'||calendarId===account)))throw Error('invalid_protected_configuration');
  if(Object.keys(runIds).some(k=>!SCENARIOS.includes(k))||Object.values(runIds).some(v=>!UUID.test(v)))throw Error('invalid_run_ids');
  if(new Set(Object.values(runIds)).size!==Object.values(runIds).length)throw Error('duplicate_run_ids');
  if(cleanupOnly&&!Object.keys(runIds).length)throw Error('cleanup_requires_recorded_run_ids');
