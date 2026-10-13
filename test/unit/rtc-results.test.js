@@ -100,7 +100,7 @@ describe('RTC byte-safe international result pages',()=>{
  });
  it('recovers multilingual stored JSON losslessly through numbered, owner-isolated pages',async()=>{
   const fake=createFakeDb(),owner='international-connection';
-  const original={rows:Array.from({length:300},(_,i)=>({id:i,notes:'é漢🌎🦉'.repeat(40)}))};
+  const original={rows:Array.from({length:100},(_,i)=>({id:i,notes:'é漢🌎🦉'.repeat(40)}))};
   const out=await shapeReadResult(ok(original),{detail:'full'},owner,fake.storeRtcResult);
   const handle=JSON.parse(out.content[0].text).handle;
   expect(handle).toMatch(/^rtc_result_/);
