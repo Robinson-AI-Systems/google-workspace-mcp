@@ -5,11 +5,12 @@
   "type": "module",
   "main": "api/mcp.js",
   "scripts": {
-    "check": "find src api -name '*.js' -exec node --check {} \\; && node scripts/check-writes.mjs && node scripts/check-rtc-budget.mjs && node scripts/gen-catalog.mjs --check",
+    "check": "find src api -name '*.js' -exec node --check {} \\; && node scripts/check-writes.mjs && node scripts/check-rtc-budget.mjs && node scripts/gen-catalog.mjs --check && npm run check:developer-evidence",
     "test": "vitest run",
     "test:db": "vitest run --config vitest.db.config.js",
     "test:rtc": "vitest run --config vitest.rtc.config.js",
-    "gen:catalog": "node scripts/gen-catalog.mjs"
+    "gen:catalog": "node scripts/gen-catalog.mjs",
+    "check:developer-evidence": "node scripts/check-developer-evidence.mjs && node --test scripts/check-developer-evidence.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -17,7 +18,7 @@
     "googleapis": "^144.0.0"
   },
   "engines": {
-    "node": ">=18"
+    "node": "24.x"
   },
   "author": "Robinson AI Systems",
   "license": "MIT",

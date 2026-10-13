@@ -1,3 +1,19 @@
+## Reusable developer OAuth and evidence boundary — 2026-10-13
+
+Owner authorized replacing repeated manual pass setup with renewable implementing-agent
+connections. Production product capabilities remain unchanged; full developer TEST/preview
+profiles retain original server write/financial/resource guards. Native OAuth owner consent
+hands authorization back to protected client storage via PKCE plus an encrypted mobile callback.
+The rtool developer client reuses/refreshes that connection and invokes the actual custom MCP.
+The completion recovery review records catalog/runtime differences, obsolete recipes and
+a finite path to finish the intended products without introducing blanket limitations.
+Source/automated/deployed/provider/Hub/revocation/cleanup evidence remain separately tracked
+in developer-evidence.json. Standard connectors remain development infrastructure aids only.
+New handoff/client regressions and mandatory provenance checks are part of this PR; exact-head
+CI, reviewed release and real owner consent/provider acceptance remain pending. Managed cloud clients use an explicit private encrypted developer vault; desktops may use
+the OS keyring. Never place credentials in a prompt, Git or plaintext credential file. This is an implementation checkpoint, not full real-world acceptance.
+See pr-cards/DEVELOPER-CONNECTION.md. No production provider activation or paid resource change.
+
 **Setup checkpoint — 2026-10-13:** Stage-aware setup verified: two Google account records/eight active MCP sessions, one encrypted account copy. Database/admin/OAuth client secrets are now write-only Production-only settings; local development uses separate credentials. P5-2 remains gated until November 1 plus every-account encrypted refresh/backfill proof; no premature plaintext retirement. All six release workflows target 00:01 America/Denver, Vercel tracks live, Basic queued builds and disabled automatic previews verified. No scheduled release event observed yet; owner authorized one manual release after green checks. Saved configuration, deployed exact revision and authentic connected acceptance remain separate.
 
 **Owner release timing update — 2026-10-13:** Daily checked main-to-live release now targets 00:01 America/Denver using GitHub native timezone support, so both daylight and standard time remain 12:01 a.m. All exact-head CI, atomic daily-marker, fast-forward, preview/build-cost and independent live/provider approval gates remain unchanged. Owner separately approved one manual release after this setup work completes; schedule syntax/CI, actual deployment and connected acceptance remain distinct evidence. GitHub scheduling can be delayed; no guaranteed start time is claimed.
@@ -34,14 +50,14 @@ Model key: default Sonnet 5.5; `[H]` = Haiku 4.5 is enough.
 
 **Build.**
 - Add `vitest` as a dev dependency. `npm test` runs unit tests; `npm run test:db`
-  runs database tests only when `TEST_DATABASE_URL` is set (a Neon branch).
+  runs database tests only when `TEST_DATABASE_URL` is set (throwaway local/CI Postgres).
 - Create `test/helpers/fake-google.js`: a factory that returns a `clients`
   object whose every service is a recording stub (`calls` array; configurable
   `resolve`/`reject` per method path, e.g. `gmail.users.settings.sendAs.patch`).
 - Create `test/helpers/fake-db.js`: an in-memory implementation of the exported
   functions in `src/db.js` for unit tests that must not touch Postgres.
 - Add `.github/workflows/ci.yml`: on PR and `main`, run `npm ci`,
-  `npm run check`, `npm test`. Database tests run only on `main` with
+  `npm run check`, `npm test`. Database tests run on PRs and `main` with
   `TEST_DATABASE_URL` from a repository secret (Chris adds it; the PR body tells
   him how in two sentences).
 - Convert `scripts/test-db-upgrade.mjs` into `test/db/upgrade.test.mjs` so it
