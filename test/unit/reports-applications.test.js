@@ -51,3 +51,54 @@ describe('P7-3 paginated multi-application audit', () => {
     expect(good.list).toHaveBeenCalledOnce();
   });
 });
+
+
+describe('P7-3 legacy audit logs: opt-in lossless provider pagination', () => {
+  const legacy = {
+    reports_login_activity:'login',
+    reports_admin_activity:'admin',
+    reports_drive_activity:'drive',
+    reports_groups_activity:'groups',
+    reports_oauth_token_activity:'token',
+    reports_mobile_activity:'mobile'
+  };
+  it('retains the old array contract but exposes an explicit paged mode for all six tools', async () => {
+    for (const [name, applicationName] of Object.entries(legacy)) {
+      const schema = tools.find(t=>t.name===name).inputSchema.properties;
+      expect(schema.withPageInfo.type).toBe('boolean');
+      expect(schema.pageToken.type).toBe('string');
+      const list = vi.fn(async () => ({data:{items:[{id:'one'}],nextPageToken:'page-2'}}));
+      const adminReports = {activities:{list}};
+      const old = await handlers[name]({}, {adminReports});
+      expect(JSON.parse(old.content[0].text)).toEqual([{id:'one'}]);
+      const next = await handlers[name]({
+        withPageInfo:true,userKey:'test@example.com',
+        maxResults:12,startTime:'2026-10-01T00:00:00Z',endTime:'2026-10-02T00:00:00Z',
+        pageToken:'page-1'
+      }, {adminReports});
+      expect(JSON.parse(next.content[0].text)).toEqual({
+        application:applicationName,activities:[{id:'one'}],nextPageToken:'page-2'
+      });
+      expect(list).toHaveBeenLastCalledWith({
+        applicationName,userKey:'test@example.com',maxResults:12,
+        startTime:'2026-10-01T00:00:00Z',endTime:'2026-10-02T00:00:00Z',
+        pageToken:'page-1'
+      });
+      expect(isWrite(name)).toBe(false);
+    }
+  });
+  it('does not convert invalid pages, date windows, flags or provider responses to apparent success', async () => {
+    const list = vi.fn(async()=>({data:{items:[]}}));
+    const adminReports = {activities:{list}};
+    for (const args of [
+      {withPageInfo:'true'},{maxResults:201},{maxResults:0},
+      {pageToken:''},{endTime:'2026-10-02T00:00:00Z'},
+      {startTime:'2026-10-03T00:00:00Z',endTime:'2026-10-02T00:00:00Z'}
+    ]) await expect(handlers.reports_login_activity(args,{adminReports})).rejects.toThrow();
+    expect(list).not.toHaveBeenCalled();
+    list.mockResolvedValueOnce({data:{items:{not:'an array'},nextPageToken:'next'}});
+    await expect(handlers.reports_login_activity({withPageInfo:true},{adminReports})).rejects.toThrow(/malformed/);
+    list.mockResolvedValueOnce({data:{items:[],nextPageToken:123}});
+    await expect(handlers.reports_login_activity({withPageInfo:true},{adminReports})).rejects.toThrow(/malformed/);
+  });
+});
