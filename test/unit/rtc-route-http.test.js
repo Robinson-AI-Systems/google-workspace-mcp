@@ -109,6 +109,35 @@ describe('real Node HTTP to Workspace gateway using checked-in Vercel route tabl
   const write=await request('/api/tools/workspace_gmail_send_email',{method:'POST',body:{confirm:true}});
   expect(write.status).toBe(403);expect(holder.writes).toBe(0);
  });
+ it('describes the read-only meta dispatcher without authorizing nested writes',async()=>{
+   const before=holder.writes;
+   const detail=await request('/api/tools/workspace_call');
+   expect(detail.status).toBe(200);
+   expect(detail.value.result.name).toBe('workspace_call');
+   expect(holder.writes).toBe(before);
+   const denied=await request('/api/tools/workspace_call',{method:'POST',
+     body:{name:'workspace_gmail_send_email',args:{confirm:true}}});
+   expect(denied.status).toBe(403);
+   expect(holder.writes).toBe(before);
+ });
+ it('refuses malformed batch entries before provider execution',async()=>{
+   const before=holder.writes;
+   for(const calls of [[null],[42],['x'],[{}],[{name:'workspace_list_accounts',args:null}],
+       [{name:'workspace_list_accounts',args:[]}],[{name:'workspace_list_accounts',args:'bad'}]]) {
+     const r=await request('/api/tools/_batch',{method:'POST',body:{calls}});
+     expect(r.status,JSON.stringify(calls)).toBe(400);
+     expect(r.value.error.code).toBe('invalid_args');
+     expect(holder.writes).toBe(before);
+   }
+ });
+ it('reports malformed owned result projection as 400 without a response or provider leak',async()=>{
+   const handle='rtc_result_'+'b'.repeat(32);
+   await holder.db.storeRtcResult({handle,connection:passId,payload:{data:{items:[{id:'x'}]},bytes:22}});
+   const r=await request('/api/results/'+handle+'?fields=__proto__.polluted');
+   expect(r.status).toBe(400);
+   expect(r.value.error.code).toBe('invalid_args');
+   expect(r.value.result).toBeUndefined();
+ });
  it('refuses mixed read/write batches before any execution',async()=>{
   const r=await request('/api/tools/_batch',{method:'POST',body:{calls:[
    {name:'workspace_list_accounts'}, {name:'workspace_gmail_send_email',args:{confirm:true}}
