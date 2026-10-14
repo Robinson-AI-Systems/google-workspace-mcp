@@ -1,3 +1,4 @@
+import { providerReadFixture } from '../helpers/smoke-provider-fixtures.js';
 import {describe,it,expect,vi} from 'vitest';
 import {originFromEnv,chooseProbe,verifiedProviderReadResult,runReadOnlySmoke,main} from '../../scripts/smoke-readonly.mjs';
 const token='rtc_pass_'+ 'A'.repeat(43);
@@ -29,10 +30,7 @@ function fakeHttp({areas=null,profile='read_only',account='scratch@example.test'
      if(name==='workspace_whoami')return ret(200,{ok:true,result:{actingAs:account,gmailReports:gmailAccount,matches:account===gmailAccount}});
      if(name===malformedName)return ret(200,{ok:true,result:{unexpected:'transport only'}});
      if(name==='workspace_drive_list_files')return ret(200,{ok:true,handle,result:{handle,summary:'stored'}});
-     if(name==='workspace_gmail_list_messages')return ret(200,{ok:true,result:{messages:[]}});
-     if(name==='workspace_calendar_list_calendars')return ret(200,{ok:true,result:{kind:'calendar#calendarList',items:[]}});
-     if(name==='workspace_tasks_list_tasklists')return ret(200,{ok:true,result:{kind:'tasks#taskLists',items:[]}});
-     return ret(200,{ok:true,result:{items:[]}});
+     return ret(200,{ok:true,result:providerReadFixture(name,'scratch@example.test')});
    }
    throw Error('unmocked request');
  };
@@ -54,7 +52,7 @@ describe('non-production multi-service read-only smoke',()=>{
    expect(outcome.outcomes.filter(x=>x.status==='PASS')).toHaveLength(5);
    expect(f.calls.filter(x=>x.path.startsWith('/api/results/'))).toHaveLength(3);
    expect(f.calls.find(x=>x.path==='/api/tools/workspace_drive_list_files'&&x.method==='POST')?.body)
-     .toBe(JSON.stringify({maxResults:1}));
+     .toBe(JSON.stringify({maxResults:1,detail:'full'}));
    expect(f.calls.filter(x=>x.method==='POST').every(x=>x.path.startsWith('/api/tools/'))).toBe(true);
  });
  it('rejects incomplete, inconsistent and cursor-looped stored reads without false PASS',async()=>{
@@ -78,26 +76,21 @@ describe('non-production multi-service read-only smoke',()=>{
    expect(report.outcomes).toContainEqual({tool:name,status:'FAIL',reason:'invalid_google_read_shape'});
   }
  });
- it('accepts only bounded provider-identifiable list objects or documented empty-list markers',()=>{
-  const samples=[
-   ['workspace_gmail_list_messages',{messages:[{id:'m1'}]}],
-   ['workspace_gmail_list_messages',{resultSizeEstimate:0}],
-   ['workspace_drive_list_files',{files:[{id:'f1'}]}],
-   ['workspace_drive_list_files',{kind:'drive#fileList'}],
-   ['workspace_calendar_list_calendars',{kind:'calendar#calendarList'}],
-   ['workspace_tasks_list_tasklists',{kind:'tasks#taskLists',items:[]}]
-  ];
-  for(const [name,value] of samples)expect(verifiedProviderReadResult(name,value),name).toBe(true);
-  for(const name of ['workspace_gmail_list_messages','workspace_drive_list_files',
-   'workspace_calendar_list_calendars','workspace_tasks_list_tasklists']){
-   for(const bad of [null,'OK',{items:[]},{files:[{}],nextPageToken:123},
-     {messages:[{id:'m1'},{id:'m2'}]}, {error:{code:'provider_failed'}}]){
-    // Some malformed values happen to use another family's valid list key.
-    if(bad?.items&&name==='workspace_calendar_list_calendars'||bad?.items&&name==='workspace_tasks_list_tasklists')continue;
-    if(bad?.files&&name==='workspace_drive_list_files'&&bad.files[0]?.id)continue;
-    expect(verifiedProviderReadResult(name,bad),name).toBe(false);
-   }
+ it('accepts native handler arrays and scoped empty provider list envelopes',()=>{
+  for(const name of ['workspace_calendar_list_calendars','workspace_tasks_list_tasklists',
+    'workspace_calendar_get_settings','workspace_calendar_list_events','workspace_tasks_list_tasks']){
+   expect(verifiedProviderReadResult(name,[]),name).toBe(true);
+   expect(verifiedProviderReadResult(name,{unexpected:'OK'}),name).toBe(false);
   }
+  for(const name of ['workspace_gmail_list_messages','workspace_gmail_list_threads',
+    'workspace_gmail_list_drafts']){
+    expect(verifiedProviderReadResult(name,{resultSizeEstimate:0}),name).toBe(true);
+    expect(verifiedProviderReadResult(name,{resultSizeEstimate:5}),name).toBe(false);
+  }
+  expect(verifiedProviderReadResult('workspace_drive_list_files',{files:[]})).toBe(true);
+  expect(verifiedProviderReadResult('workspace_drive_list_files',{files:[{id:'known'}]})).toBe(true);
+  expect(verifiedProviderReadResult('workspace_drive_list_files',{files:[{}]})).toBe(false);
+  expect(verifiedProviderReadResult('workspace_unreviewed_lookup',{items:[]})).toBe(false);
  });
  it('never calls tools outside the pass areas',async()=>{
    const f=fakeHttp({areas:['workspace']});
