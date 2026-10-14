@@ -1,3 +1,16 @@
+### October 14 owner throughput correction — pending workflow PR
+
+AI development sessions are now measured by completed, integrated roadmap
+task slices and genuine acceptance, not a fixed number of PRs or multiples
+of five. Combine adjacent small approved slices into a reviewable workflow
+(~500–800 production lines plus tests when suitable; never mandatory).
+After each merge keep an exact recoverable checkpoint and assess chat-context
+runway before starting more work. The read-only `session:status` tool now
+reports the observed PR number without suggesting a target. All Google scope,
+mailbox-isolation, provider-write, auth, safe cleanup, release, CI and owner
+approval requirements remain unchanged. This procedural change is not Google
+provider acceptance evidence.
+
 ### October 14 completion recovery — source proof, release proof remains queued
 
 Recovered PR #110's owner-overview finding: guarded read composition consumes full
