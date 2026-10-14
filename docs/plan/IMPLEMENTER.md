@@ -1,5 +1,7 @@
 # Implementer guide: prompts, PR template, checklists
 
+Start with ../SESSION-START.md and `npm run session:status`; that consolidated procedure controls workflow and release-aware acceptance. Existing templates below supply specialized review details, not a replacement rulebook.
+
 ## Product, builder and acceptance boundaries — owner correction 2026-10-13
 
 This repository builds a full independently usable custom MCP integration. Do not narrow

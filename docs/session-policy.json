@@ -1,0 +1,5 @@
+{
+  "repository": "Robinson-AI-Systems/google-workspace-mcp",
+  "ledger": "docs/plan/TASKS.md",
+  "instructions": "docs/plan/README.md; docs/SESSION-START.md; latest permanent PR handoff"
+}
