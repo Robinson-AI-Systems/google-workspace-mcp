@@ -98,7 +98,7 @@ export async function runReadOnlySmoke({origin,token,expectedAccount,expectedRev
      try{payload=await recoverRtcReadHandle(request,result.data.handle)}
      catch{outcomes.push({tool:probe.name,status:'FAIL',reason:'result_handle_unreadable'});continue;}
    }
-   if(!verifiedProviderReadResult(probe.name,payload,expectedAccount)){
+   if(!verifiedProviderReadResult(probe.name,payload,expectedAccount,probe.args)){
      outcomes.push({tool:probe.name,status:'FAIL',reason:'invalid_google_read_shape'});continue;
    }
    outcomes.push({tool:probe.name,status:'PASS',proof:INTERNAL_READ_PROOFS.has(probe.name)?'service_shape':'provider_shape'});
