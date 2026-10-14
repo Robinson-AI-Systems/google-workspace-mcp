@@ -6,11 +6,11 @@ import { isNotFound } from './write.js';
 const ISO=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?(Z|([+-])(\d{2}):(\d{2}))$/;
 function validCalendarStart(value){
  const match=ISO.exec(value);if(!match)return false;
- const [,year,month,day,hour,minute,second,,sign,offsetHour,offsetMinute]=match;
+ const [,year,month,day,hour,minute,second,timezone,sign,offsetHour,offsetMinute]=match;
  if(Number(hour)>23||Number(minute)>59||Number(second)>59)return false;
  const zone=sign==='-'?-1:1;
- const offset=sign==='Z'?0:zone*(Number(offsetHour)*60+Number(offsetMinute));
- if(sign!=='Z'&&(Number(offsetHour)>14||Number(offsetMinute)>59||
+ const offset=timezone==='Z'?0:zone*(Number(offsetHour)*60+Number(offsetMinute));
+ if(timezone!=='Z'&&(Number(offsetHour)>14||Number(offsetMinute)>59||
    (Number(offsetHour)===14&&Number(offsetMinute)!==0)))return false;
  const timestamp=Date.parse(value);
  if(!Number.isFinite(timestamp))return false;
