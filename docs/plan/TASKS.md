@@ -1,4 +1,4 @@
-### Workflow maintenance handoff — owner publication approved
+### Workflow maintenance handoff — published in PR #107
 
 New offline session utility: eight behavioral tests passed, including actual Git ancestry, partial releases, unknown/failed deployments, rollback, dependency gating, invalid queues, PR alignment and bounded output. All repository queues validate. Existing source/status evidence is preserved; no provider acceptance or release was performed. Owner explicitly approved publication on October 14; publish the reviewed maintenance branch, require exact-head CI/reviews, and merge only when those gates pass. No extra production release is authorized by this approval. Full broad application suites on the shared runner were interrupted after resource/time-limit failures; do not claim them passed. Existing exact-head remote CI/review gates must pass before any main merge.
 
@@ -35,10 +35,48 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "Existing ledger/card remains authoritative; current live/provider acceptance must be reconciled at session start. Seed revision conservatively includes reviewed current main."
+  },
+  {
+    "id": "GOOGLE-DIRECT-READ",
+    "priority": 1,
+    "requiredRevision": "39b0413c378da525a529533456a949c23a8c8dfb",
+    "task": "Complete the independently authenticated deployed custom-service read-only identity, Gmail, Calendar, Drive, Tasks, account isolation and denial/readback matrix on the approved mailbox",
+    "procedure": "docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "No fixture writes; original account and connection identity; source/READY deployment independently verified",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14: live 39b0413... and Vercel production dpl_6NShNeLfWFgzR7FtU2gDry8iwZMo READY; custom workspace_whoami returned actingAs and matching Gmail ops@robinsonappliancerentals.com. Full required matrix not run; do not call partial reads PASSED."
+  },
+  {
+    "id": "P2-7-UNKNOWN",
+    "priority": 2,
+    "requiredRevision": "540bc6141d7700a76ba2a6566f77786d34aa7bc1",
+    "task": "Re-run deployed custom workflow_search_presence_check on the rentals domain and prove permission-denied Site Verification yields typed WARN/UNKNOWN, not a schema error",
+    "procedure": "docs/plan/TASKS.md",
+    "gates": "Read-only; no new OAuth scope, credentials, Google writes or false verification success",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14: current Vercel READY live 39b0413... still produced 'Schema error: workflow output does not satisfy its advertised structure' on genuine custom call. PR #105 source fix 540bc... is in main but not live; recheck at next checked release including that revision."
+  },
+  {
+    "id": "P8-7-GMAIL-ID",
+    "priority": 3,
+    "requiredRevision": "53f9a0f589e866a7c18e66ca1e19588008ad1640",
+    "task": "Verify exact Google message-ID match to connection-owned TEST fixture ledger across Gmail creation/replay/readback/trash/final cleanup; record provider receipts without recreating previously cleaned fixtures",
+    "procedure": "docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "PR #103 must first merge and be deployed; original authorized TEST-only mailbox, existing private run ledger and safe cleanup; no sending or foreign deletion",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "PR #103 code and wrong-ID negative tests passed the former exact-head CI; source was still open/stale during Oct 14 reconciliation. No real provider fixture cycle or deployed #103 proof exists."
   }
 ]
 ```
 <!-- release-acceptance:end -->
+
+### October 14 verified release catch-up checkpoint
+
+GitHub main `66e11f557eea90566af2c0a0d7d364ceaad8b477` includes #107 with final-main CI and release-policy success. Independently READY Vercel production `dpl_6NShNeLfWFgzR7FtU2gDry8iwZMo` runs live `39b0413c378da525a529533456a949c23a8c8dfb` (#104), 11 commits behind main; one scheduled policy run was observed but is not itself provider acceptance. The protected custom connection genuinely returned the approved Rentals mailbox and matching Gmail identity. On that deployment `workflow_search_presence_check` genuinely failed its structured output, already repaired in main by #105 but awaiting future release. A separate read-only search returned live tool metadata; attempted further developer search met `connection_busy_retry_later`. Do not mark comprehensive direct/RTC/Hub or fixture tasks passed. Source-gated tasks remain queued and do not justify an extra manual release.
+
 
 <!-- Current repair also records no-change daily receipts: backups cannot publish later same-day development after a successful no-op. -->
 <!-- Current repair also records no-change daily receipts: backups cannot publish later same-day development after a successful no-op. -->
@@ -1046,7 +1084,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-4 | IN_PROGRESS | #32–#34 | Pass-only RTC manifest/HTTPS routes and DB limit implemented; deployed boundary, two-instance and D-4 acceptance not verified |
 | P8-5 | IN_PROGRESS | #34 | Pinned Hub reference conformance and local gateway tests in CI; full conformance against this service and real D-4 routes still unverified |
 | P8-6 | WAITING (optional reuse) | | Published immutable core and export-specific original-service parity; does not block P8-5, RTC routing or real Hub acceptance |
-| P8-7 | IN_PROGRESS | #40, #42–#43, #46–#48, #101, #102 candidate | Existing fixture/integration workflows and earlier provider fixtures retained. #101 candidate adds exact Gmail-label and Calendar-event app preflight, closes wrong-ID Calendar/Drive-folder false readiness, with read-only permission-filtered provider probes and fake negative tests. #102 candidate independently binds every Calendar TEST fixture ledger readback, recorded replay and deletion tombstone to the exact recorded event ID, rejecting wrong-object success. Exact-head CI/review, deployment, RTC TEST pass, Hub routes and external consents remain separate gates. |
+| P8-7 | IN_PROGRESS | #40, #42–#43, #46–#48, #101–#103 candidate | Existing fixture/integration workflows and earlier provider fixtures retained. #101 candidate adds exact Gmail-label and Calendar-event app preflight, closes wrong-ID Calendar/Drive-folder false readiness, with read-only permission-filtered provider probes and fake negative tests. #102 candidate independently binds every Calendar TEST fixture ledger readback, recorded replay and deletion tombstone to the exact recorded event ID, rejecting wrong-object success. Exact-head CI/review, deployment, RTC TEST pass, Hub routes and external consents remain separate gates. |
 | P8-8 | IN_PROGRESS | #36, #56, #58, #59, #60, #99 candidate | Evidence-aware owner overview (#56), 24 permission-aware console readbacks (#58), accurate incomplete health scans (#59); #60 candidate paginates quick Directory/Alert Center security snapshot with bounded, explicit, fail-closed coverage. #99 implements complete review of the current 50-topic console inventory with categories, bounded pagination and access-aware optional readback hints. Actual complete Google Admin console walk and Hub proof remain open. |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
@@ -1664,3 +1702,12 @@ After the genuine Android custom-service Google deletion/list discrepancy and th
 
 **Repair and proof:** #105 candidate aligns runtime validation with the already declared schema, **allowing null only for exact `WARN` + `readable:false` + `site_verification_scope_unavailable`**, requiring both roots null. PASS/FAIL and other readable/unknown reasons still require proper boolean proof and malformed values fail closed. A fake 403 `insufficientPermissions` is run end-to-end from actual ops handler through `attachStructuredResult`, with success and malformed negative tests. No provider writes, permissions, changes to Site Verification API calls or premature token retirement. Require exact PR-head `test`/`release-policy`, qualified review, merge and final-main checks. **Do not trigger another October 14 release:** the owner-approved catch-up and its per-day receipt are consumed; only the next scheduled checked promotion may deploy #105. A fresh real custom-provider check after that independently READY SHA is still required to certify this fix.
 
+
+
+### P8-7 Gmail fixture exact message-ID lifecycle verification — PR #103 candidate (2026-10-14 Denver)
+
+**Root cause and concrete value:** The Gmail TEST fixture wrapper used the connection-owned durable Google message ID to call messages.get, but accepted any successful body carrying matching run-specific subject, sender, recipient, headers and label, even when Google returned a *different message ID*. This could falsely mark a recorded run verified, allow cleanup planning, accept a wrong-message post-trash readback, or certify full cleanup based on mismatched evidence. This is an independently reproducible violation of the existing exact-ID fixture acceptance requirement, distinct from the Calendar ledger ID correction in #102.
+
+**Implemented behavior:** Every Gmail message used in tagged recovery, recorded reservation replay, fixture readback, cleanup preflight, provider post-trash verification and independent final cleanup confirmation now additionally must return the exact requested/stored Google message ID. Existing label-ID checks, mailbox identity, run headers, user-only TEST gating, owner confirmation, insertion (never send), 404 and recovery semantics remain as before. New negative tests manufacture wrong-ID responses despite identical headers/tags for all these paths and assert no false success, no new insert on uncertain replay, no foreign deletion or label deletion, and no clean-ledger marker.
+
+**Acceptance separation:** Require exact-head `test` and `release-policy`, code review, safe merge, final-main checks. Actual provider acceptance requires a later *checked daily* production release of #103 at independently READY exact SHA, and only previously authorized owned test fixtures without repeating prior destructive tests. Protected short-lived RTC TEST `read_only` pass and full 24-probe catalog, optional Hub direct/relay/Sandbox, account-specific Postmaster/Contacts/Site Verification consents remain not proven. Preserve P7-8 design-before-build and P5-2 November 1 + verified encrypted backfill gates.
