@@ -1,7 +1,14 @@
 name: Daily live policy
 on:
   schedule:
-    - cron: '1 0 * * *' # 00:01 Denver year-round; GitHub may delay.
+    # Primary 00:01 Denver run; secondary off-hour triggers guard against
+    # GitHub's documented dropped/delayed scheduled events. The promotion
+    # script's daily marker and atomic fast-forward allow at most one release.
+    - cron: '1 0 * * *'
+      timezone: America/Denver
+    - cron: '17 0 * * *'
+      timezone: America/Denver
+    - cron: '17 1 * * *'
       timezone: America/Denver
   pull_request:
     types: [opened, synchronize, reopened, edited]
