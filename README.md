@@ -522,8 +522,13 @@ are additional to the historical service-category counts above.
 For a connected app builder, `workspace_dev_check_integration`
 checks requested Google API availability, currently granted OAuth
 scopes, connected service-account client ID and declared delegated
-scopes, plus optional Calendar IDs and Drive folder IDs, without
-changing Google data. It returns observed `ready`, `missing`
+scopes, plus optional Calendar IDs, Gmail labels/messages/threads, exact Drive
+file/folder IDs, individual Tasks/list pairs, Chat space resource names,
+Contacts/People resource names, and Docs/Sheets/Slides/Forms IDs without
+changing Google data. Each resource probe uses the existing scoped account,
+metadata-only reads and exact provider-ID agreement; a mismatch, permission
+denial or unavailable optional API is not declared ready. At most 24 additional
+exact app resources can be probed in one call. It returns observed `ready`, `missing`
 and `not_readable` findings; Admin-console-only permissions remain
 unverified until separately checked. This is a complete read-only
 integration check, not fixture creation/cleanup; all three P8-7 fixture families are now implemented with exact-ID cleanup and crash reconciliation tests. Real Google TEST acceptance and full Hub routes remain open in `docs/plan/TASKS.md`.
