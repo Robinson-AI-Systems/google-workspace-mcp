@@ -28,7 +28,7 @@ const MAILBOX=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const GOOGLE_ID=/^[^\s]{1,256}$/;
 export function validateIntegrationSpec(input={}){
  if(!input||typeof input!=='object'||Array.isArray(input))throw Error('spec must be an object.');
- const fields=['apis','oauthScopes','delegatedScopes','calendars','driveFolders','documents','spreadsheets','presentations','forms'];
+ const fields=['apis','oauthScopes','delegatedScopes','calendars','driveFolders','gmailLabels','documents','spreadsheets','presentations','forms'];
  const out={};
  for(const field of fields){
    const values=input[field]===undefined?(field==='apis'?['gmail','drive','calendar']:[]):input[field];
@@ -37,7 +37,21 @@ export function validateIntegrationSpec(input={}){
  }
  if(out.apis.some(x=>!Object.hasOwn(API_SPECS,x)))throw Error('Unsupported API. Use gmail, drive, calendar, tasks, chat, people or postmaster.');
  if([...out.oauthScopes,...out.delegatedScopes].some(s=>!(['openid','email','profile'].includes(s)||/^https:\/\/www\.googleapis\.com\/auth\/[A-Za-z0-9._/-]+$/.test(s))))throw Error('Scopes must use approved Google auth scope syntax.');
- if([...out.calendars,...out.driveFolders,...out.documents,...out.spreadsheets,...out.presentations,...out.forms].some(x=>!GOOGLE_ID.test(x)))throw Error('Invalid Google resource identifier.');
+ if([...out.calendars,...out.driveFolders,...out.gmailLabels,...out.documents,...out.spreadsheets,...out.presentations,...out.forms].some(x=>!GOOGLE_ID.test(x)))throw Error('Invalid Google resource identifier.');
+ // Calendar event reads require both exact identifiers. Never infer the
+ // calendar from the primary alias or guess an event ID from its summary.
+ const events=input.calendarEvents===undefined?[]:input.calendarEvents;
+ if(!Array.isArray(events)||events.length>MAX_ITEMS||
+    events.some(e=>!e||typeof e!=='object'||Array.isArray(e)||
+      typeof e.calendarId!=='string'||typeof e.eventId!=='string'||
+      !GOOGLE_ID.test(e.calendarId)||!GOOGLE_ID.test(e.eventId)))
+   throw Error('calendarEvents must contain up to 12 {calendarId,eventId} pairs.');
+ const pairs=new Set();
+ out.calendarEvents=[];
+ for(const {calendarId,eventId} of events){
+   const key=JSON.stringify([calendarId,eventId]);
+   if(!pairs.has(key)){pairs.add(key);out.calendarEvents.push({calendarId,eventId});}
+ }
  if(input.serviceAccountClientId!==undefined&&
    (typeof input.serviceAccountClientId!=='string'||!/^[0-9]{10,32}$/.test(input.serviceAccountClientId)))
    throw Error('serviceAccountClientId must be a Google numeric client ID.');
@@ -68,7 +82,14 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
    if(!allowedTool(item.tool,policy)){
      checks.push({kind:'api',name:api,status:'not_readable',reason:'connection_area_excluded'});continue;
    }
-   const info=await observe(api,()=>item.probe(clients),guide(item.url,'Enable '+item.label+' API and verify consent for this mailbox.'));
+   const info=await observe(api,async()=>{
+     const response=await item.probe(clients);
+     // Gmail readiness must be for this exact business mailbox, not a
+     // different Google account whose profile request also returned 200.
+     if(api==='gmail'&&String(response?.data?.emailAddress||'').toLowerCase()!==clients.actingAs.toLowerCase())
+       throw Error('The Gmail profile did not match the acting mailbox.');
+     return response;
+   },guide(item.url,'Enable '+item.label+' API and verify consent for this mailbox.'));
    checks.push({kind:'api',...info});
  }
  if(request.oauthScopes.length){
@@ -107,10 +128,44 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
      if(!allowedTool('calendar_get_event',policy)){
        checks.push({kind:'calendar',name:id,status:'not_readable',reason:'connection_area_excluded'});continue;
      }
-     const value=await observe(id,()=>clients.calendar.calendars.get({calendarId:id}),
+     const value=await observe(id,async()=>{
+       const response=await clients.calendar.calendars.get({calendarId:id});
+       const actual=response?.data?.id;
+       // Google's 'primary' alias resolves to the acting mailbox ID.
+       if(actual!==id&&!(id==='primary'&&actual===clients.actingAs))
+         throw Error('The requested calendar identity was not returned.');
+       return response;
+     },
        guide('https://calendar.google.com','Confirm this calendar is shared with the exact acting mailbox.'));
      checks.push({kind:'calendar',...value});
    }
+ }
+ // Application readiness must check the exact mailbox-local Gmail label, not
+ // merely a successful profile read or a label with the same display name.
+ for(const id of request.gmailLabels){
+   if(!allowedTool('gmail_get_label',policy)){
+     checks.push({kind:'gmail_label',name:id,status:'not_readable',reason:'connection_area_excluded'});continue;
+   }
+   const observed=await observe(id,async()=>{
+     const response=await clients.gmail.users.labels.get({userId:'me',id});
+     if(response?.data?.id!==id)throw Error('The requested Gmail label identity was not returned.');
+     return response;
+   },guide('https://mail.google.com','Check that this label ID belongs to the acting mailbox.'));
+   checks.push({kind:'gmail_label',...observed});
+ }
+ // A calendar list or calendar metadata read cannot prove that an app may
+ // open an exact event. This never creates, modifies or deletes an event.
+ for(const {calendarId,eventId} of request.calendarEvents){
+   const name=calendarId+'/'+eventId;
+   if(!allowedTool('calendar_get_event',policy)){
+     checks.push({kind:'calendar_event',name,status:'not_readable',reason:'connection_area_excluded'});continue;
+   }
+   const observed=await observe(name,async()=>{
+     const response=await clients.calendar.events.get({calendarId,eventId});
+     if(response?.data?.id!==eventId)throw Error('The requested calendar event identity was not returned.');
+     return response;
+   },guide('https://calendar.google.com','Confirm the exact event ID is accessible on this calendar to the acting mailbox.'));
+   checks.push({kind:'calendar_event',...observed});
  }
  // Document-service APIs have no safe general-purpose list probe. Check exact
  // app-owned resources instead: a Drive file listing cannot prove that Docs,
@@ -151,6 +206,7 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
      }
      const item=await observe(id,async()=>{
        const response=await clients.drive.files.get({fileId:id,fields:'id,mimeType,trashed'});
+       if(response?.data?.id!==id)throw Error('The requested Drive folder identity was not returned.');
        if(response?.data?.mimeType!=='application/vnd.google-apps.folder'||response.data.trashed) {
          const e=Error('not a usable folder');e.code=404;throw e;
        }
@@ -167,12 +223,14 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
 }
 export const tools=[{
  name:'workspace_dev_check_integration',
- description:'Verify an app’s Google API access, scopes, calendars, Drive folders and exact Docs, Sheets, Slides or Forms resources without changes.',
+ description:'Verify an app’s Google API access, scopes, exact Gmail labels, Calendar events, calendars, Drive folders and Docs/Sheets/Slides/Forms without changes.',
  inputSchema:{type:'object',properties:{
    spec:{type:'object',description:'Requirements the app needs from the existing Google account.',properties:{
      apis:{type:'array',items:{type:'string',enum:Object.keys(API_SPECS)}},
      oauthScopes:{type:'array',items:{type:'string'}},delegatedScopes:{type:'array',items:{type:'string'}},
      serviceAccountClientId:{type:'string'},calendars:{type:'array',items:{type:'string'}},driveFolders:{type:'array',items:{type:'string'}},
+     gmailLabels:{type:'array',items:{type:'string'}},
+     calendarEvents:{type:'array',maxItems:12,items:{type:'object',required:['calendarId','eventId'],properties:{calendarId:{type:'string'},eventId:{type:'string'}}}},
      documents:{type:'array',items:{type:'string'}},spreadsheets:{type:'array',items:{type:'string'}},
      presentations:{type:'array',items:{type:'string'}},forms:{type:'array',items:{type:'string'}}
    }}
