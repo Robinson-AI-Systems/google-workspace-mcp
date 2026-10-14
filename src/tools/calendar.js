@@ -1,10 +1,12 @@
 import { ok } from './util.js';
+import { inspectCalendarDeletion } from './calendar-deletion.js';
 
 export const tools = [
   { name: 'calendar_list_calendars', description: 'List all calendars this account can see', inputSchema: { type: 'object', properties: {} } },
   { name: 'calendar_get_settings', description: "Get this user's calendar settings (timezone, format, etc)", inputSchema: { type: 'object', properties: {} } },
   { name: 'calendar_create_calendar', description: 'Create a new secondary calendar', inputSchema: { type: 'object', properties: { summary: { type: 'string' }, description: { type: 'string' }, timeZone: { type: 'string' } }, required: ['summary'] } },
   { name: 'calendar_delete_calendar', description: 'Delete a secondary calendar', inputSchema: { type: 'object', properties: { calendarId: { type: 'string' } }, required: ['calendarId'] } },
+  { name: 'calendar_verify_calendar_deletion', description: 'Safely recheck an exact calendar ID after a deletion. Reads the calendar resource and the account list; distinguishes confirmed gone, still listed, and uncertain cleanup. Never changes or deletes anything.', inputSchema: { type: 'object', properties: { calendarId: { type: 'string', minLength: 1 } }, required: ['calendarId'] } },
   { name: 'calendar_share_calendar', description: 'Share a calendar with a user, group, or the whole domain', inputSchema: { type: 'object', properties: { calendarId: { type: 'string' }, scopeType: { type: 'string', enum: ['user', 'group', 'domain', 'default'], default: 'user' }, scopeValue: { type: 'string' }, role: { type: 'string', enum: ['owner', 'writer', 'reader', 'freeBusyReader'], default: 'reader' } }, required: ['calendarId', 'role'] } },
   { name: 'calendar_unshare_calendar', description: 'Remove sharing access from a calendar', inputSchema: { type: 'object', properties: { calendarId: { type: 'string' }, ruleId: { type: 'string' } }, required: ['calendarId', 'ruleId'] } },
   { name: 'calendar_list_acl', description: 'List who a calendar is shared with', inputSchema: { type: 'object', properties: { calendarId: { type: 'string' } }, required: ['calendarId'] } },
@@ -41,6 +43,7 @@ export const handlers = {
     await calendar.calendars.delete({ calendarId: args.calendarId });
     return ok({ deleted: args.calendarId });
   },
+  calendar_verify_calendar_deletion: async (args, clients) => ok(await inspectCalendarDeletion(args, clients)),
   calendar_share_calendar: async (args, { calendar }) => {
     const res = await calendar.acl.insert({ calendarId: args.calendarId, requestBody: { role: args.role, scope: { type: args.scopeType || 'user', value: args.scopeValue } } });
     return ok(res.data);
