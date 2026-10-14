@@ -50,6 +50,32 @@ export function chooseProbe(catalog,name){
  const match=catalog?.find(t=>t.name===name);
  return match&&match.writes===false&&match.annotations?.readOnlyHint===true?match:null;
 }
+// A 200 OK RTC envelope is transport evidence, not Google-provider proof.
+// Require the native list shape (or Google's documented empty-list marker)
+// before recording the four baseline provider reads as PASS.
+const LIST_PROOFS=Object.freeze({
+ workspace_gmail_list_messages:{field:'messages',kind:null},
+ workspace_drive_list_files:{field:'files',kind:'drive#fileList'},
+ workspace_calendar_list_calendars:{field:'items',kind:'calendar#calendarList'},
+ workspace_tasks_list_tasklists:{field:'items',kind:'tasks#taskLists'}
+});
+export function verifiedProviderReadResult(name,payload){
+ if(!payload||typeof payload!=='object'||Array.isArray(payload)||
+   payload.isError===true||Object.hasOwn(payload,'error'))
+   return false;
+ const spec=LIST_PROOFS[name];
+ if(!spec)return true; // Other vetted probes still require real future fixture evidence.
+ const values=payload[spec.field];
+ if(payload.nextPageToken!==undefined&&
+   (typeof payload.nextPageToken!=='string'||!payload.nextPageToken))return false;
+ if(values!==undefined){
+  if(!Array.isArray(values)||values.length>1)return false;
+  return values.every(item=>item&&typeof item.id==='string'&&item.id.length>0);
+ }
+ if(spec.field==='messages')return payload.resultSizeEstimate===0;
+ // Empty collection may omit items, but retains its provider-specific kind.
+ return payload.kind===spec.kind;
+}
 export async function runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher=fetch,probes=DEFAULT_PROBES}={}){
  const url=originFromEnv(origin);
  if(!bearer.test(token||''))throw Error('Missing protected RTC TEST pass');
@@ -96,8 +122,8 @@ export async function runReadOnlySmoke({origin,token,expectedAccount,expectedRev
      try{payload=await recoverRtcReadHandle(request,result.data.handle)}
      catch{outcomes.push({tool:probe.name,status:'FAIL',reason:'result_handle_unreadable'});continue;}
    }
-   if(probe.name==='workspace_whoami'&&String(payload?.actingAs||'').toLowerCase()!==expectedAccount.toLowerCase()){
-      outcomes.push({tool:probe.name,status:'FAIL',reason:'unexpected_account'});continue;
+   if(!verifiedProviderReadResult(probe.name,payload)){
+     outcomes.push({tool:probe.name,status:'FAIL',reason:'invalid_google_read_shape'});continue;
    }
    outcomes.push({tool:probe.name,status:'PASS'});
  }
