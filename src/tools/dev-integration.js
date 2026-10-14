@@ -5,6 +5,7 @@
 import { ok, errorResult } from './util.js';
 import { allowedTool } from '../rtc/catalog.js';
 import { DELEGATED_SCOPES, describeServiceAccount } from '../auth/service-account.js';
+import { normalizeExactAppResources, inspectExactAppResources } from './dev-integration-resources.js';
 
 const API_SPECS=Object.freeze({
  gmail:{tool:'gmail_list_messages',label:'Gmail',url:'https://console.cloud.google.com/apis/library/gmail.googleapis.com',
@@ -56,6 +57,7 @@ export function validateIntegrationSpec(input={}){
    (typeof input.serviceAccountClientId!=='string'||!/^[0-9]{10,32}$/.test(input.serviceAccountClientId)))
    throw Error('serviceAccountClientId must be a Google numeric client ID.');
  out.serviceAccountClientId=input.serviceAccountClientId||null;
+ Object.assign(out, normalizeExactAppResources(input));
  return out;
 }
 const guide=(url,summary)=>({url,steps:[{n:1,action:'Open',target:url},{n:2,action:'Verify',target:summary}],expected:'Confirm in Google Console; no setting changed automatically.'});
@@ -238,6 +240,7 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
      checks.push({kind:'drive_folder',...item});
    }
  }
+ checks.push(...await inspectExactAppResources(request,clients));
  const statuses=checks.map(x=>x.status);
  return {actingAs:clients.actingAs,checkedAt:new Date().toISOString(),
    status:checks.length===0?'not_readable':statuses.includes('missing')?'missing':statuses.includes('not_readable')?'not_readable':'ready',
@@ -246,7 +249,7 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
 }
 export const tools=[{
  name:'workspace_dev_check_integration',
- description:'Verify an app’s Google API access, scopes, exact Gmail labels, Calendar events, calendars, Drive folders and Docs/Sheets/Slides/Forms without changes.',
+ description:'Verify Google API/scopes and exact authorized Gmail, Drive, Calendar, Tasks, Chat, People and Docs/Sheets/Slides/Forms app resource IDs without changes.',
  inputSchema:{type:'object',properties:{
    spec:{type:'object',description:'Requirements the app needs from the existing Google account.',properties:{
      apis:{type:'array',items:{type:'string',enum:Object.keys(API_SPECS)}},
@@ -255,7 +258,15 @@ export const tools=[{
      gmailLabels:{type:'array',items:{type:'string'}},
      calendarEvents:{type:'array',maxItems:12,items:{type:'object',required:['calendarId','eventId'],properties:{calendarId:{type:'string'},eventId:{type:'string'}}}},
      documents:{type:'array',items:{type:'string'}},spreadsheets:{type:'array',items:{type:'string'}},
-     presentations:{type:'array',items:{type:'string'}},forms:{type:'array',items:{type:'string'}}
+     presentations:{type:'array',items:{type:'string'}},forms:{type:'array',items:{type:'string'}},
+     gmailMessages:{type:'array',maxItems:12,items:{type:'string'}},
+     gmailThreads:{type:'array',maxItems:12,items:{type:'string'}},
+     driveFiles:{type:'array',maxItems:12,items:{type:'string'}},
+     taskLists:{type:'array',maxItems:12,items:{type:'string'}},
+     taskItems:{type:'array',maxItems:12,items:{type:'object',required:['tasklistId','taskId'],
+       properties:{tasklistId:{type:'string'},taskId:{type:'string'}}}},
+     chatSpaces:{type:'array',maxItems:12,items:{type:'string'}},
+     contacts:{type:'array',maxItems:12,items:{type:'string'}}
    }}
  },required:['spec']}
 }];
