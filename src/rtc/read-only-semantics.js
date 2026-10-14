@@ -14,7 +14,7 @@ export const READ_ONLY_TOOL_NAMES=new Set([
   'admin_list_roles', 'admin_list_schemas', 'admin_list_tokens', 'admin_list_user_aliases',
   'admin_list_users', 'calendar_get_event', 'calendar_get_freebusy', 'calendar_get_settings',
   'calendar_dev_snapshot', 'calendar_list_acl', 'calendar_list_calendars', 'calendar_list_event_colors', 'calendar_list_event_instances',
-  'calendar_list_events', 'chat_get_space', 'chat_list_members', 'chat_list_messages',
+  'calendar_list_events', 'calendar_verify_calendar_deletion', 'chat_get_space', 'chat_list_members', 'chat_list_messages',
   'chat_list_spaces', 'chrome_list_policy_schemas', 'chrome_resolve_policies', 'contacts_get',
   'contacts_list', 'contacts_list_groups', 'contacts_search', 'datatransfer_get_transfer_status',
   'datatransfer_list_transfers', 'directory_list_people', 'directory_search_people', 'dns_list_records',
