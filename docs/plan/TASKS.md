@@ -75,7 +75,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Separate scoped service authorization and Hub route gates; full production catalog stays independent",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "Existing ledger/card remains authoritative; current live/provider acceptance must be reconciled at session start. Seed revision conservatively includes reviewed current main."
+    "lastEvidence": "2026-10-14: independently READY deployment d0e337e...; custom Google cloud read results and owned result handles observed, but no separate short-lived service-issued RTC TEST pass or direct HTTP/Hub relay/Sandbox/revocation scenario was executed; still PENDING."
   },
   {
     "id": "GOOGLE-DIRECT-READ",
@@ -86,7 +86,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "No fixture writes; original account and connection identity; source/READY deployment independently verified",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-14: READY live #104 39b0413... Vercel dpl_6NSh...; custom whoami exact Gmail match, dev integration observed Gmail/Drive/Calendar/Tasks READY/no writes, Gmail labels and three known Calendar entries read, Drive about returned bounded RTC result, Tasks had one list. These are partial direct custom-service reads, not complete 24 probes, RTC pass/Hub/fixture/denial/revocation acceptance."
+    "lastEvidence": "2026-10-14 20:20Z: READY production dpl_5mxWZyDjSZXtLT73YrKBxRyYpd8x at main=live d0e337e...; custom Google connection actingAs/Gmail matched Appliance Rentals. A 24-call read-only custom-cloud batch returned owner Gmail, Drive, Calendar, Tasks and audit reads (large Drive data via owner-scoped result handles); exact RTC TEST-pass/24-probe HTTP runner, provider-shape checks for each, denial isolation, revocation and Hub routes remain UNPROVEN. No fixtures/writes."
   },
   {
     "id": "P2-7-UNKNOWN",
@@ -96,8 +96,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "docs/plan/TASKS.md",
     "gates": "Read-only; no new OAuth scope, credentials, Google writes or false verification success",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-14: current Vercel READY live 39b0413... still produced 'Schema error: workflow output does not satisfy its advertised structure' on genuine custom call. PR #105 source fix 540bc... is in main but not live; recheck at next checked release including that revision."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-14 20:20Z: independently READY Vercel production dpl_5mxWZyDjSZXtLT73YrKBxRyYpd8x, alias/source d0e337e182d2316853a87d983255745558a3ae47 verified against live/main. Actual custom Robinson Google connection for ops@robinsonappliancerentals.com returned structured WARN/readable:false/site_verification_scope_unavailable and exact null root/www; former schema error gone. Site verification itself remains UNKNOWN due to optional OAuth scope. No write, re-consent or DNS mutation. Does NOT prove optional-scope positive verification."
   },
   {
     "id": "P8-7-GMAIL-ID",
@@ -108,7 +108,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "PR #103 must first merge and be deployed; original authorized TEST-only mailbox, existing private run ledger and safe cleanup; no sending or foreign deletion",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "PR #103 code and wrong-ID negative tests passed the former exact-head CI; source was still open/stale during Oct 14 reconciliation. No real provider fixture cycle or deployed #103 proof exists."
+    "lastEvidence": "2026-10-14: source #103 now included in exact independently READY d0e337e... production, but original connection-owned short-lived TEST pass, IDs, confirmation and fixture cleanup proof are not available here. Do not recreate prior fixtures or claim TEST lifecycle acceptance."
   },
   {
     "id": "P7-2-POLICY-AUDIT",
@@ -119,7 +119,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Super Admin and per-account optional approved policy-read OAuth consent; crossDomain owner authorization for business-limited connection; never claim effective per-domain settings or mutate policy",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-14: 37-source-rule 10-area implementation with real Policy API field contracts and fake tests; no new Google consent or deployed provider results. Requires next checked live revision containing this implementation."
+    "lastEvidence": "2026-10-14: 37-rule/10-area read-only implementation now deployed at verified READY d0e337e..., but genuine customer-wide Cloud Identity Policy API acceptance not exercised: business-limited connection correctly requires explicit crossDomain owner authorization and optional account Super Admin/Policy API grant. No new consent or policy mutation."
   },
   {
     "id": "P8-7-API-SHAPES",
@@ -130,7 +130,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "No Google writes; check each provider individually with its authorized area and account; optional per-account consent for Chat, People or Postmaster",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-14 source #109: seven explicit provider result checks and positive/negative fakes; direct deployed custom 4-API read succeeded before source change, new shape policy awaits checked release, no assertion that optional APIs are granted."
+    "lastEvidence": "2026-10-14 20:20Z: at independently READY deployed d0e337e..., custom workspace_dev_check_integration on Appliance Rentals returned Gmail/Drive/Calendar/Tasks/Chat READY and INBOX label READY; People and Postmaster correctly not_readable (scope_or_access_denied), changesMade:false. Five positive, two properly denied; full seven-API READY acceptance remains pending optional per-account provider permissions."
   },
   {
     "id": "P8-8-OWNER-POLICIES",
@@ -143,7 +143,18 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P7-2-POLICY-AUDIT"
     ],
     "status": "PENDING",
-    "lastEvidence": "October 14 repair: genuine registry wrapper regression consumes the full policy audit with preserved profile/domain/consent guards and final owned result budgets. 1,475 local unit tests passed; deployed Google readback is still PENDING and depends on genuine P7-2 acceptance."
+    "lastEvidence": "2026-10-14 20:20Z: at READY d0e337e..., custom owner overview returned a connection-owned paginated RTC result; business-limited connection without crossDomain:true correctly withheld customer-wide organization/domains/security/licenses/policies as not_readable. Fifty-topic guided console checklist paginated with 24 scope-aware readback suggestions and 26 manual-only entries, no policy verification. Genuine optional Cloud Identity Policy API consent/cross-domain owner authorization still required."
+  },
+  {
+    "id": "P0-2-RTC-HANDLE",
+    "priority": 2,
+    "requiredRevision": "86815fe2d3565d3b9d521a0737755bcef5ed3333",
+    "task": "Verify the fixed strict paged result recovery and real-schema Drive limit arguments through direct deployed RTC read-only TEST pass, including an oversized owned handle and malformed cursor/byte refusal",
+    "procedure": "scripts/smoke-readonly-catalog.mjs; scripts/smoke-readonly.mjs; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "New coherent source PR must merge and reach independently READY checked live; original owner-issued short-lived read_only TEST pass; exact mailbox/revision/areas and zero provider mutations; no legacy plain provider token",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14 source gap reproduced against current handler/RTC contracts: smoke sent ignored pageSize instead of maxResults, and recovered only absent payload field rather than 4 KiB numbered content/next pages. Implementation PR has fake page/byte/cursor negative tests; exact-head Actions, merged main and genuine deployed TEST HTTP acceptance remain separate."
   }
 ]
 ```
@@ -1806,3 +1817,11 @@ The read-only Cloud Identity owner audit gains 16 Google-published fields across
 Reviewed, CI-gated source steps: inherited #103 repairs exact-ID Gmail fixture lifecycle; #108 expands reviewed Cloud Identity controls to 37 rules/10 areas; #109 validates seven real Google API response shapes before marking a developer preflight READY. #110 bridges that live owner policy result into `workspace_admin_overview` with distinct policy, third-party app restriction, Groups sharing and Marketplace visibility. A missing Policy API grant or inherited/partial evidence stays `not_readable`; a demonstrated policy problem remains `needs_attention`. A business-limited owner overview does not call customer-wide policies without explicit crossDomain intent, which is forwarded only as an ephemeral per-child authorization; no persistent account permission changed. Tests cover real-looking policy states, incomplete/malformed data, cross-domain refusal, isolation of client context and owner-read integration. All four separate card/source, CI, deployed HTTPS and real Google/Hub acceptance layers remain distinct; mandatory exact-head checks and review required before merge.
 
 The October 14 live production deployment independently READY at #104 `39b0413c378da525a529533456a949c23a8c8dfb` remains behind main. The native custom Workspace service genuinely confirmed approved account identity, Gmail labels, three calendars, Drive metadata handle, one tasklist and 4/4 API integration reads with no writes; **full direct/RTC/Hub acceptance not certified**. P2-7 Search Presence schema failure on old live remains pending rerun after #105 deploy. Protected TEST Gmail fixture exact-ID proof, seven-API full source-specific recheck, P7-2 policy OAuth, owner policy overview and revocation remain in the JSON release queue with exact min revisions and gates; no manual release authorized. P5-2 token retirement not before November 1 plus every-account encrypted backfill. After finishing all checked merges and final-main CI, use the concise prompt format in IMPLEMENTER.md and recompute next PR boundary. Do not pad numeric targets.
+
+### October 14 P0-2 RTC read-only smoke correction — implementation handoff
+
+**Verified release/previous acceptance:** main=live `d0e337e182d2316853a87d983255745558a3ae47` (#113), push CI successful and Vercel production `dpl_5mxWZyDjSZXtLT73YrKBxRyYpd8x` independently READY at that same source with all three aliases. Custom cloud identity matched the approved Rentals Gmail account. Genuine Search Presence missing-scope typed WARN/UNKNOWN path is now PASSED; full verification is unknown. Seven-API app preflight read Gmail/Drive/Calendar/Tasks/Chat READY, People/Postmaster not_readable due to scope; no writes. Owner overview returned an isolated paginated handle and refused business-limited customer-wide reads as intended. The 24 safe read-only custom-cloud calls returned successfully, but do not constitute separately scoped RTC TEST pass/conformance/Hub proof.
+
+**Demonstrated source correctness gap and finite repair:** scripts/smoke-readonly.mjs and smoke-readonly-catalog.mjs sent Drive `pageSize` to tools that actually accept `maxResults`; list_starred does not offer either limiter. The RTC read-only smoke then expected a non-existent `result.payload` for >8 KiB owned results, whereas the real result door returns numbered, 4 KiB UTF-8 `content` pages. This would fail a successful real HTTP smoke. The source change requests the supported limits, retrieves every page under bounded byte/page caps, verifies handle/cursor/byte count and rejects incomplete/mismatched pages. Tests replace the permissive old fake with authentic multi-page result shapes and negative cursor/size/unreadable scenarios. Complete changes and affected tests require exact-head CI, review and safe merge; source/CI alone do not prove live RTC TEST behavior.
+
+**Acceptance queue:** the single marked JSON queue above records Search Presence scenario PASSED, partial seven-API read evidence, unresolved owner Policy API consent and restricted overview; the new P0-2 handle-proof task stays PENDING until a future checked READY release includes the reviewed source and an original-owner short-lived RTC TEST pass safely runs the HTTP acceptance. Preserve connection/run-scoped Drive/Calendar/Gmail fixture ledgers, original exact IDs and revocation gates. No manual release or extra OAuth consent authorized. P7-8 bulk/cross-domain work still requires its design/owner review before implementation; P5-2 plaintext token retirement remains gated by November 1 AND verified encryption/backfill on every account. Resume the highest-priority eligible approved outcome with the repository's standard cadence, no filler/document-only PRs.

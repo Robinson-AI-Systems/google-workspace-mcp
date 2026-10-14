@@ -59,6 +59,11 @@ describe('P0-2 complete authorized catalog inventory and vetted reads',()=>{
   const invoked=f.calls.filter(c=>c.method==='POST').map(c=>c.path.slice('/api/tools/'.length));
   expect(invoked.every(t=>SAFE_READ_PROBES.some(p=>p.name===t))).toBe(true);
   expect(invoked).not.toContain('workspace_call');
+  // Match the actual handler schemas, not an ignored Google pageSize option.
+  for(const name of ['workspace_drive_list_files','workspace_drive_list_recent_files','workspace_drive_list_trash']){
+   expect(f.calls.find(c=>c.path==='/api/tools/'+name)?.body).toEqual({maxResults:1});
+  }
+  expect(f.calls.find(c=>c.path==='/api/tools/workspace_drive_list_starred')?.body).toEqual({});
   expect(f.calls.every(c=>JSON.stringify(c).includes(token)===false)).toBe(true);
  });
  it('handles more than one complete page and records every result exactly once',async()=>{

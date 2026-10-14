@@ -3,11 +3,44 @@
 const DEFAULT_PROBES=[
  {name:'workspace_whoami',area:'workspace',args:{}},
  {name:'workspace_gmail_list_messages',area:'mail',args:{maxResults:1}},
- {name:'workspace_drive_list_files',area:'files',args:{pageSize:1}},
+ {name:'workspace_drive_list_files',area:'files',args:{maxResults:1}},
  {name:'workspace_calendar_list_calendars',area:'calendar',args:{maxResults:1}},
  {name:'workspace_tasks_list_tasklists',area:'tasks',args:{maxResults:1}}
 ];
 const bearer=/^rtc_pass_[A-Za-z0-9_-]{43}$/;
+// Stored RTC results larger than 8 KiB are always delivered in 4 KiB
+// UTF-8 pages. A successful page-one response is not a complete result.
+const HANDLE=/^rtc_result_[A-Za-z0-9_-]{32}$/;
+const MAX_RESULT_BYTES=1024*1024;
+const MAX_RESULT_PAGES=256;
+export async function recoverRtcReadHandle(request,handle){
+ if(!HANDLE.test(handle))throw Error('invalid_result_handle');
+ let bytes=null,pages=null,readBytes=0;
+ const chunks=[];
+ for(let page=1;page<=MAX_RESULT_PAGES;page++){
+   const response=await request('/api/results/'+encodeURIComponent(handle)+'?page='+page);
+   const part=response?.data?.result;
+   if(response?.status!==200||response.data?.ok!==true||!part||
+      part.handle!==handle||part.page!==page||
+      !Number.isSafeInteger(part.pages)||part.pages<1||part.pages>MAX_RESULT_PAGES||
+      !Number.isSafeInteger(part.bytes)||part.bytes<1||part.bytes>MAX_RESULT_BYTES||
+      (pages!==null&&(pages!==part.pages||bytes!==part.bytes))||
+      typeof part.content!=='string'||!part.content.length||
+      Buffer.byteLength(part.content,'utf8')>4096||
+      part.next!==(page===part.pages?null:page+1))
+     throw Error('invalid_result_page');
+   if(pages===null){pages=part.pages;bytes=part.bytes;}
+   chunks.push(part.content);
+   readBytes+=Buffer.byteLength(part.content,'utf8');
+   if(readBytes>bytes)throw Error('result_size_mismatch');
+   if(part.next===null){
+     if(readBytes!==bytes)throw Error('result_size_mismatch');
+     const full=chunks.join('');
+     try{return JSON.parse(full)}catch{return full}
+   }
+ }
+ throw Error('result_page_limit');
+}
 export function originFromEnv(value){
  const u=new URL(value);
  if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.port)throw Error('An exact HTTPS origin is required.');
@@ -60,11 +93,8 @@ export async function runReadOnlySmoke({origin,token,expectedAccount,expectedRev
    }
    let payload=result.data.result;
    if(result.data.handle){
-     const recovered=await request('/api/results/'+encodeURIComponent(result.data.handle));
-     if(recovered.status!==200||recovered.data?.ok!==true||!recovered.data.result?.payload){
-       outcomes.push({tool:probe.name,status:'FAIL',reason:'result_handle_unreadable'});continue;
-     }
-     try{payload=JSON.parse(recovered.data.result.payload)}catch{payload=recovered.data.result.payload}
+     try{payload=await recoverRtcReadHandle(request,result.data.handle)}
+     catch{outcomes.push({tool:probe.name,status:'FAIL',reason:'result_handle_unreadable'});continue;}
    }
    if(probe.name==='workspace_whoami'&&String(payload?.actingAs||'').toLowerCase()!==expectedAccount.toLowerCase()){
       outcomes.push({tool:probe.name,status:'FAIL',reason:'unexpected_account'});continue;
