@@ -68,6 +68,17 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "PR #103 code and wrong-ID negative tests passed the former exact-head CI; source was still open/stale during Oct 14 reconciliation. No real provider fixture cycle or deployed #103 proof exists."
+  },
+  {
+    "id": "P7-2-POLICY-AUDIT",
+    "priority": 4,
+    "requiredRevision": "05520408e58c8e5f350076e026ec16e782ae212a",
+    "task": "Run the expanded read-only ten-area Cloud Identity Policy baseline against owner-authorized Workspace accounts; verify mismatches, missing-policy UNKNOWN and per-area coverage from actual Google",
+    "procedure": "docs/plan/TASKS.md",
+    "gates": "Super Admin and per-account optional approved policy-read OAuth consent; crossDomain owner authorization for business-limited connection; never claim effective per-domain settings or mutate policy",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14: 37-source-rule 10-area implementation with real Policy API field contracts and fake tests; no new Google consent or deployed provider results. Requires next checked live revision containing this implementation."
   }
 ]
 ```
@@ -1071,7 +1082,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P5-4 | DONE (automated) | #50 | Generated 370-name catalog, clean-regeneration and drift tests, version 2.0.0 and changelog; exact-head `test` + `release-policy` passed then #50 merged. No production/Google provider deployment acceptance asserted. |
 | P6-1 | IN_REVIEW | #25 | `admin_update_group_settings` now sets 16 more settings (reply-to, customReplyTo, message and spam moderation, who moderates content and members, who can contact the owners and discover the group, web posting, post-as-group, collaborative inbox, address-book listing, rejection notice and text, footer and text), with the allowed values checked against Google's reference on 2026-10-02. Values are checked before anything is read or changed, in a preview too, and a bad one is refused with the allowed list. Needs `confirm` for the old outsider/internet cases plus `messageModerationLevel: MODERATE_NONE` and `spamModerationLevel: ALLOW`. Read-back checks every setting asked for. Deviations: `showInGroupDirectory` left out (Google marks it deprecated); a choice may be typed in any letter case; the original six fields are still passed through unchecked, exactly as before. Manual check still to do: it changes a real group |
 | P7-1 | IN_REVIEW | | Six tools: `drive_list_shared_drives`, `drive_get_shared_drive`, `drive_create_shared_drive`, `drive_update_shared_drive` (rename, hide/show, five restrictions; turning a restriction off needs `confirm`), `drive_delete_shared_drive` (`confirm`; never deletes files inside) and `drive_update_permission` (changes a member's role; `organizer` needs `confirm`). Members are added, listed and removed with the existing sharing tools using the drive id. Every existing file tool now passes `supportsAllDrives`, and `drive_list_files`/`drive_search_files` take a `driveId`. 36 tests. `asAdmin` lets an administrator see or change drives they are not in. Manual check deferred: create a test shared drive, add a member, read it back, delete it
-| P7-2 | IN_PROGRESS | #53, #54 | Customer-wide read-only list and 21-rule baseline audit; #54 exact-head CI green and merged, confirmed mismatch remains visible under partial evidence. No effective per-domain computation or real Google provider proof. |
+| P7-2 | IN_PROGRESS | #53, #54, #108 candidate | #108 extends the documented owner-editable baseline to 37 explicit checks across 10 Policy API areas with per-area coverage; true per-domain effective policies, Super Admin consent and live proof remain open. |
 | P7-3 | DONE (automated) | #51 | Read-only, allowlisted Reports activities, capped queries, paging and date validation; exact-head required checks green and #51 merged. Actual provider/plan authorization not yet proved. |
 | P7-4 | DONE (automated) | #52 | Postmaster v1 read-only domain and delivery metrics with scope isolation; exact-head `test` and `release-policy` successful and #52 merged. Owner-authorized per-account re-consent, Postmaster domain verification and live readback remain unverified. |
 | P7-5 | DONE | #61 | All stated unit acceptance passed: reviewed reversible families, irreversible refusals and undo-of-undo. Merged after exact-head test/release-policy. Real Google undo remains separate unverified provider evidence. |
@@ -1711,3 +1722,10 @@ After the genuine Android custom-service Google deletion/list discrepancy and th
 **Implemented behavior:** Every Gmail message used in tagged recovery, recorded reservation replay, fixture readback, cleanup preflight, provider post-trash verification and independent final cleanup confirmation now additionally must return the exact requested/stored Google message ID. Existing label-ID checks, mailbox identity, run headers, user-only TEST gating, owner confirmation, insertion (never send), 404 and recovery semantics remain as before. New negative tests manufacture wrong-ID responses despite identical headers/tags for all these paths and assert no false success, no new insert on uncertain replay, no foreign deletion or label deletion, and no clean-ledger marker.
 
 **Acceptance separation:** Require exact-head `test` and `release-policy`, code review, safe merge, final-main checks. Actual provider acceptance requires a later *checked daily* production release of #103 at independently READY exact SHA, and only previously authorized owned test fixtures without repeating prior destructive tests. Protected short-lived RTC TEST `read_only` pass and full 24-probe catalog, optional Hub direct/relay/Sandbox, account-specific Postmaster/Contacts/Site Verification consents remain not proven. Preserve P7-8 design-before-build and P5-2 November 1 + verified encrypted backfill gates.
+
+
+### P7-2 completed API controls, Groups and Marketplace baseline coverage — PR #108 candidate (2026-10-14)
+
+The read-only Cloud Identity owner audit gains 16 Google-published fields across API controls, Groups for Business, Marketplace, sharing, Chat, Meet and device security, extending 21 to 37 documented owner-editable rules in ten areas. `coverageByArea` lists explicit matches, known problems and unknown/inherited observations separately; unknown or partially paginated provider results do not become compliant. Automated tests cover API-contract fields, three specific owner risks, ten-area counts and zero upstream calls when restricted cross-domain authorization is absent. The values are policy review targets, not universal mandatory choices, and no policy is changed. Verified provider contract: https://docs.cloud.google.com/identity/docs/concepts/supported-policy-api-settings .
+
+**Outstanding:** exact-head application/DB/RTC CI, review, safe merge and merged-main checks, then future independently READY checked live promotion and authentic optional-Super-Admin consent + Cloud Identity readback. P7-2 still has no true reduced/effective per-domain outcome (Google Policy API lists explicit customer/OU/group policies); never confuse it with the separate Google Cloud Organization Policy API. No new scopes, live release, fixture writes, owner costs or extra credentials. Current partial custom read-only Gmail/Drive/Calendar/Tasks proof and #105 pending Search Presence provider fix remain separately queued.
