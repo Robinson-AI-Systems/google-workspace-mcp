@@ -167,5 +167,133 @@
     "expected": "STRONG",
     "label": "Require strong passwords",
     "consoleQuery": "password policy"
+  },
+  {
+    "area": "api_controls",
+    "type": "settings/api_controls.unconfigured_third_party_apps",
+    "field": "access_level",
+    "expected": "BLOCK_ALL",
+    "label": "Review unapproved third-party app access",
+    "consoleQuery": "API controls unconfigured third-party apps"
+  },
+  {
+    "area": "api_controls",
+    "type": "settings/api_controls.internal_apps",
+    "field": "trust_internal_apps",
+    "expected": false,
+    "label": "Review automatic trust of internal OAuth apps",
+    "consoleQuery": "API controls internal apps"
+  },
+  {
+    "area": "api_controls",
+    "type": "settings/api_controls.app_approval_requests",
+    "field": "allowed_for_all",
+    "expected": "ENABLED",
+    "label": "Allow governed user app approval requests",
+    "consoleQuery": "API controls app approval requests"
+  },
+  {
+    "area": "groups_for_business",
+    "type": "settings/groups_for_business.groups_sharing",
+    "field": "collaborationCapability",
+    "expected": "DOMAIN_USERS_ONLY",
+    "label": "Review broad public access to groups",
+    "consoleQuery": "groups for business sharing"
+  },
+  {
+    "area": "groups_for_business",
+    "type": "settings/groups_for_business.groups_sharing",
+    "field": "ownersCanAllowExternalMembers",
+    "expected": false,
+    "label": "Review external group membership",
+    "consoleQuery": "groups for business sharing"
+  },
+  {
+    "area": "groups_for_business",
+    "type": "settings/groups_for_business.groups_sharing",
+    "field": "ownersCanAllowIncomingMailFromPublic",
+    "expected": false,
+    "label": "Review public email posting into groups",
+    "consoleQuery": "groups for business sharing"
+  },
+  {
+    "area": "groups_for_business",
+    "type": "settings/groups_for_business.groups_sharing",
+    "field": "createGroupsAccessLevel",
+    "expected": "USERS_IN_DOMAIN",
+    "label": "Review who may create groups",
+    "consoleQuery": "groups for business sharing"
+  },
+  {
+    "area": "groups_for_business",
+    "type": "settings/groups_for_business.groups_sharing",
+    "field": "viewTopicsDefaultAccessLevel",
+    "expected": "DOMAIN_USERS",
+    "label": "Review default conversation visibility",
+    "consoleQuery": "groups for business sharing"
+  },
+  {
+    "area": "workspace_marketplace",
+    "type": "settings/workspace_marketplace.apps_access_options",
+    "field": "access_level",
+    "expected": "ALLOW_LISTED_APPS",
+    "label": "Review unrestricted Marketplace app installs",
+    "consoleQuery": "marketplace app access options"
+  },
+  {
+    "area": "calendar",
+    "type": "settings/calendar.primary_calendar_max_allowed_external_sharing",
+    "field": "max_allowed_external_sharing",
+    "expected": "EXTERNAL_FREE_BUSY_ONLY",
+    "label": "Review primary calendar external visibility",
+    "consoleQuery": "calendar external sharing"
+  },
+  {
+    "area": "calendar",
+    "type": "settings/calendar.secondary_calendar_max_allowed_external_sharing",
+    "field": "max_allowed_external_sharing",
+    "expected": "EXTERNAL_FREE_BUSY_ONLY",
+    "label": "Review secondary calendar external visibility",
+    "consoleQuery": "calendar external sharing"
+  },
+  {
+    "area": "chat",
+    "type": "settings/chat.chat_file_sharing",
+    "field": "external_file_sharing",
+    "expected": "NO_FILES",
+    "label": "Review external Chat file transfers",
+    "consoleQuery": "chat external file sharing"
+  },
+  {
+    "area": "chat",
+    "type": "settings/chat.external_chat_restriction",
+    "field": "allow_external_chat",
+    "expected": false,
+    "label": "Review communication with external Chat accounts",
+    "consoleQuery": "chat external chat restriction"
+  },
+  {
+    "area": "chat",
+    "type": "settings/chat.space_access_default",
+    "field": "access_type",
+    "expected": "RESTRICTED",
+    "label": "Review default visibility of new Chat spaces",
+    "consoleQuery": "chat space access"
+  },
+  {
+    "area": "meet",
+    "type": "settings/meet.safety_domain",
+    "field": "users_allowed_to_join",
+    "expected": "LOGGED_IN",
+    "label": "Review who can join hosted Meet calls",
+    "consoleQuery": "meet safety domain"
+  },
+  {
+    "area": "devices",
+    "type": "settings/devices.activation_approval",
+    "field": "admin_approval_required",
+    "expected": true,
+    "label": "Review new managed-device activation approvals",
+    "consoleQuery": "device approvals"
   }
 ]
