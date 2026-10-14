@@ -2,6 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {registry} from '../../src/tools/index.js';
 import {OUTPUT_SCHEMAS,attachStructuredResult} from '../../src/rtc/structured.js';
 import {ok} from '../../src/tools/util.js';
+import {handlers as opsHandlers} from '../../src/tools/ops.js';
 import {makeFakeClients} from '../helpers/fake-google.js';
 import {listedTools} from '../../src/rtc/catalog.js';
 const targets=Object.keys(OUTPUT_SCHEMAS);
@@ -52,5 +53,49 @@ describe('P8-1 typed MCP workflow outputs',()=>{
  it('preserves read-only workflow error responses without fabricated readiness',()=>{
    const invalid=attachStructuredResult('workspace_dev_check_integration',{...ok({status:'ready'}),isError:true});
    expect(invalid.structuredContent).toBeUndefined();
+ });
+});
+
+describe('P2-7 Site Verification scope-denial typed output regression',()=>{
+ const name='workflow_search_presence_check';
+ const base={domain:'example.test',status:'WARN',readable:false,reason:'site_verification_scope_unavailable',
+   verified:{root:{name:'example.test',verified:null},www:{name:'www.example.test',verified:null}},
+   searchConsole:'Check manually in Search Console.',businessProfile:'Check Business Profile separately.',
+   note:'Unknown, no DNS changes'};
+ it('accepts exact Google insufficientPermissions as UNKNOWN through the advertised structured response',async()=>{
+   const clients={siteVerification:{webResource:{list:async()=>{
+     const error=Error('Request had insufficient authentication scopes');
+     error.response={status:403,data:{error:{errors:[{reason:'insufficientPermissions'}]}}};
+     throw error;
+   }}}};
+   const actual=await opsHandlers.workflow_search_presence_check({domain:'https://www.Example.test/'},clients);
+   const attached=attachStructuredResult(name,actual);
+   expect(attached.isError).not.toBe(true);
+   expect(attached.structuredContent).toMatchObject({
+     domain:'example.test',readable:false,status:'WARN',reason:'site_verification_scope_unavailable',
+     verified:{root:{verified:null},www:{verified:null}}
+   });
+   expect(attached.structuredContent.searchConsole).toContain('search.google.com');
+   expect(attached.structuredContent.note).toContain('UNKNOWN');
+ });
+ it('keeps a provider-verified boolean result readable and unchanged',()=>{
+   const success={...base,readable:true,status:'PASS',reason:undefined,
+     verified:{root:{name:'example.test',verified:true},www:{name:'www.example.test',verified:true}}};
+   const attached=attachStructuredResult(name,ok(success));
+   expect(attached.isError).not.toBe(true);
+   expect(attached.structuredContent.verified.root.verified).toBe(true);
+ });
+ it('refuses null proof for a FAIL/PASS or purported readable response',()=>{
+   for(const invalid of [
+     {...base,status:'FAIL'},
+     {...base,status:'PASS'},
+     {...base,readable:true},
+     {...base,reason:'unrelated_google_error'},
+     {...base,verified:{...base.verified,root:{name:'example.test',verified:true}}}
+   ]){
+     const result=attachStructuredResult(name,ok(invalid));
+     expect(result.isError).toBe(true);
+     expect(result.structuredContent).toBeUndefined();
+   }
  });
 });
