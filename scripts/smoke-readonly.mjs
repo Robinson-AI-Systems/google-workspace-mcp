@@ -1,4 +1,5 @@
-import { verifiedProviderReadResult } from './smoke-provider-shapes.mjs';
+import { verifiedProviderReadResult, INTERNAL_READ_PROOFS } from './smoke-provider-shapes.mjs';
+export { verifiedProviderReadResult } from './smoke-provider-shapes.mjs';
 // P0-2: explicit, non-production, read-only Google API acceptance probes.
 // No provider data or pass text is printed. No production connection is allowed.
 const DEFAULT_PROBES=[
@@ -100,7 +101,7 @@ export async function runReadOnlySmoke({origin,token,expectedAccount,expectedRev
    if(!verifiedProviderReadResult(probe.name,payload,expectedAccount)){
      outcomes.push({tool:probe.name,status:'FAIL',reason:'invalid_google_read_shape'});continue;
    }
-   outcomes.push({tool:probe.name,status:'PASS',proof:'provider_shape'});
+   outcomes.push({tool:probe.name,status:'PASS',proof:INTERNAL_READ_PROOFS.has(probe.name)?'service_shape':'provider_shape'});
  }
  const required=outcomes.find(x=>x.tool==='workspace_whoami');
  return {ok:required?.status==='PASS'&&outcomes.every(x=>x.status!=='FAIL'),outcomes};
