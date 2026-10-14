@@ -1,3 +1,11 @@
+<!-- Current repair also records no-change daily receipts: backups cannot publish later same-day development after a successful no-op. -->
+<!-- Current repair also records no-change daily receipts: backups cannot publish later same-day development after a successful no-op. -->
+## October 14 owner-requested daily release recovery repair — current
+
+Owner request on October 14: investigate and repair missed daily releases across the MCP repositories and Appliance Desk, including the quoted owner-run checked recovery. This supersedes the prior scheduled-only/no-new-trigger restriction for missed-event recovery only. Primary 00:01 Denver remains; retries are 00:17, 01:17 and 05:37 Denver plus 12:43 UTC. Explicit recovery defaults OFF and requires both the original actor and the triggering actor to be christcr2012, main, true recovery input and elapsed midnight. Every path retains successful exact-main CI, ancestry, atomic once-per-Denver-day receipt and independent readback. No production-provider activation, spending, force push or preview build is authorized.
+
+Local release safety tests pass. Merge requires exact-head application CI and review resolution. Source repair is separate from observed schedule execution and Vercel READY/alias proof; inspect actual daily run and receipt, do not equate main/live drift after a release with failure. These infrastructure PRs do not replace the existing substantive implementation batch.
+
 ## P7-3: Complete legacy audit-log pagination without breaking existing callers — 2026-10-13 (#86 candidate)
 
 The six older Reports activity aliases returned only Google's first audit page; they discarded `nextPageToken`, leaving agents unable to follow large histories through those familiar tool names. This change keeps the existing array response by default while offering explicit `withPageInfo:true` to return `{application, activities, nextPageToken}`; optional `pageToken` and `endTime` are forwarded through the already approved bounded/date-validated Reports read-only selector. Invalid arguments or malformed pagination responses fail closed before claiming a complete history. New unit tests cover every alias, default compatibility, page continuation, range validation and malformed provider data.
