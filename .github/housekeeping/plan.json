@@ -819,6 +819,33 @@
         55
       ],
       "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+    },
+    {
+      "name": "ai/codex/calendar-deletion-verification",
+      "sha": "ce3654888996952018a6b4e293e97ff97804ef13",
+      "disposition": "merged",
+      "prs": [
+        94
+      ],
+      "reason": "Verified merged PR; preserve exact source history including squash-merged tips."
+    },
+    {
+      "name": "ai/codex/calendar-readonly-cleanup-verifier",
+      "sha": "7cbc3f50ebc001b7857d9b2f165d8b2787eaefc8",
+      "disposition": "merged",
+      "prs": [
+        95
+      ],
+      "reason": "Verified merged PR; preserve exact source history including squash-merged tips."
+    },
+    {
+      "name": "ai/codex/mobile-native-connection",
+      "sha": "8325219a60458c348ff15f8a573d97cebbdf006e",
+      "disposition": "merged",
+      "prs": [
+        93
+      ],
+      "reason": "Verified merged PR; preserve exact source history including squash-merged tips."
     }
   ]
 }
