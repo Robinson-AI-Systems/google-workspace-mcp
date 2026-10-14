@@ -8,8 +8,10 @@ const subj=(id,k)=>'RTC '+id+' '+k+' integration fixture';
 const headers=(m,k)=>(m?.payload?.headers||[]).find(x=>String(x.name).toLowerCase()===k.toLowerCase())?.value;
 const readMsg=(c,id)=>c.gmail.users.messages.get({userId:'me',id,format:'metadata',metadataHeaders:['Subject','From','To','X-RTC-Run','X-RTC-Kind']}).then(r=>r.data);
 const readLabel=(c,id)=>c.gmail.users.labels.get({userId:'me',id}).then(r=>r.data);
-function checkMessage(m,run,kind,owner,label,{cleanup=false}={}){
- if(!m||!m.id||headers(m,'Subject')!==subj(run,kind)||headers(m,'X-RTC-Run')!==run||
+function checkMessage(m,run,kind,owner,label,{cleanup=false,expectedId=null}={}){
+ if(!m||typeof m.id!=='string'||!m.id||
+  (expectedId!==null&&m.id!==expectedId)||
+  headers(m,'Subject')!==subj(run,kind)||headers(m,'X-RTC-Run')!==run||
   headers(m,'X-RTC-Kind')!==kind||String(headers(m,'From')).toLowerCase()!==owner.actingAs||
   String(headers(m,'To')).toLowerCase()!==owner.actingAs||!Array.isArray(m.labelIds)||
   (!cleanup&&!m.labelIds.includes(label)))throw Error('Gmail message ID, run headers, ownership or label mismatch.');
@@ -36,7 +38,7 @@ async function recoverMessage(c,id,kind,owner,label){
  const found=[];
  for(const item of page?.messages||[]){
   const m=await readMsg(c,item.id);
-  try{checkMessage(m,id,kind,owner,label);found.push(m.id);}catch{}
+  try{checkMessage(m,id,kind,owner,label,{expectedId:item.id});found.push(m.id);}catch{}
  }
  if(found.length!==1)throw Error('Uncertain '+kind+' has '+found.length+' exact run matches; cannot recreate.');
  return found[0];
@@ -56,7 +58,7 @@ export async function createGmailFixtures(args,c,owner){
     const row=(await getDevRun({runId:id,...owner})).objects.find(x=>x.kind===kind&&x.google_id===step.google_id);
     if(!row||row.parent_id!==(kind==='label'?null:label))throw Error('Recorded Gmail ID has wrong immutable parent.');
     if(kind==='label')checkLabel(await readLabel(c,row.google_id),id,row.google_id);
-    else checkMessage(await readMsg(c,row.google_id),id,kind,owner,label);
+    else checkMessage(await readMsg(c,row.google_id),id,kind,owner,label,{expectedId:row.google_id});
     googleId=row.google_id;
    }else if(!step.created){
     googleId=kind==='label'?await recoverLabel(c,id):await recoverMessage(c,id,kind,owner,label);
@@ -99,7 +101,7 @@ async function inspect(run,c,owner,cleanup=false){
   const row=by[kind];
   if(row.parent_id!==label.google_id)throw Error('Incorrect Gmail message parent.');
   const m=await readMsg(c,row.google_id);
-  checkMessage(m,run.id,kind,owner,label.google_id,{cleanup});
+  checkMessage(m,run.id,kind,owner,label.google_id,{cleanup,expectedId:row.google_id});
   if(!cleanup&&!m.labelIds.includes(label.google_id))throw Error('Gmail run label was removed from fixture.');
   messages.push({kind,id:row.google_id,trashed:m.labelIds.includes('TRASH'),cleaned:!!row.cleaned_at});
  }
@@ -123,7 +125,7 @@ export async function trashGmailFixtures(run,c,owner){
   try{
    if(!m.trashed)await c.gmail.users.messages.trash({userId:'me',id:m.id});
    const data=await readMsg(c,m.id);
-   checkMessage(data,run.id,m.kind,owner,x.label.id,{cleanup:true});
+   checkMessage(data,run.id,m.kind,owner,x.label.id,{cleanup:true,expectedId:m.id});
    if(!data.labelIds.includes('TRASH'))throw Error('Provider did not confirm trash.');
    await markDevObjectCleaned({runId:run.id,...owner,kind:m.kind,googleId:m.id});
    completed.push({kind:m.kind,id:m.id,trashed:true});
@@ -149,7 +151,7 @@ export async function confirmGmailCleaned(run,c,owner){
  for(const kind of ['message1','message2']){
   try{
    const m=await readMsg(c,by[kind].google_id);
-   checkMessage(m,run.id,kind,owner,by.label.google_id,{cleanup:true});
+   checkMessage(m,run.id,kind,owner,by.label.google_id,{cleanup:true,expectedId:by[kind].google_id});
    good&&=m.labelIds.includes('TRASH')&&!!by[kind].cleaned_at;
   }catch{good=false;}
  }
