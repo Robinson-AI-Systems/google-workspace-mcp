@@ -188,7 +188,7 @@ const searchPresence = async (args, { siteVerification }) => {
     return ok({
       domain,status:'WARN',readable:false,reason:'site_verification_scope_unavailable',
       verified:{root:{name:domain,verified:null},www:{name:'www.'+domain,verified:null}},
-      searchConsole:'The connected Google account cannot read Site Verification. Open https://search.google.com/search-console while signed in as the intended owner to check existing verified properties. If desired, separately reconnect this account with the already approved read-only Site Verification permission. Do not add or change DNS records based on this unknown result.',
+      searchConsole:'The connected Google account cannot read Site Verification. Open https://search.google.com/search-console while signed in as the intended owner to check existing verified properties. If the owner approves Site Verification read access, reconnect this Google account through its normal OAuth consent process; this check cannot grant that permission. Do not add or change DNS records based on this unknown result.',
       businessProfile:'Google Business Profile is separate. Open https://business.google.com while signed in as the account that should own the listing; inspect or claim the business there.',
       note:'Verification status is UNKNOWN, not failed. This is a Google account permission limitation; no DNS, Search Console or Business Profile settings were changed.'
     });
