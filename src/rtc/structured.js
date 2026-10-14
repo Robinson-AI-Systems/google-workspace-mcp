@@ -26,9 +26,9 @@ const lifecycle={type:'object',properties:{done:{type:'boolean'},summary:string,
 export const OUTPUT_SCHEMAS=Object.freeze({
  ...Object.fromEntries([...WRITE_WORKFLOWS].map(name=>[name,lifecycle])),
  workflow_search_presence_check:{
-  type:'object',properties:{domain:string,status:{type:'string',enum:['PASS','WARN','FAIL']},
-   verified:{type:'object',properties:{root:{type:'object',properties:{name:string,verified:{type:'boolean'}},required:['name','verified']},
-    www:{type:'object',properties:{name:string,verified:{type:'boolean'}},required:['name','verified']}},required:['root','www']},
+  type:'object',properties:{domain:string,status:{type:'string',enum:['PASS','WARN','FAIL']},readable:{type:'boolean'},reason:string,
+   verified:{type:'object',properties:{root:{type:'object',properties:{name:string,verified:{type:['boolean','null']}},required:['name','verified']},
+    www:{type:'object',properties:{name:string,verified:{type:['boolean','null']}},required:['name','verified']}},required:['root','www']},
    searchConsole:string,businessProfile:string,note:string},
   anyOf:[{required:['domain','status','verified','searchConsole','businessProfile','note']},handle],additionalProperties:true
  },
@@ -100,10 +100,20 @@ export function matchesStructuredShape(name,value){
    return /^rtc_result_[A-Za-z0-9_-]{32}$/.test(value.handle)&&
      Number.isFinite(value.bytes)&&Number.isFinite(value.count)&&typeof value.summary==='string';
  switch(name){
- case 'workflow_search_presence_check':
-   return typeof value.domain==='string'&&value.domain.length>0&&['PASS','WARN','FAIL'].includes(value.status)&&
-    ['root','www'].every(k=>value.verified?.[k]&&typeof value.verified[k].name==='string'&&typeof value.verified[k].verified==='boolean')&&
-    ['searchConsole','businessProfile','note'].every(k=>typeof value[k]==='string');
+ case 'workflow_search_presence_check': {
+   // A real Site Verification 403 insufficientPermissions has no evidence for
+   // either property. The advertised output schema already accepts null; the
+   // runtime validator must agree, but ONLY for the exact unreadable/scope-
+   // denial state. Never transform unknown into failed verification or green.
+   const scopeUnknown=value.status==='WARN'&&value.readable===false&&
+     value.reason==='site_verification_scope_unavailable';
+   if(value.readable===false&&!scopeUnknown)return false;
+   return typeof value.domain==='string'&&value.domain.length>0&&
+     ['PASS','WARN','FAIL'].includes(value.status)&&
+     ['root','www'].every(k=>value.verified?.[k]&&typeof value.verified[k].name==='string'&&
+       (scopeUnknown?value.verified[k].verified===null:typeof value.verified[k].verified==='boolean'))&&
+     ['searchConsole','businessProfile','note'].every(k=>typeof value[k]==='string');
+ }
  case 'reports_activity':
    return typeof value.application==='string'&&value.application.length>0&&array(value.activities)&&value.activities.every(v=>v!==null&&typeof v==='object'&&!array(v))&&
      (value.nextPageToken===undefined||typeof value.nextPageToken==='string');

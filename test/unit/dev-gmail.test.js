@@ -8,6 +8,7 @@ vi.mock('../../src/db.js',async actual=>{
 });
 const {handlers}=await import('../../src/tools/dev-fixtures.js');
 const {allowedTool}=await import('../../src/rtc/catalog.js');
+const {gmailReadback,confirmGmailCleaned,trashGmailFixtures}=await import('../../src/tools/dev-gmail.js');
 const parsed=r=>JSON.parse(r.content[0].text);
 const runId='92222222-3333-4444-8555-666666666666',args={scenario:'gmail',runId};
 beforeEach(()=>{ref.db=createFakeDb();});
@@ -148,5 +149,55 @@ describe('P8-7 isolated Gmail fixtures',()=>{
     await expect(handlers.workspace_dev_create_fixtures({...args,dryRun:true},{...s.clients,rtcPolicy:policy})).rejects.toThrow();
   }
   expect(s.calls).toEqual([]);
+ });
+});
+
+describe('P8-7 Gmail fixture IDs independently match the durable run ledger',()=>{
+ const identity=c=>({actingAs:c.actingAs,connection:c.connection});
+ it('refuses a different Gmail message ID despite identical subject sender and RTC headers',async()=>{
+   const s=testGmail();await handlers.workspace_dev_create_fixtures(args,s.clients);
+   s.when('gmail.users.messages.get').resolves(({id})=>({data:{...s.messages.get(id),id:'foreign-message'}}));
+   expect((await gmailReadback(s.clients,identity(s.clients),runId)).verified).toBe(false);
+   await expect(handlers.workspace_dev_cleanup({runId,confirm:true},s.clients)).rejects.toThrow(/mismatch/);
+   await expect(handlers.workspace_dev_create_fixtures(args,s.clients)).rejects.toThrow(/uncertain/);
+   expect(s.calls.filter(x=>x.path==='gmail.users.messages.trash')).toHaveLength(0);
+   expect(s.calls.filter(x=>x.path==='gmail.users.messages.insert')).toHaveLength(2);
+ });
+ it('fails closed when a trash readback is for another message and does not delete the label',async()=>{
+   const s=testGmail();await handlers.workspace_dev_create_fixtures(args,s.clients);
+   const owner=identity(s.clients),run=await ref.db.getDevRun({runId,...owner});
+   let firstReads=0;
+   s.when('gmail.users.messages.get').resolves(({id})=>{
+     if(id==='message-1')firstReads++;
+     return {data:{...s.messages.get(id),id:id==='message-1'&&firstReads>=2?'foreign-message':id}};
+   });
+   const result=await trashGmailFixtures(run,s.clients,owner);
+   expect(result.fullyCleaned).toBe(false);
+   expect(result.failures.map(x=>x.kind)).toEqual(['message1']);
+   expect(s.calls.filter(x=>x.path==='gmail.users.labels.delete')).toHaveLength(0);
+   expect(s.calls.filter(x=>x.path==='gmail.users.messages.trash').map(x=>x.args[0].id)).toEqual(['message-1']);
+   expect((await ref.db.getDevRun({runId,...owner})).objects.every(x=>!x.cleaned_at)).toBe(true);
+ });
+ it('will not claim independently confirmed cleanup from mismatched message readback',async()=>{
+   const s=testGmail();await handlers.workspace_dev_create_fixtures(args,s.clients);
+   await handlers.workspace_dev_cleanup({runId,confirm:true},s.clients);
+   const owner=identity(s.clients),run=await ref.db.getDevRun({runId,...owner});
+   s.when('gmail.users.messages.get').resolves(({id})=>({data:{...s.messages.get(id),id:'foreign-message'}}));
+   const verified=await confirmGmailCleaned(run,s.clients,owner);
+   expect(verified.allTrashed).toBe(false);
+ });
+ it('rejects a wrong-ID result while reconciling a pending Gmail message, without re-inserting',async()=>{
+   const s=testGmail(),saved=ref.db.recordDevObject.bind(ref.db);
+   let failed=false;
+   ref.db.recordDevObject=async input=>{
+     if(input.kind==='message1'&&!failed){failed=true;throw Error('simulated database interruption');}
+     return saved(input);
+   };
+   await expect(handlers.workspace_dev_create_fixtures(args,s.clients)).rejects.toThrow(/uncertain/);
+   ref.db.recordDevObject=saved;
+   s.when('gmail.users.messages.get').resolves(({id})=>({data:{...s.messages.get(id),id:'foreign-message'}}));
+   await expect(handlers.workspace_dev_create_fixtures(args,s.clients)).rejects.toThrow(/Uncertain message1 has 0 exact run matches/);
+   expect(s.calls.filter(x=>x.path==='gmail.users.messages.insert')).toHaveLength(1);
+   expect(s.calls.filter(x=>x.path==='gmail.users.messages.send')).toHaveLength(0);
  });
 });

@@ -8,6 +8,7 @@ vi.mock('../../src/db.js',async(importActual)=>{
 });
 const {handlers,tools}=await import('../../src/tools/dev-fixtures.js');
 const {isWrite,allowedTool}=await import('../../src/rtc/catalog.js');
+const {calendarReadback,inspectCalendarCleanup,confirmCalendarGone,deleteRecordedCalendarFixture,exactCalendarEvent}=await import('../../src/tools/dev-calendar.js');
 const body=r=>JSON.parse(r.content[0].text);
 beforeEach(()=>{state.db=createFakeDb();});
 function setup(){
@@ -289,4 +290,74 @@ it('retries a Calendar cleanup after provider deletion without deleting any othe
  expect(r.confirmed).toBe(true);
  expect(calls.filter(c=>c.path==='calendar.events.delete')).toHaveLength(0);
  expect((await state.db.getDevRun({runId,...owner})).objects[0].cleaned_at).toBeTruthy();
+});
+
+describe('P8-7 independently bound Calendar ledger ID evidence',()=>{
+ const runId='77777777-2222-4444-8666-555555555555';
+ const calendarId='owned-test-calendar';
+ const googleId='owned-event-1';
+ function prepare(){
+   const {clients,calls,when}=makeFakeClients();
+   clients.connection='test-calendar-exact-id';
+   clients.rtcPolicy={mode:'test',profile:'full',areas:['workspace','calendar']};
+   when('calendar.calendarList.get').resolves({data:{id:calendarId,accessRole:'owner',primary:false}});
+   const identity={actingAs:clients.actingAs,connection:clients.connection};
+   const event={id:googleId,creator:{email:clients.actingAs},status:'confirmed',
+     extendedProperties:{private:{rtc_run:runId,rtc_kind:'event'}}};
+   when('calendar.events.get').resolves({data:event});
+   const seed=async()=>{
+     await state.db.startDevRun({id:runId,...identity,scenario:'calendar',calendarId});
+     await state.db.reserveDevStep({runId,...identity,kind:'event'});
+     await state.db.recordDevObject({runId,...identity,kind:'event',googleId,parentId:calendarId});
+     await state.db.markDevStepRecorded({runId,...identity,kind:'event',googleId});
+     return state.db.getDevRun({runId,...identity});
+   };
+   return {clients,calls,when,identity,event,seed};
+ }
+ it('rejects another provider event ID even if run tags and creator are identical',async()=>{
+   const s=prepare();const run=await s.seed();
+   s.when('calendar.events.get').resolves({data:{...s.event,id:'foreign-event'}});
+   expect(()=>exactCalendarEvent({...s.event,id:'foreign-event'},runId,s.identity,googleId)).toThrow(/tag|creator|run ID/);
+   expect((await calendarReadback(s.clients,s.identity,runId)).verified).toBe(false);
+   await expect(inspectCalendarCleanup(run,s.clients,s.identity)).rejects.toThrow(/different event ID/);
+   await expect(handlers.workspace_dev_cleanup({runId,confirm:true},s.clients)).rejects.toThrow(/different event ID/);
+   expect(s.calls.filter(x=>x.path==='calendar.events.delete')).toHaveLength(0);
+   expect((await state.db.getDevRun({runId,...s.identity})).objects[0].cleaned_at).toBeFalsy();
+ });
+ it('never trusts a cancelled tombstone for an unrelated event',async()=>{
+   const s=prepare();const run=await s.seed();
+   s.when('calendar.events.get').resolves({data:{id:'foreign-event',status:'cancelled'}});
+   await expect(inspectCalendarCleanup(run,s.clients,s.identity)).rejects.toThrow(/different event ID/);
+   await expect(handlers.workspace_dev_cleanup({runId,confirm:true},s.clients)).rejects.toThrow(/different event ID/);
+   expect(s.calls.filter(x=>x.path==='calendar.events.delete')).toHaveLength(0);
+ });
+ it('requires an exact tombstone after deleting the recorded event before marking cleanup',async()=>{
+   const s=prepare();const run=await s.seed();
+   let gets=0;
+   s.when('calendar.events.get').resolves(()=>{
+     gets++;
+     return {data:gets===1?s.event:{id:'foreign-event',status:'cancelled'}};
+   });
+   s.when('calendar.events.delete').resolves({data:{}});
+   const result=await deleteRecordedCalendarFixture(run,s.clients,s.identity);
+   expect(result.fullyCleaned).toBe(false);
+   expect(result.failures).toHaveLength(1);
+   expect(s.calls.filter(x=>x.path==='calendar.events.delete').map(x=>x.args[0].eventId)).toEqual([googleId]);
+   expect((await state.db.getDevRun({runId,...s.identity})).objects[0].cleaned_at).toBeFalsy();
+ });
+ it('requires exact event ID on the independent final cleanup verification',async()=>{
+   const s=prepare();const run=await s.seed();
+   await state.db.markDevObjectCleaned({runId,...s.identity,kind:'event',googleId});
+   s.when('calendar.events.get').resolves({data:{id:'foreign-event',status:'cancelled'}});
+   const result=await confirmCalendarGone(run,s.clients,s.identity);
+   expect(result.allTrashed).toBe(false);
+   expect(result.deleted).toBe(false);
+ });
+ it('rejects mismatched provider ID on a recorded reservation replay without new writes',async()=>{
+   const s=prepare();await s.seed();
+   s.when('calendar.events.get').resolves({data:{...s.event,id:'foreign-event'}});
+   await expect(handlers.workspace_dev_create_fixtures({scenario:'calendar',calendarId,runId},s.clients))
+     .rejects.toThrow(/uncertain/);
+   expect(s.calls.filter(x=>x.path==='calendar.events.insert')).toHaveLength(0);
+ });
 });

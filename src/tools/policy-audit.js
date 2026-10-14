@@ -74,7 +74,7 @@ export function evaluateBaseline(policies,{complete=true,chosen=null}={}){
     // Missing/unknown values and incomplete pagination must not become green.
     const unknown=observations.length===0||observations.some(o=>o.value===undefined);
     const mismatch=observations.some(o=>differs(o.value,rule));
-    return {setting:rule.label,policySetting:rule.type,field:rule.field,expected:rule.expected,...(rule.comparator?{comparator:rule.comparator}:{}),
+    return {area:rule.area,setting:rule.label,policySetting:rule.type,field:rule.field,expected:rule.expected,...(rule.comparator?{comparator:rule.comparator}:{}),
       status:mismatch?'needs_attention':!complete||unknown?'not_readable':'ok',
       reason:mismatch?'One or more observed explicit policies differ from the owner-editable baseline, even if other pages or inherited settings are unavailable.':!complete?'Some pages were not available; cannot conclude.':unknown?'No explicit readable policy value was returned; inherited/default state is not proven.':'All observed explicit policy entries match the baseline; inherited state and per-domain effectiveness are not verified.',
       observations,console:guide(rule)};
@@ -98,9 +98,10 @@ export const handlers={
      seen.add(v.nextPageToken);token=v.nextPageToken;
    }
    const results=evaluateBaseline(policies,{complete,chosen:cfg.chosen});
+   const coverageByArea=[...new Set(baseline.map(r=>r.area))].map(area=>{const areaResults=results.filter(r=>r.area===area);return {area,checks:areaResults.length,matchingExplicitPolicies:areaResults.filter(r=>r.status==='ok').length,needsAttention:areaResults.filter(r=>r.status==='needs_attention').length,notReadable:areaResults.filter(r=>r.status==='not_readable').length};});
    return ok({domain:args.domain.toLowerCase(),customerWide:true,complete,policiesRead:policies.length,
       ...(cfg.orgUnit?{orgUnit:cfg.orgUnit,scopeMode:'exact_explicit_org_unit_overrides',effective:false}:{}),
-      baselineRules:baseline.length,areasWithRules:[...new Set(baseline.map(r=>r.area))],results,scopeNote,
+      baselineRules:baseline.length,areasWithRules:[...new Set(baseline.map(r=>r.area))],coverageByArea,results,scopeNote,
       summary:{needsAttention:results.filter(r=>r.status==='needs_attention').length,notReadable:results.filter(r=>r.status==='not_readable').length,matchingExplicitPolicies:results.filter(r=>r.status==='ok').length}});
  }
 };

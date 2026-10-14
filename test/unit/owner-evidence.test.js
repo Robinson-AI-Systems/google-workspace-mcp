@@ -96,3 +96,64 @@ describe('owner overview evidence and business isolation',()=>{
   expect(r.items.identity.status).toBe('ok');
  });
 });
+
+describe('P8-8 owner policy review from actual P7-2 evidence',()=>{
+ const policyRule=(area,status)=>({area,status,setting:area+' example'});
+ const policyData=(over={})=>{
+  const results=[
+   policyRule('api_controls','ok'),policyRule('groups_for_business','ok'),
+   policyRule('workspace_marketplace','ok')];
+  return {domain:'example.test',customerWide:true,complete:true,baselineRules:3,results,
+   coverageByArea:results.map(x=>({area:x.area,checks:1,matchingExplicitPolicies:1,needsAttention:0,notReadable:0})),
+   summary:{matchingExplicitPolicies:3,needsAttention:0,notReadable:0},...over};
+ };
+ it('surfaces confirmed owner policy findings separately from observed third-party app tokens',async()=>{
+  const data=policyData(),results=data.results.map(x=>x.area==='api_controls'?{...x,status:'needs_attention'}:x);
+  const custom={...data,results,summary:{matchingExplicitPolicies:2,needsAttention:1,notReadable:0},
+   coverageByArea:data.coverageByArea.map(x=>x.area==='api_controls'?{...x,matchingExplicitPolicies:0,needsAttention:1}:x)};
+  const got=await buildAdminOverview(clients(),fake({...base,identity_policy_audit:custom}));
+  expect(got.items.policies.status).toBe('needs_attention');
+  expect(got.items.third_party_app_policy.status).toBe('needs_attention');
+  expect(got.items.groups_sharing_policy.status).toBe('not_readable');
+  expect(got.items.third_party_app_access.status).toBe('not_readable');
+ });
+ it('reports a complete reviewed explicit policy baseline without claiming effective user policy',async()=>{
+  const got=await buildAdminOverview(clients(),fake({...base,identity_policy_audit:policyData()}));
+  expect(got.items.policies.status).toBe('ok');
+  expect(got.items.third_party_app_policy.status).toBe('ok');
+  expect(got.items.groups_sharing_policy.status).toBe('ok');
+  expect(got.items.marketplace_apps_policy.status).toBe('ok');
+  expect(got.items.policies.reason).toMatch(/not proven/);
+ });
+ it('does not mark inherited, incomplete, malformed or partially paginated policy reports green',async()=>{
+  for(const data of [
+   policyData({complete:false}),
+   policyData({summary:{matchingExplicitPolicies:99,needsAttention:0,notReadable:0}}),
+   policyData({results:[]}),
+   {},
+  ]){
+   const got=await buildAdminOverview(clients(),fake({...base,identity_policy_audit:data}));
+   expect(got.items.policies.status).toBe('not_readable');
+   expect(got.items.marketplace_apps_policy.status).toBe('not_readable');
+  }
+ });
+ it('never reaches customer-wide policies without explicit crossDomain intent on a domain-restricted connection',async()=>{
+  const called=[],restricted=clients({allowedDomains:['example.test']});
+  const got=await buildAdminOverview(restricted,fake({...base,identity_policy_audit:policyData()},called));
+  expect(called).not.toContain('identity_policy_audit');
+  expect(got.items.policies.status).toBe('not_readable');
+  expect(got.items.third_party_app_policy.status).toBe('not_readable');
+ });
+ it('passes single-call consent only to the permitted policy child without modifying persistent client authorization',async()=>{
+  const seen=[];const restricted=clients({allowedDomains:['example.test']});
+  const got=await buildAdminOverview(restricted,async(name,args,c)=>{
+   if(name==='identity_policy_audit'){seen.push({name,args,authorized:c.crossDomain});return ok(policyData())}
+   if(name==='workflow_health_report'){seen.push({name,authorized:c.crossDomain});return ok(health())}
+   return ok(base[name]??{});
+  },{crossDomain:true});
+  expect(seen).toContainEqual({name:'identity_policy_audit',args:{domain:'example.test'},authorized:true});
+  expect(seen).toContainEqual({name:'workflow_health_report',authorized:undefined});
+  expect(restricted.crossDomain).toBeUndefined();
+  expect(got.items.policies.status).toBe('ok');
+ });
+});

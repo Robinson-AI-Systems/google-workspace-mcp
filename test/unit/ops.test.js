@@ -10,6 +10,7 @@ vi.mock('../../src/db.js', async (importActual) => {
 });
 const { handlers, matchSettings, planSummary, checkVerification, geminiVerdict } = await import('../../src/tools/ops.js');
 const { CONSOLE_MAP } = await import('../../src/data/console-map.js');
+const { CONSOLE_REVIEW_GROUPS, CONSOLE_REVIEW_CATEGORIES, consoleReviewCoverageErrors, buildConsoleReview } = await import('../../src/data/console-review.js');
 const licensing = await import('../../src/tools/licensing.js');
 
 const body = (r) => JSON.parse(r.content[0].text);
@@ -234,7 +235,111 @@ describe('workflow_search_presence_check', () => {
     expect(none.searchConsole).toMatch(/domain_get_verification_token/);
     expect(none.businessProfile).toContain('https://business.google.com');
   });
+  it('returns useful manual guidance without treating missing Site Verification scope as a failed property', async () => {
+    const {clients,calls,when}=makeFakeClients();
+    when('siteVerification.webResource.list').rejects(googleError(
+      403,'insufficientPermissions','Request had insufficient authentication scopes.'));
+    const out=body(await handlers.workflow_search_presence_check({domain:'https://www.Example.test/'},clients));
+    expect(out).toMatchObject({
+      domain:'example.test',status:'WARN',readable:false,reason:'site_verification_scope_unavailable',
+      verified:{root:{name:'example.test',verified:null},www:{name:'www.example.test',verified:null}}
+    });
+    expect(out.searchConsole).toContain('https://search.google.com/search-console');
+    expect(out.searchConsole).toMatch(/Do not add or change DNS/);
+    expect(out.note).toMatch(/UNKNOWN/);
+    expect(calls.map(x=>x.path)).toEqual(['siteVerification.webResource.list']);
+  });
+  it('does not hide forbidden account access, rate limits or unrelated Google errors as optional consent', async () => {
+    for(const [code,reason] of [[403,'forbidden'],[429,'rateLimitExceeded'],[401,'authError'],[500,'backendError']]){
+      const {clients,when}=makeFakeClients();
+      when('siteVerification.webResource.list').rejects(googleError(code,reason,'Provider refused.'));
+      await expect(handlers.workflow_search_presence_check({domain:'example.test'},clients))
+        .rejects.toThrow('Provider refused.');
+    }
+  });
+  it('keeps successful verification as a readable authoritative provider result', async () => {
+    const {clients,when}=makeFakeClients();
+    when('siteVerification.webResource.list').resolves({data:{items:[dom('example.test')]}});
+    const out=body(await handlers.workflow_search_presence_check({domain:'example.test'},clients));
+    expect(out).toMatchObject({status:'PASS',readable:true,verified:{
+      root:{verified:true},www:{verified:true}
+    }});
+  });
   it('asks for a real domain', async () => {
     expect((await handlers.workflow_search_presence_check({ domain: 'nope' }, makeFakeClients().clients)).content[0].text).toMatch(/Give the website domain/);
+  });
+});
+
+describe('P8-8 complete owner Admin console review', () => {
+  it('covers each of the 50 mapped settings exactly once with no stale review categories', () => {
+    expect(consoleReviewCoverageErrors()).toEqual([]);
+    expect(CONSOLE_MAP).toHaveLength(50);
+    expect(Object.keys(CONSOLE_REVIEW_GROUPS)).toEqual(CONSOLE_REVIEW_CATEGORIES);
+    expect(new Set(Object.values(CONSOLE_REVIEW_GROUPS).flat()).size).toBe(50);
+    expect(consoleReviewCoverageErrors([...CONSOLE_MAP,{...CONSOLE_MAP[0]}]))
+      .toContain('Duplicate console entry: dkim');
+    expect(consoleReviewCoverageErrors(CONSOLE_MAP.filter(e=>e.id!=='dkim')))
+      .toContain('Stale review category: dkim');
+    expect(consoleReviewCoverageErrors([...CONSOLE_MAP,{id:'new-uncategorized'}]))
+      .toContain('Unclassified console entry: new-uncategorized');
+  });
+  it('returns every category entry over five bounded pages without accidental green status', async () => {
+    const all=[];
+    for(let page=1;page<=5;page++){
+      const out=body(await handlers.workspace_where_is_setting({reviewAll:true,page,pageSize:10}));
+      expect(out).toMatchObject({review:true,totalMapped:50,totalMatching:50,page,pageSize:10});
+      expect(out.items).toHaveLength(10);
+      expect(out.nextPage).toBe(page<5?page+1:null);
+      expect(out.summary).toMatchObject({readbackAvailable:24,manualOnly:26,outsideScope:0});
+      all.push(...out.items.map(x=>x.id));
+      for(const item of out.items){
+        expect(item.steps.length).toBeGreaterThan(0);
+        expect(item.verification.state).toMatch(/^(manual_only|readback_available)$/);
+        expect(item.expected).toMatch(/No current policy value has been checked/);
+      }
+    }
+    expect(all).toEqual(CONSOLE_MAP.map(e=>e.id));
+    expect(new Set(all).size).toBe(50);
+  });
+  it('filters topics and categories and keeps complete matching counters', async () => {
+    const out=body(await handlers.workspace_where_is_setting({reviewAll:true,category:'mail',query:'gmail',pageSize:20}));
+    expect(out.totalMapped).toBe(50);
+    expect(out.items.length).toBeGreaterThan(1);
+    expect(out.items.every(x=>x.category==='mail')).toBe(true);
+    expect(out.items.every(x=>x.id.includes('gmail')||x.setting.toLowerCase().includes('gmail'))).toBe(true);
+    expect(out.summary.readbackAvailable+out.summary.manualOnly+out.summary.outsideScope).toBe(out.totalMatching);
+    expect(out.categories.reduce((n,c)=>n+c.count,0)).toBe(50);
+    const manual=body(await handlers.workspace_where_is_setting({reviewAll:true,category:'security',pageSize:20}));
+    expect(manual.items.find(x=>x.id==='session-length').verification.state).toBe('manual_only');
+  });
+  it('suppresses unauthorized readback tools without calling Google, and distinguishes available from verified', async () => {
+    const {clients,calls}=makeFakeClients();
+    clients.rtcPolicy={profile:'read_only',areas:['workspace']};
+    const limited=body(await handlers.workspace_where_is_setting({reviewAll:true,category:'mail',pageSize:20},clients));
+    const dkim=limited.items.find(x=>x.id==='dkim');
+    expect(dkim.verification).toMatchObject({state:'outside_scope'});
+    expect(dkim.verification).not.toHaveProperty('tool');
+    expect(calls).toHaveLength(0);
+    clients.rtcPolicy={profile:'read_only',areas:['workflows','workspace']};
+    const allowed=body(await handlers.workspace_where_is_setting({reviewAll:true,category:'mail',pageSize:20},clients));
+    expect(allowed.items.find(x=>x.id==='dkim').verification).toMatchObject({
+      state:'readback_available',tool:'workflow_email_health',invoked:false,policyVerified:false
+    });
+    expect(calls).toHaveLength(0);
+  });
+  it('fails invalid category, pages, oversized filters and nontext input closed', () => {
+    const fn=()=>({state:'manual_only'});
+    for(const input of [{category:'hidden'},{page:0},{page:1001},{page:1.5},
+      {pageSize:0},{pageSize:21},{pageSize:2.5},{query:'x'.repeat(121)},{query:{foo:'bar'}}]){
+      expect(()=>buildConsoleReview(input,fn),JSON.stringify(input)).toThrow();
+    }
+    expect(buildConsoleReview({page:100},fn)).toMatchObject({totalMatching:50,nextPage:null,items:[]});
+  });
+  it('preserves original single-setting query behavior and no-query guidance', async () => {
+    const individual=body(await handlers.workspace_where_is_setting({query:'DKIM'}));
+    expect(individual.found).toBe(true);
+    expect(individual.matches[0].id).toBe('dkim');
+    expect(individual).not.toHaveProperty('review');
+    expect((await handlers.workspace_where_is_setting({})).content[0].text).toMatch(/Say which setting/);
   });
 });

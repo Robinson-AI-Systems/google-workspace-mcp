@@ -3,6 +3,7 @@
 import { ok } from './util.js';
 import { defineWrite } from './write.js';
 import { CONSOLE_MAP, CONSOLE_HOME, CONSOLE_VERIFICATION } from '../data/console-map.js';
+import { buildConsoleReview } from '../data/console-review.js';
 
 // ---------- P2-4: where is this setting? ----------
 const GENERIC = new Set(['email', 'mail', 'user', 'users', 'file', 'files', 'account', 'people', 'person', 'staff']); // too common to point at one page by themselves
@@ -37,6 +38,21 @@ export function matchSettings(query, limit = 3) {
 }
 
 const whereIsSetting = async (args, clients) => {
+  if(args.reviewAll===true){
+    // Use the same permission classifier as normal RTC listing and dispatch.
+    // A suggested readback is never invoked here and never means a policy is
+    // verified. This remains usable when no Admin API is available.
+    const {allowedTool,isWrite}=await import('../rtc/catalog.js');
+    const readback=(id)=>{
+      const hint=CONSOLE_VERIFICATION[id];
+      if(!hint)return {state:'manual_only',reason:'No scoped Google API readback is available; inspect the Admin console manually.'};
+      if(isWrite(hint.tool)||!allowedTool(hint.tool,clients?.rtcPolicy||{}))
+        return {state:'outside_scope',reason:'The optional readback is unavailable to this connection; inspect manually or use a separately authorized connection. No read occurred.'};
+      return {state:'readback_available',tool:hint.tool,note:hint.note,
+        invoked:false,policyVerified:false};
+    };
+    return ok(buildConsoleReview(args,readback));
+  }
   const query = String(args.query || '').trim();
   if (!query) return ok('Say which setting you are looking for, e.g. "turn on DKIM" or "block external sharing".');
   const hits = matchSettings(query);
@@ -156,11 +172,32 @@ export function checkVerification(items, domain) {
 const searchPresence = async (args, { siteVerification }) => {
   const domain = stripWww(args.domain);
   if (!domain || !domain.includes('.')) return ok('Give the website domain, e.g. example.com.');
-  const res = await siteVerification.webResource.list({});
+  let res;
+  try {
+    res=await siteVerification.webResource.list({});
+  } catch(error) {
+    // OAuth consent for Site Verification is optional. A missing scope is not
+    // proof that a domain is unverified, and should not stop the owner from
+    // receiving useful manual Search Console instructions.
+    const status=Number(error?.response?.status||error?.code);
+    const reasons=error?.response?.data?.error?.errors||[];
+    const missingScope=status===403&&(
+      reasons.some(e=>e?.reason==='insufficientPermissions')||
+      /insufficient (authentication )?scopes/i.test(String(error?.message||'')));
+    if(!missingScope)throw error;
+    return ok({
+      domain,status:'WARN',readable:false,reason:'site_verification_scope_unavailable',
+      verified:{root:{name:domain,verified:null},www:{name:'www.'+domain,verified:null}},
+      searchConsole:'The connected Google account cannot read Site Verification. Open https://search.google.com/search-console while signed in as the intended owner to check existing verified properties. If the owner approves Site Verification read access, reconnect this Google account through its normal OAuth consent process; this check cannot grant that permission. Do not add or change DNS records based on this unknown result.',
+      businessProfile:'Google Business Profile is separate. Open https://business.google.com while signed in as the account that should own the listing; inspect or claim the business there.',
+      note:'Verification status is UNKNOWN, not failed. This is a Google account permission limitation; no DNS, Search Console or Business Profile settings were changed.'
+    });
+  }
   const v = checkVerification(res.data.items, domain);
   const both = v.root.verified && v.www.verified;
   return ok({
     domain,
+    readable:true,
     status: both ? 'PASS' : v.root.verified || v.www.verified ? 'WARN' : 'FAIL',
     verified: v,
     searchConsole: both ? 'Ready: add the property at https://search.google.com/search-console using "Domain" and the domain name; it will be accepted immediately because it is already verified for this account.'
@@ -172,9 +209,9 @@ const searchPresence = async (args, { siteVerification }) => {
 
 export const tools = [
   calendarUpdate.tool,
-  { name: 'workspace_where_is_setting', description: 'Find where to change an Admin console or Gmail setting that has no API (DKIM, routing rules, services on/off, Gemini, session length, password rules, sharing defaults, Marketplace allow-list, Vault, billing, and more). Gives the link and the clicks.', inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'What you want to do, e.g. "turn on DKIM" or "block sharing outside the company"' } }, required: ['query'] } },
+  { name: 'workspace_where_is_setting', description: 'Find a specific Google Admin setting, or request reviewAll:true to walk the entire 50-topic manual Admin console checklist by category and page, with scope-aware optional readback instructions but no changes or automatic verification.', inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'One setting to find; optional in reviewAll mode to filter mapped topics.' }, reviewAll: { type: 'boolean', description: 'Return a complete, paginated Admin console review checklist rather than only the top matching settings; no Google reads or writes.' }, category: { type: 'string', enum: ['mail','security','collaboration','organization','devices','billing'], description: 'Optional category filter, used with reviewAll:true.' }, page: { type: 'integer', minimum: 1, maximum: 1000, description: 'Review page (default 1).' }, pageSize: { type: 'integer', minimum: 1, maximum: 20, description: 'Review entries per page (default 10).' } } } },
   { name: 'workspace_plan_summary', description: 'Which Google Workspace plans this company pays for, how many people hold each, and whether Gemini is included. Uses the real customer ID so it works on every domain.', inputSchema: { type: 'object', properties: {} } },
-  { name: 'workflow_search_presence_check', description: 'Is a website domain (and its www. version) verified for Search Console on the account this connection acts as, and what to click next for Search Console and Google Business Profile. Read-only.', inputSchema: { type: 'object', properties: { domain: { type: 'string' } }, required: ['domain'] } }
+  { name: 'workflow_search_presence_check', description: 'Check Search Console domain verification for this Google account and explain exact next steps. If optional Google permission is missing, explicitly report verification as unknown and provide manual guidance; never infer that DNS or verification is wrong. Read-only.', inputSchema: { type: 'object', properties: { domain: { type: 'string' } }, required: ['domain'] } }
 ];
 
 export const handlers = {
