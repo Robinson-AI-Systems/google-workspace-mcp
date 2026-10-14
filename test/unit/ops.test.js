@@ -235,6 +235,36 @@ describe('workflow_search_presence_check', () => {
     expect(none.searchConsole).toMatch(/domain_get_verification_token/);
     expect(none.businessProfile).toContain('https://business.google.com');
   });
+  it('returns useful manual guidance without treating missing Site Verification scope as a failed property', async () => {
+    const {clients,calls,when}=makeFakeClients();
+    when('siteVerification.webResource.list').rejects(googleError(
+      403,'insufficientPermissions','Request had insufficient authentication scopes.'));
+    const out=body(await handlers.workflow_search_presence_check({domain:'https://www.Example.test/'},clients));
+    expect(out).toMatchObject({
+      domain:'example.test',status:'WARN',readable:false,reason:'site_verification_scope_unavailable',
+      verified:{root:{name:'example.test',verified:null},www:{name:'www.example.test',verified:null}}
+    });
+    expect(out.searchConsole).toContain('https://search.google.com/search-console');
+    expect(out.searchConsole).toMatch(/Do not add or change DNS/);
+    expect(out.note).toMatch(/UNKNOWN/);
+    expect(calls.map(x=>x.path)).toEqual(['siteVerification.webResource.list']);
+  });
+  it('does not hide forbidden account access, rate limits or unrelated Google errors as optional consent', async () => {
+    for(const [code,reason] of [[403,'forbidden'],[429,'rateLimitExceeded'],[401,'authError'],[500,'backendError']]){
+      const {clients,when}=makeFakeClients();
+      when('siteVerification.webResource.list').rejects(googleError(code,reason,'Provider refused.'));
+      await expect(handlers.workflow_search_presence_check({domain:'example.test'},clients))
+        .rejects.toThrow('Provider refused.');
+    }
+  });
+  it('keeps successful verification as a readable authoritative provider result', async () => {
+    const {clients,when}=makeFakeClients();
+    when('siteVerification.webResource.list').resolves({data:{items:[dom('example.test')]}});
+    const out=body(await handlers.workflow_search_presence_check({domain:'example.test'},clients));
+    expect(out).toMatchObject({status:'PASS',readable:true,verified:{
+      root:{verified:true},www:{verified:true}
+    }});
+  });
   it('asks for a real domain', async () => {
     expect((await handlers.workflow_search_presence_check({ domain: 'nope' }, makeFakeClients().clients)).content[0].text).toMatch(/Give the website domain/);
   });
