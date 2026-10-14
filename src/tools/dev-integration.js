@@ -82,7 +82,14 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
    if(!allowedTool(item.tool,policy)){
      checks.push({kind:'api',name:api,status:'not_readable',reason:'connection_area_excluded'});continue;
    }
-   const info=await observe(api,()=>item.probe(clients),guide(item.url,'Enable '+item.label+' API and verify consent for this mailbox.'));
+   const info=await observe(api,async()=>{
+     const response=await item.probe(clients);
+     // Gmail readiness must be for this exact business mailbox, not a
+     // different Google account whose profile request also returned 200.
+     if(api==='gmail'&&String(response?.data?.emailAddress||'').toLowerCase()!==clients.actingAs.toLowerCase())
+       throw Error('The Gmail profile did not match the acting mailbox.');
+     return response;
+   },guide(item.url,'Enable '+item.label+' API and verify consent for this mailbox.'));
    checks.push({kind:'api',...info});
  }
  if(request.oauthScopes.length){
