@@ -1,8 +1,8 @@
 import {describe,it,expect,vi} from 'vitest';
-import {originFromEnv,chooseProbe,runReadOnlySmoke,main} from '../../scripts/smoke-readonly.mjs';
+import {originFromEnv,chooseProbe,verifiedProviderReadResult,runReadOnlySmoke,main} from '../../scripts/smoke-readonly.mjs';
 const token='rtc_pass_'+ 'A'.repeat(43);
 const revision='a'.repeat(40);
-function fakeHttp({areas=null,profile='read_only',account='scratch@example.test',gmailAccount=account,actualRevision=revision,failName,unreadable=false,brokenCursor=false,wrongBytes=false}={}){
+function fakeHttp({areas=null,profile='read_only',account='scratch@example.test',gmailAccount=account,actualRevision=revision,failName,unreadable=false,brokenCursor=false,wrongBytes=false,malformedName=null}={}){
  const calls=[];
  const handle='rtc_result_'+'b'.repeat(32);
  const stored=JSON.stringify({files:[{name:'s'.repeat(9300),id:'known-owned-file'}]});
@@ -27,7 +27,11 @@ function fakeHttp({areas=null,profile='read_only',account='scratch@example.test'
      const name=decodeURIComponent(u.pathname.slice('/api/tools/'.length));
      if(name===failName)return ret(403,{ok:false,error:{code:'permission'}});
      if(name==='workspace_whoami')return ret(200,{ok:true,result:{actingAs:account,gmailReports:gmailAccount,matches:account===gmailAccount}});
+     if(name===malformedName)return ret(200,{ok:true,result:{unexpected:'transport only'}});
      if(name==='workspace_drive_list_files')return ret(200,{ok:true,handle,result:{handle,summary:'stored'}});
+     if(name==='workspace_gmail_list_messages')return ret(200,{ok:true,result:{messages:[]}});
+     if(name==='workspace_calendar_list_calendars')return ret(200,{ok:true,result:{kind:'calendar#calendarList',items:[]}});
+     if(name==='workspace_tasks_list_tasklists')return ret(200,{ok:true,result:{kind:'tasks#taskLists',items:[]}});
      return ret(200,{ok:true,result:{items:[]}});
    }
    throw Error('unmocked request');
@@ -63,6 +67,37 @@ describe('non-production multi-service read-only smoke',()=>{
        tool:'workspace_drive_list_files',status:'FAIL',reason:'result_handle_unreadable'
      });
    }
+ });
+ it('rejects a success envelope without native Google list evidence',async()=>{
+  for(const name of ['workspace_gmail_list_messages','workspace_drive_list_files',
+   'workspace_calendar_list_calendars','workspace_tasks_list_tasklists']){
+   const f=fakeHttp({malformedName:name});
+   const report=await runReadOnlySmoke({origin:'https://mcp.example.test',token,
+    expectedAccount:'scratch@example.test',expectedRevision:revision,fetcher:f.fetcher});
+   expect(report.ok,name).toBe(false);
+   expect(report.outcomes).toContainEqual({tool:name,status:'FAIL',reason:'invalid_google_read_shape'});
+  }
+ });
+ it('accepts only bounded provider-identifiable list objects or documented empty-list markers',()=>{
+  const samples=[
+   ['workspace_gmail_list_messages',{messages:[{id:'m1'}]}],
+   ['workspace_gmail_list_messages',{resultSizeEstimate:0}],
+   ['workspace_drive_list_files',{files:[{id:'f1'}]}],
+   ['workspace_drive_list_files',{kind:'drive#fileList'}],
+   ['workspace_calendar_list_calendars',{kind:'calendar#calendarList'}],
+   ['workspace_tasks_list_tasklists',{kind:'tasks#taskLists',items:[]}]
+  ];
+  for(const [name,value] of samples)expect(verifiedProviderReadResult(name,value),name).toBe(true);
+  for(const name of ['workspace_gmail_list_messages','workspace_drive_list_files',
+   'workspace_calendar_list_calendars','workspace_tasks_list_tasklists']){
+   for(const bad of [null,'OK',{items:[]},{files:[{}],nextPageToken:123},
+     {messages:[{id:'m1'},{id:'m2'}]}, {error:{code:'provider_failed'}}]){
+    // Some malformed values happen to use another family's valid list key.
+    if(bad?.items&&name==='workspace_calendar_list_calendars'||bad?.items&&name==='workspace_tasks_list_tasklists')continue;
+    if(bad?.files&&name==='workspace_drive_list_files'&&bad.files[0]?.id)continue;
+    expect(verifiedProviderReadResult(name,bad),name).toBe(false);
+   }
+  }
  });
  it('never calls tools outside the pass areas',async()=>{
    const f=fakeHttp({areas:['workspace']});
