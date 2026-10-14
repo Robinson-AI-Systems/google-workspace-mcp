@@ -90,12 +90,34 @@ export const PROVIDER_READ_PROOFS = Object.freeze({
   workspace_recent_changes: changes
 });
 
+
+// Resource-specific reads are optional and require an owner-provided exact
+// resource identity. Never infer a fixture from a subject, name or search.
+// A 200 response for a different resource must never satisfy the test.
+const fixtureId = (field, argField) => (v,_account,args) =>
+  object(v) && object(args) && string(args[argField]) &&
+  v[field] === args[argField];
+export const FIXTURE_READ_PROOFS = Object.freeze({
+ workspace_gmail_get_label: fixtureId('id','labelId'),
+ workspace_gmail_get_message: fixtureId('id','messageId'),
+ workspace_gmail_get_thread: fixtureId('id','threadId'),
+ workspace_drive_get_file: fixtureId('id','fileId'),
+ workspace_drive_get_shared_drive: fixtureId('id','driveId'),
+ workspace_calendar_get_event: fixtureId('id','eventId'),
+ workspace_tasks_get_tasklist: fixtureId('id','tasklistId'),
+ workspace_tasks_get_task: fixtureId('id','taskId'),
+ workspace_docs_get_document: fixtureId('documentId','documentId'),
+ workspace_sheets_get_spreadsheet: fixtureId('spreadsheetId','spreadsheetId'),
+ workspace_slides_get_presentation: fixtureId('presentationId','presentationId'),
+ workspace_forms_get: fixtureId('formId','formId')
+});
+
 export const INTERNAL_READ_PROOFS = new Set(['workspace_recent_changes']);
 
-export function verifiedProviderReadResult(name, payload, expectedAccount) {
+export function verifiedProviderReadResult(name, payload, expectedAccount, args={}) {
   if (payload === null || payload === undefined ||
       object(payload) && (payload.isError === true || Object.hasOwn(payload, 'error'))) return false;
-  const validate = PROVIDER_READ_PROOFS[name];
-  try { return typeof validate === 'function' && validate(payload, expectedAccount) === true; }
+  const validate = PROVIDER_READ_PROOFS[name] || FIXTURE_READ_PROOFS[name];
+  try { return typeof validate === 'function' && validate(payload, expectedAccount, args) === true; }
   catch { return false; }
 }
