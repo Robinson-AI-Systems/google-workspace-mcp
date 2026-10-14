@@ -26,9 +26,9 @@ const lifecycle={type:'object',properties:{done:{type:'boolean'},summary:string,
 export const OUTPUT_SCHEMAS=Object.freeze({
  ...Object.fromEntries([...WRITE_WORKFLOWS].map(name=>[name,lifecycle])),
  workflow_search_presence_check:{
-  type:'object',properties:{domain:string,status:{type:'string',enum:['PASS','WARN','FAIL']},
-   verified:{type:'object',properties:{root:{type:'object',properties:{name:string,verified:{type:'boolean'}},required:['name','verified']},
-    www:{type:'object',properties:{name:string,verified:{type:'boolean'}},required:['name','verified']}},required:['root','www']},
+  type:'object',properties:{domain:string,status:{type:'string',enum:['PASS','WARN','FAIL']},readable:{type:'boolean'},reason:string,
+   verified:{type:'object',properties:{root:{type:'object',properties:{name:string,verified:{type:['boolean','null']}},required:['name','verified']},
+    www:{type:'object',properties:{name:string,verified:{type:['boolean','null']}},required:['name','verified']}},required:['root','www']},
    searchConsole:string,businessProfile:string,note:string},
   anyOf:[{required:['domain','status','verified','searchConsole','businessProfile','note']},handle],additionalProperties:true
  },
