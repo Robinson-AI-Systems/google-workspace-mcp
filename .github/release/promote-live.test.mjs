@@ -89,6 +89,12 @@ test('real atomic git promotion, read-back and second same-day update refusal', 
     assert.equal(calls, 3);
     assert.equal(git('ls-remote', 'origin', 'refs/heads/live').split(/\s+/)[0], checked);
     assert.equal(git('ls-remote', 'origin', 'refs/tags/live-promotion/' + denverDay()).split(/\s+/)[0], checked);
+    // An explicitly approved recovery can promote via a guarded ref update
+    // rather than this script's atomic push. Its day-specific branch receipt
+    // must prevent a later scheduled retry from publishing a second revision.
+    git('push', 'origin', ':refs/tags/live-promotion/' + denverDay());
+    git('push', 'origin', checked + ':refs/heads/release-markers/' + denverDay());
+    assert.equal(git('ls-remote', 'origin', 'refs/heads/release-markers/' + denverDay()).split(/\s+/)[0], checked);
     git('checkout', 'main');
     writeFileSync(join(dir, 'fixture.txt'), 'third');
     git('commit', '-am', 'third'); git('push', 'origin', 'main');
@@ -103,8 +109,16 @@ test('real atomic git promotion, read-back and second same-day update refusal', 
   }
 });
 
-test('owner release schedule is 00:01 Denver with native DST handling', () => {
+test('Denver owner release has one 00:01 primary and two distinct fallback triggers', () => {
   const workflow = readFileSync(new URL('../workflows/daily-live.yml', import.meta.url), 'utf8');
-  assert.equal((workflow.match(/^\s*- cron:/gm) || []).length, 1);
-  assert.match(workflow, /- cron: '1 0 \* \* \*'[^\n]*\n\s+timezone: America\/Denver\s*\n/);
+  const lines = [...workflow.matchAll(/^\s*- cron: '([^']+)'[^\n]*\n\s+timezone: (\S+)\s*$/gm)]
+    .map(([,cron,zone]) => ({cron,zone}));
+  assert.deepEqual(lines, [
+    {cron:'1 0 * * *',zone:'America/Denver'},
+    {cron:'17 0 * * *',zone:'America/Denver'},
+    {cron:'17 1 * * *',zone:'America/Denver'}
+  ]);
+  assert.equal(new Set(lines.map(x=>x.cron)).size, lines.length);
+  assert.match(workflow, /if: github.event_name == 'schedule' && github.ref == 'refs\/heads\/main'/);
+  assert.match(workflow, /cancel-in-progress: false/);
 });
