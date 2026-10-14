@@ -45,7 +45,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "No fixture writes; original account and connection identity; source/READY deployment independently verified",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-14: live 39b0413... and Vercel production dpl_6NShNeLfWFgzR7FtU2gDry8iwZMo READY; custom workspace_whoami returned actingAs and matching Gmail ops@robinsonappliancerentals.com. Full required matrix not run; do not call partial reads PASSED."
+    "lastEvidence": "2026-10-14: READY live #104 39b0413... Vercel dpl_6NSh...; custom whoami exact Gmail match, dev integration observed Gmail/Drive/Calendar/Tasks READY/no writes, Gmail labels and three known Calendar entries read, Drive about returned bounded RTC result, Tasks had one list. These are partial direct custom-service reads, not complete 24 probes, RTC pass/Hub/fixture/denial/revocation acceptance."
   },
   {
     "id": "P2-7-UNKNOWN",
@@ -90,6 +90,19 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "2026-10-14 source #109: seven explicit provider result checks and positive/negative fakes; direct deployed custom 4-API read succeeded before source change, new shape policy awaits checked release, no assertion that optional APIs are granted."
+  },
+  {
+    "id": "P8-8-OWNER-POLICIES",
+    "priority": 4,
+    "requiredRevision": "7bd2dcb588e56f74ca9c9e71be68b93ec8324b49",
+    "task": "On future checked deployed revision verify owner overview exposes Cloud Identity policy differences, unknown/inherited settings, scoped opt-in and actual per-area reports without implying effective domain settings",
+    "procedure": "docs/plan/TASKS.md",
+    "gates": "Read-only P7-2 Google Policy API; optional real Super Admin consent; explicit crossDomain owner approval for limited connections; no Google settings writes",
+    "dependsOn": [
+      "P7-2-POLICY-AUDIT"
+    ],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14 source #110: owner overview integrates P7-2 policy results with separate app-access/Groups/Marketplace evidence; automated fake and auth isolation tests only. Requires P7-2 genuine provider acceptance, checked future live source and new owner overview readback."
   }
 ]
 ```
@@ -1107,7 +1120,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-5 | IN_PROGRESS | #34 | Pinned Hub reference conformance and local gateway tests in CI; full conformance against this service and real D-4 routes still unverified |
 | P8-6 | WAITING (optional reuse) | | Published immutable core and export-specific original-service parity; does not block P8-5, RTC routing or real Hub acceptance |
 | P8-7 | IN_PROGRESS | #40, #42–#43, #46–#48, #101–#103, #109 candidate | Existing fixture/integration workflows and earlier provider fixtures retained. #101 candidate adds exact Gmail-label and Calendar-event app preflight, closes wrong-ID Calendar/Drive-folder false readiness, with read-only permission-filtered provider probes and fake negative tests. #102 candidate independently binds every Calendar TEST fixture ledger readback, recorded replay and deletion tombstone to the exact recorded event ID, rejecting wrong-object success. Exact-head CI/review, deployment, RTC TEST pass, Hub routes and external consents remain separate gates. |
-| P8-8 | IN_PROGRESS | #36, #56, #58, #59, #60, #99 candidate | Evidence-aware owner overview (#56), 24 permission-aware console readbacks (#58), accurate incomplete health scans (#59); #60 candidate paginates quick Directory/Alert Center security snapshot with bounded, explicit, fail-closed coverage. #99 implements complete review of the current 50-topic console inventory with categories, bounded pagination and access-aware optional readback hints. Actual complete Google Admin console walk and Hub proof remain open. |
+| P8-8 | IN_PROGRESS | #36, #56, #58–#60, #99, #110 candidate | Evidence-aware owner overview (#56), 24 permission-aware console readbacks (#58), accurate incomplete health scans (#59); #60 candidate paginates quick Directory/Alert Center security snapshot with bounded, explicit, fail-closed coverage. #99 implements complete review of the current 50-topic console inventory with categories, bounded pagination and access-aware optional readback hints. Actual complete Google Admin console walk and Hub proof remain open. |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 (PR #1), account-choice fix (PR #2), domain-wide delegation + mailbox branding
@@ -1745,3 +1758,10 @@ The read-only Cloud Identity owner audit gains 16 Google-published fields across
 ### P8-7 seven-API result-qualified developer integration preflight — PR #109 candidate (October 14)
 
 **Observable capability:** an app readiness check cannot claim all required Google APIs work after an unrelated HTTP-success body. It now validates actual Google API-specific response shapes, exact Gmail mailbox identity and People self-email (if readable), typed/identified list items for Drive, Calendar, Tasks, Chat and Postmaster, and page token shape. Absent lists or empty malformed bodies are conservatively not_readable; an explicit empty array is a readable empty list. The seven APIs stay independently reported with service scope/area refusal, no mutation. Negative and empty-list tests exercise the shared handler. Live at #104 remains unaffected; code/CI and future provider checks remain independent. No new OAuth scopes, fixture writes, release or spending.
+
+
+### October 14 session handoff — PR #110 owner policy evidence bridge
+
+Reviewed, CI-gated source steps: inherited #103 repairs exact-ID Gmail fixture lifecycle; #108 expands reviewed Cloud Identity controls to 37 rules/10 areas; #109 validates seven real Google API response shapes before marking a developer preflight READY. #110 bridges that live owner policy result into `workspace_admin_overview` with distinct policy, third-party app restriction, Groups sharing and Marketplace visibility. A missing Policy API grant or inherited/partial evidence stays `not_readable`; a demonstrated policy problem remains `needs_attention`. A business-limited owner overview does not call customer-wide policies without explicit crossDomain intent, which is forwarded only as an ephemeral per-child authorization; no persistent account permission changed. Tests cover real-looking policy states, incomplete/malformed data, cross-domain refusal, isolation of client context and owner-read integration. All four separate card/source, CI, deployed HTTPS and real Google/Hub acceptance layers remain distinct; mandatory exact-head checks and review required before merge.
+
+The October 14 live production deployment independently READY at #104 `39b0413c378da525a529533456a949c23a8c8dfb` remains behind main. The native custom Workspace service genuinely confirmed approved account identity, Gmail labels, three calendars, Drive metadata handle, one tasklist and 4/4 API integration reads with no writes; **full direct/RTC/Hub acceptance not certified**. P2-7 Search Presence schema failure on old live remains pending rerun after #105 deploy. Protected TEST Gmail fixture exact-ID proof, seven-API full source-specific recheck, P7-2 policy OAuth, owner policy overview and revocation remain in the JSON release queue with exact min revisions and gates; no manual release authorized. P5-2 token retirement not before November 1 plus every-account encrypted backfill. After finishing all checked merges and final-main CI, use the concise prompt format in IMPLEMENTER.md and recompute next PR boundary. Do not pad numeric targets.
