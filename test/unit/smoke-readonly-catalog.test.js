@@ -33,6 +33,10 @@ function fake({catalog,revisionFound=revision,failedTool='',missingProbe='',wron
     actingAs:wrongMailbox?'other@example.test':account,
     gmailReports:wrongMailbox?'other@example.test':account,matches:!wrongMailbox
    }});
+   if(name==='workspace_gmail_list_messages')return ret(200,{ok:true,result:{messages:[]}});
+   if(name==='workspace_drive_list_files')return ret(200,{ok:true,result:{files:[]}});
+   if(name==='workspace_calendar_list_calendars')return ret(200,{ok:true,result:{kind:'calendar#calendarList',items:[]}});
+   if(name==='workspace_tasks_list_tasklists')return ret(200,{ok:true,result:{kind:'tasks#taskLists',items:[]}});
    return ret(200,{ok:true,result:{items:[]}});
   }
   throw Error('unexpected_path');

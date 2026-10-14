@@ -188,6 +188,17 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "2026-10-14: source now refuses foreign/duplicate/incomplete label inventory before cleanup, and rechecks before label deletion; negative test fakes for an unrelated message added before and during cleanup and truncated inventory. GitHub exact-head/READY deployed/Google TEST readback remain separate."
+  },
+  {
+    "id": "P0-2-CORE-LIST-SHAPES",
+    "priority": 2,
+    "requiredRevision": "3003fd532ec7e68b89039acd928a4e06c857dd5e",
+    "task": "Verify five-area RTC TEST smoke declares Google PASS only after native Gmail/Drive/Calendar/Tasks list shapes and full bounded result pages, never HTTP 200 alone",
+    "procedure": "scripts/smoke-readonly.mjs; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "Original owner-authorized read-only nonproduction TEST account and service-issued pass; checked READY live source at or after revision; no mutations/secrets/result bodies in logs",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14: core provider list-shape validation, fake negative 200 responses and valid native empty/full list tests implemented; exact-head CI, READY source and live Google acceptance remain separate."
   }
 ]
 ```
@@ -1872,3 +1883,11 @@ P8-7 TEST-only Calendar event creation accepts a future, real ISO date only with
 ### October 14 P8-7 Gmail TEST label isolation continuation
 
 During normal dev-fixture review, the prior Gmail cleanup test placed an unrecorded message under an RTC label yet expected the label to be deleted. That would silently remove the label from the unrelated message, even though its body remains. The corrected TEST-only workflow refuses any foreign, duplicate or partially listed label membership before cleanup; it checks owner-scoped complete membership including Spam/Trash and repeats immediately before deleting the run label after the two recorded messages are safely trashed. If a concurrent outsider appears, the run is not confirmed, the label remains and only the originally recorded messages can be in Trash. Fake negatives cover incomplete lists and concurrent foreign labeling, with no new scopes, owner grants, Gmail send, foreign writes, live release or external fixture claim. Next: exact-head full CI/reviews/merge/main CI; independently READY deployment, original authorized TEST mailbox and genuine precise cleanup evidence remain in the release queue.
+
+### October 14 P0-2 provider-shape acceptance handoff
+
+The five-area RTC smoke previously treated an HTTP 200 response as Google proof even if the returned body did not belong to the named Google API. This source slice requires native, bounded Gmail, Drive, Calendar and Tasks list representations or provider empty-list metadata before recording PASS, with no response data or bearer secrets printed. Negative fakes cover malformed 200 responses and preserve the PR #114 bounded result handle checks. Exact-head CI/reviews, main verification and independently READY checked live source remain separate from genuine TEST Google read-only acceptance. The single release queue tracks the independently authorized run. No permission, real provider fixture, production release or spending was changed here.
+
+#### October 14 connected custom-service read-only observation (23:27 UTC)
+
+The connected Robinson Google Workspace Cloud adapter reported its existing upstream reachable with matching issuer, then a direct custom-service workspace_whoami response with actingAs and gmailReports both ops@robinsonappliancerentals.com and matches=true. Calling that same custom service workspace_dev_check_integration with spec.apis=[gmail,drive,calendar,tasks] at 2026-10-14T23:27:28.919Z reported four individual READY results, status READY and changesMade=false. This is a genuine nonmutating connected-service Google provider observation (not the standard ChatGPT connector). It does not independently pin the exact upstream deployed source revision, prove the new source code at current main, satisfy owner-issued RTC TEST-pass manifest and denial checks, exercise fixtures/cleanup, or prove Hub direct/relay/Sandbox. Keep those release acceptance rows PENDING until their independent preconditions and evidence are met; do not silently promote this read observation to complete acceptance.
