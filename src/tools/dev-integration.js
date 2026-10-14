@@ -43,6 +43,7 @@ export function validateIntegrationSpec(input={}){
  const events=input.calendarEvents===undefined?[]:input.calendarEvents;
  if(!Array.isArray(events)||events.length>MAX_ITEMS||
     events.some(e=>!e||typeof e!=='object'||Array.isArray(e)||
+      typeof e.calendarId!=='string'||typeof e.eventId!=='string'||
       !GOOGLE_ID.test(e.calendarId)||!GOOGLE_ID.test(e.eventId)))
    throw Error('calendarEvents must contain up to 12 {calendarId,eventId} pairs.');
  const pairs=new Set();
