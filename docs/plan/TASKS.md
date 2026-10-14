@@ -1,3 +1,91 @@
+### Workflow maintenance handoff — published in PR #107
+
+New offline session utility: eight behavioral tests passed, including actual Git ancestry, partial releases, unknown/failed deployments, rollback, dependency gating, invalid queues, PR alignment and bounded output. All repository queues validate. Existing source/status evidence is preserved; no provider acceptance or release was performed. Owner explicitly approved publication on October 14; publish the reviewed maintenance branch, require exact-head CI/reviews, and merge only when those gates pass. No extra production release is authorized by this approval. Full broad application suites on the shared runner were interrupted after resource/time-limit failures; do not claim them passed. Existing exact-head remote CI/review gates must pass before any main merge.
+
+## Release acceptance queue — workflow optimization 2026-10-14
+
+Owner-authorized guidance/tooling maintenance: consolidated session procedure, focused
+checks between meaningful edits, substantial capability grouping, and read-only queued
+acceptance/PR-boundary report. This records source/tooling work, not a live/provider pass.
+The queue below seeds existing outstanding obligations; reconcile exact scenarios and
+already-proven evidence from the unchanged cards/ledger before running. Keep all prior
+open obligations, original fixture ownership, approvals and deployment provenance.
+
+<!-- release-acceptance:start -->
+```json
+[
+  {
+    "id": "GOOGLE-DIRECT",
+    "priority": 1,
+    "requiredRevision": "e30606d0e52a58d4d0957fd8637b173be47b6ce5",
+    "task": "Run remaining direct deployed custom-service mailbox fixtures, negative checks, readbacks and exact cleanup",
+    "procedure": "docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "Existing approved mailbox only; original pass/run ownership and owned non-primary calendar; no mail sending",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "Existing ledger/card remains authoritative; current live/provider acceptance must be reconciled at session start. Seed revision conservatively includes reviewed current main."
+  },
+  {
+    "id": "GOOGLE-RTC",
+    "priority": 2,
+    "requiredRevision": "e30606d0e52a58d4d0957fd8637b173be47b6ce5",
+    "task": "Finish remaining P8 direct/Hub/relay/Sandbox/revocation acceptance",
+    "procedure": "docs/plan/TASKS.md",
+    "gates": "Separate scoped service authorization and Hub route gates; full production catalog stays independent",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "Existing ledger/card remains authoritative; current live/provider acceptance must be reconciled at session start. Seed revision conservatively includes reviewed current main."
+  },
+  {
+    "id": "GOOGLE-DIRECT-READ",
+    "priority": 1,
+    "requiredRevision": "39b0413c378da525a529533456a949c23a8c8dfb",
+    "task": "Complete the independently authenticated deployed custom-service read-only identity, Gmail, Calendar, Drive, Tasks, account isolation and denial/readback matrix on the approved mailbox",
+    "procedure": "docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "No fixture writes; original account and connection identity; source/READY deployment independently verified",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14: live 39b0413... and Vercel production dpl_6NShNeLfWFgzR7FtU2gDry8iwZMo READY; custom workspace_whoami returned actingAs and matching Gmail ops@robinsonappliancerentals.com. Full required matrix not run; do not call partial reads PASSED."
+  },
+  {
+    "id": "P2-7-UNKNOWN",
+    "priority": 2,
+    "requiredRevision": "540bc6141d7700a76ba2a6566f77786d34aa7bc1",
+    "task": "Re-run deployed custom workflow_search_presence_check on the rentals domain and prove permission-denied Site Verification yields typed WARN/UNKNOWN, not a schema error",
+    "procedure": "docs/plan/TASKS.md",
+    "gates": "Read-only; no new OAuth scope, credentials, Google writes or false verification success",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14: current Vercel READY live 39b0413... still produced 'Schema error: workflow output does not satisfy its advertised structure' on genuine custom call. PR #105 source fix 540bc... is in main but not live; recheck at next checked release including that revision."
+  },
+  {
+    "id": "P8-7-GMAIL-ID",
+    "priority": 3,
+    "requiredRevision": "53f9a0f589e866a7c18e66ca1e19588008ad1640",
+    "task": "Verify exact Google message-ID match to connection-owned TEST fixture ledger across Gmail creation/replay/readback/trash/final cleanup; record provider receipts without recreating previously cleaned fixtures",
+    "procedure": "docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "PR #103 must first merge and be deployed; original authorized TEST-only mailbox, existing private run ledger and safe cleanup; no sending or foreign deletion",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "PR #103 code and wrong-ID negative tests passed the former exact-head CI; source was still open/stale during Oct 14 reconciliation. No real provider fixture cycle or deployed #103 proof exists."
+  }
+]
+```
+<!-- release-acceptance:end -->
+
+### October 14 verified release catch-up checkpoint
+
+GitHub main `66e11f557eea90566af2c0a0d7d364ceaad8b477` includes #107 with final-main CI and release-policy success. Independently READY Vercel production `dpl_6NShNeLfWFgzR7FtU2gDry8iwZMo` runs live `39b0413c378da525a529533456a949c23a8c8dfb` (#104), 11 commits behind main; one scheduled policy run was observed but is not itself provider acceptance. The protected custom connection genuinely returned the approved Rentals mailbox and matching Gmail identity. On that deployment `workflow_search_presence_check` genuinely failed its structured output, already repaired in main by #105 but awaiting future release. A separate read-only search returned live tool metadata; attempted further developer search met `connection_busy_retry_later`. Do not mark comprehensive direct/RTC/Hub or fixture tasks passed. Source-gated tasks remain queued and do not justify an extra manual release.
+
+
+<!-- Current repair also records no-change daily receipts: backups cannot publish later same-day development after a successful no-op. -->
+<!-- Current repair also records no-change daily receipts: backups cannot publish later same-day development after a successful no-op. -->
+## October 14 owner-requested daily release recovery repair — current
+
+Owner request on October 14: investigate and repair missed daily releases across the MCP repositories and Appliance Desk, including the quoted owner-run checked recovery. This supersedes the prior scheduled-only/no-new-trigger restriction for missed-event recovery only. Primary 00:01 Denver remains; retries are 00:17, 01:17 and 05:37 Denver plus 12:43 UTC. Explicit recovery defaults OFF and requires both the original actor and the triggering actor to be christcr2012, main, true recovery input and elapsed midnight. Every path retains successful exact-main CI, ancestry, atomic once-per-Denver-day receipt and independent readback. No production-provider activation, spending, force push or preview build is authorized.
+
+Local release safety tests pass. Merge requires exact-head application CI and review resolution. Source repair is separate from observed schedule execution and Vercel READY/alias proof; inspect actual daily run and receipt, do not equate main/live drift after a release with failure. These infrastructure PRs do not replace the existing substantive implementation batch.
+
 ## P7-3: Complete legacy audit-log pagination without breaking existing callers — 2026-10-13 (#86 candidate)
 
 The six older Reports activity aliases returned only Google's first audit page; they discarded `nextPageToken`, leaving agents unable to follow large histories through those familiar tool names. This change keeps the existing array response by default while offering explicit `withPageInfo:true` to return `{application, activities, nextPageToken}`; optional `pageToken` and `endTime` are forwarded through the already approved bounded/date-validated Reports read-only selector. Invalid arguments or malformed pagination responses fail closed before claiming a complete history. New unit tests cover every alias, default compatibility, page continuation, range validation and malformed provider data.
@@ -965,7 +1053,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P2-4 | MERGED | #14 | `workspace_where_is_setting`, 47 settings (card said ~60). Deviation: a .js file, not .json, so the serverless bundle always includes it. Direct links are from memory of Google's URL patterns: spot-check of 10 by Chris still to do; entries without a link give click paths only |
 | P2-5 | MERGED | #14 | `workflow_health_report`: scoring rules unit tested. Deviation: "unused licences" means licences held by suspended or 90-day-inactive accounts, because the API cannot show purchased seats. Deep checks (apps, forwarding) cover the first 100 active users. Manual runs and committed examples still to do |
 | P2-6 | MERGED | #14 | Real customer ID in `licensing_list_assignments`; switched-off-API errors now name the API to enable; `workspace_plan_summary` added. Manual run on both domains still to do |
-| P2-7 | IN_PROGRESS | #14, #100 candidate | Search presence read-only verification remains account-specific. Actual native custom Google provider run for the rentals domain returned Google Site Verification insufficient authentication scopes; #100 makes that case explicitly UNKNOWN instead of incorrectly reporting unverified, with safe manual Search Console and Business Profile steps. Genuine provider success after owner-authorized Site Verification OAuth consent and future checked deployment remains open. |
+| P2-7 | IN_PROGRESS | #14, #100, #105 candidate | Search presence read-only verification remains account-specific. Actual native custom Google provider run for the rentals domain returned Google Site Verification insufficient authentication scopes; #100 makes that case explicitly UNKNOWN instead of incorrectly reporting unverified, with safe manual Search Console and Business Profile steps. #105 candidate fixes a reproducible typed-result validator disagreement: the declared schema permits null unknown root/www but runtime refused it, causing the new deployed #100 fallback to fail in the custom MCP. Provider success after optional owner OAuth consent and next checked deployment remain open. |
 | P2-8 | MERGED | #14 | `workflow_weekly_digest`: emailing needs confirm:true. Manual run and committed sample still to do |
 | P3-1 | MERGED | #17, #18 | `workflow_add_staff_member`: roles map to calendar/Drive levels (driver/technician: edit calendar, no Drive access (Chris, 2026-10-01); office/admin: manage calendar, edit folder). Safe to run twice. Deviations: Chris said drivers/technicians need no Drive access; the nine standard folders were read from the live Drive; emailing needs `confirm` (login to an address, or welcome to `personalEmail`); 2-step: Google's API cannot require it for one person (the field is read-only), so the tool reports enrolment status and points to the org-unit policy (Admin console > Security). Hardening #18 also: a failed step is no longer "confirmed", a driver who already has Drive access is flagged (never silently removed), owners are never downgraded, mailbox branding is skipped when already applied, sharing lists are read to the end, and offboarding now verifies the shares are gone and respects the domain limit. `ai-systems` has no calendar/folder listed so those steps are skipped. Manual run against a disposable test user (Chris deletes it) still to do: it creates a real account |
 | P3-2 | MERGED | #15, #18 | Offboarding already had dryRun/confirm/read-back/logging from P1-3. Added: removes send-as aliases and sets the out-of-office reply (the old description promised the reply but the code never did it) before suspending, via delegation; each is skipped with a reason when delegation is off. Also removes the calendar/Drive shares granted by P3-1. #18 hardened failed-step/read-back behavior. Left as the guard wrapper rather than direct `defineWrite` (same safety behavior). |
@@ -996,7 +1084,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-4 | IN_PROGRESS | #32–#34 | Pass-only RTC manifest/HTTPS routes and DB limit implemented; deployed boundary, two-instance and D-4 acceptance not verified |
 | P8-5 | IN_PROGRESS | #34 | Pinned Hub reference conformance and local gateway tests in CI; full conformance against this service and real D-4 routes still unverified |
 | P8-6 | WAITING (optional reuse) | | Published immutable core and export-specific original-service parity; does not block P8-5, RTC routing or real Hub acceptance |
-| P8-7 | IN_PROGRESS | #40, #42–#43, #46–#48, #101, #102, #103 candidate | Existing fixture/integration workflows and earlier provider fixtures retained. #101 candidate adds exact Gmail-label and Calendar-event app preflight, closes wrong-ID Calendar/Drive-folder false readiness, with read-only permission-filtered provider probes and fake negative tests. #102 candidate independently binds every Calendar TEST fixture ledger readback, recorded replay and deletion tombstone to the exact recorded event ID, rejecting wrong-object success. #103 candidate requires exact Gmail message ID for every run reservation/readback/cleanup step and proves wrong-ID fail-closed. Exact-head CI/review, deployment, RTC TEST pass, Hub routes and external consents remain separate gates. |
+| P8-7 | IN_PROGRESS | #40, #42–#43, #46–#48, #101–#103 candidate | Existing fixture/integration workflows and earlier provider fixtures retained. #101 candidate adds exact Gmail-label and Calendar-event app preflight, closes wrong-ID Calendar/Drive-folder false readiness, with read-only permission-filtered provider probes and fake negative tests. #102 candidate independently binds every Calendar TEST fixture ledger readback, recorded replay and deletion tombstone to the exact recorded event ID, rejecting wrong-object success. Exact-head CI/review, deployment, RTC TEST pass, Hub routes and external consents remain separate gates. |
 | P8-8 | IN_PROGRESS | #36, #56, #58, #59, #60, #99 candidate | Evidence-aware owner overview (#56), 24 permission-aware console readbacks (#58), accurate incomplete health scans (#59); #60 candidate paginates quick Directory/Alert Center security snapshot with bounded, explicit, fail-closed coverage. #99 implements complete review of the current 50-topic console inventory with categories, bounded pagination and access-aware optional readback hints. Actual complete Google Admin console walk and Hub proof remain open. |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
@@ -1597,6 +1685,24 @@ After the genuine Android custom-service Google deletion/list discrepancy and th
 **Usable safe outcome:** The *same exact Google-assigned event ID* in the connection-bound durable run ledger must match the `events.get` result in recorded replay, verification and pre-delete planning; and only that ID's cancelled marker qualifies as proof in deletion post-readback and final independent cleanup confirmation. Google 404 for the requested ID still qualifies as absence, but a 200 response about another ID never does. Existing run/owner/TEST-calendar/confirmation/tags and nonproduction fences remain intact. Regression tests deliberately provide a different event with identical private tags/creator and wrong-ID tombstones, and assert no foreign delete, no clean-ledger certification, no new event create and no false green status. No Google provider writes or test fixtures occur during development.
 
 **Acceptance boundaries:** Exact PR-head `test` and `release-policy`, qualified review, safe merge, post-merge main checks; later independently READY checked daily release with true Google provider readbacks on an already authorized isolated fixture (do not regenerate previously cleaned resources). The RTC TEST `read_only` pass, catalog report, optional Hub direct/relay/Sandbox and per-account optional Google scopes remain external. P7-8 design and P5-2 Nov 1 plus all-account encrypted backfill gates unchanged.
+
+### October 14 missed scheduled live release — trigger recovery PR #104 candidate
+
+**Observed failure:** At 05:01 America/Denver on October 14, `live` and Vercel still ran `014e6a024462a8d0f22b8756a6dd9a4e676285b2` (#96), while newer main commits had exact-head successful GitHub Actions `test` + `release-policy`. GitHub's API exposed **zero `event=schedule` runs**, not a failed `scheduled-live-promotion` execution. The workflow file exists on the default `main`; ordinary pull_request/push workflow jobs are healthy. Its 00:01 Denver IANA timezone syntax matches GitHub's published scheduler contract. GitHub documents scheduled triggers can be delayed/dropped under load and changing a cron entry can reactivate a stalled schedule; workflow enabled-state through this connector was not independently readable, so **no single external scheduler cause is proven**. Do not claim the promotion code ran or errored; it had no schedule event.
+
+**Repair and owner benefit:** Re-register the existing 00:01 Denver schedule, add 00:17 and 01:17 off-minute backup triggers. All are schedule-only, use the exact same check-gated atomic fast-forward + dated marker and cannot automatically deploy extra times/day; no preview or autonomous spending change. Tests inspect all timezone/cron entries and verify the manual one-time `release-markers/YYYY-MM-DD` receipt prevents later scheduled promotion for that Denver day. The receipt branch is separate from normal atomic scheduled tag: the owner-approved REST catch-up uses expected-head nonforce live update with independently rechecked main SHA and checks, followed by a same-SHA once-per-day receipt. The receipt must be checked and the exact READY Vercel production commit proved separately. A partially written receipt is not claimed as success.
+
+**Acceptance layers:** PR #104 exact-head `test` and `release-policy`, applicable source review and final-main validation are required before exceptional catch-up. Then one-time owner-authorized October 14 release must read back `main`, `live`, ancestry, checks and any day's prior marker, use only the approved guarded ref update, verify marker, GitHub/Vercel production deployment and alias provenance. No new Google provider consent, direct RTC TEST pass, Hub or fixture acceptance follows from a successful release. P7-8 design and P5-2 November 1 + every-account encrypted backfill gates remain unchanged.
+
+### October 14 live P2-7 structured-output mismatch — PR #105 candidate
+
+**Actual production observation:** After the owner-approved one-time Oct 14 checked catch-up release of PRs #97–#102 and trigger repair #104 to SHA `39b0413c378da525a529533456a949c23a8c8dfb`, Vercel `dpl_6NShNeLfWFgzR7FtU2gDry8iwZMo` was independently READY and assigned the three production aliases, including `google-workspace-mcp-five.vercel.app`. The custom service `workspace_whoami` identified `ops@robinsonappliancerentals.com`. Newly deployed `workspace_where_is_setting({reviewAll:true,category:'security',page:1,pageSize:5})` successfully returned all 50 mapped topics, 12 matching security entries, and bounded pagination. `workspace_dev_check_integration({spec:{apis:['gmail'],gmailLabels:['INBOX']}})` returned genuine `ready` for both Gmail and the exact INBOX ID without writes. BUT native `workspace_call('workflow_search_presence_check', {domain:'robinsonappliancerentals.com'})` returned `Schema error: workflow output does not satisfy its advertised structure.` This is a **real provider/transport acceptance failure**, not a deployment failure.
+
+**Isolated code root cause:** #100 correctly returns `status:'WARN',readable:false,reason:'site_verification_scope_unavailable'` with `verified.root.verified:null` and `verified.www.verified:null` on Google Site Verification 403 missing OAuth scope. `src/rtc/structured.js` advertised each verification as boolean OR null, but its separate `matchesStructuredShape` runtime check insisted on booleans only and converted the safe unknown result into a generic schema error. No additional OAuth permission, DNS change or customer action can fix that internal mismatch.
+
+**Repair and proof:** #105 candidate aligns runtime validation with the already declared schema, **allowing null only for exact `WARN` + `readable:false` + `site_verification_scope_unavailable`**, requiring both roots null. PASS/FAIL and other readable/unknown reasons still require proper boolean proof and malformed values fail closed. A fake 403 `insufficientPermissions` is run end-to-end from actual ops handler through `attachStructuredResult`, with success and malformed negative tests. No provider writes, permissions, changes to Site Verification API calls or premature token retirement. Require exact PR-head `test`/`release-policy`, qualified review, merge and final-main checks. **Do not trigger another October 14 release:** the owner-approved catch-up and its per-day receipt are consumed; only the next scheduled checked promotion may deploy #105. A fresh real custom-provider check after that independently READY SHA is still required to certify this fix.
+
+
 
 ### P8-7 Gmail fixture exact message-ID lifecycle verification — PR #103 candidate (2026-10-14 Denver)
 
