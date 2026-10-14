@@ -166,6 +166,17 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "2026-10-14: P8-7 source now checks exact parent IDs, three reserved slot IDs and owned type/tag/ancestry on create readback and before cleanup; fake regressions added. CI, deployed source and real Google TEST lifecycle are distinct and pending; no fixture created in this PR."
+  },
+  {
+    "id": "P8-7-CALENDAR-STRICT",
+    "priority": 3,
+    "requiredRevision": "561f3c49c7f39a98a5de8e994ddd04f647c4fa51",
+    "task": "Prove timezone-explicit Calendar TEST fixture creation, exact provider event ID/recorded reservation ID agreement and genuine event cleanup on original approved owner-owned nonprimary calendar",
+    "procedure": "src/tools/dev-calendar.js; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "Original TEST-only service authorization, exact nonprimary calendar ownership, existing fixture run reservations, provider readbacks and safeguarded confirmation; no user calendar event unless authorized",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14: calendar fixture validator rejects missing timezone, impossible date and invalid offsets; readback now refuses reservation ID disagreement before declaring confirmation. Fake tests added; exact-head CI/review, READY checked release and actual Google TEST provider acceptance remain separate."
   }
 ]
 ```
@@ -1842,3 +1853,7 @@ The October 14 live production deployment independently READY at #104 `39b0413c3
 **Source outcome:** Repair a demonstrated difference between initial Drive fixture ownership checks and final acceptance/cleanup. The TEST Drive path now checks the exact caller-selected parent ID, complete three-kind/three-ID reservation graph, recorded parent-child relationships and observed provider ID, owner, MIME, rtc_run/rtc_kind tags and parent of every created/trashed object. The cleanup preflight rejects an incomplete, duplicated or conflicting ledger before any trash operation. Added regression cases for wrong provider parent, changed owner/MIME/tag/parent, missing ledger child and zero unintended trash calls. No new Google permission, fixture, account, send, release or override of consent/confirmation is introduced.
 
 **Evidence and next action:** First source commit `4c6c59336d4bef65cdd7ba03a04428144d5ba888`; current PR branch code/tests require exact-head GitHub `test` and `release-policy`, review, merge and post-merge main checks. Actual Google TEST run, precise replay/readback/trash and separate RTC/Hub route evidence stay PENDING in the single release acceptance queue (P8-7-DRIVE-EXACT). Once the independently verified READY release includes the source, use only the saved original service-issued TEST pass/fixture ownership with the documented guarded cleanup. Next eligible engineering follows the approved roadmap; P5-2 still cannot run before 2026-11-01 plus verified encryption backfill, and P7-8 retains prior owner design review.
+
+### October 14 P8-7 Calendar ISO time and reserved-ID integrity continuation
+
+P8-7 TEST-only Calendar event creation accepts a future, real ISO date only with a declared UTC or numeric timezone; absence of a timezone or normalized invalid Gregorian day is refused. Creation readback now requires the original recorded reservation ID to match the exact event ledger ID before trusting Google response, alongside the separate-owned-calendar and creator/run/kind verification already in place. Unit negative regressions cover invalid dates and changed reservations. This neither creates a real event nor widens permissions. Gate new exact-head CI and independent review before merge; record main and READY live separately, and retain the pending owner-authorized genuine Calendar provider/replay/cleanup proof in the single queue. Continue the approved roadmap in order. No manual release authorized.

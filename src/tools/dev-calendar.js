@@ -3,12 +3,25 @@
 import crypto from 'node:crypto';
 import { startDevRun,reserveDevStep,recordDevObject,markDevStepRecorded,getDevRun,markDevObjectCleaned } from '../db.js';
 import { isNotFound } from './write.js';
-const ISO=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:/;
+const ISO=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,9})?(Z|([+-])(\d{2}):(\d{2}))$/;
+function validCalendarStart(value){
+ const match=ISO.exec(value);if(!match)return false;
+ const [,year,month,day,hour,minute,second,timezone,sign,offsetHour,offsetMinute]=match;
+ if(Number(hour)>23||Number(minute)>59||Number(second)>59)return false;
+ const zone=sign==='-'?-1:1;
+ const offset=timezone==='Z'?0:zone*(Number(offsetHour)*60+Number(offsetMinute));
+ if(timezone!=='Z'&&(Number(offsetHour)>14||Number(offsetMinute)>59||
+   (Number(offsetHour)===14&&Number(offsetMinute)!==0)))return false;
+ const timestamp=Date.parse(value);
+ if(!Number.isFinite(timestamp))return false;
+ const local=new Date(timestamp+offset*60000);
+ return local.toISOString().slice(0,10)===year+'-'+month+'-'+day;
+}
 export function validateCalendarRequest(args={}){
  if(typeof args.calendarId!=='string'||!args.calendarId.trim()||args.calendarId==='primary'||args.calendarId.length>256)
    throw Error('Choose an existing separate test calendar ID, not primary.');
  if(args.folder!==undefined)throw Error('Calendar fixtures cannot target Drive folders.');
- if(args.startAt!==undefined&&(!ISO.test(args.startAt)||!Number.isFinite(Date.parse(args.startAt))))
+ if(args.startAt!==undefined&&(!ISO.test(args.startAt)||!Number.isFinite(Date.parse(args.startAt))||!validCalendarStart(args.startAt)))
    throw Error('startAt must be a valid ISO time with a timezone offset.');
  return args.calendarId;
 }
@@ -81,7 +94,9 @@ export async function calendarReadback(clients,identity,runId){
  const obj=run.objects[0];
  await requireTestCalendar(clients,run.calendar_id,identity);
  try{
-  if(obj.kind!=='event'||obj.parent_id!==run.calendar_id)throw Error('Wrong recorded event parent.');
+  if(obj.kind!=='event'||obj.parent_id!==run.calendar_id||
+     run.steps[0].kind!=='event'||run.steps[0].google_id!==obj.google_id)
+   throw Error('Calendar provider ID and recorded reservation must match.');
   const response=await clients.calendar.events.get({calendarId:run.calendar_id,eventId:obj.google_id});
   exactCalendarEvent(response.data,runId,identity,obj.google_id);
   return {runId,verified:true,objects:[{kind:'event',id:obj.google_id,verified:true}]};

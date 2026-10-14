@@ -8,7 +8,7 @@ vi.mock('../../src/db.js',async(importActual)=>{
 });
 const {handlers,tools}=await import('../../src/tools/dev-fixtures.js');
 const {isWrite,allowedTool}=await import('../../src/rtc/catalog.js');
-const {calendarReadback,inspectCalendarCleanup,confirmCalendarGone,deleteRecordedCalendarFixture,exactCalendarEvent}=await import('../../src/tools/dev-calendar.js');
+const {calendarReadback,inspectCalendarCleanup,confirmCalendarGone,deleteRecordedCalendarFixture,exactCalendarEvent,validateCalendarRequest}=await import('../../src/tools/dev-calendar.js');
 const body=r=>JSON.parse(r.content[0].text);
 beforeEach(()=>{state.db=createFakeDb();});
 function setup(){
@@ -259,6 +259,15 @@ describe('P8-7 TEST Calendar event fixtures',()=>{
   when('calendar.events.delete').resolves(({eventId})=>{byId.get(eventId).status='cancelled';return {data:{}};});
   return {clients,calls,when,byId};
  }
+ it('requires a real ISO date and explicit timezone for TEST events',()=>{
+  for(const invalid of [
+   '2026-10-15T10:30:00','2026-02-30T10:30:00Z',
+   '2026-11-31T10:30:00-07:00','2026-10-15T10:30:00+14:30',
+   '2026-10-15T25:30:00Z','2026-10-15T10:61:00Z'
+  ])expect(()=>validateCalendarRequest({calendarId,startAt:invalid}),invalid).toThrow(/ISO time/);
+  for(const valid of ['2028-02-29T10:30:00Z','2028-02-29T10:30:00-07:00','2028-02-29T10:30:00.123+05:30'])
+   expect(validateCalendarRequest({calendarId,startAt:valid})).toBe(calendarId);
+ });
  it('previews without creating anything and rejects primary or reader calendars',async()=>{
   const s=cal();
   const preview=body(await handlers.workspace_dev_create_fixtures({...args,dryRun:true},s.clients));
@@ -355,6 +364,12 @@ describe('P8-7 independently bound Calendar ledger ID evidence',()=>{
    };
    return {clients,calls,when,identity,event,seed};
  }
+ it('refuses Calendar readback when the original reserved ID differs from the ledger object',async()=>{
+   const s=prepare();await s.seed();
+   state.db.__state.devRuns.get(runId).steps[0].google_id='different-reserved-event';
+   expect((await calendarReadback(s.clients,s.identity,runId)).verified).toBe(false);
+   expect(s.calls.filter(x=>x.path==='calendar.events.delete')).toHaveLength(0);
+ });
  it('rejects another provider event ID even if run tags and creator are identical',async()=>{
    const s=prepare();const run=await s.seed();
    s.when('calendar.events.get').resolves({data:{...s.event,id:'foreign-event'}});
