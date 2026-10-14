@@ -1,3 +1,15 @@
+### October 14 completion recovery — source proof, release proof remains queued
+
+Recovered PR #110's owner-overview finding: guarded read composition consumes full
+policy evidence in-process, preserving domain/profile/customer-wide consent and typed
+validation. Only the final external result is shaped/stored; no transport option
+bypasses budgets or exposes raw internal handlers. The actual-registry regression
+covers the large policy report, final owned handle, no child storage, denials,
+foreign domains and rejection of writes/brokers/unregistered handlers. Local check
+and all 1,475 unit tests passed; required exact-head database/RTC CI and deployed
+provider acceptance remain separate. Repin P8-8 to this repair's source commit before
+publication; no Google write or new permission occurred.
+
 ### Workflow maintenance handoff — published in PR #107
 
 New offline session utility: eight behavioral tests passed, including actual Git ancestry, partial releases, unknown/failed deployments, rollback, dependency gating, invalid queues, PR alignment and bounded output. All repository queues validate. Existing source/status evidence is preserved; no provider acceptance or release was performed. Owner explicitly approved publication on October 14; publish the reviewed maintenance branch, require exact-head CI/reviews, and merge only when those gates pass. No extra production release is authorized by this approval. Full broad application suites on the shared runner were interrupted after resource/time-limit failures; do not claim them passed. Existing exact-head remote CI/review gates must pass before any main merge.

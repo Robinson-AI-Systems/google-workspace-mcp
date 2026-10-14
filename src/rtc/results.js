@@ -3,10 +3,24 @@ import { summarizeGoogleResult } from './summary.js';
 import crypto from 'node:crypto';
 import { OUTPUT_SCHEMAS, attachStructuredResult } from './structured.js';
 import { storeRtcResult, getRtcResult } from '../db.js';
-import { isWrite, RTC_META } from './catalog.js';
+import { isWrite, RTC_META, allowedTool } from './catalog.js';
 import { ok, errorResult } from '../tools/util.js';
 import {isGuardedWrite,inheritGuardedWrite} from '../tools/write.js';
 export const INLINE_BYTES = 8192;
+// Composition consumes full read evidence in-process. Only wrappers installed
+// below can recover their already domain-guarded handler; no transport argument
+// disables result budgets or exposes this internal route to callers.
+const compositionReads = new WeakMap();
+export async function callReadForComposition(registry,name,args={},clients){
+ try{
+  if(RTC_META.has(name)||isWrite(name)||!allowedTool(name,clients?.rtcPolicy||{}))
+   throw new Error('Read composition is outside this connection policy.');
+  const original=compositionReads.get(registry.handlers[name]);
+  if(!original)throw new Error('No guarded read composition handler.');
+  const {fields,detail,...input}=args;
+  return attachStructuredResult(name,await original(input,clients));
+ }catch(e){return errorResult(e);}
+}
 function pick(value,parts) {
  if (!parts.length) return value;
  if (Array.isArray(value)) return value.map(x=>pick(x,parts));
@@ -132,6 +146,7 @@ export function applyResultRules(registry){
    }
    catch(e){return errorResult(e);}
   };
+  compositionReads.set(registry.handlers[tool.name],original);
   return {...tool,inputSchema:{...tool.inputSchema,properties:props},...(OUTPUT_SCHEMAS[tool.name]?{outputSchema:OUTPUT_SCHEMAS[tool.name]}:{})};
  });
  return registry;
