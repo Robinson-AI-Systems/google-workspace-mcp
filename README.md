@@ -35,12 +35,12 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 <!-- BEGIN GENERATED TOOL CATALOG -->
 <!-- Registry-derived; regenerate with `npm run gen:catalog`. Do not edit this section by hand. -->
 
-**377 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
+**378 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
 
 | Area | Registered tools |
 | --- | ---: |
 | admin | 111 |
-| calendar | 23 |
+| calendar | 24 |
 | chat | 8 |
 | chrome | 3 |
 | contacts | 7 |
@@ -169,7 +169,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `vault_list_matters`
 - `vault_remove_hold`
 
-### calendar (23)
+### calendar (24)
 
 - `calendar_add_attendee`
 - `calendar_create_calendar`
@@ -194,6 +194,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `calendar_unshare_calendar`
 - `calendar_update_calendar`
 - `calendar_update_event`
+- `calendar_verify_calendar_deletion`
 
 ### chat (8)
 

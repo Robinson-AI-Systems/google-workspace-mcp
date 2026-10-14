@@ -7,6 +7,7 @@
 // Rule for adding tools: every tool whose name contains "_delete" must have an entry here
 // (test/unit/guards.test.js fails if one is missing).
 import { guard, gone } from './write.js';
+import { inspectCalendarDeletion } from './calendar-deletion.js';
 import { delegatedGmail, delegationReady, mailboxAllowed } from './delegated.js';
 
 import { CUSTOMER, pick, data, orgPath, D, same, SCALARS } from './guard-helpers.js';
@@ -247,7 +248,8 @@ const CORE = {
   calendar_delete_calendar: { destructive: D,
     describe: (a) => ({ target: a.calendarId, summary: `PERMANENTLY delete the calendar ${a.calendarId} and all its events` }),
     before: (a, { calendar }) => data(calendar.calendars.get({ calendarId: a.calendarId })).then((c) => pick(c, ['id', 'summary', 'timeZone'])),
-    after: gone((a, { calendar }) => data(calendar.calendars.get({ calendarId: a.calendarId }))) },
+    after: inspectCalendarDeletion,
+    verify: (a, before, after) => after?.exists === false },
   calendar_delete_event: { destructive: D,
     describe: (a) => ({ target: a.eventId, summary: `Delete the calendar event ${a.eventId}${(a.sendUpdates || 'all') !== 'none' ? ' (guests are told)' : ''}` }),
     before: (a, { calendar }) => data(calendar.events.get({ calendarId: a.calendarId || 'primary', eventId: a.eventId })).then((e) => pick(e, ['summary', 'start', 'end', 'status'])),

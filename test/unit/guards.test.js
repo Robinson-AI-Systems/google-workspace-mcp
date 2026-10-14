@@ -252,3 +252,118 @@ describe('guarded tools, confirmed', () => {
     expect(out).toMatchObject({ done: true, confirmed: true, after: { exists: false } });
   });
 });
+
+
+describe('secondary-calendar delete verification against conflicting Google reads', () => {
+  const id = 'scratch-123@example.test';
+  const run = (clients) => registry.handlers.calendar_delete_calendar({ calendarId: id, confirm: true }, clients).then(body);
+
+  it('confirms cleanup when the exact calendar resource returns 404', async () => {
+    const { clients, calls, when } = makeFakeClients();
+    when('calendar.calendars.get').resolvesOnce({ data: { id, summary: 'Scratch' } });
+    when('calendar.calendars.get').rejects(googleError(404, 'notFound', 'Gone'));
+    const result = await run(clients);
+    expect(result).toMatchObject({ done: true, confirmed: true, after: { exists: false, verification: 'calendar_not_found' } });
+    expect(calls.filter(c => c.path === 'calendar.calendars.delete')).toHaveLength(1);
+    expect(calls.some(c => c.path === 'calendar.calendarList.delete')).toBe(false);
+  });
+
+  it('does not call a calendar permanently deleted when it is unlisted but metadata lingers', async () => {
+    const { clients, calls, when } = makeFakeClients();
+    when('calendar.calendars.get').resolves({ data: { id, summary: 'Scratch' } });
+    when('calendar.calendarList.get').rejects(googleError(404, 'notFound', 'Not on list'));
+    const result = await run(clients);
+    expect(result).toMatchObject({
+      done: true, confirmed: false,
+      after: { exists: null, listed: false, metadataReadable: true, verification: 'not_listed_metadata_readable' }
+    });
+    expect(result.after.note).toMatch(/not yet been verified/i);
+    expect(result.after).not.toHaveProperty('stillThere');
+    expect(calls.filter(c => c.path === 'calendar.calendars.delete')).toHaveLength(1);
+    expect((await holder.db.listRecentChanges())).toHaveLength(1);
+  });
+
+  it('does not confirm when the exact calendar still appears in the account list', async () => {
+    const { clients, when } = makeFakeClients();
+    when('calendar.calendars.get').resolves({ data: { id, summary: 'Scratch' } });
+    when('calendar.calendarList.get').resolves({ data: { id, summary: 'Scratch' } });
+    expect(await run(clients)).toMatchObject({
+      confirmed: false, after: { exists: true, listed: true, verification: 'still_listed' }
+    });
+  });
+
+  it('accepts an exact-ID deleted resource marker but not a mismatched one', async () => {
+    const { clients, when } = makeFakeClients();
+    when('calendar.calendars.get').resolvesOnce({ data: { id, summary: 'Scratch' } });
+    when('calendar.calendars.get').resolves({ data: { id, deleted: true } });
+    expect(await run(clients)).toMatchObject({ confirmed: true, after: { exists: false, verification: 'calendar_deleted_marker' } });
+
+    const other = makeFakeClients();
+    other.when('calendar.calendars.get').resolvesOnce({ data: { id } });
+    other.when('calendar.calendars.get').resolves({ data: { id: 'some-other-calendar', deleted: true } });
+    other.when('calendar.calendarList.get').rejects(googleError(404, 'notFound', 'Not on list'));
+    expect(await run(other.clients)).toMatchObject({ confirmed: false, after: { exists: null, verification: 'inconclusive' } });
+  });
+
+  it('leaves verification inconclusive when the list read itself fails', async () => {
+    const { clients, when } = makeFakeClients();
+    when('calendar.calendars.get').resolves({ data: { id } });
+    when('calendar.calendarList.get').rejects(googleError(403, 'forbidden', 'Temporary API refusal'));
+    expect(await run(clients)).toMatchObject({
+      confirmed: false, after: { exists: null, listed: null, verification: 'inconclusive' }
+    });
+  });
+
+  it('never deletes a calendar without explicit confirmation', async () => {
+    const { clients, calls } = makeFakeClients();
+    const result = body(await registry.handlers.calendar_delete_calendar({ calendarId: id }, clients));
+    expect(result).toMatchObject({ done: false, needsConfirmation: true });
+    expect(calls.some(c => c.path === 'calendar.calendars.delete')).toBe(false);
+  });
+});
+
+describe('repeatable read-only secondary calendar cleanup verification', () => {
+  const id = 'scratch-123@example.test';
+  const verify = (clients) => registry.handlers.calendar_verify_calendar_deletion({ calendarId: id }, clients).then(body);
+
+  it('confirms an exact resource 404 without attempting any mutation', async () => {
+    const { clients, calls, when } = makeFakeClients();
+    when('calendar.calendars.get').rejects(googleError(404, 'notFound', 'No such calendar'));
+    expect(await verify(clients)).toMatchObject({ exists: false, verification: 'calendar_not_found' });
+    expect(mutations(calls)).toEqual([]);
+    expect(await holder.db.listRecentChanges()).toHaveLength(0);
+  });
+
+  it('reconciles invisible list entry and still-readable metadata without another delete', async () => {
+    const { clients, calls, when } = makeFakeClients();
+    when('calendar.calendars.get').resolves({ data: { id, summary: 'Temporary' } });
+    when('calendar.calendarList.get').rejects(googleError(404, 'notFound', 'Not listed'));
+    expect(await verify(clients)).toMatchObject({
+      exists: null, listed: false, metadataReadable: true, verification: 'not_listed_metadata_readable'
+    });
+    expect(mutations(calls)).toEqual([]);
+  });
+
+  it('tells the owner when a calendar is still visible, without treating it as gone', async () => {
+    const { clients, calls, when } = makeFakeClients();
+    when('calendar.calendars.get').resolves({ data: { id } });
+    when('calendar.calendarList.get').resolves({ data: { id } });
+    expect(await verify(clients)).toMatchObject({ exists: true, listed: true, verification: 'still_listed' });
+    expect(mutations(calls)).toEqual([]);
+  });
+
+  it('does not claim success for a wrong-ID tombstone or denied metadata lookup', async () => {
+    const first = makeFakeClients();
+    first.when('calendar.calendars.get').resolves({ data: { id: 'other', deleted: true } });
+    first.when('calendar.calendarList.get').rejects(googleError(404, 'notFound', 'Not listed'));
+    expect(await verify(first.clients)).toMatchObject({ exists: null, verification: 'inconclusive' });
+    expect(mutations(first.calls)).toEqual([]);
+
+    const second = makeFakeClients();
+    second.when('calendar.calendars.get').rejects(googleError(403, 'forbidden', 'Not authorized'));
+    const denied = await registry.handlers.calendar_verify_calendar_deletion({ calendarId: id }, second.clients);
+    expect(denied.content[0].text).toMatch(/What happened|Not authorized|permission|forbidden/i);
+    expect(denied.content[0].text).not.toMatch(/"exists"\s*:\s*false/);
+    expect(mutations(second.calls)).toEqual([]);
+  });
+});
