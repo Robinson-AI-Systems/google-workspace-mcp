@@ -59,7 +59,7 @@ const options=(http,fixtures=requests)=>({
 });
 describe('owner-authorized exact-ID read-only fixture runner',()=>{
  it('keeps the whole explicit allowlist aligned with exact identity validators',()=>{
-  expect(FIXTURE_TOOL_NAMES.sort()).toEqual(Object.keys(FIXTURE_READ_PROOFS).sort());
+  expect([...FIXTURE_TOOL_NAMES].sort()).toEqual(Object.keys(FIXTURE_READ_PROOFS).sort());
   expect(parseExactReadFixtures(requests,account)).toHaveLength(12);
   const message=parseExactReadFixtures([requests[1]],account)[0];
   expect(message.args).toEqual({messageId:'msg1',format:'metadata'});
