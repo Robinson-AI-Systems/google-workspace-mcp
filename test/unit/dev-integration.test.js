@@ -41,6 +41,15 @@ describe('RTC app development integration inspection',()=>{
    expect(accessed.map(x=>x.name)).toEqual(['gmail','drive','calendar','tasks','calendarResource','folder']);
    expect(accessed.every(x=>x.payload&&typeof x.payload==='object')).toBe(true);
  });
+ it('refuses successful Gmail profile reads for a different acting mailbox',async()=>{
+   const {c}=clients();
+   c.gmail.users.getProfile=async()=>({data:{emailAddress:'some-other-business@example.test'}});
+   const out=await inspectGoogleIntegration({apis:['gmail','calendar']},c);
+   expect(out.status).toBe('not_readable');
+   expect(out.checks[0]).toMatchObject({kind:'api',name:'gmail',status:'not_readable',reason:'google_probe_failed'});
+   expect(out.checks[1].status).toBe('ready');
+   expect(out.changesMade).toBe(false);
+ });
  it('reports API permission denial rather than inventing success or printing provider details',async()=>{
    const {c}=clients({denyApi:'drive'});
    const result=await inspectGoogleIntegration({apis:['drive']},c);
