@@ -1,37 +1,54 @@
 import { data } from './guard-helpers.js';
 import { isNotFound } from './write.js';
 
-// A deleted secondary calendar can disappear from CalendarList before Google's
-// Calendars.get metadata stops being readable. Neither an unlisted entry nor a
-// successful DELETE response alone proves permanent deletion. Report both
-// observations without treating a stale resource response as verified cleanup.
+// Permanent calendar deletion is only confirmed when the exact resource and
+// account-list observations agree. The two Google endpoints can converge at
+// different times, and a forbidden or malformed read is never proof of absence.
+// This helper is shared by the guarded delete readback and a read-only verifier;
+// it must never issue a mutating request or retry DELETE.
 export async function inspectCalendarDeletion(args, { calendar }) {
+  const id = args.calendarId;
   let metadata;
+  let resourceNotFound = false;
   try {
-    metadata = await data(calendar.calendars.get({ calendarId: args.calendarId }));
+    metadata = await data(calendar.calendars.get({ calendarId: id }));
   } catch (error) {
-    if (isNotFound(error)) return { exists: false, verification: 'calendar_not_found' };
-    throw error;
-  }
-  if (metadata?.deleted === true && metadata?.id === args.calendarId) {
-    return { exists: false, verification: 'calendar_deleted_marker' };
+    if (!isNotFound(error)) throw error;
+    resourceNotFound = true;
   }
 
   let listed = null;
   try {
-    const entry = await data(calendar.calendarList.get({ calendarId: args.calendarId }));
-    if (entry?.id === args.calendarId) listed = entry.deleted === true ? false : true;
+    const entry = await data(calendar.calendarList.get({ calendarId: id }));
+    if (entry?.id === id) listed = entry.deleted === true ? false : true;
+    // A successful response for a different ID (or missing ID) proves nothing.
   } catch (error) {
     if (isNotFound(error)) listed = false;
-    // A denied or transient list read is not evidence of absence.
+    // A denied or transient list read cannot confirm either presence or absence.
   }
 
-  const metadataReadable = metadata?.id === args.calendarId;
-  const verification = metadataReadable && listed === true
-    ? 'still_listed'
-    : metadataReadable && listed === false
-      ? 'not_listed_metadata_readable'
-      : 'inconclusive';
+  const metadataReadable = !resourceNotFound && metadata?.id === id;
+  const deletedMarker = metadataReadable && metadata.deleted === true;
+
+  if (listed === false && (resourceNotFound || deletedMarker)) {
+    return {
+      exists: false,
+      verification: resourceNotFound ? 'calendar_not_found' : 'calendar_deleted_marker',
+      listed: false,
+      metadataReadable
+    };
+  }
+
+  const verification = resourceNotFound && listed === true
+    ? 'not_found_but_listed'
+    : deletedMarker && listed === true
+      ? 'deleted_marker_still_listed'
+      : metadataReadable && listed === true
+        ? 'still_listed'
+        : metadataReadable && listed === false
+          ? 'not_listed_metadata_readable'
+          : 'inconclusive';
+
   return {
     exists: verification === 'still_listed' ? true : null,
     verification,
@@ -39,7 +56,8 @@ export async function inspectCalendarDeletion(args, { calendar }) {
     metadataReadable,
     note: verification === 'not_listed_metadata_readable'
       ? 'This calendar is absent from the account list, but Google still returns its metadata. Permanent deletion has not yet been verified; check the exact ID again later.'
-      : 'Google has not independently confirmed permanent deletion of this calendar.'
+      : verification === 'not_found_but_listed' || verification === 'deleted_marker_still_listed'
+        ? 'The calendar resource looks deleted, but its exact account-list entry remains visible. Cleanup is not confirmed; recheck later without deleting again.'
+        : 'Google has not independently confirmed permanent deletion of this calendar.'
   };
 }
-
