@@ -6,7 +6,7 @@ const revision='d'.repeat(40);
 const account='scratch@example.test';
 const origin='https://mcp.example.test';
 
-function fake({catalog,revisionFound=revision,failedTool='',wrongMailbox=false,cycle=false}={}){
+function fake({catalog,revisionFound=revision,failedTool='',missingProbe='',wrongMailbox=false,cycle=false}={}){
  const tools=catalog||[
   ...SAFE_READ_PROBES.map(p=>({name:p.name,area:p.area,writes:false,annotations:{readOnlyHint:true}})),
   {name:'workspace_admin_get_user',area:'admin',writes:false,annotations:{readOnlyHint:true}},
@@ -21,7 +21,7 @@ function fake({catalog,revisionFound=revision,failedTool='',wrongMailbox=false,c
   if(u.pathname==='/api/whoami')return ret(200,{ok:true,result:{account,profile:'read_only',mode:'test',allow_writes:false,areas:null}});
   if(u.pathname==='/api/tools'){
    const query=u.searchParams.get('q');
-   if(query)return ret(200,{ok:true,result:{tools:tools.filter(t=>t.name===query)}});
+   if(query)return ret(200,{ok:true,result:{tools:query===missingProbe?[]:tools.filter(t=>t.name===query)}});
    const page=Number(u.searchParams.get('page')||'1');
    const rows=tools.slice((page-1)*100,page*100);
    return ret(200,{ok:true,result:{tools:rows,next:cycle&&page===1?'1':page*100<tools.length?String(page+1):null}});
@@ -105,6 +105,15 @@ describe('P0-2 complete authorized catalog inventory and vetted reads',()=>{
    status:'FAIL',reason:'provider_read_failed'
   });
   expect(result.summary.failed).toBe(1);
+ });
+ it('treats disagreement between complete catalog and exact-name lookup as a failed probe',async()=>{
+  const f=fake({missingProbe:'workspace_gmail_get_pop_settings'});
+  const result=await runCatalogReadOnlySmoke(options(f));
+  expect(result.ok).toBe(false);
+  expect(result.catalogComplete).toBe(true);
+  expect(result.tools.find(t=>t.tool==='workspace_gmail_get_pop_settings')).toMatchObject({
+   status:'FAIL',reason:'advertised_probe_unavailable'
+  });
  });
  it('cannot run real RTC calls by default or without a protected TEST pass',async()=>{
   const spy=vi.spyOn(console,'error').mockImplementation(()=>{});
