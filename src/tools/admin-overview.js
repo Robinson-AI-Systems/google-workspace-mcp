@@ -2,6 +2,7 @@
 // A failed, partial, denied or unobserved check is never presented as healthy.
 import { ok } from './util.js';
 import { allowedTool } from '../rtc/catalog.js';
+import { callReadForComposition } from '../rtc/results.js';
 
 const secretShape=/rtc_pass_[A-Za-z0-9_-]{43}/g;
 const errors=e=>String(e?.message||e).replace(secretShape,'[redacted]').slice(0,160);
@@ -198,7 +199,7 @@ export const tools=[{
 export const handlers={
  async workspace_admin_overview(args={},clients){
   const {registry}=await import('./index.js');
-  return ok(await buildAdminOverview(clients,(name,childArgs,c)=>registry.handlers[name](childArgs,c),
+  return ok(await buildAdminOverview(clients,(name,childArgs,c)=>callReadForComposition(registry,name,childArgs,c),
    {crossDomain:args.crossDomain===true}));
  }
 };

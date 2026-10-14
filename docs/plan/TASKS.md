@@ -1,3 +1,15 @@
+### October 14 completion recovery — source proof, release proof remains queued
+
+Recovered PR #110's owner-overview finding: guarded read composition consumes full
+policy evidence in-process, preserving domain/profile/customer-wide consent and typed
+validation. Only the final external result is shaped/stored; no transport option
+bypasses budgets or exposes raw internal handlers. The actual-registry regression
+covers the large policy report, final owned handle, no child storage, denials,
+foreign domains and rejection of writes/brokers/unregistered handlers. Local check
+and all 1,475 unit tests passed; required exact-head database/RTC CI and deployed
+provider acceptance remain separate. Repin P8-8 to this repair's source commit before
+publication; no Google write or new permission occurred.
+
 ### Workflow maintenance handoff — published in PR #107
 
 New offline session utility: eight behavioral tests passed, including actual Git ancestry, partial releases, unknown/failed deployments, rollback, dependency gating, invalid queues, PR alignment and bounded output. All repository queues validate. Existing source/status evidence is preserved; no provider acceptance or release was performed. Owner explicitly approved publication on October 14; publish the reviewed maintenance branch, require exact-head CI/reviews, and merge only when those gates pass. No extra production release is authorized by this approval. Full broad application suites on the shared runner were interrupted after resource/time-limit failures; do not claim them passed. Existing exact-head remote CI/review gates must pass before any main merge.
@@ -94,7 +106,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P8-8-OWNER-POLICIES",
     "priority": 4,
-    "requiredRevision": "7bd2dcb588e56f74ca9c9e71be68b93ec8324b49",
+    "requiredRevision": "5e17f876a7f9873fae49e7ace9f4804b86020cc3",
     "task": "On future checked deployed revision verify owner overview exposes Cloud Identity policy differences, unknown/inherited settings, scoped opt-in and actual per-area reports without implying effective domain settings",
     "procedure": "docs/plan/TASKS.md",
     "gates": "Read-only P7-2 Google Policy API; optional real Super Admin consent; explicit crossDomain owner approval for limited connections; no Google settings writes",
@@ -102,7 +114,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P7-2-POLICY-AUDIT"
     ],
     "status": "PENDING",
-    "lastEvidence": "2026-10-14 source #110: owner overview integrates P7-2 policy results with separate app-access/Groups/Marketplace evidence; automated fake and auth isolation tests only. Requires P7-2 genuine provider acceptance, checked future live source and new owner overview readback."
+    "lastEvidence": "October 14 repair: genuine registry wrapper regression consumes the full policy audit with preserved profile/domain/consent guards and final owned result budgets. 1,475 local unit tests passed; deployed Google readback is still PENDING and depends on genuine P7-2 acceptance."
   }
 ]
 ```
