@@ -80,9 +80,12 @@ use required exact-head Actions evidence for execution they cannot perform local
 Do not invent commands, relax coverage or merge gates, or rerun unchanged passing checks
 unless changes or new evidence invalidate them. Live proof remains in the release queue.
 
-Use `npm run check` and affected `test/unit` tests; DB changes need `test:db`,
-and RTC changes need `test:rtc`. Assert recorded Google client method and exact
-arguments; default fake `{ data: {} }` responses cannot prove new request shapes.
+Use `npm run check` and affected `test/unit` tests; DB changes need `test:db`.
+For RTC integration/runner changes, prepare `.rtc-hub` at the reviewed commit pinned
+in `.github/workflows/ci.yml`, then run both `npm run test:rtc` and
+`node scripts/rtc-conformance-ci.mjs`; the Vitest suite does not execute that runner.
+Assert recorded Google client method and exact arguments; default fake `{ data: {} }`
+responses cannot prove new request shapes.
 
 **PR merge readiness and product acceptance are separate.** A safe implementation PR
 may merge with deployment-dependent proof queued, when all pre-merge gates pass and
