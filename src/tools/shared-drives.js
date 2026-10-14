@@ -46,7 +46,9 @@ export function restrictionsOf(a = {}) {
 export const handlers = {
   drive_list_shared_drives: async (a, { drive }) => {
     const res = await drive.drives.list({ pageSize: Math.min(Number(a.maxResults) || 50, 100), pageToken: a.pageToken, q: a.query, fields: LIST_VIEW, ...asAdmin(a) });
-    return ok(res.data);
+    // Empty native pages may omit drives; retain the page cursor and
+    // expose an explicit typed collection for consumer and smoke checks.
+    return ok({ ...res.data, drives: res.data.drives || [] });
   },
   drive_get_shared_drive: async (a, { drive }) => ok((await drive.drives.get({ driveId: a.driveId, fields: VIEW, ...asAdmin(a) })).data),
   drive_create_shared_drive: async (a, { drive }) => {

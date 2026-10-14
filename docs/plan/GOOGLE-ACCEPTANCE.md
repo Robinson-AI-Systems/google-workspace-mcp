@@ -32,3 +32,17 @@ node scripts/google-test-acceptance.mjs --owner-authorized-cleanup
 Cleanup-only does not require the prior read-only pass to remain valid, but still verifies current deployed revision, approved write-pass identity and actual Google mailbox. A new pass cannot own an old fixture run. If the original write pass is expired or revoked, stop and obtain an owner-reviewed exact-ID recovery plan; **do not** widen account/connection ownership. Any pass left valid after a failed run must be revoked through the owner's guarded mechanism once safe cleanup/recovery is completed.
 
 A permanent ledger update may include sanitized results, source and independently verified deployment identity, counts, denied operations, disposition and re-entry requirements; never include actual pass secrets or unrelated mailbox data. Genuine deployed, Google, Hub and Sandbox acceptance remain separately tracked in TASKS.md and the hosting policy.
+
+## Optional exact-ID read-only acceptance after an eligible checked release
+
+For a separately owner-authorized **read-only TEST** pass, validate existing nonproduction Google objects by their actual provider IDs without recreating fixtures or touching mailbox, calendar, or Drive state. Source/CI alone cannot satisfy this scenario. Independently verify Vercel READY deployment revision and original pass identity/areas/account according to the prerequisites above. Store the existing short-lived read-only pass only in protected environment variables; the tool never prints Google object IDs or bodies.
+
+Set `RTC_ORIGIN`, `RTC_TEST_PASS`, `RTC_EXPECTED_ACCOUNT`, `RTC_EXPECTED_REVISION` and `RTC_READ_FIXTURES_JSON` **in a private runner environment**, not a command argument, repository file, report, issue or chat. The JSON value is an array of at most twelve exact approved `{name,args}` entries. For example an owned Drive resource uses the tool name `workspace_drive_get_file` and an `args` object with the `fileId` of the original approved TEST object. The calendar event entry supplies its *real* `calendarId` and `eventId`; primary calendars are categorically refused. The eligible tools and required IDs are fixed in `scripts/smoke-readonly-fixtures.mjs`, not inferred from a tool-name pattern. Any invalid/unknown/duplicated fixture, extra parameter, wrong mailbox/area, advertised-tool mismatch, unreadable result, or provider ID mismatch makes the run fail without counting the object as accepted. Never invent a fixture ID.
+
+Once these prerequisites are verified, the protected runner may execute:
+
+```sh
+node scripts/smoke-readonly-fixtures.mjs --authorized-fixtures
+```
+
+The runner performs only read-only GET/resource-detail invocations with `detail:'full'` and numbered owned result-page recovery, using the existing exact account/TEST profile checks. Its console summary has tool/status/reason only; never log IDs or provider content. A successfully read resource establishes only that precise TEST object/permission, not blanket Google account, Hub, delegated user, webhook, or write/cleanup acceptance. The P0-2-EXACT-FIXTURE-READ queue row stays pending until actual separately recorded provider receipts and checked live provenance exist.

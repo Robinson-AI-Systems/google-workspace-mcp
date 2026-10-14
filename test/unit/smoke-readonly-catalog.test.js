@@ -1,3 +1,4 @@
+import { providerReadFixture } from '../helpers/smoke-provider-fixtures.js';
 import { describe,it,expect,vi } from 'vitest';
 import { SAFE_READ_PROBES,readAuthorizedCatalog,runCatalogReadOnlySmoke,main } from '../../scripts/smoke-readonly-catalog.mjs';
 
@@ -33,11 +34,7 @@ function fake({catalog,revisionFound=revision,failedTool='',missingProbe='',wron
     actingAs:wrongMailbox?'other@example.test':account,
     gmailReports:wrongMailbox?'other@example.test':account,matches:!wrongMailbox
    }});
-   if(name==='workspace_gmail_list_messages')return ret(200,{ok:true,result:{messages:[]}});
-   if(name==='workspace_drive_list_files')return ret(200,{ok:true,result:{files:[]}});
-   if(name==='workspace_calendar_list_calendars')return ret(200,{ok:true,result:{kind:'calendar#calendarList',items:[]}});
-   if(name==='workspace_tasks_list_tasklists')return ret(200,{ok:true,result:{kind:'tasks#taskLists',items:[]}});
-   return ret(200,{ok:true,result:{items:[]}});
+   return ret(200,{ok:true,result:providerReadFixture(name,account)});
   }
   throw Error('unexpected_path');
  };
@@ -65,9 +62,9 @@ describe('P0-2 complete authorized catalog inventory and vetted reads',()=>{
   expect(invoked).not.toContain('workspace_call');
   // Match the actual handler schemas, not an ignored Google pageSize option.
   for(const name of ['workspace_drive_list_files','workspace_drive_list_recent_files','workspace_drive_list_trash']){
-   expect(f.calls.find(c=>c.path==='/api/tools/'+name)?.body).toEqual({maxResults:1});
+   expect(f.calls.find(c=>c.path==='/api/tools/'+name)?.body).toEqual({maxResults:1,detail:'full'});
   }
-  expect(f.calls.find(c=>c.path==='/api/tools/workspace_drive_list_starred')?.body).toEqual({});
+  expect(f.calls.find(c=>c.path==='/api/tools/workspace_drive_list_starred')?.body).toEqual({detail:'full'});
   expect(f.calls.every(c=>JSON.stringify(c).includes(token)===false)).toBe(true);
  });
  it('handles more than one complete page and records every result exactly once',async()=>{
