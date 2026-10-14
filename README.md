@@ -43,14 +43,13 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 | calendar | 24 |
 | chat | 8 |
 | chrome | 3 |
-| contacts | 7 |
 | datatransfer | 3 |
-| directory | 2 |
 | dns | 3 |
 | domain | 3 |
 | files | 102 |
 | identity | 5 |
 | mail | 60 |
+| people | 9 |
 | tasks | 11 |
 | workflows | 12 |
 | workspace | 24 |
@@ -213,26 +212,11 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `chrome_resolve_policies`
 - `chrome_set_policy`
 
-### contacts (7)
-
-- `contacts_create`
-- `contacts_delete`
-- `contacts_get`
-- `contacts_list`
-- `contacts_list_groups`
-- `contacts_search`
-- `contacts_update`
-
 ### datatransfer (3)
 
 - `datatransfer_get_transfer_status`
 - `datatransfer_list_transfers`
 - `datatransfer_start_transfer`
-
-### directory (2)
-
-- `directory_list_people`
-- `directory_search_people`
 
 ### dns (3)
 
@@ -421,6 +405,18 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `gmail_update_vacation_settings`
 - `postmaster_list_domains`
 - `postmaster_list_traffic_stats`
+
+### people (9)
+
+- `contacts_create`
+- `contacts_delete`
+- `contacts_get`
+- `contacts_list`
+- `contacts_list_groups`
+- `contacts_search`
+- `contacts_update`
+- `directory_list_people`
+- `directory_search_people`
 
 ### tasks (11)
 
