@@ -106,7 +106,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P8-8-OWNER-POLICIES",
     "priority": 4,
-    "requiredRevision": "7bd2dcb588e56f74ca9c9e71be68b93ec8324b49",
+    "requiredRevision": "5e17f876a7f9873fae49e7ace9f4804b86020cc3",
     "task": "On future checked deployed revision verify owner overview exposes Cloud Identity policy differences, unknown/inherited settings, scoped opt-in and actual per-area reports without implying effective domain settings",
     "procedure": "docs/plan/TASKS.md",
     "gates": "Read-only P7-2 Google Policy API; optional real Super Admin consent; explicit crossDomain owner approval for limited connections; no Google settings writes",
@@ -114,7 +114,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P7-2-POLICY-AUDIT"
     ],
     "status": "PENDING",
-    "lastEvidence": "2026-10-14 source #110: owner overview integrates P7-2 policy results with separate app-access/Groups/Marketplace evidence; automated fake and auth isolation tests only. Requires P7-2 genuine provider acceptance, checked future live source and new owner overview readback."
+    "lastEvidence": "October 14 repair: genuine registry wrapper regression consumes the full policy audit with preserved profile/domain/consent guards and final owned result budgets. 1,475 local unit tests passed; deployed Google readback is still PENDING and depends on genuine P7-2 acceptance."
   }
 ]
 ```
