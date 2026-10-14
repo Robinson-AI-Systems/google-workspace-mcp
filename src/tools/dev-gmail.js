@@ -84,6 +84,21 @@ export async function createGmailFixtures(args,c,owner){
  }catch(e){throw Error('Gmail run '+id+' is uncertain; retry SAME runId to reconcile: '+String(e.message||e).slice(0,140));}
  return {runId:id,scenario:'gmail',actingAs:owner.actingAs,objects};
 }
+async function assertRunLabelIsExclusive(c,labelId,recordedIds){
+ const r=await c.gmail.users.messages.list({userId:'me',labelIds:[labelId],maxResults:100,includeSpamTrash:true});
+ const page=r?.data;
+ if(!page||typeof page!=='object'||Array.isArray(page)||
+    (page.messages!==undefined&&!Array.isArray(page.messages))||
+    page.nextPageToken||page.messages?.length>100)
+   throw Error('Incomplete TEST label inventory; cleanup refused.');
+ const allowed=new Set(recordedIds),seen=new Set();
+ for(const item of page.messages||[]){
+  if(typeof item?.id!=='string'||!allowed.has(item.id)||seen.has(item.id))
+   throw Error('Unrecorded message uses TEST run label; cleanup refused.');
+  seen.add(item.id);
+ }
+ return seen;
+}
 async function inspect(run,c,owner,cleanup=false){
  if(run?.scenario!=='gmail'||run.steps?.length!==3||run.objects?.length!==3||
     run.steps.some(s=>s.state!=='recorded'||!s.google_id))throw Error('Gmail fixture has unresolved reservations.');
@@ -106,6 +121,14 @@ async function inspect(run,c,owner,cleanup=false){
   messages.push({kind,id:row.google_id,trashed:m.labelIds.includes('TRASH'),cleaned:!!row.cleaned_at});
  }
  if(labelGone&&messages.some(m=>!m.trashed))throw Error('Gmail label removed before messages were safely trashed.');
+ if(cleanup&&!labelGone){
+  const seen=await assertRunLabelIsExclusive(c,label.google_id,messages.map(m=>m.id));
+  for(const m of messages){
+   const data=await readMsg(c,m.id);
+   if(data.labelIds?.includes(label.google_id)&&!seen.has(m.id))
+    throw Error('A recorded TEST message was omitted from its label inventory.');
+  }
+ }
  return {run,identity:owner,messages,label:{id:label.google_id,kind:'label',missing:labelGone,cleaned:!!label.cleaned_at}};
 }
 export async function gmailReadback(c,owner,id){
@@ -133,7 +156,10 @@ export async function trashGmailFixtures(run,c,owner){
  }
  if(!failures.length){
   try{
-   if(!x.label.missing)await c.gmail.users.labels.delete({userId:'me',id:x.label.id});
+   if(!x.label.missing){
+    await assertRunLabelIsExclusive(c,x.label.id,x.messages.map(m=>m.id));
+    await c.gmail.users.labels.delete({userId:'me',id:x.label.id});
+   }
    let gone=false;
    try{await readLabel(c,x.label.id);}catch(e){if(isNotFound(e))gone=true;else throw e;}
    if(!gone)throw Error('Label still exists.');
