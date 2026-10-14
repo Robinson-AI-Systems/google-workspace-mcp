@@ -18,8 +18,10 @@ export async function requireTestCalendar(clients,calendarId,identity){
     result.data.primary===true||calendarId==='primary'||calendarId===identity.actingAs)
    throw Error('Fixture calendar must be separately owned by the acting mailbox.');
 }
-export function exactCalendarEvent(event,id,identity){
- if(!event||!event.id||event.status==='cancelled'||
+export function exactCalendarEvent(event,id,identity,expectedEventId=null){
+ if(!event||typeof event.id!=='string'||!event.id||
+   (expectedEventId!==null&&event.id!==expectedEventId)||
+   event.status==='cancelled'||
    event.extendedProperties?.private?.rtc_run!==id||
    event.extendedProperties?.private?.rtc_kind!=='event'||
    String(event.creator?.email||'').toLowerCase()!==identity.actingAs)
@@ -49,7 +51,7 @@ export async function createCalendarFixture(args,clients,identity){
   if(step.state==='recorded'){
     const row=run.objects.find(x=>x.kind==='event'&&x.google_id===step.google_id&&x.parent_id===calendarId);
     if(!row)throw Error('Recorded calendar event has no matching ledger row.');
-    exactCalendarEvent((await clients.calendar.events.get({calendarId,eventId:step.google_id})).data,id,identity);
+    exactCalendarEvent((await clients.calendar.events.get({calendarId,eventId:step.google_id})).data,id,identity,step.google_id);
     eventId=step.google_id;
   }else if(!step.created){
     eventId=await findEventByRun(clients,calendarId,id,identity);
@@ -81,7 +83,7 @@ export async function calendarReadback(clients,identity,runId){
  try{
   if(obj.kind!=='event'||obj.parent_id!==run.calendar_id)throw Error('Wrong recorded event parent.');
   const response=await clients.calendar.events.get({calendarId:run.calendar_id,eventId:obj.google_id});
-  exactCalendarEvent(response.data,runId,identity);
+  exactCalendarEvent(response.data,runId,identity,obj.google_id);
   return {runId,verified:true,objects:[{kind:'event',id:obj.google_id,verified:true}]};
  }catch{return {runId,verified:false};}
 }
@@ -95,8 +97,12 @@ export async function inspectCalendarCleanup(run,clients,identity){
  let alreadyDeleted=false;
  try{
   const result=await clients.calendar.events.get({calendarId:run.calendar_id,eventId:o.google_id});
-  if(result.data?.status==='cancelled')alreadyDeleted=true;
-  else exactCalendarEvent(result.data,run.id,identity);
+  // A successful GET is only evidence about its requested ledger object if
+  // Google also returned the exact ID. A foreign/corrupt tombstone must
+  // never authorize deletion, mark the ledger clean or trigger a new delete.
+  if(result.data?.id!==o.google_id)throw Error('Calendar provider returned a different event ID from the durable fixture ledger.');
+  if(result.data.status==='cancelled')alreadyDeleted=true;
+  else exactCalendarEvent(result.data,run.id,identity,o.google_id);
  }catch(e){if(isNotFound(e))alreadyDeleted=true;else throw e;}
  // When Calendar already deleted the exact ledger ID during a previous attempt,
  // don't try another delete or invent a different event ID.
@@ -110,7 +116,7 @@ export async function deleteRecordedCalendarFixture(run,clients,identity){
  let gone=proof.proof[0].alreadyDeleted;
  if(!gone)try{
   const r=await clients.calendar.events.get({calendarId:run.calendar_id,eventId:obj.google_id});
-  gone=r.data?.status==='cancelled';
+  gone=r.data?.id===obj.google_id&&r.data?.status==='cancelled';
  }catch(e){if(isNotFound(e))gone=true;else throw e;}
  if(!gone)return {runId:run.id,fullyCleaned:false,completed:[],failures:[{id:obj.google_id,reason:'Delete was not verified by Calendar.'}]};
  await markDevObjectCleaned({runId:run.id,...identity,kind:'event',googleId:obj.google_id});
@@ -119,7 +125,7 @@ export async function deleteRecordedCalendarFixture(run,clients,identity){
 export async function confirmCalendarGone(run,clients,identity){
  const obj=run.objects[0];
  let gone=false;
- try{const r=await clients.calendar.events.get({calendarId:run.calendar_id,eventId:obj.google_id});gone=r.data?.status==='cancelled';}
+ try{const r=await clients.calendar.events.get({calendarId:run.calendar_id,eventId:obj.google_id});gone=r.data?.id===obj.google_id&&r.data?.status==='cancelled';}
  catch(e){if(isNotFound(e))gone=true;}
  const fresh=await getDevRun({runId:run.id,...identity});
  return {runId:run.id,allTrashed:gone&&!!fresh?.objects[0]?.cleaned_at,deleted:gone};
