@@ -415,7 +415,7 @@ describe('repeatable read-only secondary calendar cleanup verification', () => {
     when('calendar.calendars.get').resolvesOnce({ data: { id, summary: 'Scratch' } });
     when('calendar.calendars.get').rejects(googleError(404, 'notFound', 'Resource gone'));
     when('calendar.calendarList.get').resolves({ data: { id } });
-    const result = await run(clients);
+    const result = body(await registry.handlers.calendar_delete_calendar({ calendarId: id, confirm: true }, clients));
     expect(result).toMatchObject({
       done: true, confirmed: false, after: { exists: null, verification: 'not_found_but_listed' }
     });
