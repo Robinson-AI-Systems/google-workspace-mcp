@@ -9,7 +9,13 @@ function clients({denyApi=null,areas=null,tokenScopes=[]}={}){
    return {data:name==='folder'?{id:'folder-safe',mimeType:'application/vnd.google-apps.folder',trashed:false}:
      name==='calendarResource'?{id:payload.calendarId==='primary'?'dev@example.test':payload.calendarId}:
      name==='gmailLabel'?{id:payload.id}:name==='calendarEvent'?{id:payload.eventId}:
-     {id:'read-ok',emailAddress:'dev@example.test'}};
+     name==='gmail'?{emailAddress:'dev@example.test'}:
+     name==='drive'?{files:[{id:'file-1'}]}:
+     name==='calendar'?{items:[{id:'calendar-1'}]}:
+     name==='tasks'?{items:[{id:'task-list-1'}]}:
+     name==='chat'?{spaces:[{name:'spaces/test'}]}:
+     name==='people'?{resourceName:'people/test',emailAddresses:[{value:'dev@example.test'}]}:
+     name==='postmaster'?{domains:[{name:'domains/example.test'}]}:{}};
  };
  const c={
    actingAs:'dev@example.test',
@@ -246,5 +252,43 @@ describe('P8-7 exact app-owned Gmail and Calendar readiness',()=>{
       calendarEvents:[{calendarId:'cal',eventId:'e1'},{calendarId:'cal',eventId:'e1'},{calendarId:'cal',eventId:'e2'}]});
    expect(x.gmailLabels).toEqual(['Label_42']);
    expect(x.calendarEvents).toEqual([{calendarId:'cal',eventId:'e1'},{calendarId:'cal',eventId:'e2'}]);
+ });
+});
+
+describe('P8-7 authentic read-only API readiness shape verification',()=>{
+ it('does not declare any of seven APIs ready solely because a provider returned HTTP 200 with an irrelevant body',async()=>{
+   const names=['gmail','drive','calendar','tasks','chat','people','postmaster'];
+   const {c}=clients();
+   for(const [kind,replace] of [
+    ['gmail',()=>{c.gmail.users.getProfile=async()=>({data:{emailAddress:'different@example.test'}});} ],
+    ['drive',()=>{c.drive.files.list=async()=>({data:{files:'not-an-array'}});} ],
+    ['calendar',()=>{c.calendar.calendarList.list=async()=>({data:{items:'not-an-array'}});} ],
+    ['tasks',()=>{c.tasks.tasklists.list=async()=>({data:{items:[{}]}});} ],
+    ['chat',()=>{c.chat.spaces.list=async()=>({data:{spaces:[{name:''}]}});} ],
+    ['people',()=>{c.people.people.get=async()=>({data:{resourceName:'people/foreign',emailAddresses:[{value:'foreign@example.test'}]}});} ],
+    ['postmaster',()=>{c.postmaster.domains.list=async()=>({data:{domains:[{}]}});} ]
+   ]){
+    replace();
+    const out=await inspectGoogleIntegration({apis:[kind]},c);
+    expect(out.status,kind).toBe('not_readable');
+    expect(out.checks[0].reason).toBe('google_probe_failed');
+    expect(out.changesMade).toBe(false);
+   }
+   expect(names).toHaveLength(7);
+ });
+ it('treats an incomplete or repeated token as unknown, never valid pagination',async()=>{
+   const {c}=clients();
+   c.drive.files.list=async()=>({data:{files:[{id:'x'}],nextPageToken:23}});
+   const out=await inspectGoogleIntegration({apis:['drive']},c);
+   expect(out.status).toBe('not_readable');
+   expect(out.checks[0].status).toBe('not_readable');
+ });
+ it('accepts explicit empty list arrays as a valid successful provider read',async()=>{
+   const {c}=clients();
+   c.drive.files.list=async()=>({data:{files:[]}});
+   c.chat.spaces.list=async()=>({data:{spaces:[]}});
+   const out=await inspectGoogleIntegration({apis:['drive','chat']},c);
+   expect(out.status).toBe('ready');
+   expect(out.checks.every(x=>x.status==='ready')).toBe(true);
  });
 });

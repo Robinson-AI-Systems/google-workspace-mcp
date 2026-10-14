@@ -67,6 +67,29 @@ function classifyFailure(e){
  if(code===401||code===403)return {status:'not_readable',reason:'scope_or_access_denied'};
  return {status:'not_readable',reason:'google_probe_failed'};
 }
+
+const nonempty=v=>typeof v==='string'&&v.trim().length>0;
+function listShape(data,key){
+ // Google list endpoints may omit an empty collection. Absence is not affirmative
+ // proof of app-list readiness; tell the developer the evidence is unreadable.
+ if(!data||typeof data!=='object'||Array.isArray(data)||!Array.isArray(data[key]))return false;
+ if(data.nextPageToken!==undefined&&typeof data.nextPageToken!=='string')return false;
+ return true;
+}
+function verifiedApiProbe(name,response,actingAs){
+ const data=response?.data;
+ if(!data||typeof data!=='object'||Array.isArray(data))return false;
+ if(name==='gmail')return nonempty(data.emailAddress)&&data.emailAddress.toLowerCase()===actingAs.toLowerCase();
+ if(name==='drive')return listShape(data,'files')&&data.files.every(f=>nonempty(f?.id));
+ if(name==='calendar')return listShape(data,'items')&&data.items.every(item=>nonempty(item?.id));
+ if(name==='tasks')return listShape(data,'items')&&data.items.every(item=>nonempty(item?.id));
+ if(name==='chat')return listShape(data,'spaces')&&data.spaces.every(s=>nonempty(s?.name));
+ if(name==='people')return nonempty(data.resourceName)&&data.resourceName.startsWith('people/')&&
+   Array.isArray(data.emailAddresses)&&data.emailAddresses.some(a=>nonempty(a?.value)&&a.value.toLowerCase()===actingAs.toLowerCase());
+ if(name==='postmaster')return listShape(data,'domains')&&data.domains.every(d=>nonempty(d?.name));
+ return false;
+}
+
 async function observe(name,probe,guideTo){
  try{const result=await probe();if(!result||typeof result!=='object')throw Error('Missing Google response');
    return {name,status:'ready'};
@@ -86,8 +109,8 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
      const response=await item.probe(clients);
      // Gmail readiness must be for this exact business mailbox, not a
      // different Google account whose profile request also returned 200.
-     if(api==='gmail'&&String(response?.data?.emailAddress||'').toLowerCase()!==clients.actingAs.toLowerCase())
-       throw Error('The Gmail profile did not match the acting mailbox.');
+     if(!verifiedApiProbe(api,response,clients.actingAs))
+       throw Error('The provider did not prove a correctly shaped API result for the acting account.');
      return response;
    },guide(item.url,'Enable '+item.label+' API and verify consent for this mailbox.'));
    checks.push({kind:'api',...info});
