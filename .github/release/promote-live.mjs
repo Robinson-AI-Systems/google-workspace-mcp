@@ -42,17 +42,26 @@ export async function run(policy = JSON.parse(readFileSync(new URL('./policy.jso
   if (process.env.GITHUB_EVENT_NAME !== 'schedule' || process.env.GITHUB_REF !== 'refs/heads/main' ||
       repo !== policy.repository || !process.env.GH_TOKEN) throw Error('Scheduled owner main only');
   const deadline = Date.now() + 10 * 60 * 1000;
-  const marker = 'live-promotion/' + denverDay();
+  const day = denverDay();
+  const marker = 'live-promotion/' + day;
   const tagged = () => git(['ls-remote', '--tags', 'origin', 'refs/tags/' + marker]) !== '';
+  // The normal scheduled release creates the atomic annotated-by-name tag.
+  // An explicitly owner-approved one-time recovery performed through an
+  // authenticated branch-lease connector records a separate immutable-by-policy
+  // per-day branch receipt. Both block a second release on the same Denver day.
+  // Never create this branch from the schedule; normal releases remain atomic.
+  const recovered = () => git(['ls-remote', '--heads', 'origin',
+    'refs/heads/release-markers/' + day]) !== '';
+  const alreadyToday = () => tagged() || recovered();
   const remoteHead = ref => git(['ls-remote', 'origin', 'refs/heads/' + ref]).split(/\s+/)[0];
   for (let attempt = 0; attempt < attempts && Date.now() < deadline; attempt++) {
     if (attempt) await pause();
-    if (tagged()) { console.log('Already promoted today'); return; }
+    if (alreadyToday()) { console.log('Already promoted today'); return; }
     git(['fetch', '--no-tags', 'origin', '+refs/heads/main:refs/remotes/origin/main',
       '+refs/heads/live:refs/remotes/origin/live']);
     const main = git(['rev-parse', 'origin/main']);
     const live = git(['rev-parse', 'origin/live']);
-    if (tagged() || main === live) { console.log('No promotion needed today'); return; }
+    if (alreadyToday() || main === live) { console.log('No promotion needed today'); return; }
     let ancestor = false;
     try { git(['merge-base', '--is-ancestor', live, main]); ancestor = true; } catch { /* fail closed */ }
     const runs = [];
@@ -78,10 +87,10 @@ export async function run(policy = JSON.parse(readFileSync(new URL('./policy.jso
     if (!checksPass(runs, policy.requiredChecks, main)) {
       console.log('Waiting for required checks on ' + main); continue;
     }
-    const action = decide({ main, live, alreadyToday: tagged(), ancestor,
+    const action = decide({ main, live, alreadyToday: alreadyToday(), ancestor,
       green: checksPass(runs, policy.requiredChecks, main) });
     if (action !== 'promote') return;
-    if (remoteHead('main') !== main || remoteHead('live') !== live || tagged())
+    if (remoteHead('main') !== main || remoteHead('live') !== live || alreadyToday())
       continue;
     // A rerun or racing job cannot advance live twice in a Denver calendar day.
     // Atomic push refuses both updates if the marker already exists or live diverges.
