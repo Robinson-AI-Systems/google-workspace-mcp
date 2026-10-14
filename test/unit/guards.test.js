@@ -361,7 +361,9 @@ describe('repeatable read-only secondary calendar cleanup verification', () => {
 
     const second = makeFakeClients();
     second.when('calendar.calendars.get').rejects(googleError(403, 'forbidden', 'Not authorized'));
-    await expect(verify(second.clients)).rejects.toThrow(/Not authorized/);
+    const denied = await registry.handlers.calendar_verify_calendar_deletion({ calendarId: id }, second.clients);
+    expect(denied.content[0].text).toMatch(/What happened|Not authorized|permission|forbidden/i);
+    expect(denied.content[0].text).not.toMatch(/"exists"\s*:\s*false/);
     expect(mutations(second.calls)).toEqual([]);
   });
 });
