@@ -197,7 +197,7 @@ async function loadRun(args,clients) {
      new Set(run.objects.map(o=>o.google_id)).size!==SLOT_ORDER.length||
      SLOT_ORDER.some(kind=>!byKind.has(kind)||!Object.hasOwn(KIND_MIME,kind))||
      ['doc','sheet'].some(kind=>byKind.get(kind).parent_id!==root.google_id))
-     throw Error('Incomplete or inconsistent three-object Drive ledger; refusing cleanup.');
+     throw Error('Incomplete or inconsistent three-object Drive ledger or reservations; refusing cleanup.');
    if(run.steps?.length!==SLOT_ORDER.length||
      SLOT_ORDER.some(kind=>!run.steps.some(step=>step.kind===kind&&
        step.state==='recorded'&&step.google_id===byKind.get(kind).google_id)))
