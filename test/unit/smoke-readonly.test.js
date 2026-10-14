@@ -2,8 +2,11 @@ import {describe,it,expect,vi} from 'vitest';
 import {originFromEnv,chooseProbe,runReadOnlySmoke,main} from '../../scripts/smoke-readonly.mjs';
 const token='rtc_pass_'+ 'A'.repeat(43);
 const revision='a'.repeat(40);
-function fakeHttp({areas=null,profile='read_only',account='scratch@example.test',gmailAccount=account,actualRevision=revision,failName,unreadable=false}={}){
+function fakeHttp({areas=null,profile='read_only',account='scratch@example.test',gmailAccount=account,actualRevision=revision,failName,unreadable=false,brokenCursor=false,wrongBytes=false}={}){
  const calls=[];
+ const handle='rtc_result_'+'b'.repeat(32);
+ const stored=JSON.stringify({files:[{name:'s'.repeat(9300),id:'known-owned-file'}]});
+ const pages=Array.from({length:Math.ceil(stored.length/4096)},(_,i)=>stored.slice(i*4096,(i+1)*4096));
  const fetcher=async(url,options)=>{
    const u=new URL(url);calls.push({path:u.pathname,method:options.method,body:options.body,headers:options.headers});
    const ret=(status,value)=>({status,json:async()=>value});
@@ -13,12 +16,18 @@ function fakeHttp({areas=null,profile='read_only',account='scratch@example.test'
      const name=u.searchParams.get('q');
      return ret(200,{ok:true,result:{tools:[{name,writes:false,annotations:{readOnlyHint:true}}]}});
    }
-   if(u.pathname.startsWith('/api/results/'))return ret(unreadable?404:200,unreadable?{ok:false}:{ok:true,result:{payload:JSON.stringify({messages:[]})}});
+   if(u.pathname.startsWith('/api/results/')){
+     if(unreadable)return ret(404,{ok:false});
+     const p=Number(u.searchParams.get('page'));
+     return ret(200,{ok:true,result:{handle,page:p,pages:pages.length,
+       bytes:Buffer.byteLength(stored,'utf8')+(wrongBytes?1:0),
+       content:pages[p-1],next:p===pages.length?null:brokenCursor?1:p+1}});
+   }
    if(u.pathname.startsWith('/api/tools/')){
      const name=decodeURIComponent(u.pathname.slice('/api/tools/'.length));
      if(name===failName)return ret(403,{ok:false,error:{code:'permission'}});
      if(name==='workspace_whoami')return ret(200,{ok:true,result:{actingAs:account,gmailReports:gmailAccount,matches:account===gmailAccount}});
-     if(name==='workspace_drive_list_files')return ret(200,{ok:true,handle:'rtc_result_'+'b'.repeat(32),result:{summary:'stored'}});
+     if(name==='workspace_drive_list_files')return ret(200,{ok:true,handle,result:{handle,summary:'stored'}});
      return ret(200,{ok:true,result:{items:[]}});
    }
    throw Error('unmocked request');
@@ -39,8 +48,21 @@ describe('non-production multi-service read-only smoke',()=>{
    const outcome=await runReadOnlySmoke({origin:'https://mcp.example.test',token,expectedAccount:'scratch@example.test',expectedRevision:revision,fetcher:f.fetcher});
    expect(outcome.ok).toBe(true);
    expect(outcome.outcomes.filter(x=>x.status==='PASS')).toHaveLength(5);
-   expect(f.calls.some(x=>x.path.startsWith('/api/results/'))).toBe(true);
+   expect(f.calls.filter(x=>x.path.startsWith('/api/results/'))).toHaveLength(3);
+   expect(f.calls.find(x=>x.path==='/api/tools/workspace_drive_list_files'&&x.method==='POST')?.body)
+     .toBe(JSON.stringify({maxResults:1}));
    expect(f.calls.filter(x=>x.method==='POST').every(x=>x.path.startsWith('/api/tools/'))).toBe(true);
+ });
+ it('rejects incomplete, inconsistent and cursor-looped stored reads without false PASS',async()=>{
+   for(const flags of [{unreadable:true},{brokenCursor:true},{wrongBytes:true}]){
+     const f=fakeHttp(flags);
+     const outcome=await runReadOnlySmoke({origin:'https://mcp.example.test',token,expectedAccount:'scratch@example.test',
+       expectedRevision:revision,fetcher:f.fetcher});
+     expect(outcome.ok).toBe(false);
+     expect(outcome.outcomes).toContainEqual({
+       tool:'workspace_drive_list_files',status:'FAIL',reason:'result_handle_unreadable'
+     });
+   }
  });
  it('never calls tools outside the pass areas',async()=>{
    const f=fakeHttp({areas:['workspace']});
