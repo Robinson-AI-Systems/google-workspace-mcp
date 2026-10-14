@@ -81,6 +81,9 @@ export async function runCatalogReadOnlySmoke({origin,token,expectedAccount,expe
  const tested=new Map(run.outcomes.map(x=>[x.tool,x]));
  const tools=catalog.map(tool=>{
   const found=tested.get(tool.name);
+  // The full catalog advertised this exact read, so a narrower q lookup that
+  // cannot locate it is contract drift, not an "unavailable" optional area.
+  if(found?.status==='NOT_AVAILABLE')return {tool:tool.name,status:'FAIL',reason:'advertised_probe_unavailable'};
   if(found)return {tool:tool.name,status:found.status,...(found.reason?{reason:found.reason}:{})};
   return {tool:tool.name,status:'NOT_PROBED',reason:tool.writes?'protected_dispatcher_not_invoked':'requires_fixture_or_separate_approval'};
  });
