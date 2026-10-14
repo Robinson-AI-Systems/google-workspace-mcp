@@ -155,6 +155,17 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "2026-10-14 source gap reproduced against current handler/RTC contracts: smoke sent ignored pageSize instead of maxResults, and recovered only absent payload field rather than 4 KiB numbered content/next pages. Implementation PR has fake page/byte/cursor negative tests; exact-head Actions, merged main and genuine deployed TEST HTTP acceptance remain separate."
+  },
+  {
+    "id": "P8-7-DRIVE-EXACT",
+    "priority": 3,
+    "requiredRevision": "4c6c59336d4bef65cdd7ba03a04428144d5ba888",
+    "task": "Prove complete tagged three-object Drive fixture creation, replay and exact cleanup against the actual authorized Google TEST account, verifying each object's ID, owner, MIME, run/kind tags, folder ancestry and saved reservation graph",
+    "procedure": "src/tools/dev-fixtures.js; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "Only original independently authorized scoped non-production TEST pass and account; source code must reach checked READY live; consent and fixture ID ownership verified; no foreign items or irreversible deletions; cleanup/replay proof preserved privately",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14: P8-7 source now checks exact parent IDs, three reserved slot IDs and owned type/tag/ancestry on create readback and before cleanup; fake regressions added. CI, deployed source and real Google TEST lifecycle are distinct and pending; no fixture created in this PR."
   }
 ]
 ```
@@ -1825,3 +1836,9 @@ The October 14 live production deployment independently READY at #104 `39b0413c3
 **Demonstrated source correctness gap and finite repair:** scripts/smoke-readonly.mjs and smoke-readonly-catalog.mjs sent Drive `pageSize` to tools that actually accept `maxResults`; list_starred does not offer either limiter. The RTC read-only smoke then expected a non-existent `result.payload` for >8 KiB owned results, whereas the real result door returns numbered, 4 KiB UTF-8 `content` pages. This would fail a successful real HTTP smoke. The source change requests the supported limits, retrieves every page under bounded byte/page caps, verifies handle/cursor/byte count and rejects incomplete/mismatched pages. Tests replace the permissive old fake with authentic multi-page result shapes and negative cursor/size/unreadable scenarios. Complete changes and affected tests require exact-head CI, review and safe merge; source/CI alone do not prove live RTC TEST behavior.
 
 **Acceptance queue:** the single marked JSON queue above records Search Presence scenario PASSED, partial seven-API read evidence, unresolved owner Policy API consent and restricted overview; the new P0-2 handle-proof task stays PENDING until a future checked READY release includes the reviewed source and an original-owner short-lived RTC TEST pass safely runs the HTTP acceptance. Preserve connection/run-scoped Drive/Calendar/Gmail fixture ledgers, original exact IDs and revocation gates. No manual release or extra OAuth consent authorized. P7-8 bulk/cross-domain work still requires its design/owner review before implementation; P5-2 plaintext token retirement remains gated by November 1 AND verified encryption/backfill on every account. Resume the highest-priority eligible approved outcome with the repository's standard cadence, no filler/document-only PRs.
+
+### October 14 P8-7 exact three-object Drive fixture proof — implementation handoff
+
+**Source outcome:** Repair a demonstrated difference between initial Drive fixture ownership checks and final acceptance/cleanup. The TEST Drive path now checks the exact caller-selected parent ID, complete three-kind/three-ID reservation graph, recorded parent-child relationships and observed provider ID, owner, MIME, rtc_run/rtc_kind tags and parent of every created/trashed object. The cleanup preflight rejects an incomplete, duplicated or conflicting ledger before any trash operation. Added regression cases for wrong provider parent, changed owner/MIME/tag/parent, missing ledger child and zero unintended trash calls. No new Google permission, fixture, account, send, release or override of consent/confirmation is introduced.
+
+**Evidence and next action:** First source commit `4c6c59336d4bef65cdd7ba03a04428144d5ba888`; current PR branch code/tests require exact-head GitHub `test` and `release-policy`, review, merge and post-merge main checks. Actual Google TEST run, precise replay/readback/trash and separate RTC/Hub route evidence stay PENDING in the single release acceptance queue (P8-7-DRIVE-EXACT). Once the independently verified READY release includes the source, use only the saved original service-issued TEST pass/fixture ownership with the documented guarded cleanup. Next eligible engineering follows the approved roadmap; P5-2 still cannot run before 2026-11-01 plus verified encryption backfill, and P7-8 retains prior owner design review.
