@@ -199,6 +199,17 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "2026-10-14: core provider list-shape validation, fake negative 200 responses and valid native empty/full list tests implemented; exact-head CI, READY source and live Google acceptance remain separate."
+  },
+  {
+    "id": "P0-2-EXACT-FIXTURE-READ",
+    "priority": 2,
+    "requiredRevision": "db23e30bf8fbf0ba1042fa4b0062c34c2c600898",
+    "task": "Exercise the read-only TEST exact-ID Google resource matrix through independently READY direct RTC with original owner-supplied IDs, including wrong/foreign ID, denied area and missing-provider cases",
+    "procedure": "scripts/smoke-readonly-fixtures.mjs; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "Original owner-issued read_only TEST pass only; at most twelve specifically consented non-production IDs; nonprimary exact Calendar; no fixture creation, mutations, private objects or tokens in public evidence",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14: reviewed opt-in source and synthetic exact-ID wrong-resource/denial tests added on implementation branch. Exact-head Actions/merge/checked live and real owner-issued pass with fixture IDs remain separate; no actual Google fixture read executed."
   }
 ]
 ```
@@ -1167,7 +1178,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | Card | Status | PR | Notes |
 | --- | --- | --- | --- |
 | P0-1 | MERGED | #6 | Tests, fakes, DB tests, CI added (on `main`; 993 unit tests pass in the 2026-10-02 audit). CI runs DB tests on a throwaway Postgres on every PR (no secret needed). Not yet proven: red-on-failure demo (do once on the PR) |
-| P0-2 | IN_PROGRESS | #39, #98 candidate | Protected five-area TEST smoke is merged; #98 adds a complete paginated read-only pass catalog inventory and 24 vetted harmless probes, explicitly tracking every untested/scope-gated tool. Native custom-service provider reads on #96 are real, but a separately issued RTC read_only TEST pass, genuine directly deployed-run acceptance and full catalog fixture coverage are still open. |
+| P0-2 | IN_PROGRESS | #39, #98, #114, #120 and current provider proof | Protected five-area TEST smoke is merged; #98 adds a complete paginated read-only pass catalog inventory and 24 vetted harmless probes, explicitly tracking every untested/scope-gated tool. Native custom-service provider reads on #96 are real, but a separately issued RTC read_only TEST pass, genuine directly deployed-run acceptance and full catalog fixture coverage are still open. |
 | P0-3 | MERGED | #6 | Fix + unit test done. Manual Drive upload check needs Chris's go-ahead (writes to his Drive) |
 | P0-4 | MERGED | #7 | Tool + unit tests done (token host check, size/redirect/timeout/private-address limits). Manual copy of the brand PDF needs Chris's go-ahead (writes to his Drive) |
 | P0-5 | MERGED | #6 | Lockout + constant-time compare + tests. Manual 5-wrong-tries check on the preview still to do |
@@ -1891,3 +1902,10 @@ The five-area RTC smoke previously treated an HTTP 200 response as Google proof 
 #### October 14 connected custom-service read-only observation (23:27 UTC)
 
 The connected Robinson Google Workspace Cloud adapter reported its existing upstream reachable with matching issuer, then a direct custom-service workspace_whoami response with actingAs and gmailReports both ops@robinsonappliancerentals.com and matches=true. Calling that same custom service workspace_dev_check_integration with spec.apis=[gmail,drive,calendar,tasks] at 2026-10-14T23:27:28.919Z reported four individual READY results, status READY and changesMade=false. This is a genuine nonmutating connected-service Google provider observation (not the standard ChatGPT connector). It does not independently pin the exact upstream deployed source revision, prove the new source code at current main, satisfy owner-issued RTC TEST-pass manifest and denial checks, exercise fixtures/cleanup, or prove Hub direct/relay/Sandbox. Keep those release acceptance rows PENDING until their independent preconditions and evidence are met; do not silently promote this read observation to complete acceptance.
+
+
+### October 14 P0-2 native Google result and exact owned-resource acceptance continuation
+
+**Engineering outcome:** The existing RTC smoke incorrectly treated valid Calendar/Tasks array output from the actual service handlers as invalid, and could label unrelated HTTP 200 JSON as a PASS on the additional vetted read probes. The implementation centralizes handler-specific identity-aware proof for the approved safe catalog, preserves numbered/byte-bounded full RTC result recovery, adds exact ID-bound optional TEST reads for twelve existing Google resource tools, and normalizes empty Drive and shared-drive lists without losing provider cursors. A Gmail profile must match the acting account; a fixture must return the requested exact resource ID, with a bounded, permission-filtered, read-only scope. Existing service-only change history is recorded distinctly from provider proof. No expansion to arbitrary or unsafe catalog calls, owner grants or writes.
+
+**Evidence and gates:** Synthetic provider-shape, actual handler output, wrong-provider/foreign-ID, area and account denial, missing catalog, safe limits and protection tests cover these boundaries. Actual local command results and exact-head Actions must be recorded before claiming CI; no remote Google fixture call or source READY release has been established by this source change. Queue row P0-2-EXACT-FIXTURE-READ remains PENDING alongside the existing P0-2 baseline, Drive handle and comprehensive RTC acceptance rows. Original TEST pass, independently verified live source, resource consent/IDs, separation of direct/relay/Sandbox and no external Google writes remain mandatory. Resume the next approved eligible roadmap outcome after a fully reviewed merge, not another small hardening-only PR.
