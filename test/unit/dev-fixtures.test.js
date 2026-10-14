@@ -58,7 +58,29 @@ describe('P8-7 Drive test fixtures',()=>{
    expect(r.confirmed).toBe(false);
    await expect(handlers.workspace_dev_create_fixtures({scenario:'files'},{...clients,connection:null})).rejects.toThrow(/authenticated/);
  });
- it('is a write forbidden to read-only and everyday Workspace profiles',()=>{
+ it('does not confirm a Drive fixture whose readback has changed identity',async()=>{
+    for(const [slot,alter] of [
+      ['fixture2',x=>({...x,mimeType:'application/vnd.google-apps.folder'})],
+      ['fixture2',x=>({...x,owners:[{emailAddress:'foreign@example.test'}]})],
+      ['fixture2',x=>({...x,appProperties:{...x.appProperties,rtc_kind:'sheet'}})],
+      ['fixture3',x=>({...x,parents:['unrelated-folder']})]
+    ]){
+      const s=setup();
+      s.when('drive.files.get').resolves(({fileId})=>{
+        const found=s.byId.get(fileId);
+        return {data:found&&fileId===slot?alter(found):found||{}};
+      });
+      const out=body(await handlers.workspace_dev_create_fixtures({scenario:'files'},s.clients));
+      expect(out.confirmed,slot).toBe(false);
+    }
+  });
+  it('refuses a caller-selected parent when its provider ID differs',async()=>{
+    const s=setup();
+    s.when('drive.files.get').resolves({data:{id:'different-owned-folder',mimeType:'application/vnd.google-apps.folder',owners:[{emailAddress:s.clients.actingAs}]}});
+    await expect(handlers.workspace_dev_create_fixtures({scenario:'files',folder:'owned-folder-123',dryRun:true},s.clients)).rejects.toThrow(/owned/);
+    expect(s.calls.filter(c=>c.path==='drive.files.create')).toHaveLength(0);
+  });
+  it('is a write forbidden to read-only and everyday Workspace profiles',()=>{
    expect(tools[0].inputSchema.properties.dryRun).toBeDefined();
    expect(isWrite('workspace_dev_create_fixtures')).toBe(true);
    expect(allowedTool('workspace_dev_create_fixtures',{profile:'read_only'})).toBe(false);
@@ -73,7 +95,7 @@ describe('P8-7 precise confirmed cleanup',()=>{
    const run='4ab45b6c-013e-4f66-8c4a-ccccccccccca';
    const objects=[['folder','f-root','application/vnd.google-apps.folder'],['doc','d-1','application/vnd.google-apps.document'],['sheet','s-1','application/vnd.google-apps.spreadsheet']];
    const owner={emailAddress:clients.actingAs};
-   for(const [kind,id,mimeType] of objects)byId.set(id,{id,mimeType,appProperties:{rtc_run:run},owners:[owner],trashed:false});
+   for(const [kind,id,mimeType] of objects)byId.set(id,{id,mimeType,appProperties:{rtc_run:run,rtc_kind:kind},parents:kind==='folder'?undefined:['f-root'],owners:[owner],trashed:false});
    byId.set('sibling',{id:'sibling',mimeType:'application/vnd.google-apps.document',appProperties:{},owners:[owner],trashed:false});
    when('drive.files.get').resolves(({fileId})=>({data:{...byId.get(fileId)}}));
    when('drive.files.update').resolves(({fileId,requestBody})=>{byId.set(fileId,{...byId.get(fileId),...requestBody});return {data:{id:fileId,trashed:true}};});
@@ -82,7 +104,7 @@ describe('P8-7 precise confirmed cleanup',()=>{
  async function seeded(s){
    await state.db.startDevRun({id:s.run,actingAs:s.clients.actingAs,connection:s.clients.connection,scenario:'files'});
    for(const [kind,googleId] of s.objects){
-     const input={runId:s.run,actingAs:s.clients.actingAs,connection:s.clients.connection,kind,googleId};
+     const input={runId:s.run,actingAs:s.clients.actingAs,connection:s.clients.connection,kind,googleId,parentId:kind==='folder'?null:'f-root'};
      await state.db.reserveDevStep(input);
      await state.db.recordDevObject(input);
      await state.db.markDevStepRecorded(input);
@@ -113,7 +135,26 @@ describe('P8-7 precise confirmed cleanup',()=>{
    await expect(handlers.workspace_dev_cleanup({runId:s.run,confirm:true},{...s.clients,connection:'stranger'})).rejects.toThrow(/does not exist/);
    expect(s.calls.filter(x=>x.path==='drive.files.update')).toHaveLength(0);
  });
- it('marks partial failures as not confirmed and stops before parent',async()=>{
+ it('refuses tampered type tags, ownership or child parent before any trash write',async()=>{
+    for(const mutate of [
+      x=>{x.appProperties.rtc_kind='sheet';},
+      x=>{x.owners=[{emailAddress:'foreign@example.test'}];},
+      x=>{x.parents=['unrelated-folder'];}
+    ]){
+      const s=ready();await seeded(s);
+      mutate(s.byId.get('d-1'));
+      await expect(handlers.workspace_dev_cleanup({runId:s.run,confirm:true},s.clients)).rejects.toThrow(/identity/);
+      expect(s.calls.filter(x=>x.path==='drive.files.update')).toHaveLength(0);
+    }
+  });
+  it('refuses a missing recorded child before cleanup or any provider writes',async()=>{
+    const s=ready();await seeded(s);
+    const row=state.db.__state.devRuns.get(s.run);
+    row.objects.splice(row.objects.findIndex(x=>x.kind==='sheet'),1);
+    await expect(handlers.workspace_dev_cleanup({runId:s.run,confirm:true},s.clients)).rejects.toThrow(/ledger/);
+    expect(s.calls.filter(x=>x.path==='drive.files.update')).toHaveLength(0);
+  });
+  it('marks partial failures as not confirmed and stops before parent',async()=>{
    const s=ready();await seeded(s);
    s.when('drive.files.update').resolves(({fileId,requestBody})=>{
      if(fileId!=='s-1')return {data:{id:fileId,trashed:false}};

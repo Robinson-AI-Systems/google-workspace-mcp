@@ -39,7 +39,7 @@ async function checkParent(clients,folder) {
   if(!folder)return;
   const response=await clients.drive.files.get({fileId:folder,fields:'id,mimeType,trashed,owners(emailAddress)',supportsAllDrives:false});
   const data=response?.data;
-  if(data?.mimeType!==FOLDER||data.trashed||!data.owners?.some(x=>String(x.emailAddress).toLowerCase()===clients.actingAs.toLowerCase()))
+  if(data?.id!==folder||data.mimeType!==FOLDER||data.trashed||!data.owners?.some(x=>String(x.emailAddress).toLowerCase()===clients.actingAs.toLowerCase()))
     throw Error('Fixture parent must be an owned, accessible, untrashed My Drive folder.');
 }
 
@@ -128,12 +128,22 @@ async function readTagged(args,clients,details) {
   const objects=[];
   for(const obj of run.objects) {
     try {
-      const res=await clients.drive.files.get({fileId:obj.google_id,fields:'id,mimeType,trashed,appProperties,parents',supportsAllDrives:false});
-      objects.push({kind:obj.kind,id:obj.google_id,verified:res?.data?.id===obj.google_id&&res.data.trashed!==true&&res.data.appProperties?.rtc_run===run.id});
+      const res=await clients.drive.files.get({fileId:obj.google_id,fields:'id,mimeType,trashed,appProperties,parents,owners(emailAddress)',supportsAllDrives:false});
+      const verified=verifyOwnedTag(res?.data,run.id,obj.kind,identity,obj.parent_id)===obj.google_id;
+      objects.push({kind:obj.kind,id:obj.google_id,verified});
     } catch {objects.push({kind:obj.kind,id:obj.google_id,verified:false});}
   }
-  return {runId:run.id,objects,verified:objects.length===3&&objects.every(x=>x.verified)&&
-    run.steps?.length===3&&run.steps.every(s=>s.state==='recorded')};
+  // Creation succeeds only for the original complete reservation graph.
+  const byKind=new Map(run.objects.map(x=>[x.kind,x]));
+  const folder=byKind.get('folder');
+  const complete=run.objects.length===SLOT_ORDER.length&&byKind.size===SLOT_ORDER.length&&
+    new Set(run.objects.map(x=>x.google_id)).size===SLOT_ORDER.length&&
+    SLOT_ORDER.every(kind=>{
+      const obj=byKind.get(kind),step=run.steps?.find(s=>s.kind===kind);
+      return obj&&step?.state==='recorded'&&step.google_id===obj.google_id&&
+        (kind==='folder'||obj.parent_id===folder?.google_id);
+    })&&run.steps?.length===SLOT_ORDER.length;
+  return {runId:run.id,objects,verified:complete&&objects.every(x=>x.verified)};
 }
 const built=defineWrite({
   name:'workspace_dev_create_fixtures',
@@ -168,7 +178,8 @@ const built=defineWrite({
 const cleanOrder={sheet:0,doc:1,folder:2};
 function assertFixtureIdentity(run,obj,data,identity) {
  if(!data||data.id!==obj.google_id||data.mimeType!==KIND_MIME[obj.kind]||
-   data.appProperties?.rtc_run!==run.id||
+   data.appProperties?.rtc_run!==run.id||data.appProperties?.rtc_kind!==obj.kind||
+   (obj.parent_id&&!data.parents?.includes(obj.parent_id))||
    !Array.isArray(data.owners)||!data.owners.some(o=>String(o.emailAddress).toLowerCase()===identity.actingAs))
    throw Error('Fixture identity or ownership changed; refused to trash '+obj.kind+' '+obj.google_id+'.');
 }
@@ -179,9 +190,21 @@ async function loadRun(args,clients) {
  if(!run)throw Error('Fixture run does not exist for this account and connection.');
  if(!['files','calendar','gmail'].includes(run.scenario))throw Error('Unknown fixture scenario; refusing cleanup.');
  if(!Array.isArray(run.objects)||run.objects.length===0)throw Error('No recorded objects; refusing cleanup.');
- if(run.scenario==='files'&&run.objects.some(o=>!Object.hasOwn(KIND_MIME,o.kind)))throw Error('Unknown fixture kind; refusing cleanup.');
- if(!run.steps?.length||run.steps.some(s=>s.state!=='recorded'))
+ if(run.scenario==='files'){
+   const byKind=new Map(run.objects.map(o=>[o.kind,o]));
+   const root=byKind.get('folder');
+   if(run.objects.length!==SLOT_ORDER.length||byKind.size!==SLOT_ORDER.length||
+     new Set(run.objects.map(o=>o.google_id)).size!==SLOT_ORDER.length||
+     SLOT_ORDER.some(kind=>!byKind.has(kind)||!Object.hasOwn(KIND_MIME,kind))||
+     ['doc','sheet'].some(kind=>byKind.get(kind).parent_id!==root.google_id))
+     throw Error('Incomplete or inconsistent three-object Drive ledger or reservations; refusing cleanup.');
+   if(run.steps?.length!==SLOT_ORDER.length||
+     SLOT_ORDER.some(kind=>!run.steps.some(step=>step.kind===kind&&
+       step.state==='recorded'&&step.google_id===byKind.get(kind).google_id)))
+     throw Error('Missing, conflicting or uncertain fixture reservations; reconcile every provider ID before cleanup.');
+ }else if(!run.steps?.length||run.steps.some(s=>s.state!=='recorded')){
    throw Error('Missing or uncertain fixture reservations; reconcile every provider ID before cleanup.');
+ }
  return {run,identity};
 }
 async function inspectCleanup(args,clients) {
