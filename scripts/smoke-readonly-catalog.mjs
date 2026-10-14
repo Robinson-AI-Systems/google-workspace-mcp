@@ -21,7 +21,7 @@ export const SAFE_READ_PROBES = Object.freeze([
   {name:'workspace_drive_list_files',area:'files',args:{maxResults:1}},
   {name:'workspace_drive_list_shared_drives',area:'files',args:{}},
   {name:'workspace_drive_list_recent_files',area:'files',args:{maxResults:1}},
-  {name:'workspace_drive_list_starred',area:'files',args:{maxResults:1}},
+  {name:'workspace_drive_list_starred',area:'files',args:{}},
   {name:'workspace_drive_list_trash',area:'files',args:{maxResults:1}},
   {name:'workspace_calendar_get_settings',area:'calendar',args:{}},
   {name:'workspace_calendar_list_calendars',area:'calendar',args:{}},
