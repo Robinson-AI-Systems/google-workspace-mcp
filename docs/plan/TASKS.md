@@ -177,6 +177,17 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "2026-10-14: calendar fixture validator rejects missing timezone, impossible date and invalid offsets; readback now refuses reservation ID disagreement before declaring confirmation. Fake tests added; exact-head CI/review, READY checked release and actual Google TEST provider acceptance remain separate."
+  },
+  {
+    "id": "P8-7-GMAIL-LABEL-EXCLUSIVE",
+    "priority": 3,
+    "requiredRevision": "f212b5bcba3123e81fcea472badaa1b93d9de5f6",
+    "task": "Accept original TEST Gmail fixture cleanup only after complete own-mailbox label inventory proves no foreign mail before trash and again before deleting the run-owned label, including Spam/Trash and no pagination gaps",
+    "procedure": "src/tools/dev-gmail.js; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "Original connection-owned non-production TEST mode; one owner mailbox, exact durable run IDs; dry run and independent destructive confirmation; no real mailbox mutator without fixture owner confirmation; never relabel or delete unknown messages",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14: source now refuses foreign/duplicate/incomplete label inventory before cleanup, and rechecks before label deletion; negative test fakes for an unrelated message added before and during cleanup and truncated inventory. GitHub exact-head/READY deployed/Google TEST readback remain separate."
   }
 ]
 ```
@@ -1857,3 +1868,7 @@ The October 14 live production deployment independently READY at #104 `39b0413c3
 ### October 14 P8-7 Calendar ISO time and reserved-ID integrity continuation
 
 P8-7 TEST-only Calendar event creation accepts a future, real ISO date only with a declared UTC or numeric timezone; absence of a timezone or normalized invalid Gregorian day is refused. Creation readback now requires the original recorded reservation ID to match the exact event ledger ID before trusting Google response, alongside the separate-owned-calendar and creator/run/kind verification already in place. Unit negative regressions cover invalid dates and changed reservations. This neither creates a real event nor widens permissions. Gate new exact-head CI and independent review before merge; record main and READY live separately, and retain the pending owner-authorized genuine Calendar provider/replay/cleanup proof in the single queue. Continue the approved roadmap in order. No manual release authorized.
+
+### October 14 P8-7 Gmail TEST label isolation continuation
+
+During normal dev-fixture review, the prior Gmail cleanup test placed an unrecorded message under an RTC label yet expected the label to be deleted. That would silently remove the label from the unrelated message, even though its body remains. The corrected TEST-only workflow refuses any foreign, duplicate or partially listed label membership before cleanup; it checks owner-scoped complete membership including Spam/Trash and repeats immediately before deleting the run label after the two recorded messages are safely trashed. If a concurrent outsider appears, the run is not confirmed, the label remains and only the originally recorded messages can be in Trash. Fake negatives cover incomplete lists and concurrent foreign labeling, with no new scopes, owner grants, Gmail send, foreign writes, live release or external fixture claim. Next: exact-head full CI/reviews/merge/main CI; independently READY deployment, original authorized TEST mailbox and genuine precise cleanup evidence remain in the release queue.

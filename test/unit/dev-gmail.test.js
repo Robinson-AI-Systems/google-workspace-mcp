@@ -112,9 +112,14 @@ describe('P8-7 isolated Gmail fixtures',()=>{
   await handlers.workspace_dev_create_fixtures(args,s.clients);
   const foreign={id:'not-recorded',labelIds:['Label_1'],payload:{headers:[]}};
   s.messages.set('not-recorded',foreign);
+  await expect(handlers.workspace_dev_cleanup({runId,dryRun:true},s.clients)).rejects.toThrow(/Unrecorded/);
+  await expect(handlers.workspace_dev_cleanup({runId,confirm:true},s.clients)).rejects.toThrow(/Unrecorded/);
+  expect(s.calls.filter(x=>x.path==='gmail.users.messages.trash')).toHaveLength(0);
+  expect(s.calls.filter(x=>x.path==='gmail.users.labels.delete')).toHaveLength(0);
+  // Only another actor removes this foreign label association.
+  foreign.labelIds=[];
   expect(parsed(await handlers.workspace_dev_cleanup({runId,dryRun:true},s.clients)).dryRun).toBe(true);
   expect(parsed(await handlers.workspace_dev_cleanup({runId},s.clients)).needsConfirmation).toBe(true);
-  expect(s.calls.filter(x=>x.path==='gmail.users.messages.trash')).toHaveLength(0);
   const cleaned=parsed(await handlers.workspace_dev_cleanup({runId,confirm:true},s.clients));
   expect(cleaned.confirmed).toBe(true);
   expect(cleaned.details.fullyCleaned).toBe(true);
@@ -123,6 +128,34 @@ describe('P8-7 isolated Gmail fixtures',()=>{
   expect(s.calls.filter(x=>x.path==='gmail.users.labels.delete').map(x=>x.args[0].id)).toEqual(['Label_1']);
   expect(s.messages.get('not-recorded')).toEqual(foreign);
   expect(s.labels.size).toBe(0);
+ });
+ it('refuses an incomplete label inventory before moving messages to trash',async()=>{
+  const s=testGmail();await handlers.workspace_dev_create_fixtures(args,s.clients);
+  s.when('gmail.users.messages.list').resolves({data:{messages:[{id:'message-1'}],nextPageToken:'next'}});
+  await expect(handlers.workspace_dev_cleanup({runId,confirm:true},s.clients)).rejects.toThrow(/Incomplete TEST label/);
+  expect(s.calls.filter(x=>x.path==='gmail.users.messages.trash')).toHaveLength(0);
+  expect(s.calls.filter(x=>x.path==='gmail.users.labels.delete')).toHaveLength(0);
+ });
+ it('rechecks label membership after trash and retains a label with new foreign mail',async()=>{
+  const s=testGmail();await handlers.workspace_dev_create_fixtures(args,s.clients);
+  s.when('gmail.users.messages.list').resolves(({labelIds,includeSpamTrash})=>{
+   expect(includeSpamTrash).toBe(true);
+   const messages=[...s.messages.values()].filter(m=>labelIds.every(label=>m.labelIds.includes(label))).map(m=>({id:m.id}));
+   if(s.calls.some(x=>x.path==='gmail.users.messages.trash'))messages.push({id:'unrecorded-after-preview'});
+   return {data:{messages}};
+  });
+  const result=parsed(await handlers.workspace_dev_cleanup({runId,confirm:true},s.clients));
+  expect(result.confirmed).toBe(false);
+  expect(result.details.failures.map(x=>x.kind)).toContain('label');
+  expect(s.calls.filter(x=>x.path==='gmail.users.messages.trash')).toHaveLength(2);
+  expect(s.calls.filter(x=>x.path==='gmail.users.labels.delete')).toHaveLength(0);
+  expect(s.labels.size).toBe(1);
+ });
+ it('refuses a label inventory missing a recorded labeled message',async()=>{
+  const s=testGmail();await handlers.workspace_dev_create_fixtures(args,s.clients);
+  s.when('gmail.users.messages.list').resolves({data:{messages:[{id:'message-1'}]}});
+  await expect(handlers.workspace_dev_cleanup({runId,confirm:true},s.clients)).rejects.toThrow(/omitted/);
+  expect(s.calls.filter(x=>x.path==='gmail.users.messages.trash')).toHaveLength(0);
  });
  it('replaying fully cleaned run does not delete other objects',async()=>{
   const s=testGmail();
