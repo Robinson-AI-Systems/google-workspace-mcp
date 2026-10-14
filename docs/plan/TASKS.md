@@ -79,6 +79,17 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "2026-10-14: 37-source-rule 10-area implementation with real Policy API field contracts and fake tests; no new Google consent or deployed provider results. Requires next checked live revision containing this implementation."
+  },
+  {
+    "id": "P8-7-API-SHAPES",
+    "priority": 3,
+    "requiredRevision": "0c093951117ea35e86f0135def41b9f78b328988",
+    "task": "Prove complete app integration preflight with correctly typed read-only Gmail, Drive, Calendar, Tasks, Chat, People and Postmaster results on actual connected account and proper permission-denial handling",
+    "procedure": "docs/plan/TASKS.md",
+    "gates": "No Google writes; check each provider individually with its authorized area and account; optional per-account consent for Chat, People or Postmaster",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14 source #109: seven explicit provider result checks and positive/negative fakes; direct deployed custom 4-API read succeeded before source change, new shape policy awaits checked release, no assertion that optional APIs are granted."
   }
 ]
 ```
@@ -1095,7 +1106,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-4 | IN_PROGRESS | #32–#34 | Pass-only RTC manifest/HTTPS routes and DB limit implemented; deployed boundary, two-instance and D-4 acceptance not verified |
 | P8-5 | IN_PROGRESS | #34 | Pinned Hub reference conformance and local gateway tests in CI; full conformance against this service and real D-4 routes still unverified |
 | P8-6 | WAITING (optional reuse) | | Published immutable core and export-specific original-service parity; does not block P8-5, RTC routing or real Hub acceptance |
-| P8-7 | IN_PROGRESS | #40, #42–#43, #46–#48, #101–#103 candidate | Existing fixture/integration workflows and earlier provider fixtures retained. #101 candidate adds exact Gmail-label and Calendar-event app preflight, closes wrong-ID Calendar/Drive-folder false readiness, with read-only permission-filtered provider probes and fake negative tests. #102 candidate independently binds every Calendar TEST fixture ledger readback, recorded replay and deletion tombstone to the exact recorded event ID, rejecting wrong-object success. Exact-head CI/review, deployment, RTC TEST pass, Hub routes and external consents remain separate gates. |
+| P8-7 | IN_PROGRESS | #40, #42–#43, #46–#48, #101–#103, #109 candidate | Existing fixture/integration workflows and earlier provider fixtures retained. #101 candidate adds exact Gmail-label and Calendar-event app preflight, closes wrong-ID Calendar/Drive-folder false readiness, with read-only permission-filtered provider probes and fake negative tests. #102 candidate independently binds every Calendar TEST fixture ledger readback, recorded replay and deletion tombstone to the exact recorded event ID, rejecting wrong-object success. Exact-head CI/review, deployment, RTC TEST pass, Hub routes and external consents remain separate gates. |
 | P8-8 | IN_PROGRESS | #36, #56, #58, #59, #60, #99 candidate | Evidence-aware owner overview (#56), 24 permission-aware console readbacks (#58), accurate incomplete health scans (#59); #60 candidate paginates quick Directory/Alert Center security snapshot with bounded, explicit, fail-closed coverage. #99 implements complete review of the current 50-topic console inventory with categories, bounded pagination and access-aware optional readback hints. Actual complete Google Admin console walk and Hub proof remain open. |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
@@ -1729,3 +1740,8 @@ After the genuine Android custom-service Google deletion/list discrepancy and th
 The read-only Cloud Identity owner audit gains 16 Google-published fields across API controls, Groups for Business, Marketplace, sharing, Chat, Meet and device security, extending 21 to 37 documented owner-editable rules in ten areas. `coverageByArea` lists explicit matches, known problems and unknown/inherited observations separately; unknown or partially paginated provider results do not become compliant. Automated tests cover API-contract fields, three specific owner risks, ten-area counts and zero upstream calls when restricted cross-domain authorization is absent. The values are policy review targets, not universal mandatory choices, and no policy is changed. Verified provider contract: https://docs.cloud.google.com/identity/docs/concepts/supported-policy-api-settings .
 
 **Outstanding:** exact-head application/DB/RTC CI, review, safe merge and merged-main checks, then future independently READY checked live promotion and authentic optional-Super-Admin consent + Cloud Identity readback. P7-2 still has no true reduced/effective per-domain outcome (Google Policy API lists explicit customer/OU/group policies); never confuse it with the separate Google Cloud Organization Policy API. No new scopes, live release, fixture writes, owner costs or extra credentials. Current partial custom read-only Gmail/Drive/Calendar/Tasks proof and #105 pending Search Presence provider fix remain separately queued.
+
+
+### P8-7 seven-API result-qualified developer integration preflight — PR #109 candidate (October 14)
+
+**Observable capability:** an app readiness check cannot claim all required Google APIs work after an unrelated HTTP-success body. It now validates actual Google API-specific response shapes, exact Gmail mailbox identity and People self-email (if readable), typed/identified list items for Drive, Calendar, Tasks, Chat and Postmaster, and page token shape. Absent lists or empty malformed bodies are conservatively not_readable; an explicit empty array is a readable empty list. The seven APIs stay independently reported with service scope/area refusal, no mutation. Negative and empty-list tests exercise the shared handler. Live at #104 remains unaffected; code/CI and future provider checks remain independent. No new OAuth scopes, fixture writes, release or spending.
