@@ -138,11 +138,10 @@ describe('P8-7 isolated Gmail fixtures',()=>{
  });
  it('rechecks label membership after trash and retains a label with new foreign mail',async()=>{
   const s=testGmail();await handlers.workspace_dev_create_fixtures(args,s.clients);
-  let reads=0;
   s.when('gmail.users.messages.list').resolves(({labelIds,includeSpamTrash})=>{
    expect(includeSpamTrash).toBe(true);
    const messages=[...s.messages.values()].filter(m=>labelIds.every(label=>m.labelIds.includes(label))).map(m=>({id:m.id}));
-   if(++reads>=3)messages.push({id:'unrecorded-after-preview'});
+   if(s.calls.some(x=>x.path==='gmail.users.messages.trash'))messages.push({id:'unrecorded-after-preview'});
    return {data:{messages}};
   });
   const result=parsed(await handlers.workspace_dev_cleanup({runId,confirm:true},s.clients));
