@@ -166,3 +166,20 @@ This transition plan is a contribution plan, not a new bundle. Its small remaini
 estimate cannot certify the workload alone. Final comparison must include actual
 new engineering from PR142 and the resumed source, the necessary Hub package
 implementation, exact production/test separation and all original criteria.
+
+
+### Final preserved-plan comparison
+
+All planned P8-5/P8-7 remaining engineering and original criteria passed at source
+d8415e3 (Actions38779326658, all14 actual-service probes and all3 fixture lifecycles;
+unit1697/PG59/RTC28). The transition contribution is122/27 Workspace production
+plus98/27 necessary reusable Hub production:220 additions/54 deletions. Its
+standalone report correctly remains CONTINUE_BUNDLE because this contribution is
+below the ordinary substantial guide. It is combined with retained PR142's186/11
+P8-4 contribution ONCE:406 additions/65 deletions across the3 complete approved
+subsections. The original session baseline bbe2477371ffc79a645107ff031815bcb63baa23
+predates the formal-plan marker. No historical P8-4 plan is fabricated, and no
+accounting command establishes owner substantiality by itself. Coherent new service,
+audit and owned recovery behavior plus the actual integration boundary justify the
+combined workload. Test/harness/generated/docs and inherited fixture code receive
+zero production credit. Deployed/provider/Hub acceptance remains separately gated.

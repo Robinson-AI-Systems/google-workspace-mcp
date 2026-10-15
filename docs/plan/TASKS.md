@@ -219,24 +219,26 @@ restricts only the named operation. Source completion never proves actual Google
   {
     "id": "P8-4",
     "state": "EXTERNAL_ONLY",
-    "remaining": "Full original HTTP engineering reconciled at source 4ca6af37551809c2e0c9f93e250966d15d3d9fbf: all generic routes and aliases, public manifest/counts, complete bounded OpenAPI, pass-only auth, registry write-guard parity, result ownership, shared configured SQL rate limit and safe error envelopes implemented. Exact-head CI/review must pass before merging this source; actual deployed rtool/TEST-pass/Google/Hub proof remains external, never inferred from synthetic tests.",
+    "remaining": "Completed engineering contribution PR142, merged 997518507ad1e7a914bd31d71b54129292016168, retained ONCE in the original workload. Full HTTP contract, bounded OpenAPI, pass/guard/result ownership, shared atomic configured PostgreSQL counter and obsolete-window pruning proved at exact head and merged main. Genuine deployed TEST/provider/Hub acceptance remains external.",
     "evidence": "api/rtc-gateway.js createRtcGateway/default handler and src/rtc/openapi.js; test/unit/rtc-openapi.test.js; rtc-route-http.test.js exact Node HTTP rewrite, final MCP registry, broker and HTTP-broker label lifecycle, connector/no-token refusals, full catalog/counts, private paging and error tests; rtc-https.test.js; test/db/rtc-http.test.js two independent handlers / 12 concurrent actual PG sessions, 150 requests => 120 successes and 30 HTTP 429, per-pass limit 5, window reset, atomic same-pass obsolete-window pruning and cross-pass isolation/revocation. Database execution requires exact-head Actions; original P8-4 criteria all mapped.",
-    "next": "Require exact-head test/release-policy and completed review; merge, retain queue P8-4-HTTP-CONTRACT and then perform rtool whoami and real direct TEST pass/denial/runtime checks at checked READY source. No manual release.",
+    "next": "Retain original completion proof and acceptance queue P8-4-HTTP-CONTRACT; execute only after scheduled checked READY source includes it and protected scoped TEST authorization is available. No extra release.",
     "gate": "Checked READY live containing 4ca6af37551809c2e0c9f93e250966d15d3d9fbf; original short-lived service-issued TEST pass and approved mailbox; genuine rtool/wire identity, denial and permitted provider behavior, with direct/Hub/relay/Sandbox evidence separated. No new credentials, production write or spend authority."
   },
   {
     "id": "P8-5",
-    "state": "REVIEW",
-    "remaining": "Actual-service candidate at 89f48c2602853031690b69b920b7d56317ff0b83: strict explicit Hub fixture profile, canonical namespace, real audit references and bounded handle recovery integrated. Two actual Workspace HTTP/OAuth processes share a disposable real PostgreSQL schema with fake Google. All named checks, native refresh and all three owned fixture lifecycles must execute in exact-head Actions before engineering closure; reference success is insufficient.",
-    "evidence": "Hub #213/#215 reviewed immutable conformance package; scripts/rtc-conformance-ci.mjs and rtc-workspace-conformance.mjs; test/conformance/server.mjs actual module loader/route table and strict Google provider; unit receipt/schema/profile and fixture regression tests; full original P8-5 criterion. Source candidate still needs actual SQL/process proof.",
-    "next": "Execute the complete pinned actual Workspace conformance step with disposable PostgreSQL, inspect every failing probe/lifecycle, batch concrete remedies into this same PR; preserve all assertions and exact-head gates. Then mark engineering complete with exact evidence; genuine deployed Google/Hub remains independent."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Full original P8-5 engineering criterion passed at d8415e34637cf7c0a7e13bd6e83fa92d49d0cd15 in Actions 38779326658: reviewed pinned Hub conformance runs against actual Workspace modules and checked route table, strict stateful fake Google, two independent processes and shared disposable PostgreSQL. All fourteen named probes pass with NO skips. Local actual DB was unavailable; exact-head Actions supplies genuine local-process/SQL proof. Deployed Google and Hub routing are separate external acceptance.",
+    "evidence": "Hub #213/#215 immutable package f173a0aeb070f1ca52188e9acab5bcccf53d81c7; scripts/rtc-conformance-ci.mjs and rtc-workspace-conformance.mjs; test/conformance actual server/provider/SQL adapters. Actions 38779326658/job116575122533: manifest, OpenAPI, full catalog, meta, projected/oversized isolated reads, guarded audited writes, missing/read-only/expired/revoked passes, safety, budget, real OAuth refresh settings, two-instance shared counter all PASS; 1697 unit +59 actual PG +28 RTC tests pass. release-policy run38779326675 PASS. PR144 final docs head must retain green checks and review before merge.",
+    "next": "Require final exact-head CI/review and merge PR144; then retain P8-5-WIRE-RECEIPTS and GOOGLE-RTC for genuine deployed direct/Hub/relay/Sandbox acceptance with original scoped grants.",
+    "gate": "Scheduled checked READY source including d8415e3; separately protected short-lived TEST service grant and scoped Hub routing authorization. Synthetic provider proof is not live Google or Hub acceptance."
   },
   {
     "id": "P8-7",
-    "state": "REVIEW",
-    "remaining": "Source 89f48c2602853031690b69b920b7d56317ff0b83 adds durable immutable request_spec, owner-only TEST run recovery inspection, pending/recorded/partial/cleaned states and real audit linkage. Original files/calendar/gmail creation/readback/cleanup and app-integration source traced; fake negative and API tests retained. Complete actual HTTP+real-PG lost-response/replay/exact-cleanup scenarios and full required checks before engineering closure.",
-    "evidence": "src/tools/dev-run-state.js, dev-fixtures.js, dev-calendar.js, dev-gmail.js; additive src/db.js request_spec and exact owned getDevRun; src/tools/dev-integration*.js; test/unit/dev-* and integration tests; test/db/upgrade.test.js immutable intent; actual process lifecycle runner. Native cloud fixture list was actually refused outside TEST; no real fixture pass exists in this runner.",
-    "next": "Finish actual service lifecycle proof for all three scenarios, same-run lost-response recovery without duplicate creates, changed Calendar intent refusal, foreign pass isolation, original fixture ID/ownership, confirm/readback/audit and terminal cleanup. Keep live owner TEST pass and original-run recovery as exact separate prerequisites."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "All original engineering criteria reconciled: tagged Drive folder/Doc/Sheet, separate owned TEST Calendar and inserted-not-sent self-mailbox Gmail fixtures with every ID durably reserved/recorded; exact owner/tag/parent cleanup and foreign-object refusal; read-only real API/scope/resource integration readiness with manual console fixes; dry-run/confirm/readback/audit and same-account enforcement. PR144 adds immutable intent and owned run recovery, not credit for inherited fixture code. Actual HTTP/PG recovery, replay/no duplicate, foreign pass denial, changed Calendar intent refusal and exact terminal cleanup pass for all three scenarios at d8415e3. Real TEST Google proof remains external.",
+    "evidence": "src/tools/dev-{fixtures,calendar,gmail,run-state,integration,integration-capabilities,integration-resources,integration-report}.js; durable src/db.js request_spec and owned reads; test/unit/dev-fixtures.test.js exact IDs, sibling preservation, trash-only, containment, foreign/tag/malformed/timeout negatives; dev-integration*.test.js actual SDK call arguments, scopes/API/resource denial and console remediation; dev-run-state.test.js immutable/owned/legacy state; test/db/upgrade.test.js JSONB immutable parity and real numeric audit receipt. Actions38779326658: all files/calendar/gmail process lifecycle scenarios PASS, unit1697, PG59 and RTC28.",
+    "next": "Require final PR144 exact-head checks/review and merge; then original TEST principal/run ledger and exact approved nonprimary calendar for existing fixture recovery. Owner may authorize a separate protected TEST grant for new independent scenarios, or explicitly transfer serialized runner ownership. Preserve P8-7 queue rows and no recreation of uncertain fixtures.",
+    "gate": "Independently verified checked READY source; original TEST pass/run ownership and exact fixture IDs, explicitly approved owned nonprimary Calendar and separate destructive confirmation. Native fixture-run list actually refused outside_scope; no trusted TEST grant/vault present here."
   },
   {
     "id": "P8-8",
@@ -270,7 +272,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Existing approved mailbox only; original pass/run ownership and owned non-primary calendar; no mail sending",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Original short-lived service-issued TEST pass, exact owned fixture/run IDs and operation-specific confirmation; separate Hub scoped routing grant for RTC. Remedy: Read GOOGLE-ACCEPTANCE and DEVELOPER-CONNECTION. Native connection is available but not original TEST fixture principal; coordinating encrypted checkpoint is serialized and cannot be taken over concurrently. No secret copying, fixture recreation, scope expansion or destructive bypass. Next: Coordinate existing authorized single runner to use original pass/run ledger and independent fixture confirmation; execute only this row\u2019s permitted scenario and preserve recovery IDs privately."
+    "lastEvidence": "Investigated 2026-10-15: native custom issuer connected/reachable; actual workspace_dev_list_runs refused outside_scope requiring trusted TEST. Owner /api/rtc/passes form fetched and authenticated issuance fields verified. Private runner storage and TEST pass/developer vault configuration absent. Shared rotating checkpoint has one serialized owner; no transfer authorized, so no takeover attempted. Needed: explicit original-runner ownership transfer or original runner execution with exact pass/run/resource IDs and cleanup confirmation. Separate new TEST grants cannot clean old foreign-pass fixtures. Scoped Hub grant separately required for federation. No fixture recreation, copied secrets or scope changes."
   },
   {
     "id": "GOOGLE-RTC",
@@ -281,7 +283,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Separate scoped service authorization and Hub route gates; full production catalog stays independent",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Original short-lived service-issued TEST pass, exact owned fixture/run IDs and operation-specific confirmation; separate Hub scoped routing grant for RTC. Remedy: Read GOOGLE-ACCEPTANCE and DEVELOPER-CONNECTION. Native connection is available but not original TEST fixture principal; coordinating encrypted checkpoint is serialized and cannot be taken over concurrently. No secret copying, fixture recreation, scope expansion or destructive bypass. Next: Coordinate existing authorized single runner to use original pass/run ledger and independent fixture confirmation; execute only this row\u2019s permitted scenario and preserve recovery IDs privately."
+    "lastEvidence": "Investigated 2026-10-15: native custom issuer connected/reachable; actual workspace_dev_list_runs refused outside_scope requiring trusted TEST. Owner /api/rtc/passes form fetched and authenticated issuance fields verified. Private runner storage and TEST pass/developer vault configuration absent. Shared rotating checkpoint has one serialized owner; no transfer authorized, so no takeover attempted. Needed: explicit original-runner ownership transfer or original runner execution with exact pass/run/resource IDs and cleanup confirmation. Separate new TEST grants cannot clean old foreign-pass fixtures. Scoped Hub grant separately required for federation. No fixture recreation, copied secrets or scope changes."
   },
   {
     "id": "GOOGLE-DIRECT-READ",
@@ -314,7 +316,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "PR #103 must first merge and be deployed; original authorized TEST-only mailbox, existing private run ledger and safe cleanup; no sending or foreign deletion",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Original short-lived service-issued TEST pass, exact owned fixture/run IDs and operation-specific confirmation; separate Hub scoped routing grant for RTC. Remedy: Read GOOGLE-ACCEPTANCE and DEVELOPER-CONNECTION. Native connection is available but not original TEST fixture principal; coordinating encrypted checkpoint is serialized and cannot be taken over concurrently. No secret copying, fixture recreation, scope expansion or destructive bypass. Next: Coordinate existing authorized single runner to use original pass/run ledger and independent fixture confirmation; execute only this row\u2019s permitted scenario and preserve recovery IDs privately."
+    "lastEvidence": "Investigated 2026-10-15: native custom issuer connected/reachable; actual workspace_dev_list_runs refused outside_scope requiring trusted TEST. Owner /api/rtc/passes form fetched and authenticated issuance fields verified. Private runner storage and TEST pass/developer vault configuration absent. Shared rotating checkpoint has one serialized owner; no transfer authorized, so no takeover attempted. Needed: explicit original-runner ownership transfer or original runner execution with exact pass/run/resource IDs and cleanup confirmation. Separate new TEST grants cannot clean old foreign-pass fixtures. Scoped Hub grant separately required for federation. No fixture recreation, copied secrets or scope changes."
   },
   {
     "id": "P7-2-POLICY-AUDIT",
@@ -360,7 +362,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "New coherent source PR must merge and reach independently READY checked live; original owner-issued short-lived read_only TEST pass; exact mailbox/revision/areas and zero provider mutations; no legacy plain provider token",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Original short-lived service-issued TEST pass, exact owned fixture/run IDs and operation-specific confirmation; separate Hub scoped routing grant for RTC. Remedy: Read GOOGLE-ACCEPTANCE and DEVELOPER-CONNECTION. Native connection is available but not original TEST fixture principal; coordinating encrypted checkpoint is serialized and cannot be taken over concurrently. No secret copying, fixture recreation, scope expansion or destructive bypass. Next: Coordinate existing authorized single runner to use original pass/run ledger and independent fixture confirmation; execute only this row\u2019s permitted scenario and preserve recovery IDs privately."
+    "lastEvidence": "Investigated 2026-10-15: native custom issuer connected/reachable; actual workspace_dev_list_runs refused outside_scope requiring trusted TEST. Owner /api/rtc/passes form fetched and authenticated issuance fields verified. Private runner storage and TEST pass/developer vault configuration absent. Shared rotating checkpoint has one serialized owner; no transfer authorized, so no takeover attempted. Needed: explicit original-runner ownership transfer or original runner execution with exact pass/run/resource IDs and cleanup confirmation. Separate new TEST grants cannot clean old foreign-pass fixtures. Scoped Hub grant separately required for federation. No fixture recreation, copied secrets or scope changes."
   },
   {
     "id": "P8-7-DRIVE-EXACT",
@@ -371,7 +373,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Only original independently authorized scoped non-production TEST pass and account; source code must reach checked READY live; consent and fixture ID ownership verified; no foreign items or irreversible deletions; cleanup/replay proof preserved privately",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Original short-lived service-issued TEST pass, exact owned fixture/run IDs and operation-specific confirmation; separate Hub scoped routing grant for RTC. Remedy: Read GOOGLE-ACCEPTANCE and DEVELOPER-CONNECTION. Native connection is available but not original TEST fixture principal; coordinating encrypted checkpoint is serialized and cannot be taken over concurrently. No secret copying, fixture recreation, scope expansion or destructive bypass. Next: Coordinate existing authorized single runner to use original pass/run ledger and independent fixture confirmation; execute only this row\u2019s permitted scenario and preserve recovery IDs privately."
+    "lastEvidence": "Investigated 2026-10-15: native custom issuer connected/reachable; actual workspace_dev_list_runs refused outside_scope requiring trusted TEST. Owner /api/rtc/passes form fetched and authenticated issuance fields verified. Private runner storage and TEST pass/developer vault configuration absent. Shared rotating checkpoint has one serialized owner; no transfer authorized, so no takeover attempted. Needed: explicit original-runner ownership transfer or original runner execution with exact pass/run/resource IDs and cleanup confirmation. Separate new TEST grants cannot clean old foreign-pass fixtures. Scoped Hub grant separately required for federation. No fixture recreation, copied secrets or scope changes."
   },
   {
     "id": "P8-7-CALENDAR-STRICT",
@@ -382,7 +384,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Original TEST-only service authorization, exact nonprimary calendar ownership, existing fixture run reservations, provider readbacks and safeguarded confirmation; no user calendar event unless authorized",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Original short-lived service-issued TEST pass, exact owned fixture/run IDs and operation-specific confirmation; separate Hub scoped routing grant for RTC. Remedy: Read GOOGLE-ACCEPTANCE and DEVELOPER-CONNECTION. Native connection is available but not original TEST fixture principal; coordinating encrypted checkpoint is serialized and cannot be taken over concurrently. No secret copying, fixture recreation, scope expansion or destructive bypass. Next: Coordinate existing authorized single runner to use original pass/run ledger and independent fixture confirmation; execute only this row\u2019s permitted scenario and preserve recovery IDs privately."
+    "lastEvidence": "Investigated 2026-10-15: native custom issuer connected/reachable; actual workspace_dev_list_runs refused outside_scope requiring trusted TEST. Owner /api/rtc/passes form fetched and authenticated issuance fields verified. Private runner storage and TEST pass/developer vault configuration absent. Shared rotating checkpoint has one serialized owner; no transfer authorized, so no takeover attempted. Needed: explicit original-runner ownership transfer or original runner execution with exact pass/run/resource IDs and cleanup confirmation. Separate new TEST grants cannot clean old foreign-pass fixtures. Scoped Hub grant separately required for federation. No fixture recreation, copied secrets or scope changes."
   },
   {
     "id": "P8-7-GMAIL-LABEL-EXCLUSIVE",
@@ -393,7 +395,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Original connection-owned non-production TEST mode; one owner mailbox, exact durable run IDs; dry run and independent destructive confirmation; no real mailbox mutator without fixture owner confirmation; never relabel or delete unknown messages",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Original short-lived service-issued TEST pass, exact owned fixture/run IDs and operation-specific confirmation; separate Hub scoped routing grant for RTC. Remedy: Read GOOGLE-ACCEPTANCE and DEVELOPER-CONNECTION. Native connection is available but not original TEST fixture principal; coordinating encrypted checkpoint is serialized and cannot be taken over concurrently. No secret copying, fixture recreation, scope expansion or destructive bypass. Next: Coordinate existing authorized single runner to use original pass/run ledger and independent fixture confirmation; execute only this row\u2019s permitted scenario and preserve recovery IDs privately."
+    "lastEvidence": "Investigated 2026-10-15: native custom issuer connected/reachable; actual workspace_dev_list_runs refused outside_scope requiring trusted TEST. Owner /api/rtc/passes form fetched and authenticated issuance fields verified. Private runner storage and TEST pass/developer vault configuration absent. Shared rotating checkpoint has one serialized owner; no transfer authorized, so no takeover attempted. Needed: explicit original-runner ownership transfer or original runner execution with exact pass/run/resource IDs and cleanup confirmation. Separate new TEST grants cannot clean old foreign-pass fixtures. Scoped Hub grant separately required for federation. No fixture recreation, copied secrets or scope changes."
   },
   {
     "id": "P0-2-CORE-LIST-SHAPES",
@@ -404,7 +406,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Original owner-authorized read-only nonproduction TEST account and service-issued pass; checked READY live source at or after revision; no mutations/secrets/result bodies in logs",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Original short-lived service-issued TEST pass, exact owned fixture/run IDs and operation-specific confirmation; separate Hub scoped routing grant for RTC. Remedy: Read GOOGLE-ACCEPTANCE and DEVELOPER-CONNECTION. Native connection is available but not original TEST fixture principal; coordinating encrypted checkpoint is serialized and cannot be taken over concurrently. No secret copying, fixture recreation, scope expansion or destructive bypass. Next: Coordinate existing authorized single runner to use original pass/run ledger and independent fixture confirmation; execute only this row\u2019s permitted scenario and preserve recovery IDs privately."
+    "lastEvidence": "Investigated 2026-10-15: native custom issuer connected/reachable; actual workspace_dev_list_runs refused outside_scope requiring trusted TEST. Owner /api/rtc/passes form fetched and authenticated issuance fields verified. Private runner storage and TEST pass/developer vault configuration absent. Shared rotating checkpoint has one serialized owner; no transfer authorized, so no takeover attempted. Needed: explicit original-runner ownership transfer or original runner execution with exact pass/run/resource IDs and cleanup confirmation. Separate new TEST grants cannot clean old foreign-pass fixtures. Scoped Hub grant separately required for federation. No fixture recreation, copied secrets or scope changes."
   },
   {
     "id": "P0-2-EXACT-FIXTURE-READ",
@@ -415,7 +417,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Original owner-issued read_only TEST pass only; at most twelve specifically consented non-production IDs; nonprimary exact Calendar; no fixture creation, mutations, private objects or tokens in public evidence",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Original short-lived service-issued TEST pass, exact owned fixture/run IDs and operation-specific confirmation; separate Hub scoped routing grant for RTC. Remedy: Read GOOGLE-ACCEPTANCE and DEVELOPER-CONNECTION. Native connection is available but not original TEST fixture principal; coordinating encrypted checkpoint is serialized and cannot be taken over concurrently. No secret copying, fixture recreation, scope expansion or destructive bypass. Next: Coordinate existing authorized single runner to use original pass/run ledger and independent fixture confirmation; execute only this row\u2019s permitted scenario and preserve recovery IDs privately."
+    "lastEvidence": "Investigated 2026-10-15: native custom issuer connected/reachable; actual workspace_dev_list_runs refused outside_scope requiring trusted TEST. Owner /api/rtc/passes form fetched and authenticated issuance fields verified. Private runner storage and TEST pass/developer vault configuration absent. Shared rotating checkpoint has one serialized owner; no transfer authorized, so no takeover attempted. Needed: explicit original-runner ownership transfer or original runner execution with exact pass/run/resource IDs and cleanup confirmation. Separate new TEST grants cannot clean old foreign-pass fixtures. Scoped Hub grant separately required for federation. No fixture recreation, copied secrets or scope changes."
   },
   {
     "id": "P8-7-EXACT-APP-READS",
@@ -448,7 +450,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Exact READY deployment and authenticated custom MCP connection; owner-approved isolated TEST targets, permission/domain limits, exact fixture IDs and operation-specific approvals; no production bulk writes or autonomous spending",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Original short-lived service-issued TEST pass, exact owned fixture/run IDs and operation-specific confirmation; separate Hub scoped routing grant for RTC. Remedy: Read GOOGLE-ACCEPTANCE and DEVELOPER-CONNECTION. Native connection is available but not original TEST fixture principal; coordinating encrypted checkpoint is serialized and cannot be taken over concurrently. No secret copying, fixture recreation, scope expansion or destructive bypass. Next: Coordinate existing authorized single runner to use original pass/run ledger and independent fixture confirmation; execute only this row\u2019s permitted scenario and preserve recovery IDs privately."
+    "lastEvidence": "Investigated 2026-10-15: native custom issuer connected/reachable; actual workspace_dev_list_runs refused outside_scope requiring trusted TEST. Owner /api/rtc/passes form fetched and authenticated issuance fields verified. Private runner storage and TEST pass/developer vault configuration absent. Shared rotating checkpoint has one serialized owner; no transfer authorized, so no takeover attempted. Needed: explicit original-runner ownership transfer or original runner execution with exact pass/run/resource IDs and cleanup confirmation. Separate new TEST grants cannot clean old foreign-pass fixtures. Scoped Hub grant separately required for federation. No fixture recreation, copied secrets or scope changes."
   },
   {
     "id": "P0-2-FULL-CASEBOOK-REAL-READ",
@@ -475,24 +477,24 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P8-5-WIRE-RECEIPTS",
     "priority": 2,
-    "requiredRevision": "89f48c2602853031690b69b920b7d56317ff0b83",
+    "requiredRevision": "d8415e34637cf7c0a7e13bd6e83fa92d49d0cd15",
     "task": "Verify deployed canonical Workspace namespace and real audit row references through permitted TEST writes, metadata schemas and owned handles, without reclassifying local/reference conformance as real Google/Hub acceptance.",
     "procedure": "api/rtc-gateway.js; src/rtc/write-receipt.js; docs/plan/TASKS.md P8-5",
     "gates": "Checked READY deployment containing reviewed source; original approved short-lived Rentals TEST principal, exact owned resources and separate destructive confirmation. No provider scopes/spend, no other-pass cleanup, no uncertain fixture recreation. Preserve direct/Hub/relay/Sandbox boundaries.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "Source and local fake unit evidence only. Full actual local process/SQL CI remains pending. Native custom adapter connected but actual fixture list denied trusted TEST mode; owner pass page fields verified; no RTC_TEST_PASS, RTC_WRITE_TEST_PASS or developer vault configured here. Owner must supply a separate protected TEST authorization or explicitly transfer original runner ownership; original fixture principal/IDs still required. No genuine provider writes performed."
+    "lastEvidence": "Actual local Workspace HTTP/OAuth with fake Google and two processes/shared PostgreSQL passed Actions38779326658: all14 conformance probes, all3 lifecycle scenarios, unit1697/PG59/RTC28. Genuine provider remains pending. Native fixture list returned outside_scope requiring trusted TEST; owner pass form verified; no RTC_TEST_PASS/RTC_WRITE_TEST_PASS/developer vault in this runner. Owner must issue a separate protected TEST grant for independent scenarios or explicitly transfer original serialized runner; existing cleanup still requires original pass/run IDs and owned nonprimary calendar."
   },
   {
     "id": "P8-7-OWNED-RECOVERY",
     "priority": 3,
-    "requiredRevision": "89f48c2602853031690b69b920b7d56317ff0b83",
+    "requiredRevision": "d8415e34637cf7c0a7e13bd6e83fa92d49d0cd15",
     "task": "On the original approved TEST principal prove immutable intent, exact owned run inspection, lost-response same-run recovery/no duplicate, foreign principal refusal and exact cleanup for Drive, Calendar and Gmail.",
     "procedure": "src/tools/dev-run-state.js; docs/plan/GOOGLE-ACCEPTANCE.md; docs/pr-cards/DEVELOPER-CONNECTION.md",
     "gates": "Checked READY deployment containing reviewed source; original approved short-lived Rentals TEST principal, exact owned resources and separate destructive confirmation. No provider scopes/spend, no other-pass cleanup, no uncertain fixture recreation. Preserve direct/Hub/relay/Sandbox boundaries.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "Source and local fake unit evidence only. Full actual local process/SQL CI remains pending. Native custom adapter connected but actual fixture list denied trusted TEST mode; owner pass page fields verified; no RTC_TEST_PASS, RTC_WRITE_TEST_PASS or developer vault configured here. Owner must supply a separate protected TEST authorization or explicitly transfer original runner ownership; original fixture principal/IDs still required. No genuine provider writes performed."
+    "lastEvidence": "Actual local Workspace HTTP/OAuth with fake Google and two processes/shared PostgreSQL passed Actions38779326658: all14 conformance probes, all3 lifecycle scenarios, unit1697/PG59/RTC28. Genuine provider remains pending. Native fixture list returned outside_scope requiring trusted TEST; owner pass form verified; no RTC_TEST_PASS/RTC_WRITE_TEST_PASS/developer vault in this runner. Owner must issue a separate protected TEST grant for independent scenarios or explicitly transfer original serialized runner; existing cleanup still requires original pass/run IDs and owned nonprimary calendar."
   }
 ]
 ```
@@ -2504,7 +2506,7 @@ it as another outcome. Source 89f48c2 assembles P8-5/P8-7 actual-service conform
 canonical namespace/audit receipts, immutable fixture intent and owned recovery
 inspection. All 1,696 local unit tests pass; exact actual-process/PG conformance,
 new SQL checks, final immutable Hub pin, required Actions and review/merge remain
-pending publication. P8-5/P8-7 remain REVIEW until these full criteria are proven.
+now verified in the actual-service CI run below. P8-5/P8-7 engineering proof is recorded, with live acceptance kept separate.
 
 The active existing DEVELOPER-CONNECTION card preserves the conversational scope
 and a transition bundle-plan after concurrent workflow PR143. It does not invent
@@ -2559,3 +2561,46 @@ need explicit owner intent and optional Super Admin/per-account consent; People 
 Postmaster remain the already observed scope denials. These are operation-specific
 prerequisites, not a project-wide engineering blocker. No credential copying,
 foreign fixture deletion, fresh-run recreation, scope widening, release or spend.
+
+
+### PR144 assembled workload completion evidence — October 15
+
+The owner-requested ONE coherent workload comprises P8-4 engineering from PR142
+(retained once) and P8-5/P8-7 from PR144, with Hub #213/#215 as its necessary
+immutable conformance dependency. It provides a usable HTTP contract and an actual
+service conformance gate plus durable original-request/owned-run recovery, not
+three claims for helpers or another outcome for the earlier P8-4 merge.
+
+Measured NEW production: PR142 186 additions/11 deletions; PR144 src/api versus
+inspected main d706687: 122 additions/27 deletions; necessary reusable Hub package
+src versus original pin 570e597: 98 additions/27 deletions. Combined 406 additions
+and 65 deletions (471 changed production lines), three completed existing IDs.
+Excluded: test code, CI harness/scripts, reference fake, docs, generated catalog,
+formatting and inherited provider/cleanup implementation. The formal transition
+plan's estimate50 was remaining work AFTER source assembly; it is not the whole
+workload estimate. Its remaining source integration found and repaired compact
+search, real SQL audit-ID normalization, OAuth test transport and exact SDK fake
+method failures. Preserve the frozen plan; no retrospective pre-code plan claimed.
+
+Original criteria: P8-4 route/OpenAPI/pass/guards/owner/rate/error proof is retained
+from142. P8-5 all14 actual-service probes pass without skips. P8-7 all reserved IDs,
+exact tag/owner/parent cleanup and foreign sibling preservation, trash-only Drive,
+API/scope/manual-console readiness, dryRun/confirm/readback/audit/no-foreign-user
+criteria map to the engineering rows above and dev-* tests. All3 actual HTTP/PG
+fixture lifecycles pass lost-response reconciliation, same-run no-duplicate replay,
+foreign pass404, exact cleanup and cleaned-run non-recreation. No new Google write
+or real Hub certification is claimed. Optional P8-6 and independent P8-8 were not
+invented to increase volume.
+
+First assembled Actions run38778157979 passed unit1696/PG59/RTC28 but exposed meta,
+write receipt, OAuth transport and all3 lifecycle failures. One batched source
+correction d8415e3 passed check, unit1697/PG59/RTC28 and complete actual conformance
+in run38779326658; release-policy38779326675 passed. Automatic review failed quota
+at17:32:20Z, with zero inline threads. No paid credits requested; full source and
+security-boundary self-review completed. Final documentation head, exact-head gates,
+review recheck, main merge/CI and permanent handoff remain mandatory.
+
+Additional previous-session timing: first Actions job16:45:26.638–16:46:35.509
+lasted68.871s; final job16:49:44.119–16:50:33.935 lasted49.816s. These are job spans,
+not idle wait or additive coding time. Existing acceptance timestamps, overlapping
+review/correction window and2m20s closeout evidence above remain intact.
