@@ -98,8 +98,12 @@ export async function runCatalogReadOnlySmoke({origin,token,expectedAccount,expe
  const failed=tools.filter(row=>row.status==='FAIL').length;
  const summary={...coverage.summary,failed,probed:coverage.summary.passed+failed,
   notProbed:tools.filter(row=>row.status==='NOT_PROBED'||row.status==='NOT_AVAILABLE').length};
- return {ok:baseline.ok&&run.ok&&failed===0,catalogComplete:true,
-  coverageComplete:failed===0&&summary.notProbed===0,baseline:baseline.outcomes,
+ const coverageComplete=failed===0&&summary.notProbed===0;
+ // Success means the selected approved catalog was actually fully checked.
+ // A partly implemented plan may still have zero individual provider errors.
+ // Never expose that partial result to library callers as a passing smoke.
+ return {ok:baseline.ok&&run.ok&&coverageComplete,catalogComplete:true,
+  coverageComplete,baseline:baseline.outcomes,
   tools,summary};
 }
 
