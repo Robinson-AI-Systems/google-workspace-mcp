@@ -39,7 +39,7 @@ describe('P0-2 complete read-catalog engineering inventory',()=>{
    kind:'NEEDS_FIXTURE',reason:'exact_owner_fixture_required'
   });
   expect(entries.find(e=>e.name==='workspace_admin_get_user')).toMatchObject({
-   kind:'GAP',reason:'unreviewed_required_arguments',required:['userKey']
+   kind:'NEEDS_CASE',reason:'reviewed_owner_case_required'
   });
   expect(entries.find(e=>e.name==='workspace_call').kind).toBe('PROTECTED');
   const checks=coverageResults(entries,entries.filter(e=>e.kind==='SAFE')
@@ -48,7 +48,7 @@ describe('P0-2 complete read-catalog engineering inventory',()=>{
    discovered:SAFE_READ_PROBES.length+3,
    scheduled:SAFE_READ_PROBES.length,
    passed:SAFE_READ_PROBES.length,
-   failed:0,notProbed:2,engineeringGaps:1,exactFixtureGates:1,
+   failed:0,notProbed:2,engineeringGaps:0,exactFixtureGates:1,reviewedCaseGates:1,
    protectedBrokers:1
   });
   expect(checks.coverageComplete).toBe(false);
@@ -60,7 +60,7 @@ describe('P0-2 complete read-catalog engineering inventory',()=>{
   const entries=planCatalogReads({catalog:catalog(),safeProbes:SAFE_READ_PROBES,
    fixtures:[prepared],account});
   expect(entries.find(e=>e.name===fixture.name).kind).toBe('FIXTURE');
-  expect(entries.find(e=>e.name==='workspace_admin_get_user').kind).toBe('GAP');
+  expect(entries.find(e=>e.name==='workspace_admin_get_user').kind).toBe('NEEDS_CASE');
   const checks=coverageResults(entries,entries.filter(e=>e.probe)
    .map(e=>({tool:e.name,status:'PASS'})));
   expect(checks.summary.exactFixtureGates).toBe(0);
@@ -110,7 +110,7 @@ describe('P0-2 complete read-catalog engineering inventory',()=>{
    .map(e=>({tool:e.name,status:'PASS'})));
   const report=renderReadOnlyReport({date:'2026-10-15',revision,coverage:checks,
    runType:'synthetic'});
-  expect(report).toContain('Unfinished engineering probes: 1');
+  expect(report).toContain('Unfinished engineering probes: 0');
   expect(report).toContain('Full coverage: NO');
   expect(report).toContain('| `workspace_admin_get_user` | NOT_PROBED |');
   expect(report).not.toContain('test-fixture-label');

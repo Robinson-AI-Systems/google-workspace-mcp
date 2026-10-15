@@ -2,6 +2,7 @@
 // the expected resource. These rules describe our handler outputs, not raw
 // Google responses: some handlers deliberately return data.items || [].
 // Never log a provider value, email, ID, token, event or message body.
+import { verifyAdditionalRead } from './smoke-readonly-cases.mjs';
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const string = value => typeof value === 'string' && value.trim().length > 0;
 const boolean = value => typeof value === 'boolean';
@@ -117,7 +118,8 @@ export const INTERNAL_READ_PROOFS = new Set(['workspace_recent_changes']);
 export function verifiedProviderReadResult(name, payload, expectedAccount, args={}) {
   if (payload === null || payload === undefined ||
       object(payload) && (payload.isError === true || Object.hasOwn(payload, 'error'))) return false;
-  const validate = PROVIDER_READ_PROOFS[name] || FIXTURE_READ_PROOFS[name];
+  const validate = PROVIDER_READ_PROOFS[name] || FIXTURE_READ_PROOFS[name] ||
+  ((value,account,argumentsForRead)=>verifyAdditionalRead(name,value,account,argumentsForRead));
   try { return typeof validate === 'function' && validate(payload, expectedAccount, args) === true; }
   catch { return false; }
 }
