@@ -341,8 +341,6 @@ open obligations, original fixture ownership, approvals and deployment provenanc
 
 <!-- release-acceptance:start -->
 ```json
-
-
 [
   {
     "id": "GOOGLE-DIRECT",
@@ -487,7 +485,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Original owner-authorized read-only nonproduction TEST account and service-issued pass; checked READY live source at or after revision; no mutations/secrets/result bodies in logs",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "Investigated 2026-10-15: native custom issuer connected/reachable; actual workspace_dev_list_runs refused outside_scope requiring trusted TEST. Owner /api/rtc/passes form fetched and authenticated issuance fields verified. Private runner storage and TEST pass/developer vault configuration absent. Shared rotating checkpoint has one serialized owner; no transfer authorized, so no takeover attempted. Needed: explicit original-runner ownership transfer or original runner execution with exact pass/run/resource IDs and cleanup confirmation. Separate new TEST grants cannot clean old foreign-pass fixtures. Scoped Hub grant separately required for federation. No fixture recreation, copied secrets or scope changes."
+    "lastEvidence": "2026-10-15 owner explicitly approved a separate one-hour Rentals read_only TEST pass. Canonical browser and secure-auth submissions both refused Wrong website address before checking credentials; no pass issued and no smoke run. Deployed afbc602 form sends Referrer-Policy:no-referrer, which nulls navigation POST Origin (Fetch standard); the strict canonical-origin guard then refuses it. PR151 sets same-origin only on the entry form, retaining no-referrer on secret/error/redirect pages and null/missing/foreign denial. Protected Node24 runner imports and canonical contract HTTP200 verified. Retry actual original smoke only after reviewed fix is serving. Fresh pass grants cannot recover old runs/foreign fixtures; Hub grants and per-resource confirmations remain separate."
   },
   {
     "id": "P0-2-EXACT-FIXTURE-READ",
@@ -520,7 +518,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Independently READY custom Workspace MCP revision, original owner-connected account/TEST pass as applicable, read_only and explicit owner intent for customer-wide/foreign domain. No provider writes, no claiming inherited policy or purchased seats.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15 16:35Z actual custom-service verify: four exact mailbox topics observed; customer-wide domains outside_scope without crossDomain. Narrow mailbox/denial portion passed; customer-wide optional proof remains separately gated. Full acceptance remains PENDING: existing optional provider grants, TEST/fixture and other-business approvals remain separate. 2026-10-15T20:18:48Z follow-up with same approved Rentals account: 4/5 mailbox topics observed, but gmail-default-routing-delegation returned not_readable. Direct gmail_list_delegates returned Google's service-account-only refusal, while verified workspace_delegation_status for this account reports Gmail settings/Calendar/Drive approved and working. Original P8-8 remains pending; source repair on PR successor, then checked release and readback required."
+    "lastEvidence": "2026-10-15 delegation repair is already deployed at afbc602285437557ae42ff470721dc834fbad8fd; prior custom-service verify observed all five mailbox topics, including genuine empty delegate list. No further delegation source repair is needed. Actual authenticated Google Admin browser subsequently observed Rentals inherited delegation OFF; owner separately approved Rentals-only override ON, saved and independently read back after reload. The API's empty delegate list does not certify this OU policy. Parent/customer-wide/foreign read criteria remain pending for separately approved actual reads; do not repeat completed mailbox repair or claim full console acceptance."
   },
   {
     "id": "P8-8-DELEGATED-MAILBOX",
@@ -619,7 +617,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "docs/plan/TASKS.md — P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Authenticated read-only Google Admin Console session for the intended authorized organization/role; observe only approved scope, no policy changes. Record inaccessible/edition-specific pages honestly; an API-generated checklist alone is not the walkthrough.",
     "dependsOn": [],
-    "lastEvidence": "2026-10-15 repository reconciliation only. Original acceptance was outstanding but absent as its own precise queue row; no actual Google lifecycle/console walk was performed in this maintenance. Establish exact deployed ancestry and existing authorization, then execute or ask the specific access/fixture question."
+    "lastEvidence": "2026-10-15 repository reconciliation only. Original acceptance was outstanding but absent as its own precise queue row; no actual Google lifecycle/console walk was performed in this maintenance. Establish exact deployed ancestry and existing authorization, then execute or ask the specific access/fixture question. 2026-10-15 owner-assisted secure browser sign-in succeeded as Rentals admin. Observed actual Home/service inventory, Gmail root/User Settings and Rentals OU, security Authentication/Access-data menus, Data compliance/import-export, Account, Gemini, Directory and Devices navigation. Owner explicitly authorized Rentals changes and independently approved saving Rentals-only Mail delegation ON; after reload parent remained OFF, Rentals showed Overridden/ON. Group delegation stayed disabled and no delegates were assigned. Walkthrough remains PARTIAL: correct observed stale paths/missing pages and finish other mapped pages before passing; no navigation inventory is counted as full acceptance."
   },
   {
     "id": "P5-2-ENCRYPTED-READY",
@@ -630,7 +628,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Protected operator environment; current correct TOKEN_ENCRYPTION_KEY; verified source/READY deployment; exact all-account count and encrypted/refresh evidence; no token values in logs or report, no real retirement or unsolicited Google mutation.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: exact-source isolated PostgreSQL upgrade/integrity/refresh/concurrency tests passed Actions 38798504715. No actual deployed Google account refresh or protected operator readiness proof was run. Next: checked live promotion plus existing operator authority; report only sanitized counts and per-condition PASS/FAIL."
+    "lastEvidence": "2026-10-15: exact-source isolated PostgreSQL upgrade/integrity/refresh/concurrency tests passed Actions 38798504715. No actual deployed Google account refresh or protected operator readiness proof was run. Next: checked live promotion plus existing operator authority; report only sanitized counts and per-condition PASS/FAIL. 2026-10-15 protected provider-control inspection (aggregate SQL only): two connected accounts, two encrypted copies, zero tokens_enc_verified_at, zero tokens_enc_refreshed_at; two legacy copies retained. This is NOT cryptographic validation or genuine refresh proof. Production/Development TOKEN_ENCRYPTION_KEY is secret/write-only; named Development inspection returned decrypted:false and no value. Full keyed operator inspection remains pending; no credentials returned or retirement performed."
   },
   {
     "id": "P5-2-PLAINTEXT-RETIRE",
@@ -2804,3 +2802,8 @@ Additional previous-session timing: first Actions job16:45:26.638–16:46:35.509
 lasted68.871s; final job16:49:44.119–16:50:33.935 lasted49.816s. These are job spans,
 not idle wait or additive coding time. Existing acceptance timestamps, overlapping
 review/correction window and2m20s closeout evidence above remain intact.
+
+
+### October 15 owner setup attempt — browser form source defect
+
+Owner-approved Rentals-only Gmail delegation is saved and independently read back ON (parent remains OFF; group delegation off; no delegates assigned). Separate one-hour read_only TEST pass approval is retained, but issuance is blocked by the form's own no-referrer policy nulling navigation Origin. Both canonical and secure-auth submissions were refused before login; no pass/fixture was created. Fix only form response policy to same-origin; preserve exact canonical Origin and result-page no-referrer, CSP, allowlist, owner authentication and limits. Fetch specification: https://fetch.spec.whatwg.org/#append-a-request-origin-header . Focused current-route test: 22 passed on a separate diagnostic checkout; exact PR CI is authoritative for current-main integration. This is a small demonstrated blocker repair, zero bundles claimed. Existing source pins/statuses remain unchanged. Full TEST smoke, full console walk/map correction and keyed all-account encrypted refresh remain pending. No release or plaintext retirement is authorized by this repair.
