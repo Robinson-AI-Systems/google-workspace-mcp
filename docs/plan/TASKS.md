@@ -14,12 +14,13 @@ inspect full original acceptance; it is neither missing-code proof nor a complet
 feature. The check refuses 0/5 normal finish, duplicate/prior-session claims,
 unmerged/local completion claims, optional/unapproved scope and blanket exhaustion
 with OPEN/REVIEW rows. Automated review identified the optional-scope case; it
-is fixed with a regression for ON_REQUEST/PLANNED and later status relabeling.
+is fixed with regressions for ON_REQUEST/PLANNED, later status relabeling and
+missing engineering records even after a MERGED status change.
 Genuine exhausted/limited checkpoints remain explicitly INCOMPLETE, exit 2.
 This cannot force a chat agent to obey or certify its proof. No new product bundle,
 Google mutation, scope, spending, deployment or authentic acceptance is claimed.
 
-Local `npm run check`, 21 session workflow tests, eight focused catalog tests
+Local `npm run check`, 22 session workflow tests, eight focused catalog tests
 and all 1,611 unit tests (83 files) passed. Required exact-head full CI/review
 remain mandatory before merge.
 Current handoff and next engineering action are below; historical acceptance stays

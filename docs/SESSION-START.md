@@ -45,7 +45,9 @@ permanent handoff; no second roadmap. Example for one completed bundle:
 }
 ```
 
-Counts exclude prior sessions and duplicate subsection IDs. Repeated merge
+Retain a completed subsection's exact engineering-completion row through session
+accounting, even after its coarse status becomes MERGED; that label alone is not
+completion proof. Counts exclude prior sessions and duplicate subsection IDs. Repeated merge
 references within one bundle are invalid; one substantial PR may deliver multiple
 independently complete bundles only with distinct whole-subsection outcomes. The command checks
 merged origin/main, not local unmerged claims. Before using it, fetch/reconcile

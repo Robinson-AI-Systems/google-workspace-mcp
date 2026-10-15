@@ -30,7 +30,7 @@ export function assessCompletion(report, { target, index, baselineIndex, baselin
     for (const id of bundle.subsections) {
       if (!cards.has(id) || !eligibleAtStart.has(id) || seen.has(id) || alreadyComplete.has(id))
         throw Error('Unknown, unapproved, repeated or previously completed subsection: ' + id);
-      if (engineering.some(row => row.id === id && row.state !== 'EXTERNAL_ONLY'))
+      if (!engineering.some(row => row.id === id && row.state === 'EXTERNAL_ONLY'))
         throw Error('Unfinished engineering cannot count as a completed subsection: ' + id);
       seen.add(id);
     }

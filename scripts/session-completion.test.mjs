@@ -52,6 +52,13 @@ test('optional and planned scope cannot satisfy a target even with a new merged 
     assert.throws(() => assessCompletion(r, c), /unapproved/);
   }
 });
+test('a merged label cannot replace a missing engineering-completion record', () => {
+  const r = { ...report(), bundles: [bundle()] };
+  const c = { ...config, target: 1,
+    index: { cards: index.cards.map(card => card.id === 'P0-2' ? { ...card, status: 'MERGED' } : card) },
+    engineering: [review('P7-1')] };
+  assert.throws(() => assessCompletion(r, c), /Unfinished engineering/);
+});
 test('genuine exhaustion requires each remaining subsection and remains incomplete', () => {
   const c = { ...config, engineering: [external('P0-2'), external('P7-1')] };
   const r = { ...report(), stop: { kind: 'EXTERNAL_EXHAUSTION', evidence: ['complete source inspection'],
