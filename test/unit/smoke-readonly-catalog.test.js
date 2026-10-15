@@ -46,7 +46,7 @@ describe('P0-2 complete authorized catalog inventory and vetted reads',()=>{
  it('retrieves every permitted page without mutating and labels untested resource-specific tools',async()=>{
   const f=fake();
   const result=await runCatalogReadOnlySmoke(options(f));
-  expect(result.ok).toBe(true);
+  expect(result.ok).toBe(false); // an unimplemented read is not a successful smoke
   expect(result.catalogComplete).toBe(true);
   expect(result.coverageComplete).toBe(false);
   expect(result.summary.engineeringGaps).toBe(1);
@@ -55,7 +55,7 @@ describe('P0-2 complete authorized catalog inventory and vetted reads',()=>{
    status:'NOT_PROBED',reason:'unreviewed_required_arguments'
   });
   expect(result.tools.find(t=>t.tool==='workspace_call')).toMatchObject({
-   status:'NOT_PROBED',reason:'broker_not_direct_read'
+   status:'SKIPPED',reason:'broker_not_direct_read'
   });
   expect(result.tools.find(t=>t.tool==='workspace_gmail_get_profile').status).toBe('PASS');
   const invoked=f.calls.filter(c=>c.method==='POST').map(c=>c.path.slice('/api/tools/'.length));
