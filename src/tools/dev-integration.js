@@ -5,6 +5,10 @@
 import { ok, errorResult } from './util.js';
 import { allowedTool } from '../rtc/catalog.js';
 import { DELEGATED_SCOPES, describeServiceAccount } from '../auth/service-account.js';
+import { normalizeExactAppResources, inspectExactAppResources } from './dev-integration-resources.js';
+import { normalizeAppCapabilities, inspectAppCapabilities } from './dev-integration-capabilities.js';
+import { normalizeCalendarAvailability, inspectCalendarAvailability } from './dev-integration-calendar-readiness.js';
+import { summarizeAppReadiness } from './dev-integration-report.js';
 
 const API_SPECS=Object.freeze({
  gmail:{tool:'gmail_list_messages',label:'Gmail',url:'https://console.cloud.google.com/apis/library/gmail.googleapis.com',
@@ -56,6 +60,7 @@ export function validateIntegrationSpec(input={}){
    (typeof input.serviceAccountClientId!=='string'||!/^[0-9]{10,32}$/.test(input.serviceAccountClientId)))
    throw Error('serviceAccountClientId must be a Google numeric client ID.');
  out.serviceAccountClientId=input.serviceAccountClientId||null;
+ Object.assign(out, normalizeExactAppResources(input), normalizeAppCapabilities(input), normalizeCalendarAvailability(input));
  return out;
 }
 const guide=(url,summary)=>({url,steps:[{n:1,action:'Open',target:url},{n:2,action:'Verify',target:summary}],expected:'Confirm in Google Console; no setting changed automatically.'});
@@ -238,15 +243,17 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
      checks.push({kind:'drive_folder',...item});
    }
  }
- const statuses=checks.map(x=>x.status);
+ checks.push(...await inspectExactAppResources(request,clients));
+ checks.push(...await inspectAppCapabilities(request,clients));
+ checks.push(...await inspectCalendarAvailability(request,clients));
+ const summary=summarizeAppReadiness(checks);
  return {actingAs:clients.actingAs,checkedAt:new Date().toISOString(),
-   status:checks.length===0?'not_readable':statuses.includes('missing')?'missing':statuses.includes('not_readable')?'not_readable':'ready',
-   checks,changesMade:false,
+   status:summary.status,summary,checks,changesMade:false,
    note:'Only observed reads are marked ready. Domain-wide delegation requires independent Admin console verification.'};
 }
 export const tools=[{
  name:'workspace_dev_check_integration',
- description:'Verify an app’s Google API access, scopes, exact Gmail labels, Calendar events, calendars, Drive folders and Docs/Sheets/Slides/Forms without changes.',
+ description:'Verify Google API/scopes, exact app resources and declared Calendar/Drive/Gmail access capabilities with read-only metadata.',
  inputSchema:{type:'object',properties:{
    spec:{type:'object',description:'Requirements the app needs from the existing Google account.',properties:{
      apis:{type:'array',items:{type:'string',enum:Object.keys(API_SPECS)}},
@@ -255,7 +262,28 @@ export const tools=[{
      gmailLabels:{type:'array',items:{type:'string'}},
      calendarEvents:{type:'array',maxItems:12,items:{type:'object',required:['calendarId','eventId'],properties:{calendarId:{type:'string'},eventId:{type:'string'}}}},
      documents:{type:'array',items:{type:'string'}},spreadsheets:{type:'array',items:{type:'string'}},
-     presentations:{type:'array',items:{type:'string'}},forms:{type:'array',items:{type:'string'}}
+     presentations:{type:'array',items:{type:'string'}},forms:{type:'array',items:{type:'string'}},
+     gmailMessages:{type:'array',maxItems:12,items:{type:'string'}},
+     gmailThreads:{type:'array',maxItems:12,items:{type:'string'}},
+     driveFiles:{type:'array',maxItems:12,items:{type:'string'}},
+     taskLists:{type:'array',maxItems:12,items:{type:'string'}},
+     taskItems:{type:'array',maxItems:12,items:{type:'object',required:['tasklistId','taskId'],
+       properties:{tasklistId:{type:'string'},taskId:{type:'string'}}}},
+     chatSpaces:{type:'array',maxItems:12,items:{type:'string'}},
+     contacts:{type:'array',maxItems:12,items:{type:'string'}},
+     calendarRoles:{type:'array',maxItems:12,items:{type:'object',required:['calendarId','minimumRole'],
+       properties:{calendarId:{type:'string'},minimumRole:{type:'string',enum:['reader','writer','owner']}}}},
+     driveFolderCapabilities:{type:'array',maxItems:12,items:{type:'object',required:['folderId','capability'],
+       properties:{folderId:{type:'string'},capability:{type:'string',
+         enum:['canAddChildren','canEdit','canShare','canReadRevisions']}}}},
+     driveMemberships:{type:'array',maxItems:12,items:{type:'object',
+       required:['driveId','permissionId','role'],properties:{
+       driveId:{type:'string'},permissionId:{type:'string'},
+       role:{type:'string',enum:['organizer','fileOrganizer','writer','commenter','reader']}}}},
+     gmailSendAsAliases:{type:'array',maxItems:12,items:{type:'string'}},
+     calendarFreeBusyWindows:{type:'array',maxItems:12,items:{type:'object',
+       required:['calendarId','timeMin','timeMax'],
+       properties:{calendarId:{type:'string'},timeMin:{type:'string'},timeMax:{type:'string'}}}}
    }}
  },required:['spec']}
 }];

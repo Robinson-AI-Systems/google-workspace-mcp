@@ -43,14 +43,13 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 | calendar | 24 |
 | chat | 8 |
 | chrome | 3 |
-| contacts | 7 |
 | datatransfer | 3 |
-| directory | 2 |
 | dns | 3 |
 | domain | 3 |
 | files | 102 |
 | identity | 5 |
 | mail | 60 |
+| people | 9 |
 | tasks | 11 |
 | workflows | 12 |
 | workspace | 24 |
@@ -213,26 +212,11 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `chrome_resolve_policies`
 - `chrome_set_policy`
 
-### contacts (7)
-
-- `contacts_create`
-- `contacts_delete`
-- `contacts_get`
-- `contacts_list`
-- `contacts_list_groups`
-- `contacts_search`
-- `contacts_update`
-
 ### datatransfer (3)
 
 - `datatransfer_get_transfer_status`
 - `datatransfer_list_transfers`
 - `datatransfer_start_transfer`
-
-### directory (2)
-
-- `directory_list_people`
-- `directory_search_people`
 
 ### dns (3)
 
@@ -422,6 +406,18 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `postmaster_list_domains`
 - `postmaster_list_traffic_stats`
 
+### people (9)
+
+- `contacts_create`
+- `contacts_delete`
+- `contacts_get`
+- `contacts_list`
+- `contacts_list_groups`
+- `contacts_search`
+- `contacts_update`
+- `directory_list_people`
+- `directory_search_people`
+
 ### tasks (11)
 
 - `tasks_clear_completed`
@@ -526,8 +522,20 @@ are additional to the historical service-category counts above.
 For a connected app builder, `workspace_dev_check_integration`
 checks requested Google API availability, currently granted OAuth
 scopes, connected service-account client ID and declared delegated
-scopes, plus optional Calendar IDs and Drive folder IDs, without
-changing Google data. It returns observed `ready`, `missing`
+scopes, plus optional Calendar IDs, Gmail labels/messages/threads, exact Drive
+file/folder IDs, individual Tasks/list pairs, Chat space resource names,
+Contacts/People resource names, and Docs/Sheets/Slides/Forms IDs, plus explicit Calendar reader/writer roles,
+Google Drive folder capabilities, shared-drive membership roles, Gmail send-as
+verification and exact Calendar free/busy windows, without changing Google data.
+Only status findings are returned: message bodies, permissions details and busy
+slots are not included. Each resource probe uses the existing scoped account,
+metadata-only reads and exact provider-ID agreement; a mismatch, permission
+denial or unavailable optional API is not declared ready. At most 24 additional
+exact app resources and 24 explicit permission/capability requirements can be
+probed in one call, plus up to 12 narrow Calendar availability windows. The
+response includes total/ready/missing/not-readable counts, per-resource-type
+and API-area breakdowns, and a bounded list of trusted Google Console remediation
+links. Unsupported or unobservable authorizations remain `not_readable`. It returns observed `ready`, `missing`
 and `not_readable` findings; Admin-console-only permissions remain
 unverified until separately checked. This is a complete read-only
 integration check, not fixture creation/cleanup; all three P8-7 fixture families are now implemented with exact-ID cleanup and crash reconciliation tests. Real Google TEST acceptance and full Hub routes remain open in `docs/plan/TASKS.md`.

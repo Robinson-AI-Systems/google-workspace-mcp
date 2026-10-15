@@ -210,6 +210,17 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "2026-10-14: reviewed opt-in source and synthetic exact-ID wrong-resource/denial tests added on implementation branch. Exact-head Actions/merge/checked live and real owner-issued pass with fixture IDs remain separate; no actual Google fixture read executed."
+  },
+  {
+    "id": "P8-7-EXACT-APP-READS",
+    "priority": 3,
+    "requiredRevision": "c34c9b3a1ad0d52a96aa4eaef75fc11f51215ad6",
+    "task": "Verify custom-service exact Gmail, Drive, Tasks, Chat and People resources plus Calendar minimum roles/freebusy, Drive capabilities/membership and Gmail send-as status on a consented TEST identity; collect denied/wrong-ID and insufficient-permission evidence without disclosing data",
+    "procedure": "src/tools/dev-integration.js; src/tools/dev-integration-resources.js; src/tools/dev-integration-capabilities.js; src/tools/dev-integration-calendar-readiness.js",
+    "gates": "Read-only, existing authenticated account and permitted areas; no message bodies/sending, fixture creation, admin impersonation, scope widening or consent without owner approval. Independently READY deployed revision and original resource IDs first.",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14: source and synthetic provider tests implemented to prove exact resource identifiers and reject denied or other-account responses; no live custom-service requests to these private exact IDs have been executed or accepted."
   }
 ]
 ```
@@ -1909,3 +1920,10 @@ The connected Robinson Google Workspace Cloud adapter reported its existing upst
 **Engineering outcome:** The existing RTC smoke incorrectly treated valid Calendar/Tasks array output from the actual service handlers as invalid, and could label unrelated HTTP 200 JSON as a PASS on the additional vetted read probes. The implementation centralizes handler-specific identity-aware proof for the approved safe catalog, preserves numbered/byte-bounded full RTC result recovery, adds exact ID-bound optional TEST reads for twelve existing Google resource tools, and normalizes empty Drive and shared-drive lists without losing provider cursors. A Gmail profile must match the acting account; a fixture must return the requested exact resource ID, with a bounded, permission-filtered, read-only scope. Existing service-only change history is recorded distinctly from provider proof. No expansion to arbitrary or unsafe catalog calls, owner grants or writes.
 
 **Evidence and gates:** Synthetic provider-shape, actual handler output, wrong-provider/foreign-ID, area and account denial, missing catalog, safe limits and protection tests cover these boundaries. Actual local command results and exact-head Actions must be recorded before claiming CI; no remote Google fixture call or source READY release has been established by this source change. Queue row P0-2-EXACT-FIXTURE-READ remains PENDING alongside the existing P0-2 baseline, Drive handle and comprehensive RTC acceptance rows. Original TEST pass, independently verified live source, resource consent/IDs, separation of direct/relay/Sandbox and no external Google writes remain mandatory. Resume the next approved eligible roadmap outcome after a fully reviewed merge, not another small hardening-only PR.
+
+
+### October 14 P8-7 full exact-resource app-integration preflight continuation
+
+**User/developer capability:** Existing `workspace_dev_check_integration` now inspects the exact Google Gmail message/thread, Drive file, Tasks list and task, Chat space and People/Contacts resource name the app needs. The same read-only spec also validates declared Calendar access role, Drive folder write/share/read capability, exact shared-drive member role for the connected mailbox, verified Gmail send-as aliases and narrow exact Calendar free/busy windows (only statuses returned, never busy slots). These are per-existing-connection metadata-only provider reads with exact returned identifiers, explicit Google denied/missing/wrong-ID status, no message body, no send, no Google mutation and no cross-account impersonation. Max twelve per type and twenty-four new exact resources per inspection; duplicate pairs are deduplicated, invalid URLs and foreign categories rejected. This augments, not replaces, Calendar labels/events, Drive folders and Docs/Sheets/Slides/Forms checks. RTC Contacts/Directory reads now belong to the existing 'people' area instead of unreachable unmapped area names. Generated README catalog is aligned to the corrected registry-derived areas.
+
+**Tests and separate gates:** Source fakes exercise all seven families, metadata-only Google call arguments, absent/wrong IDs, trashed Drive items, 403/404 results, scoped area exclusion, actor-required guard, bounded specs and no provider details in reported findings. A genuine custom-service check against owner-approved precise resources and verified READY live revision remains **PENDING** in the queue (P8-7-EXACT-APP-READS). No optional consent, production release or new owner grant was performed. Exact-head test/release-policy, review and merge must pass; the source change alone never asserts real provider or Hub acceptance. Continue the approved remaining implementation and acceptance order.
