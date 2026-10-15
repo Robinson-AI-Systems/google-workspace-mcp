@@ -190,7 +190,8 @@ describe('P8-7 precise confirmed cleanup',()=>{
    s.when('drive.files.list').resolves(()=>{
      const files=[...s.byId.values()].filter(f=>f.parents?.includes('f-root')&&!f.trashed)
        .map(f=>({id:f.id,parents:f.parents,trashed:f.trashed}));
-     if(++count>=2)files.push({id:'unrecorded-after-start',parents:['f-root'],trashed:false});
+     // The write wrapper reads once to plan, again when applying, and again before the parent update.
+     if(++count>=3)files.push({id:'unrecorded-after-start',parents:['f-root'],trashed:false});
      return {data:{files}};
    });
    const out=body(await handlers.workspace_dev_cleanup({runId:s.run,confirm:true},s.clients));
