@@ -30,7 +30,11 @@ export default async function handler(req, res) {
     }
 
     const client = await getOAuthClient(body.client_id);
-    if (client?.client_secret && client.client_secret !== body.client_secret) {
+    if (!client) {
+      res.status(401).json({ error: 'invalid_client' });
+      return;
+    }
+    if (client.client_secret && client.client_secret !== body.client_secret) {
       res.status(401).json({ error: 'invalid_client' });
       return;
     }
