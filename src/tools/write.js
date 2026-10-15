@@ -72,7 +72,7 @@ export function defineWrite({ name, description, inputSchema, destructive = fals
   const schema = JSON.parse(JSON.stringify(inputSchema || { type: 'object', properties: {} }));
   schema.properties = { ...(schema.properties || {}), dryRun: DRY_RUN_FIELD };
   const canNeedConfirm = destructive === true || typeof confirmWhen === 'function';
-  const needsConfirm = (args) => destructive === true || (typeof confirmWhen === 'function' && confirmWhen(args) === true);
+  const needsConfirm = (args, clients) => destructive === true || (typeof confirmWhen === 'function' && confirmWhen(args, clients) === true);
   if (canNeedConfirm) schema.properties.confirm = { ...CONFIRM_FIELD, ...(inputSchema?.properties?.confirm || {}), type: 'boolean' };
   if (Array.isArray(schema.required)) schema.required = schema.required.filter((k) => k !== 'confirm'); // dryRun alone must be a valid call
   const tool = { name, description: description + safetyNote(destructive === true, canNeedConfirm), inputSchema: schema };
@@ -88,9 +88,9 @@ export function defineWrite({ name, description, inputSchema, destructive = fals
 
     if (dryRun === true) {
       const logged = await recordChange(clients, { tool: name, target: p.target, summary: `PREVIEW: ${p.summary}`, before, dryRun: true });
-      return ok({ done: false, dryRun: true, summary: p.summary, target: p.target, before, note: 'Nothing was changed. Run it again without dryRun to do it.' + (needsConfirm(callArgs) ? ' It will also need confirm: true.' : ''), logged: logged.logged });
+      return ok({ done: false, dryRun: true, summary: p.summary, target: p.target, before, note: 'Nothing was changed. Run it again without dryRun to do it.' + (needsConfirm(callArgs, clients) ? ' It will also need confirm: true.' : ''), logged: logged.logged });
     }
-    if (needsConfirm(callArgs) && confirm !== true) {
+    if (needsConfirm(callArgs, clients) && confirm !== true) {
       return ok({ done: false, needsConfirmation: true, summary: p.summary, target: p.target, before, note: 'Nothing was changed. Ask the person, then run it again with confirm: true (or dryRun: true to preview).' });
     }
 

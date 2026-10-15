@@ -8,7 +8,7 @@ vi.mock('../../src/db.js', async (importActual) => {
   return Object.fromEntries(Object.keys(real).map((name) => [name, (...args) => holder.db[name](...args)]));
 });
 const { registry } = await import('../../src/tools/index.js');
-const { restrictionsOf, savedSharedDriveRequestId } = await import('../../src/tools/shared-drives.js');
+const { restrictionsOf, savedSharedDriveRequestId, driveVisualsOf } = await import('../../src/tools/shared-drives.js');
 
 const body = (r) => JSON.parse(r.content[0].text);
 const call = (name, args, clients) => registry.handlers[name](args, clients);
@@ -43,7 +43,10 @@ describe('create', () => {
     const out = body(await call('drive_create_shared_drive', { name: 'Ops', domainUsersOnly: true }, x.clients));
     const sent = paths(x.calls, 'drive.drives.create')[0].args[0];
     expect(sent.requestId).toMatch(/^[0-9a-f-]{36}$/);
-    expect(sent.requestBody).toEqual({ name: 'Ops', restrictions: { domainUsersOnly: true } });
+    expect(sent.requestBody).toEqual({ name: 'Ops' });
+    expect(paths(x.calls, 'drive.drives.update')[0].args[0]).toMatchObject({
+      driveId: 'new1', requestBody: { restrictions: { domainUsersOnly: true } }
+    });
     expect(out).toMatchObject({ done: true, confirmed: true });
   });
   it('allows a saved UUID across uncertain retries and preserves identical Google create parameters', async () => {
@@ -60,6 +63,9 @@ describe('create', () => {
     const firstArgs = paths(first.calls, 'drive.drives.create')[0].args[0];
     const secondArgs = paths(second.calls, 'drive.drives.create')[0].args[0];
     expect(firstArgs).toEqual(secondArgs);
+    expect(firstArgs.requestBody).toEqual({name:'Ops'});
+    expect(paths(second.calls,'drive.drives.update')[0].args[0].requestBody)
+      .toEqual({ restrictions: {domainUsersOnly:true} });
     expect(firstArgs.requestId).toBe(requestId);
     expect(result).toMatchObject({ confirmed: true, details: { requestId, id: 'same1' } });
     expect(result.summary).toContain(requestId);
@@ -81,6 +87,59 @@ describe('create', () => {
     expect(paths(x.calls, 'drive.drives.create')).toHaveLength(1);
     expect(paths(x.calls, 'drive.drives.create')[0].args[0].requestId).toBe(requestId);
   });
+  it('never sends restrictions to Google create even if an owner asks to set them',async()=>{
+    const x=makeFakeClients();
+    x.when('drive.drives.create').resolves({data:{id:'new1'}});
+    x.when('drive.drives.update').resolves({data:{id:'new1'}});
+    x.when('drive.drives.get').resolves({data:{id:'new1',name:'Locked',
+      restrictions:{domainUsersOnly:true,driveMembersOnly:true}}});
+    const result=body(await call('drive_create_shared_drive',{name:'Locked',
+      domainUsersOnly:true,driveMembersOnly:true},x.clients));
+    expect(result).toMatchObject({done:true,confirmed:true});
+    expect(paths(x.calls,'drive.drives.create')).toHaveLength(1);
+    expect(paths(x.calls,'drive.drives.create')[0].args[0].requestBody)
+      .toEqual({name:'Locked'});
+    expect(paths(x.calls,'drive.drives.update')[0].args[0].requestBody)
+      .toEqual({restrictions:{domainUsersOnly:true,driveMembersOnly:true}});
+  });
+
+  it('retains the created ID and request UUID when the second-step restriction patch fails',async()=>{
+    const requestId='123e4567-e89b-42d3-a456-426614174008';
+    const x=makeFakeClients();
+    x.when('drive.drives.create').resolves({data:{id:'created-but-unrestricted',name:'Ops'}});
+    x.when('drive.drives.update').rejects(googleError(403,'forbidden','not allowed'));
+    x.when('drive.drives.get').resolves({data:{id:'created-but-unrestricted',name:'Ops',
+      restrictions:{domainUsersOnly:false}}});
+    const result=body(await call('drive_create_shared_drive',{name:'Ops',
+      requestId,domainUsersOnly:true},x.clients));
+    expect(result).toMatchObject({done:true,confirmed:false,
+      details:{id:'created-but-unrestricted',requestId,
+        partialFailure:{step:'apply_restrictions',code:'google_http_403'}}});
+    expect(result.details.partialFailure.recovery).toContain('drive_update_shared_drive');
+    expect(paths(x.calls,'drive.drives.create')).toHaveLength(1);
+    expect(paths(x.calls,'drive.drives.delete')).toHaveLength(0);
+  });
+
+  it('refuses invalid name before external reads or writes',async()=>{
+    for(const name of ['','  ',null,'x'.repeat(256)]){
+      const x=makeFakeClients();
+      await expect(call('drive_create_shared_drive',{name,dryRun:true},x.clients))
+        .rejects.toThrow(/name must be/);
+      expect(x.calls).toEqual([]);
+    }
+  });
+
+  it('supports approved shared-drive theme on create without pretending to read back write-only IDs',async()=>{
+    const x=makeFakeClients();
+    x.when('drive.drives.create').resolves({data:{id:'d-new',name:'Theme'}});
+    x.when('drive.drives.get').resolves({data:{id:'d-new',name:'Theme',colorRgb:'#AA0000'}});
+    const result=body(await call('drive_create_shared_drive',{name:'Theme',
+      themeId:'theme_red'},x.clients));
+    expect(paths(x.calls,'drive.drives.create')[0].args[0].requestBody)
+      .toEqual({name:'Theme',themeId:'theme_red'});
+    expect(result).toMatchObject({done:true,confirmed:false});
+  });
+
   it('dryRun creates nothing', async () => {
     const x = makeFakeClients();
     const out = body(await call('drive_create_shared_drive', { name: 'Ops', dryRun: true }, x.clients));
@@ -106,6 +165,47 @@ describe('update', () => {
     expect(paths(x.calls, 'drive.drives.unhide')).toHaveLength(0);
     expect(out).toMatchObject({ done: true, confirmed: true });
   });
+  it('uses one patch for visual color and restrictions, and never sends a conflicting theme',async()=>{
+    const x=makeFakeClients();
+    x.when('drive.drives.get').resolves({data:{id:'d1',name:'Ops',colorRgb:'#ABCDEF',
+      restrictions:{adminManagedRestrictions:true}}});
+    const out=body(await call('drive_update_shared_drive',{driveId:'d1',
+      colorRgb:'#abcdef',adminManagedRestrictions:true},x.clients));
+    expect(out).toMatchObject({done:true,confirmed:true});
+    expect(paths(x.calls,'drive.drives.update')[0].args[0].requestBody)
+      .toEqual({colorRgb:'#ABCDEF',restrictions:{adminManagedRestrictions:true}});
+    for(const invalid of [
+      {themeId:'theme1',colorRgb:'#123456'},
+      {colorRgb:'NOT-A-HEX'},
+      {themeId:'!bad theme'},
+      {name:'  '}
+    ]){
+      const other=makeFakeClients();
+      await expect(call('drive_update_shared_drive',{driveId:'d1',...invalid,
+        dryRun:true},other.clients)).rejects.toThrow(/Nothing was changed/);
+      expect(other.calls).toEqual([]);
+    }
+  });
+
+  it('records an uncertain partial update when metadata succeeded but hide failed',async()=>{
+    const x=makeFakeClients();
+    x.when('drive.drives.update').resolves({data:{id:'d1'}});
+    x.when('drive.drives.hide').rejects(googleError(503,'unavailable','provider temporary outage'));
+    x.when('drive.drives.get').resolves({data:{id:'d1',name:'Renamed',hidden:false}});
+    const out=body(await call('drive_update_shared_drive',{driveId:'d1',name:'Renamed',hidden:true},x.clients));
+    expect(out).toMatchObject({done:true,confirmed:false,
+      details:{driveId:'d1',partialFailure:{step:'hide',code:'google_http_503'}}});
+    expect(out.details.partialFailure.recovery).toMatch(/inspect/i);
+  });
+
+  it('does not pretend a visibility-only provider error succeeded',async()=>{
+    const x=makeFakeClients();
+    x.when('drive.drives.hide').rejects(googleError(403,'forbidden','cannot hide'));
+    await expect(call('drive_update_shared_drive',{driveId:'d1',hidden:true},
+      x.clients)).rejects.toThrow();
+    expect(paths(x.calls,'drive.drives.update')).toHaveLength(0);
+  });
+
   it('only hiding does not call update at all', async () => {
     const x = makeFakeClients();
     x.when('drive.drives.get').resolves({ data: { ...held, hidden: true } });
@@ -119,6 +219,15 @@ describe('update', () => {
     await call('drive_update_shared_drive', { driveId: 'd1', hidden: false }, x.clients);
     expect(paths(x.calls, 'drive.drives.unhide')).toHaveLength(1);
   });
+  it('removing administrator-managed restrictions requires owner confirmation',async()=>{
+    const x=makeFakeClients();
+    x.when('drive.drives.get').resolves({data:{id:'d1',restrictions:{adminManagedRestrictions:true}}});
+    const preview=body(await call('drive_update_shared_drive',{driveId:'d1',
+      adminManagedRestrictions:false},x.clients));
+    expect(preview).toMatchObject({done:false,needsConfirmation:true});
+    expect(paths(x.calls,'drive.drives.update')).toHaveLength(0);
+  });
+
   it('turning a restriction off needs confirm; nothing happens without it', async () => {
     const x = makeFakeClients();
     x.when('drive.drives.get').resolves({ data: held });

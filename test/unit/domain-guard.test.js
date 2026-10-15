@@ -144,3 +144,68 @@ describe('workspace_set_allowed_domains', () => {
     expect(list.find((a) => a.email === 'ops@rentals.test')).toMatchObject({ allowed_domains: ['rentals.test'], allowed_domains_custom: false });
   });
 });
+
+
+describe('P7-1 shared-drive and existing Drive member caller authorization', () => {
+ it('declares crossDomain only on the mutating sharing tool, never on ordinary file reads', () => {
+   const t=registry.tools.find(x=>x.name==='drive_share_file');
+   expect(t.inputSchema.properties.crossDomain.type).toBe('boolean');
+   expect(registry.tools.find(x=>x.name==='drive_list_files').inputSchema.properties.crossDomain).toBeUndefined();
+ });
+ it('refuses outside-domain member creation without crossDomain even when confirm is set',async()=>{
+   for(const extra of [{},{dryRun:true},{confirm:true}]){
+     const f=rentals();
+     const result=text(await registry.handlers.drive_share_file({
+       fileId:'shared1',role:'writer',type:'user',
+       emailAddress:'outsider@elsewhere.test',...extra},f.clients));
+     expect(result).toMatch(/Refused/);
+     expect(f.calls).toHaveLength(0);
+   }
+ });
+ it('does not let crossDomain alone bypass independent owner confirmation',async()=>{
+   const f=rentals();
+   const out=body(await registry.handlers.drive_share_file({
+     fileId:'shared1',role:'writer',type:'user',
+     emailAddress:'outsider@elsewhere.test',crossDomain:true},f.clients));
+   expect(out).toMatchObject({done:false,needsConfirmation:true});
+   expect(f.calls.some(c=>c.path==='drive.permissions.create')).toBe(false);
+   expect(JSON.stringify(f.calls)).not.toContain('crossDomain');
+ });
+ it('permits an expressly approved external shared member and confirms the Google result',async()=>{
+   const f=rentals();
+   f.when('drive.permissions.create').resolves({data:{
+     id:'permission1',role:'writer',type:'user',emailAddress:'outsider@elsewhere.test'}});
+   f.when('drive.permissions.get').resolves({data:{
+     id:'permission1',role:'writer',type:'user',emailAddress:'outsider@elsewhere.test'}});
+   const out=body(await registry.handlers.drive_share_file({
+     fileId:'shared1',role:'writer',type:'user',emailAddress:'outsider@elsewhere.test',
+     crossDomain:true,confirm:true},f.clients));
+   expect(out).toMatchObject({done:true});
+   expect(f.calls.filter(c=>c.path==='drive.permissions.create')).toHaveLength(1);
+   expect(JSON.stringify(f.calls)).not.toContain('crossDomain');
+ });
+ it('ordinary allowed-domain member shares remain compatible',async()=>{
+   const f=rentals();
+   f.when('drive.permissions.create').resolves({data:{id:'permission2',role:'writer',
+     emailAddress:'member@rentals.test'}});
+   f.when('drive.permissions.get').resolves({data:{id:'permission2',role:'writer',
+     emailAddress:'member@rentals.test'}});
+   const out=body(await registry.handlers.drive_share_file({
+     fileId:'shared1',role:'writer',type:'user',emailAddress:'member@rentals.test'},f.clients));
+   expect(out).toMatchObject({done:true});
+   expect(f.calls.filter(c=>c.path==='drive.permissions.create')).toHaveLength(1);
+ });
+ it('promoting new members to organizer and creating public/domain links requires confirmation',async()=>{
+   for(const args of [
+     {role:'organizer',type:'user',emailAddress:'member@rentals.test'},
+     {role:'reader',type:'anyone'},
+     {role:'reader',type:'domain',emailAddress:'member@rentals.test',crossDomain:true}
+   ]) {
+     const f=rentals();
+     const out=body(await registry.handlers.drive_share_file({
+       fileId:'shared1',...args},f.clients));
+     expect(out.needsConfirmation).toBe(true);
+     expect(f.calls.filter(c=>c.path==='drive.permissions.create')).toHaveLength(0);
+   }
+ });
+});

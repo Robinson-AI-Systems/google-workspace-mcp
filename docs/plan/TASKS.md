@@ -103,6 +103,10 @@ New offline session utility: eight behavioral tests passed, including actual Git
 
 The complete existing 22-setting shared-inbox handler and caller already support the 16 newer fields, preview/confirm and field-by-field readback. Current work addresses the original P6-1 requirement to refuse unknown values for the four legacy enum fields and both legacy booleans (previously allowed through), while preserving every historically accepted request value. The same guard checks cross-field dependencies against an actual before-image prior to PATCH. Synthetic tests cover accepted and denied values, risky confirmation, readback, and missing dependencies. This is not source/CI/provider completion until exact-head mandatory gates pass, and no real group was edited or deleted. Owner-authorized disposable Rentals group lifecycle remains separate.
 
+### October 15 P7-1 two-phase shared-drive lifecycle
+
+Google Drive v3 forbids submitting restrictions in the create request. The P7-1 candidate creates with a stable requestId first, then patches restrictions once it has a drive ID, returning that created ID and a coarse recovery reason if the second step fails. It never creates a second drive, deletes a partially created drive, or claims provider-verified theme IDs (Google's themeId field is write-only). A metadata update followed by a failed hide/unhide is audited as partial with readback instead of silently losing the first result. **Source/CI/review are not a substitute for genuine owner-authorized TEST Google lifecycle acceptance.**
+
 ## Current engineering disposition — October 15 owner recovery
 
 This is the engineering view of the EXISTING subsection IDs, not new work units.
@@ -148,9 +152,9 @@ restricts only the named operation. Source completion never proves actual Google
   {
     "id": "P7-1",
     "state": "REVIEW",
-    "remaining": "Shared-drive request-ID repair #130 is not proof of every original shared-drive/member/restriction, all-drives caller and denial criterion.",
-    "evidence": "src/tools/shared-drives.js, drive.js, guards-files.js; original P7-1; #130 is a 24-line corrective addition.",
-    "next": "Trace complete six-tool lifecycle and existing sharing callers/tests, repair any connected gaps, then record exact engineering proof and independent disposable-drive acceptance."
+    "remaining": "October 15 candidate corrects the Google Drive create/restriction ordering (restriction PATCH only after create), returns a durable drive ID/requestId when stage two fails, handles hide-after-update partial failures and adds theme/color with honest write-only theme verification. Existing six tools and member callers, exact-head tests/reviews and real authorized disposable drive lifecycle require evidence before declaring completed.",
+    "evidence": "src/tools/shared-drives.js; test/unit/shared-drives.test.js; Google Drive v3 drives create/update docs; original P7-1.",
+    "next": "Run full exact-head CI and review, fix all negative paths, trace membership domain guards and existing caller coverage, merge valid code, then separately obtain owner-authorized create/member/read/delete/cleanup evidence."
   },
   {
     "id": "P7-2",

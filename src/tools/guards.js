@@ -237,7 +237,11 @@ const CORE = {
     describe: () => ({ target: 'Drive trash', summary: 'PERMANENTLY empty the Drive trash (every file in it is lost for good)' }),
     before: async (a, { drive }) => { const r = await data(drive.files.list({ q: 'trashed = true', pageSize: 100, fields: 'files(id,name)' })); return { filesInTrash: (r.files || []).length, hasMore: !!r.nextPageToken, sample: (r.files || []).slice(0, 10).map((f) => f.name) }; },
     after: async (a, { drive }) => { const r = await data(drive.files.list({ q: 'trashed = true', pageSize: 10, fields: 'files(id)' })); return { filesInTrash: (r.files || []).length }; } },
-  drive_share_file: { destructive: false, confirmWhen: (a) => a.type === 'anyone' || a.type === 'domain',
+  drive_share_file: { destructive: false, confirmWhen: (a, clients) =>
+      a.type === 'anyone' || a.type === 'domain' || a.role === 'organizer' ||
+      a.role === 'owner' || clients?.crossDomain === true ||
+      (typeof a.emailAddress === 'string' && Array.isArray(clients?.allowedDomains) &&
+       !clients.allowedDomains.some(d=>a.emailAddress.toLowerCase().endsWith('@'+String(d).toLowerCase()))),
     describe: (a) => ({ target: a.fileId, summary: `Share the Drive file ${a.fileId} with ${a.type === 'anyone' ? 'ANYONE with the link' : (a.emailAddress || a.type || 'user')} as ${a.role}` }),
     before: async (a, { drive }) => ({ permissions: (await data(drive.permissions.list({ fileId: a.fileId, fields: 'permissions(id,type,role,emailAddress)', supportsAllDrives: true }))).permissions }),
     after: (a, { drive }, details) => (details?.id
