@@ -97,6 +97,12 @@ describe('real Node HTTP to Workspace gateway using checked-in Vercel route tabl
   expect(tools.value.result.tools).toHaveLength(2);
   expect(tools.value.result.next).toBe('2');
  });
+ it('searches the full permitted catalog for compact connections',async()=>{
+  const result=await request('/api/tools?q=workspace_gmail_get_label',{bearer:wideToken});
+  expect(result.value.result.tools.some(t=>t.name==='workspace_gmail_get_label')).toBe(true);
+  const denied=await request('/api/tools?q=workspace_gmail_get_label');
+  expect(denied.value.result.tools).toEqual([]);
+ });
  it('permits the read-only meta dispatcher only for the exact authorized read',async()=>{
   const direct=await request('/api/tools/workspace_list_accounts',{method:'POST',body:{}});
   const nested=await request('/api/tools/workspace_call',{method:'POST',body:{name:'workspace_list_accounts',args:{}}});

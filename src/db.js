@@ -521,7 +521,9 @@ export async function recordChange({ actingAs, connection, tool, target, summary
     VALUES (${actingAs || null}, ${connection || null}, ${tool}, ${target || null}, ${summary || null}, ${j(before)}::jsonb, ${j(after)}::jsonb, ${!!dryRun})
     RETURNING id
   `;
-  return rows[0].id;
+  const id = Number(rows[0].id);
+  if (!Number.isSafeInteger(id) || id < 1) throw Error('Audit reference exceeds the supported integer range.');
+  return id;
 }
 
 /** Newest first. `since` is a date/time; omit it for "everything". */

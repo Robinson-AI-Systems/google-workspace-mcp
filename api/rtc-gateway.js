@@ -129,7 +129,7 @@ export function createRtcGateway(){
      (audience!==undefined&&!['owner','operator','builder'].includes(audience)))
     return fail(res,400,'invalid_args','Unknown listing, area or audience.');
   if(limit===null||page===null)return fail(res,400,'invalid_args','Page and limit must be bounded positive integers.');
-  const all=listedTools(registry.tools,pass,req.query?.listing||pass.listing)
+  const all=listedTools(registry.tools,pass,req.query?.listing||(q?'catalog':pass.listing))
    .map(expose).filter(t=>(!q||(t.name+' '+t.description).toLowerCase().includes(q))&&(!area||t.area===area)&&(!audience||t.audience.includes(audience)));
   const start=(page-1)*limit;
   const tools=all.slice(start,start+limit);

@@ -62,7 +62,7 @@ const calendar={calendarList:{get:apply('calendar.owner',({calendarId})=>{
 const gmail={users:{getProfile:apply('gmail.profile',()=>({emailAddress:account})),labels:{
  list:apply('gmail.labels.list',()=>({labels:[...labels.values()]})),
  get:apply('gmail.labels.get',({id})=>get(labels,id)),
- update:apply('gmail.labels.update',({id,requestBody})=>{const l={...get(labels,id),...requestBody};labels.set(id,l);return l;}),
+ patch:apply('gmail.labels.patch',({id,requestBody})=>{const l={...get(labels,id),...requestBody};labels.set(id,l);return l;}),
  create:apply('gmail.labels.create',({requestBody})=>{const l={id:'Label_'+(++sequence),type:'user',...requestBody};labels.set(l.id,l);return l;}),
  delete:apply('gmail.labels.delete',({id})=>{get(labels,id);labels.delete(id);return {};})
 },messages:{

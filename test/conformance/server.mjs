@@ -23,11 +23,11 @@ const account='rtc-fixture@example.test';
 const app=createServer(async(req,res)=>{
  const url=new URL(req.url,'http://127.0.0.1');
  res.status=n=>{res.statusCode=n;return res;};res.json=value=>{res.setHeader('content-type','application/json');res.end(JSON.stringify(value));return res;};
+ if(url.pathname==='/api/oauth/token'){await oauth(req,res);return;}
  const chunks=[];for await(const c of req)chunks.push(c);
  const raw=Buffer.concat(chunks).toString();
  try{
   req.body=raw?JSON.parse(raw):{};req.query=Object.fromEntries(url.searchParams);
-  if(url.pathname==='/api/oauth/token'){await oauth(req,res);return;}
   for(const rule of rewrites){
    if(!rule.destination.startsWith('/api/rtc-gateway'))continue;
    const keys=[];const pattern=rule.source.replace(/:([a-z]+)/g,(_,key)=>{keys.push(key);return '([^/]+)';});

@@ -99,7 +99,7 @@ export async function runWorkspaceConformance({databaseUrl,runConformance}){
   const seeded=await servers[0].rpc('seed');
   const oauth={inspect:async token=>servers[0].rpc('inspect',{token:token||seeded.access}),refresh:async()=>{
    const r=await fetch(servers[0].url+'/api/oauth/token',{method:'POST',headers:{'content-type':'application/json'},
-    body:JSON.stringify({grant_type:'refresh_token',refresh_token:seeded.refresh,client_id:'local-conformance'})});
+    body:JSON.stringify({grant_type:'refresh_token',refresh_token:seeded.refresh,client_id:'local-conformance'}),signal:AbortSignal.timeout(10000)});
    const value=await r.json();assert(r.status===200&&value.access_token,'Actual OAuth refresh failed');return value.access_token;
   }};
   const report=await runConformance({url:servers[0].url,passes:seeded.passes,oauth,
