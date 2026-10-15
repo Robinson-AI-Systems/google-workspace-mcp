@@ -12,12 +12,68 @@ concurrency:
   group: ci-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# Independent verification families run together, each SQL family with its own
+# disposable database. Keep test as the existing required aggregate check.
 jobs:
-  test:
+  check:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    # A throwaway Postgres that lives only for this run, so the database tests
-    # run on every change without touching the real (Neon) database.
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run check
+
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: node scripts/ci-phase.mjs --budget-seconds 180 -- npm test
+
+  db:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ci-only-not-a-secret
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: node scripts/ci-phase.mjs --budget-seconds 180 -- npm run test:db
+        env:
+          TEST_DATABASE_URL: postgres://postgres:ci-only-not-a-secret@127.0.0.1:5432/postgres
+
+  rtc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     services:
       postgres:
         image: postgres:16
@@ -44,12 +100,26 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: npm run check
-      - run: npm test
-      - run: npm run test:db
+      - run: node scripts/ci-phase.mjs --budget-seconds 180 -- npm run test:rtc
+      - run: node scripts/ci-phase.mjs --budget-seconds 180 -- node scripts/rtc-conformance-ci.mjs
         env:
           TEST_DATABASE_URL: postgres://postgres:ci-only-not-a-secret@127.0.0.1:5432/postgres
-      - run: npm run test:rtc
-      - run: node scripts/rtc-conformance-ci.mjs
+
+  test:
+    name: test
+    if: always()
+    needs: [check, unit, db, rtc]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every verification family
         env:
-          TEST_DATABASE_URL: postgres://postgres:ci-only-not-a-secret@127.0.0.1:5432/postgres
+          CHECK: ${{ needs.check.result }}
+          UNIT: ${{ needs.unit.result }}
+          DB: ${{ needs.db.result }}
+          RTC: ${{ needs.rtc.result }}
+        run: |
+          test "$CHECK" = success
+          test "$UNIT" = success
+          test "$DB" = success
+          test "$RTC" = success
