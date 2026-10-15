@@ -173,9 +173,9 @@ restricts only the named operation. Source completion never proves actual Google
   {
     "id": "P8-2",
     "state": "REVIEW",
-    "remaining": "Profile/area/listing persistence across refresh, every dispatch door and metadata budget must be traced to complete current proof.",
-    "evidence": "src/rtc/catalog.js; src/db.js; api/oauth/token.js; test/unit/rtc-profile.test.js; real-DB connection-settings tests; P8-2 original acceptance.",
-    "next": "Reconcile full original matrix including refresh setting-copy coverage; fix missing behavior/tests before labeling external-only."
+    "remaining": "October 15 P8-2 candidate centralizes the issued OAuth profile/listing/areas, validates each authorization-code and refresh grant against one immutable policy source, refuses malformed persisted refresh rather than returning full privileges, and tests real PostgreSQL settings-column parity and same-account refresh continuity. Existing registry dispatch/compact budget gates remain. Exact-head CI/security review and real custom-service profile persistence acceptance are not yet verified.",
+    "evidence": "src/oauth/connection-settings.js; api/oauth/token.js; src/db.js; test/unit/oauth-connection-settings.test.js; test/db/upgrade.test.js; test/unit/rtc-profile.test.js; original P8-2 Build/Acceptance.",
+    "next": "Pass complete exact-head unit, real-Postgres, RTC/compact budget, release-policy and review checks; fix verified defects, merge source. Then separately verify authenticated TEST custom MCP refresh and direct/relay/Sandbox profile enforcement without enabling production."
   },
   {
     "id": "P8-3",
