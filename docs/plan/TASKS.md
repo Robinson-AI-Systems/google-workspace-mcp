@@ -1,3 +1,9 @@
+## October 15 — genuine deployed P8-8 delegated-mailbox acceptance
+
+Independently checked `main`, GitHub `live` and Vercel production READY all serve `afbc602285437557ae42ff470721dc834fbad8fd` (deployment `dpl_45xFRdTSm8fDwhSCVRxn4Xgoin1X`), which includes source repair `91325ca774c1be52955f394930831b20a65b43a0`. Actual connected service `workspace_whoami` confirmed the existing approved Rentals mailbox, then real `gmail_list_delegates` returned a valid **empty** result under the now-correct scoped delegated-robot authentication. The live `workspace_admin_console_verify` result at `2026-10-15T20:55:15.023Z` reported **5 of 5 observed** exact mailbox topics, including previous broken delegation (empty count 0); none were `not_readable`. No actual Google mutation, customer-wide read, TEST-fixture takeover, consent widening or secret was involved. Authentication-subject/boundary/negative identity/denial cases passed in the source regression and exact-head CI for merged PR149, while the live observation supplies genuine Google proof. Marked precise queue task **P8-8-DELEGATED-MAILBOX PASSED** with immutable original source pin and full sanitized evidence. This is a newly verified narrow original P8-8 acceptance result, **not** a full substantial completion bundle or whole-P8-8 acceptance.
+
+Independently reran `workspace_dev_check_integration` on deployed code at `2026-10-15T20:56:24.216Z`: Gmail/Drive/Calendar/Tasks/Chat **5 ready**, People/Postmaster **2 `not_readable`** (scope/access denied), changesMade `false`. Original P8-7-API-SHAPES stays PENDING. Read-only connected mailbox metadata list probes for Gmail labels, bounded Drive files (five objects, real paged/handle result), Calendar list and Tasks task-lists succeeded, but the complete original TEST-pass isolation, exact fixtures, negative cases and recovery/cleanup were not run; do not upgrade `GOOGLE-DIRECT-READ` or any source-ready fixture task without their independent criteria. Owner-granted customer-wide/Admin Console and protected operator P5-2 readiness remain separately outstanding. Source promotion alone never passed other queue tasks.
+
 ### October 15 P8-8 delegated Gmail mailbox readback — provider defect recovery
 
 On independently READY live `15a547f4f7c24c9739d496bfb6f7d489cc468a8e`, actual read-only `workspace_admin_console_verify` observed four supported current-mailbox topics, but `gmail-default-routing-delegation` was `not_readable` (missing/malformed Google evidence). Direct `gmail_list_delegates` returned Google's service-account-only delegation refusal. The existing approved robot `workspace_delegation_status` separately passed same-mailbox Gmail settings, Calendar and Drive scopes, ruling out a global robot-key/consent failure. Cause: the delegates handler used ordinary OAuth instead of the existing `delegatedGmail` helper, despite Google requiring delegated service-account auth.
@@ -336,6 +342,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
 <!-- release-acceptance:start -->
 ```json
 
+
 [
   {
     "id": "GOOGLE-DIRECT",
@@ -523,8 +530,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "src/tools/gmail.js; src/tools/delegated.js; test/unit/delegation-scopes.test.js; P8-8-CONSOLE-READBACK",
     "gates": "Independently READY checked source including 91325ca774c1be52955f394930831b20a65b43a0; existing in-scope authorized Rentals connection and previously approved service-account Gmail settings sharing DWD; no new OAuth grant, secret disclosure, Google mutation, foreign-account impersonation or global Admin policy assertion.",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-15 actual deployed 15a547f Gmail delegates.list ordinary OAuth was denied service-account-only; service-account Gmail settings read access separately succeeded. Source repair committed at 91325ca; no real delegated provider proof or promotion yet."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-15T20:55:15.023Z genuine custom Workspace MCP on owner-connected Rentals account, production independently READY deployment dpl_45xFRdTSm8fDwhSCVRxn4Xgoin1X / source afbc602285437557ae42ff470721dc834fbad8fd (main=live=source; PR149 contained). workspace_whoami authenticated exact Rentals mailbox (matches=true). Direct google-read gmail_list_delegates returned valid empty array (0 delegates) via source-guarded delegatedGmail. workspace_admin_console_verify 5 selected mailbox topics observed 5/5, including gmail-default-routing-delegation observedCount=0 with narrow_metadata_readback_only; old live returned not_readable. Required no-foreign/missing authenticated identity and no OAuth fallback covered exact-head source regression and CI job 38801699173, PR #149 green and merged; live call supplies positive non-synthetic provider proof, no user email / Google object contents retained. No Google write/new scope, no inherited/organization-wide Admin policy assertion."
   },
   {
     "id": "P7-8-GUARDED-BULK",
