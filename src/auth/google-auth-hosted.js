@@ -175,7 +175,8 @@ export function buildApiClients(auth) {
     classroom: () => google.classroom({ version: 'v1', auth }),
     admin: () => google.admin({ version: 'directory_v1', auth }),
     adminReports: () => google.admin({ version: 'reports_v1', auth }),
-    groupssettings: () => google.groupssettings({ version: 'v1', auth }),
+    // Legacy discovery advertises Atom by default; guards and reads need JSON.
+    groupssettings: () => google.groupssettings({ version: 'v1', auth, params: { alt: 'json' } }),
     licensing: () => google.licensing({ version: 'v1', auth }),
     datatransfer: () => buildDataTransferClient(auth),
     alertcenter: () => google.alertcenter({ version: 'v1beta1', auth }),
