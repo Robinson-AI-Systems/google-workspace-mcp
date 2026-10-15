@@ -3,10 +3,14 @@
 import { ok } from './util.js';
 import { matchSettings } from './ops.js';
 import baseline from '../data/policy-baseline.json' with { type:'json' };
+import metadata from '../data/policy-baseline-meta.json' with { type:'json' };
+import { checkPolicyBaseline, checkPolicySnapshot, evaluatePolicyEvidence,
+ summarizePolicyEvidence, policyOwnerReport } from './policy-evidence.js';
 import { createHash } from 'node:crypto';
 import { policyFilter, readPolicyPage, scanPolicyPages } from './policy-scan.js';
 
-const AREAS=Object.freeze(['gmail','drive_and_docs','calendar','chat','groups_for_business','api_controls','workspace_marketplace','meet','devices','security','other']);
+import { POLICY_AUDIT_AREAS } from './policy-evidence.js';
+const AREAS=POLICY_AUDIT_AREAS;
 function area(value) {
   if(value===undefined||value===null||value==='')return null;
   if(!AREAS.includes(value))throw new Error('Unknown policy area; allowed: '+AREAS.join(', '));
@@ -60,6 +64,7 @@ export function validateBaseline(rules=baseline){
     if(seen.has(key))throw new Error('Duplicate policy baseline rule: '+key);
     seen.add(key);
   }
+  if (rules === baseline) checkPolicyBaseline(rules,metadata);
   return rules;
 }
 function differs(observed,rule){
@@ -67,22 +72,15 @@ function differs(observed,rule){
   if(rule.comparator==='atLeast')return typeof observed!=='number'||!Number.isFinite(observed)||observed<rule.expected;
   return observed!==rule.expected;
 }
-export function evaluateBaseline(policies,{complete=true,chosen=null}={}){
+export function evaluateBaseline(policies,{complete=true,chosen=null,orgUnit=null}={}) {
   validateBaseline();
   validatePolicies(policies);
-  const matches=baseline.filter(r=>!chosen||r.area===chosen);
-  return matches.map(rule=>{
-    const relevant=policies.filter(p=>p.setting.type===rule.type);
-    const observations=relevant.map(p=>({name:p.name,policyQuery:p.policyQuery||null,policyType:p.type||null,value:p.setting?.value?.[rule.field]}));
-    // Missing/unknown values and incomplete pagination must not become green.
-    const unknown=observations.length===0||observations.some(o=>o.value===undefined);
-    const mismatch=observations.some(o=>differs(o.value,rule));
-    return {area:rule.area,setting:rule.label,policySetting:rule.type,field:rule.field,expected:rule.expected,...(rule.comparator?{comparator:rule.comparator}:{}),
-      status:mismatch?'needs_attention':!complete||unknown?'not_readable':'ok',
-      reason:mismatch?'One or more observed explicit policies differ from the owner-editable baseline, even if other pages or inherited settings are unavailable.':!complete?'Some pages were not available; cannot conclude.':unknown?'No explicit readable policy value was returned; inherited/default state is not proven.':'All observed explicit policy entries match the baseline; inherited state and per-domain effectiveness are not verified.',
-      observations,console:guide(rule)};
+  return evaluatePolicyEvidence(policies,baseline,{
+    complete,chosen,orgUnit,
+    baselineStatus:metadata.status,consoleGuide:guide
   });
 }
+
 export const tools=[
  {name:'identity_list_policies',description:'List Google Cloud Identity policies with pagination, optionally narrowed to an application. Requires crossDomain: true for business-restricted connections with owner permission; domain is NOT a provider filter.',inputSchema:{type:'object',properties:{domain:{type:'string'},area:{type:'string',enum:AREAS},orgUnit:{type:'string',description:'Optional exact Cloud Identity policyQuery.orgUnit helper ID, e.g. orgUnits/123; does not include inherited/effective values.'},pageSize:{type:'integer',minimum:1,maximum:100},pageToken:{type:'string'}},required:['domain']}},
  {name:'identity_policy_audit',description:'Compare explicit Cloud Identity policies with the documented editable reference baseline. Missing/inherited data is not_readable, not compliant. Organization-wide reads require crossDomain: true for business-restricted connections with owner permission; Google requires Super Admin and account-specific OAuth consent.',inputSchema:{type:'object',properties:{domain:{type:'string'},area:{type:'string',enum:AREAS},orgUnit:{type:'string',description:'Optional exact policyQuery.orgUnit ID for observed explicit override comparisons only. Does not calculate effective settings.'}},required:['domain']}}
@@ -94,14 +92,24 @@ export const handlers={
    const cfg=request(args);
    const scan=await scanPolicyPages(clients,{filter:cfg.filter,pageSize:100});
    const policies=scan.policies.filter(p=>(!cfg.chosen||label(p)===cfg.chosen)&&(!cfg.orgUnit||p.policyQuery?.orgUnit===cfg.orgUnit));
-   const results=evaluateBaseline(policies,{complete:scan.complete,chosen:cfg.chosen});
-   const coverageByArea=[...new Set(baseline.map(r=>r.area))].map(area=>{const areaResults=results.filter(r=>r.area===area);return {area,checks:areaResults.length,matchingExplicitPolicies:areaResults.filter(r=>r.status==='ok').length,needsAttention:areaResults.filter(r=>r.status==='needs_attention').length,notReadable:areaResults.filter(r=>r.status==='not_readable').length};});
+   const results=evaluateBaseline(policies,{complete:scan.complete,chosen:cfg.chosen,orgUnit:cfg.orgUnit});
+   const integrity=checkPolicySnapshot(policies);
+   const evidence=summarizePolicyEvidence(results,{
+      baselineVersion:metadata.version,baselineStatus:metadata.status,
+      complete:scan.complete,policiesRead:policies.length
+   });
+   const coverageByArea=evidence.coverageByArea;
+   const ownerReport=policyOwnerReport(results,evidence);
    return ok({domain:args.domain.toLowerCase(),customerWide:true,complete:scan.complete,pagesRead:scan.pagesRead,
       nextPageToken:scan.nextPageToken,incompleteReason:scan.incompleteReason,
-      baselineRevision:createHash('sha256').update(JSON.stringify(baseline)).digest('hex'),
-      baselineSource:'src/data/policy-baseline.json',effective:false,policiesRead:policies.length,
+      baselineRevision:createHash('sha256').update(JSON.stringify({metadata,rules:baseline})).digest('hex'),
+      baselineSource:'src/data/policy-baseline.json',baselineMetadataSource:'src/data/policy-baseline-meta.json',
+      baselineVersion:metadata.version,baselineStatus:metadata.status,
+      isComplianceCertificate:false,customerScopeVerified:integrity.customerVerified,
+      policyEvaluationScope:evidence.scope,ownerReport,
+      effective:false,policiesRead:policies.length,
       ...(cfg.orgUnit?{orgUnit:cfg.orgUnit,scopeMode:'exact_explicit_org_unit_overrides',effective:false}:{}),
       baselineRules:baseline.length,areasWithRules:[...new Set(baseline.map(r=>r.area))],coverageByArea,results,scopeNote,
-      summary:{needsAttention:results.filter(r=>r.status==='needs_attention').length,notReadable:results.filter(r=>r.status==='not_readable').length,matchingExplicitPolicies:results.filter(r=>r.status==='ok').length}});
+      summary:evidence.summary});
  }
 };
