@@ -272,7 +272,11 @@ const WALKED_SECTIONS = [
 {"id":"studio-integrations","title":"Workspace Studio: Integration settings Beta","reviewCategory":"collaboration","route":"/ac/managedsettings/243976345647","path":["Apps","Google Workspace","Workspace Studio","Integration settings Beta"]},
 {"id":"studio-custom-steps","title":"Workspace Studio: Custom steps settings","reviewCategory":"collaboration","route":"/ac/managedsettings/243976345647","path":["Apps","Google Workspace","Workspace Studio","Custom steps settings"]},
 {"id":"studio-skills","title":"Workspace Studio: Skills","reviewCategory":"collaboration","route":"/ac/managedsettings/243976345647","path":["Apps","Google Workspace","Workspace Studio","Skills"]},
-{"id":"studio-flows","title":"Workspace Studio: Flows","reviewCategory":"collaboration","route":"/ac/managedsettings/243976345647","path":["Apps","Google Workspace","Workspace Studio","Flows"]}
+{"id":"studio-flows","title":"Workspace Studio: Flows","reviewCategory":"collaboration","route":"/ac/managedsettings/243976345647","path":["Apps","Google Workspace","Workspace Studio","Flows"]},
+{"id":"agents-access","title":"Agent access management","reviewCategory":"organization","route":"/ac/agents","path":["Agents","Agent access management","Review the agent inventory and Type, Access and Status filters"]},
+{"id":"agents-default-flow-access","title":"Default access for Workspace Studio flows","reviewCategory":"organization","route":"/ac/managedsettings/1097476177575/agentaccesscontrols","path":["Agents","Settings","Select the intended organizational unit, group or user","Default access for Workspace Studio flows"]},
+{"id":"agents-flow-attribution","title":"Studio flow attribution visibility Beta","reviewCategory":"organization","route":"/ac/managedsettings/1097476177575/agentaccesscontrols","path":["Agents","Settings","Select the intended organizational unit, group or user","Studio flow attribution visibility Beta"]}
+
 ];
 CONSOLE_MAP.push(...WALKED_SECTIONS.map(({route,...entry})=>({
  ...entry,link:G(route),keywords:[entry.id,...entry.path].map(x=>x.toLowerCase()),
