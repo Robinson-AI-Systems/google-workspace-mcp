@@ -29,6 +29,9 @@ function pick(value,parts) {
  return {[parts[0]]:pick(value[parts[0]],parts.slice(1))};
 }
 function merge(dst,part){
+ if(part===undefined)return dst;
+ if(Array.isArray(dst)&&Array.isArray(part))
+  return Array.from({length:Math.max(dst.length,part.length)},(_,i)=>merge(dst[i],part[i]));
  if(!dst||typeof dst!=='object'||Array.isArray(dst)||!part||typeof part!=='object'||Array.isArray(part))return part;
  for(const [k,v] of Object.entries(part))dst[k]=Object.hasOwn(dst,k)?merge(dst[k],v):v;
  return dst;
