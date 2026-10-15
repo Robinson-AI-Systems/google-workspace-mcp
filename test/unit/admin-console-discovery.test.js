@@ -2,13 +2,13 @@ import {describe,it,expect} from 'vitest';
 import {discoverConsoleReadbacks,planConsoleReadbacks,CONSOLE_LIVE_READBACK_IDS}
  from '../../src/tools/admin-console-verify.js';
 import {CONSOLE_MAP} from '../../src/data/console-map.js';
-import {CONSOLE_REVIEW_CATEGORIES} from '../../src/data/console-review.js';
+import {CONSOLE_REVIEW_CATEGORIES,CONSOLE_REVIEW_GROUPS} from '../../src/data/console-review.js';
 
 const clients={actingAs:'ops@example.test',rtcPolicy:{profile:'read_only',areas:['workspace','mail','files']}};
 describe('P8-8 complete owner Admin-console readback discovery',()=>{
- it('reports every one of the actual 50 mapped topics without contacting Google',()=>{
+ it('reports every one of the actual mapped topics without contacting Google',()=>{
   const found=[];
-  for(let page=1;page<=5;page++){
+  for(let page=1;page<=Math.ceil(CONSOLE_MAP.length/10);page++){
    const result=discoverConsoleReadbacks({page,pageSize:10},clients);
    expect(result.mode).toBe('read_only_discovery');
    expect(result.totalMapped).toBe(CONSOLE_MAP.length);
@@ -16,20 +16,27 @@ describe('P8-8 complete owner Admin-console readback discovery',()=>{
    found.push(...result.items.map(x=>x.id));
   }
   expect(found).toEqual(CONSOLE_MAP.map(x=>x.id));
-  expect(new Set(found).size).toBe(50);
+  expect(new Set(found).size).toBe(CONSOLE_MAP.length);
   const first=discoverConsoleReadbacks({},clients);
-  expect(Object.values(first.counts).reduce((n,x)=>n+x,0)).toBe(50);
-  expect(Object.values(first.categoryCoverage).reduce((n,x)=>n+x.total,0)).toBe(50);
+  expect(Object.values(first.counts).reduce((n,x)=>n+x,0)).toBe(CONSOLE_MAP.length);
+  expect(Object.values(first.categoryCoverage).reduce((n,x)=>n+x.total,0)).toBe(CONSOLE_MAP.length);
   for(const row of Object.values(first.categoryCoverage)){
    expect(row.eligible+row.manualOnly+row.outsideScope+row.needsTarget).toBe(row.total);
   }
  });
  it('supports category, query and scoped readiness filtering with accurate independent totals',()=>{
   for(const category of CONSOLE_REVIEW_CATEGORIES){
-   const result=discoverConsoleReadbacks({category,pageSize:20},clients);
-   expect(result.items.every(x=>x.category===category)).toBe(true);
-   expect(result.totalMatched).toBe(CONSOLE_MAP.filter(x=>x.id&&
-    result.items.some(y=>y.id===x.id)).length);
+   const found=[];
+   for(let page=1;;page++){
+    const result=discoverConsoleReadbacks({category,page,pageSize:20},clients);
+    expect(result.items.every(x=>x.category===category)).toBe(true);
+    expect(result.totalMatched).toBe(CONSOLE_MAP.filter(x=>x.reviewCategory===category||
+     CONSOLE_REVIEW_GROUPS[category].includes(x.id)).length);
+    found.push(...result.items.map(x=>x.id));
+    if(result.nextPage===null)break;
+    expect(result.nextPage).toBe(page+1);
+   }
+   expect(found).toEqual(CONSOLE_MAP.filter(x=>CONSOLE_REVIEW_GROUPS[category].includes(x.id)).map(x=>x.id));
   }
   const gmail=discoverConsoleReadbacks({query:'forward',pageSize:20},clients);
   expect(gmail.totalMatched).toBeGreaterThan(0);
@@ -52,7 +59,7 @@ describe('P8-8 complete owner Admin-console readback discovery',()=>{
   expect(approved[0].status).toBe('outside_scope'); // profile is read_only but admin area is excluded
  });
  it('will not confuse finding a console link with proof of applied policy',()=>{
-  for(let page=1;page<=3;page++){
+  for(let page=1;page<=Math.ceil(CONSOLE_MAP.length/20);page++){
    const response=discoverConsoleReadbacks({page,pageSize:20,crossDomain:false},clients);
    expect(response.note).toMatch(/not mean Google granted/i);
    expect(JSON.stringify(response)).not.toMatch(/"status":"observed"/);

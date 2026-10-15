@@ -617,7 +617,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "docs/plan/TASKS.md — P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Authenticated read-only Google Admin Console session for the intended authorized organization/role; observe only approved scope, no policy changes. Record inaccessible/edition-specific pages honestly; an API-generated checklist alone is not the walkthrough.",
     "dependsOn": [],
-    "lastEvidence": "2026-10-15 repository reconciliation only. Original acceptance was outstanding but absent as its own precise queue row; no actual Google lifecycle/console walk was performed in this maintenance. Establish exact deployed ancestry and existing authorization, then execute or ask the specific access/fixture question. 2026-10-15 owner-assisted secure browser sign-in succeeded as Rentals admin. Observed actual Home/service inventory, Gmail root/User Settings and Rentals OU, security Authentication/Access-data menus, Data compliance/import-export, Account, Gemini, Directory and Devices navigation. Owner explicitly authorized Rentals changes and independently approved saving Rentals-only Mail delegation ON; after reload parent remained OFF, Rentals showed Overridden/ON. Group delegation stayed disabled and no delegates were assigned. Walkthrough remains PARTIAL: correct observed stale paths/missing pages and finish other mapped pages before passing; no navigation inventory is counted as full acceptance."
+    "lastEvidence": "2026-10-15 authenticated Rentals admin navigation audit observed Gmail, Calendar, Drive/Docs, Chat, Meet, Groups, Studio, Sites, account, security, data, directory, billing, reporting and devices sections. Corrected stale/404 legacy addresses and added observed section guidance (50 to 135 entries); preserved original IDs. Vault denied access; DLP showed upgrade; context-aware access/web-session were unavailable in this menu and are explicitly unverified. These observations prove navigation only, not every OU policy. Rentals-only delegation ON independently reloaded; parent OFF, group delegation off, no delegates assigned. Full original acceptance remains pending corrected deployed guidance/readback; source map audit and provider API opportunity research are recorded below."
   },
   {
     "id": "P5-2-ENCRYPTED-READY",
@@ -642,6 +642,28 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     ],
     "status": "PENDING",
     "lastEvidence": "2026-10-15 source proof only. November 1 date and every-account verification are not satisfied by code/CI. Protected operator --activate is never called by normal production runtime. Do not mark PASSED until exact real refresh/readback of every account after approved activation."
+  },
+  {
+    "id": "P8-3-OWNER-TEST-FORM",
+    "priority": 3,
+    "requiredRevision": "199dfc23c11928f92418407cebc20d0bf55f4b7b",
+    "task": "Issue the approved one-hour read_only Rentals TEST pass through the corrected canonical browser form",
+    "procedure": "api/rtc/passes.js; scripts/smoke-readonly.mjs --authorized-read-only",
+    "gates": "Reviewed form fix independently READY; secure owner-authenticated entry; same approved Rentals account; no credentials in chat/logs; no TEST writes or Hub duration; retain existing rate/allowlist/origin limits",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "PR151 merged to 4c527c6; exact-head test and release-policy passed. Deployed afbc602 still rejects canonical browser form before authentication. No TEST pass issued. Approved private runner is prepared; retry only once corrected source is independently READY, then run actual smoke and revoke the short-lived grant. Scheduled release policy remains unchanged."
+  },
+  {
+    "id": "P8-8-WALKED-GUIDANCE",
+    "priority": 8,
+    "requiredRevision": "ad0e9059179760c29b2d6c064504266d3e8d7e1d",
+    "task": "Read back corrected 135-entry Admin navigation guidance from the deployed custom service",
+    "procedure": "workspace_where_is_setting; workspace_admin_console_review",
+    "gates": "Independently READY source at or after requiredRevision; read only; follow all category pages; distinguish navigation from actual OU policy and edition availability",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "Authenticated October15 console audit supplied actual links/section labels. Focused diagnostic navigation/verification/expectation/owner-coverage tests passed33. Preserve original50IDs; category pagination traverses all135 without truncation. New rows are manual navigation guidance; no new provider tools/scopes or verified-policy claims. Existing original acceptance remains open."
   }
 ]
 ```
@@ -2807,3 +2829,34 @@ review/correction window and2m20s closeout evidence above remain intact.
 ### October 15 owner setup attempt — browser form source defect
 
 Owner-approved Rentals-only Gmail delegation is saved and independently read back ON (parent remains OFF; group delegation off; no delegates assigned). Separate one-hour read_only TEST pass approval is retained, but issuance is blocked by the form's own no-referrer policy nulling navigation Origin. Both canonical and secure-auth submissions were refused before login; no pass/fixture was created. Fix only form response policy to same-origin; preserve exact canonical Origin and result-page no-referrer, CSP, allowlist, owner authentication and limits. Fetch specification: https://fetch.spec.whatwg.org/#append-a-request-origin-header . Focused current-route test: 22 passed on a separate diagnostic checkout; exact PR CI is authoritative for current-main integration. This is a small demonstrated blocker repair, zero bundles claimed. Existing source pins/statuses remain unchanged. Full TEST smoke, full console walk/map correction and keyed all-account encrypted refresh remain pending. No release or plaintext retirement is authorized by this repair.
+
+
+### October 15 authenticated navigation repair and capability discovery
+
+Owner asked to use the walkthrough simultaneously to find additional tools/features. The dated audit found stale Gmail, recovery, Directory, Groups, billing, alerts, investigation, reporting, Chrome, branding, email-log and DLP paths; Marketplace installation policy was incorrectly conflated with OAuth app access. Repairs preserve all original50IDs, add85 observed section entries and route every entry into the existing review categories. Root-page section labels are observations, not proof that every child control or effective OU policy has been verified. Context-aware access and web-session controls remain explicitly unavailable/unverified; Cloud session control is a separate setting. Vault access was denied and DLP offered an edition upgrade; no purchase or entitlement change was made. Password-only less-secure-app access is retired, not an available enable switch. Generic service-status-only roots need no duplicate rows.
+
+This is a demonstrated P8-8 navigation repair, not a new product bundle. No provider authorization, sharing, notification, security-policy or cost change is introduced. Rentals delegation was the separately approved exception: saved ON only for Rentals, independently reloaded; group delegation off and no delegate assignment. Corrected guidance still needs deployed-service proof. The original27 acceptance entries retain their dispositions; the two additional precise deployment-dependent checks above record the new form/navigation changes rather than manufacturing passes. Focused existing tests passed33 across discovery, verification, expected outcomes and owner coverage; exact PR CI remains authoritative for current-main integration.
+
+#### Research proposals — not yet implemented or selected as engineering scope
+
+These are capability candidates supported by current Google documentation and the existing registry audit. They are not new approved roadmap subsections. Prefer completing the original acceptance first, then selecting a coherent business workflow. Current generic Drive file tools, Calendar operations, Chrome policy tools and Studio activity reports must be reused rather than duplicated.
+
+| Priority / proposed outcome | Current coverage and real gap | Provider contract and implementation prerequisites |
+| --- | --- | --- |
+| First: Rentals document-review status and guarded approval workflow | Drive file tools exist; no approval-resource handlers were found. Start with list/get status, then explicitly authorized start/cancel/reviewer actions for identified files and people. This is content review, separate from contract signing. | Drive approvals API supports lifecycle actions. Every request needs explicit fields. Check canStartApproval, edition, domain and writer access; reviewers must already have file access. Actions notify reviewers, so recipient resolution and specific user intent are required. Existing metadata-write Drive scopes can support administration; inspect actual grants/SDK support before adding anything. No delegated-scope change is implied. |
+| Next: start a configured Rentals Workspace Studio flow from an app event | Studio audit-report application already exists. No trigger execution tool was found. A booking/service event could fire a separately configured starter; this is not arbitrary flow creation or Admin policy editing. | v1 triggers.fire requires workspace.studio.trigger consent. Require a durable requestId and bounded payload; delivery success is not flow-completion proof. Current console parent view showed webhooks/custom steps/integrations OFF; effective Rentals controls and intended starter must be checked before any enablement. Do not enable them under the delegation approval. |
+| Next: useful change notifications for app integrations | Existing on-demand Drive/Calendar reads are not subscription lifecycle management. Add only after a concrete consumer is selected; handle renewals, duplicate/out-of-order delivery and revocation. | Workspace Events subscriptions support Drive and Chat via Pub/Sub; Calendar uses its separate watch channels. Verify exact event/scopes/retention, callback authentication and provider charges. No paid infrastructure or unsolicited subscriptions are authorized by this research. |
+| Later: list and inspect classification-label definitions | drive_create_drive_label_assignment already assigns an existing label; taxonomy discovery/management is a different API. Read definitions first; avoid redundant assignment tools. | Drive Labels API has distinct labels/admin-labels scopes. Any consent, publication or classification-policy change needs its own approval. Show only labels the chosen identity may inspect. |
+
+Primary sources checked October15:
+- https://developers.google.com/workspace/drive/api/guides/approvals
+- https://developers.google.com/workspace/drive/api/reference/rest/v3/approvals
+- https://developers.google.com/workspace/add-ons/studio/reference/rest/v1/triggers/fire
+- https://developers.google.com/workspace/events/guides/events-drive
+- https://developers.google.com/workspace/events/reference/rest/v1/subscriptions
+- https://developers.google.com/workspace/calendar/api/v3/reference/events/watch
+- https://developers.google.com/workspace/drive/labels/guides/authorize
+
+No supported public eSignature initiation API was established by this review; do not invent a signing tool or equate document approval with a legal signature. All proposals need normal RTC profiles/size bounds, guard integration, dry-run/confirmation where relevant, real provider readback or an honest delivery receipt, tests and genuine acceptance.
+
+Re-entry: checked scheduled main-to-live promotion, independently verify READY/source, securely issue the approved one-hour read_only pass and run the prepared original smoke. Fresh grants cannot take over historical foreign-run fixtures. Protected all-account encryption proof still needs the correct key in an authorized operator environment: aggregate evidence is2encrypted,0verified,0refresh-observed of2accounts, not readiness. No retirement before November1 America/Denver plus independent approval. No manual deployment, new scope, spend or retirement is performed.

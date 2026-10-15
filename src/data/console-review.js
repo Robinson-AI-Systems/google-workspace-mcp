@@ -2,19 +2,22 @@
 // A category is a navigation aid, not proof that a Google policy can be read.
 import { CONSOLE_MAP } from './console-map.js';
 
+const reviewIds=(category,existing)=>Object.freeze([...existing,
+ ...CONSOLE_MAP.filter(entry=>entry.reviewCategory===category).map(entry=>entry.id)]);
+
 export const CONSOLE_REVIEW_GROUPS = Object.freeze({
-  mail: Object.freeze(['dkim','gmail-routing','gmail-compliance','gmail-spam','gmail-default-routing-delegation',
+  mail: reviewIds('mail',['dkim','gmail-routing','gmail-compliance','gmail-spam','gmail-default-routing-delegation',
     'gmail-imap-pop','gmail-enable-disable','email-log-search','email-forwarding',
     'out-of-office','signature','spf-dmarc','gmail-send-limits']),
-  security: Object.freeze(['session-length','password-policy','2sv','recovery','less-secure-apps',
+  security: reviewIds('security',['session-length','password-policy','2sv','recovery','less-secure-apps',
     'marketplace-allowlist','api-controls','security-investigation','context-aware-access',
     'sso','admin-roles','alerts']),
-  collaboration: Object.freeze(['calendar-sharing','calendar-resources','drive-sharing','drive-shared-drives',
+  collaboration: reviewIds('collaboration',['calendar-sharing','calendar-resources','drive-sharing','drive-shared-drives',
     'drive-storage','drive-dlp','meet-settings','chat-external','groups-settings']),
-  organization: Object.freeze(['services-on-off','gemini','data-regions','directory-visibility',
+  organization: reviewIds('organization',['services-on-off','gemini','data-regions','directory-visibility',
     'takeout','vault-retention','domains','org-units','users','company-branding','support-pin','reports']),
-  devices: Object.freeze(['mobile-management','chrome-management']),
-  billing: Object.freeze(['billing-plan','license-assign-ui'])
+  devices: reviewIds('devices',['mobile-management','chrome-management']),
+  billing: reviewIds('billing',['billing-plan','license-assign-ui'])
 });
 export const CONSOLE_REVIEW_CATEGORIES = Object.freeze(Object.keys(CONSOLE_REVIEW_GROUPS));
 
