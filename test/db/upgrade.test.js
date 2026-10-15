@@ -119,12 +119,14 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       expect(active).toMatchObject({id,profile:'read_only',mode:'test',allow_writes:false,rate_limit_per_minute:120});
       expect((await rawQuery('SELECT token_hash FROM rtc_passes WHERE id=$1',[id]))[0].token_hash).not.toBe(token);
       expect(JSON.stringify(await db.listConnections())).not.toContain(token);
+      expect((await db.listConnections()).find(c=>c.connection_id===id)).toMatchObject({kind:'pass',token_prefix:id,google_account:'rtc-pass@example.test',revoked_at:null});
       const results=await Promise.all(Array.from({length:150},()=>db.chargeRtcPass(id,120)));
       expect(results.filter(Boolean)).toHaveLength(120);
       expect(results.filter(x=>!x)).toHaveLength(30);
       expect((await db.revokeConnection(id)).revoked).toBe(1);
       expect(await db.getRtcPass(token)).toBeNull();
       expect(await db.rtcPassFailureCode(token)).toBe('pass_revoked');
+      expect((await db.listConnections()).find(c=>c.token_prefix===id)?.revoked_at).toBeTruthy();
       await rawQuery('DELETE FROM rtc_rate_limits WHERE pass_id=$1',[id]);
       await rawQuery('DELETE FROM rtc_passes WHERE id=$1',[id]);
     });

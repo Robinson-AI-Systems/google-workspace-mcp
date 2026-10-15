@@ -647,7 +647,7 @@ export async function listConnections() {
     ORDER BY t.created_at DESC
   `;
   const passes=await listRtcPasses();
-  return [...connectors.map(c=>({...c,kind:'connector'})),...passes.map(p=>({...p,token_prefix:p.id}))].sort((x,y)=>new Date(y.created_at)-new Date(x.created_at));
+  return [...connectors.map(c=>({...c,kind:'connector'})),...passes.map(p=>({...p,token_prefix:p.connection_id}))].sort((x,y)=>new Date(y.created_at)-new Date(x.created_at));
 }
 
 /**
