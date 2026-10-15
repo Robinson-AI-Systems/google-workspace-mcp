@@ -147,9 +147,8 @@ describe('admin_update_group_settings through the safety layer', () => {
     ];
     for(const [input,existing] of cases) {
       const x=fresh(existing);
-      const result=body(await run({groupEmail:GROUP,...input,confirm:true},x.clients));
-      expect(result).not.toMatchObject({done:true,confirmed:true});
-      expect(JSON.stringify(result)).toMatch(/Nothing was changed|needs customReplyTo|needs sendMessageDenyNotification|archiveOnly/i);
+      await expect(run({groupEmail:GROUP,...input,confirm:true},x.clients))
+        .rejects.toThrow(/Nothing was changed/);
       expect(patches(x.calls)).toHaveLength(0);
       expect(x.calls.filter(c=>c.path==='groupssettings.groups.get')).toHaveLength(1);
     }
