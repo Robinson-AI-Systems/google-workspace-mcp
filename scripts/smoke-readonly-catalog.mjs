@@ -2,6 +2,7 @@
 // not a blanket "all tools passed" check: only harmless reviewed probes run;
 // tools needing real fixture IDs or organization-wide approval remain unprobed.
 // Secrets and provider response bodies are never written to the report.
+import { pacedReadOnlyFetch } from './smoke-readonly-rate.mjs';
 import { parseReviewedReadCases } from './smoke-readonly-cases.mjs';
 import { runReadOnlySmoke, originFromEnv } from './smoke-readonly.mjs';
 import { preparedFixtureProbes, planCatalogReads, coverageResults,
@@ -83,15 +84,16 @@ export async function runCatalogReadOnlySmoke({origin,token,expectedAccount,expe
  validateTestAuthorization({token,account:expectedAccount,revision:expectedRevision});
  const selectedFixtures=preparedFixtureProbes(fixtures,expectedAccount);
  const selectedCases=parseReviewedReadCases(reviewedCases);
+ const sharedFetcher=fetcher===fetch?pacedReadOnlyFetch(fetcher):fetcher;
  // Identity, exact deployed revision and existing five essential reads are
  // checked before walking or invoking the wider catalog.
- const baseline=await runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher});
+ const baseline=await runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher:sharedFetcher});
  if(!baseline.ok)return {ok:false,catalogComplete:false,baseline:baseline.outcomes,
   tools:[],summary:{discovered:0,probed:0,failed:baseline.outcomes.filter(x=>x.status==='FAIL').length,notProbed:0,engineeringGaps:0}};
- const catalog=await readAuthorizedCatalog({origin,token,fetcher});
+ const catalog=await readAuthorizedCatalog({origin,token,fetcher:sharedFetcher});
  const plan=planCatalogReads({catalog,safeProbes:SAFE_READ_PROBES,fixtures:selectedFixtures,reviewedCases:selectedCases,account:expectedAccount});
  const probes=plan.filter(entry=>entry.probe).map(entry=>entry.probe);
- const run=await runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher,probes});
+ const run=await runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher:sharedFetcher,probes,catalog});
  const coverage=coverageResults(plan,run.outcomes);
  // A missing advertised exact name is a contract drift, not an optional skip.
  const tools=coverage.tools.map(row=>row.status==='NOT_AVAILABLE'&&

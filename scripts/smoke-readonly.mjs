@@ -1,3 +1,4 @@
+import { READ_ONLY_TOOL_NAMES } from '../src/rtc/read-only-semantics.js';
 import { verifiedProviderReadResult, INTERNAL_READ_PROOFS } from './smoke-provider-shapes.mjs';
 export { verifiedProviderReadResult } from './smoke-provider-shapes.mjs';
 // P0-2: explicit, non-production, read-only Google API acceptance probes.
@@ -52,7 +53,7 @@ export function chooseProbe(catalog,name){
  const match=catalog?.find(t=>t.name===name);
  return match&&match.writes===false&&match.annotations?.readOnlyHint===true?match:null;
 }
-export async function runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher=fetch,probes=DEFAULT_PROBES}={}){
+export async function runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher=fetch,probes=DEFAULT_PROBES,catalog=null}={}){
  const url=originFromEnv(origin);
  if(!bearer.test(token||''))throw Error('Missing protected RTC TEST pass');
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(expectedAccount||''))throw Error('Expected scratch account is required');
@@ -84,8 +85,18 @@ export async function runReadOnlySmoke({origin,token,expectedAccount,expectedRev
    if(Array.isArray(allowed)&&!allowed.includes(probe.area)){
      outcomes.push({tool:probe.name,status:'NOT_AVAILABLE',reason:'area_not_granted'});continue;
    }
-   const catalog=await request('/api/tools?listing=catalog&limit=30&q='+encodeURIComponent(probe.name));
-   const tool=catalog.status===200?chooseProbe(catalog.data?.result?.tools,probe.name):null;
+   const internal=READ_ONLY_TOOL_NAMES.has(probe.name)?probe.name:
+    (probe.name.startsWith('workspace_')?probe.name.slice(10):'');
+   if(!READ_ONLY_TOOL_NAMES.has(internal)){
+    outcomes.push({tool:probe.name,status:'FAIL',reason:'unreviewed_read_declaration'});continue;
+   }
+   let tool;
+   if(catalog!==null){
+    tool=chooseProbe(catalog,probe.name);
+   }else{
+    const response=await request('/api/tools?listing=catalog&limit=30&q='+encodeURIComponent(probe.name));
+    tool=response.status===200?chooseProbe(response.data?.result?.tools,probe.name):null;
+   }
    if(!tool){outcomes.push({tool:probe.name,status:'NOT_AVAILABLE',reason:'read_tool_not_advertised'});continue;}
    let result;
    try{result=await request('/api/tools/'+encodeURIComponent(probe.name),{...probe.args,detail:'full'});}

@@ -122,14 +122,12 @@ describe('P0-2 complete authorized catalog inventory and vetted reads',()=>{
   });
   expect(result.summary.failed).toBe(1);
  });
- it('treats disagreement between complete catalog and exact-name lookup as a failed probe',async()=>{
+ it('reuses the complete authorized catalog instead of re-fetching each name',async()=>{
   const f=fake({missingProbe:'workspace_gmail_get_pop_settings'});
   const result=await runCatalogReadOnlySmoke(options(f));
-  expect(result.ok).toBe(false);
-  expect(result.catalogComplete).toBe(true);
-  expect(result.tools.find(t=>t.tool==='workspace_gmail_get_pop_settings')).toMatchObject({
-   status:'FAIL',reason:'advertised_probe_unavailable'
-  });
+  expect(result.tools.find(t=>t.tool==='workspace_gmail_get_pop_settings')).toMatchObject({status:'PASS'});
+  expect(f.calls.filter(x=>x.path==='/api/tools'&&x.tool).length).toBe(4);
+  expect(f.calls.some(x=>x.path==='/api/tools/workspace_gmail_get_pop_settings')).toBe(true);
  });
  it('cannot run real RTC calls by default or without a protected TEST pass',async()=>{
   const spy=vi.spyOn(console,'error').mockImplementation(()=>{});
