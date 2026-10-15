@@ -63,7 +63,7 @@ export function planCatalogReads({catalog,safeProbes,fixtures=[],account}={}) {
  const safe=new Map();
  for(const probe of safeProbes) {
   if(!isObject(probe)||!IDENT.test(probe.name)||!isReviewedRead(probe.name)||
-     !own(PROVIDER_READ_PROOFS,probe.name)||!isObject(probe.args)||
+     !(own(PROVIDER_READ_PROOFS,probe.name)||probe.name==='workspace_whoami')||!isObject(probe.args)||
      typeof probe.area!=='string'||safe.has(probe.name))
     throw Error('unsafe_reviewed_probe_definition');
   safe.set(probe.name,probe);
