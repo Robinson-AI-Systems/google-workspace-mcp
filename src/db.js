@@ -158,6 +158,17 @@ export async function initSchema() {
   // column stays in step until a later cleanup removes it, so older code that
   // only knows `tokens` keeps working during a deploy.
   await q`ALTER TABLE google_accounts ADD COLUMN IF NOT EXISTS tokens_enc TEXT`;
+  // P5-2: evidence is stored per mailbox, without ever logging token contents.
+  // An encrypted copy proves backfill; a real OAuth token event proves refresh.
+  await q`ALTER TABLE google_accounts ADD COLUMN IF NOT EXISTS tokens_enc_verified_at TIMESTAMPTZ`;
+  await q`ALTER TABLE google_accounts ADD COLUMN IF NOT EXISTS tokens_enc_refreshed_at TIMESTAMPTZ`;
+  // Dormant until a separate owner-controlled, all-account checked activation.
+  // Once active it is durable across function instances and environment changes.
+  await q`CREATE TABLE IF NOT EXISTS google_token_storage (
+    id BOOLEAN PRIMARY KEY DEFAULT true CHECK (id),
+    encrypted_only_at TIMESTAMPTZ
+  )`;
+  await q`INSERT INTO google_token_storage (id) VALUES (true) ON CONFLICT (id) DO NOTHING`;
   // Which email domains this account's connections may manage through the admin tools. NULL means "only the account's own domain" (see src/tools/domain-guard.js).
   await q`ALTER TABLE google_accounts ADD COLUMN IF NOT EXISTS allowed_domains TEXT[]`;
   // Google IDs (calendars, folders) the business apps look up by name instead of hard-coding. Additive only.
@@ -267,18 +278,37 @@ function canonical(value) {
   return JSON.stringify(value);
 }
 
+// P5-2: every process uses the durable database state, never a local feature flag.
+// Old deployments must be drained before activation: they know only plaintext.
+const RETIREMENT_NOT_BEFORE = '2026-11-01T06:00:00Z'; // Nov 1, 2026 00:00 America/Denver
+async function encryptedOnlyEnabled(q) {
+  const rows = await q`SELECT encrypted_only_at FROM google_token_storage WHERE id = true`;
+  if (rows.length !== 1) throw new Error('Google token storage state is unavailable. Nothing was changed.');
+  return rows[0].encrypted_only_at !== null;
+}
+const objectTokens = v => v && typeof v === 'object' && !Array.isArray(v);
+function strictEncryptedTokens(value, key) {
+  if (!key || !value) throw new Error('Encrypted Google tokens unavailable; reconnect using the approved recovery procedure.');
+  try {
+    const tokens = decryptJson(value, key);
+    if (!objectTokens(tokens) || !Object.keys(tokens).length) throw Error('empty credentials');
+    return tokens;
+  } catch {
+    throw new Error('Encrypted Google token integrity check failed; no plaintext fallback is allowed.');
+  }
+}
 export async function getGoogleTokensFor(email) {
   const q = db();
   const e = normalizeEmail(email);
   const rows = await q`SELECT tokens, tokens_enc FROM google_accounts WHERE email = ${e}`;
   if (!rows[0]) return null;
   const { tokens, tokens_enc } = rows[0];
-  if (!tokens) return null;
   const key = loadKey();
+  // An active retirement must fail closed: {} is not a valid credential and
+  // stale plaintext is never consulted if the key is absent or corrupted.
+  if (await encryptedOnlyEnabled(q)) return strictEncryptedTokens(tokens_enc, key);
+  if (!tokens) return null;
   if (!key) return tokens;
-  // The plain copy is always written by every version of the code, so it is the authority. The encrypted
-  // copy is used only when it says exactly the same thing; a stale, damaged or wrong-key copy (older code
-  // saved a refresh without knowing about it, or the key was changed) is replaced from the plain copy.
   if (tokens_enc) {
     try {
       const decrypted = decryptJson(tokens_enc, key);
@@ -287,43 +317,148 @@ export async function getGoogleTokensFor(email) {
       console.warn('[crypto] Could not decrypt the stored tokens for an account; using the plain copy and re-encrypting it. If this repeats, check TOKEN_ENCRYPTION_KEY.');
     }
   }
-  await storeEncryptedCopy(q, e, tokens, key); // first read after turning encryption on, or healing a stale/damaged copy
+  await storeEncryptedCopy(q, e, tokens, key);
   return tokens;
 }
 
-/** Write the encrypted copy, but only if the plain copy is still the one we encrypted (a newer save writes its own). */
-async function storeEncryptedCopy(q, email, tokens, key) {
+/** Backfill without overwriting a newer plaintext save; never mark a fake refresh. */
+async function storeEncryptedCopy(q, email, tokens, key, refreshed = false) {
   try {
     const enc = encryptJson(tokens, key);
-    await q`UPDATE google_accounts SET tokens_enc = ${enc} WHERE email = ${email} AND tokens = ${JSON.stringify(tokens)}::jsonb`;
+    await q`UPDATE google_accounts SET tokens_enc = ${enc},
+      tokens_enc_verified_at = now(),
+      tokens_enc_refreshed_at = CASE WHEN ${refreshed}::boolean THEN now() ELSE tokens_enc_refreshed_at END
+      WHERE email = ${email} AND tokens = ${JSON.stringify(tokens)}::jsonb
+        AND EXISTS (SELECT 1 FROM google_token_storage WHERE id = true AND encrypted_only_at IS NULL)`;
   } catch {
     console.warn('[crypto] Could not store the encrypted copy of an account\'s tokens; the plain copy is still correct.');
   }
 }
 
 /**
- * Save (or refresh) the tokens for one account. Merging with `||` keeps the
- * refresh_token from the first sign-in when Google later hands back an
- * access_token-only refresh.
+ * In encrypted-only mode the ciphertext is the optimistic compare-and-swap
+ * version. Two serverless refresh callbacks cannot clobber one another's
+ * refresh_token or other new fields. There is no temporary plaintext write.
  */
-export async function saveGoogleTokensFor(email, tokens, { label } = {}) {
+async function saveEncryptedOnly(q, email, tokens, label, key, refreshed) {
+  if (!key) throw new Error('A valid TOKEN_ENCRYPTION_KEY is required for encrypted-only storage.');
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const rows = await q`SELECT tokens_enc, tokens_enc_refreshed_at FROM google_accounts WHERE email = ${email}`;
+    const before = rows[0];
+    const previous = before ? strictEncryptedTokens(before.tokens_enc, key) : {};
+    const merged = { ...previous, ...tokens };
+    const enc = encryptJson(merged, key);
+    if (before) {
+      const result = await q`UPDATE google_accounts SET
+        tokens = '{}'::jsonb, tokens_enc = ${enc},
+        tokens_enc_verified_at = now(),
+        tokens_enc_refreshed_at = CASE WHEN ${refreshed}::boolean THEN now() ELSE tokens_enc_refreshed_at END,
+        label = COALESCE(${label}, label), updated_at = now()
+        WHERE email = ${email} AND tokens_enc = ${before.tokens_enc}
+          AND EXISTS (SELECT 1 FROM google_token_storage WHERE id = true AND encrypted_only_at IS NOT NULL)
+        RETURNING email`;
+      if (result.length) return;
+    } else {
+      const result = await q`INSERT INTO google_accounts
+        (email, label, tokens, tokens_enc, tokens_enc_verified_at, tokens_enc_refreshed_at, is_default, updated_at)
+        SELECT ${email}, ${label}, '{}'::jsonb, ${enc}, now(),
+          CASE WHEN ${refreshed}::boolean THEN now() ELSE NULL END,
+          NOT EXISTS (SELECT 1 FROM google_accounts), now()
+        WHERE EXISTS (SELECT 1 FROM google_token_storage WHERE id = true AND encrypted_only_at IS NOT NULL)
+        ON CONFLICT (email) DO NOTHING RETURNING email`;
+      if (result.length) return;
+    }
+  }
+  throw new Error('Concurrent encrypted Google token refresh could not be safely reconciled; retry using the same credentials.');
+}
+
+/**
+ * Dual-write until independent approval, verified backfill/refresh for EVERY
+ * mailbox, and the November 1 date. This remains compatible with old code.
+ * After activation all newly connected accounts also start encrypted-only.
+ */
+export async function saveGoogleTokensFor(email, tokens, { label, source } = {}) {
+  if (!objectTokens(tokens) || !Object.keys(tokens).length)
+    throw new Error('Google credentials must be a nonempty token object.');
   const q = db();
   const e = normalizeEmail(email);
+  const refreshed = source === 'refresh';
+  const key = loadKey();
+  if (await encryptedOnlyEnabled(q)) return saveEncryptedOnly(q, e, tokens, label || null, key, refreshed);
   const count = await q`SELECT count(*)::int AS n FROM google_accounts`;
-  const makeDefault = count[0].n === 0; // the first account ever added is the default
+  const makeDefault = count[0].n === 0;
+  // The mode condition handles an activation between our read and the upsert.
+  // No plaintext is intentionally written by a new-version post-activation save.
   const rows = await q`
     INSERT INTO google_accounts (email, label, tokens, is_default, updated_at)
-    VALUES (${e}, ${label || null}, ${JSON.stringify(tokens)}::jsonb, ${makeDefault}, now())
+    SELECT ${e}, ${label || null}, ${JSON.stringify(tokens)}::jsonb, ${makeDefault}, now()
+    WHERE EXISTS (SELECT 1 FROM google_token_storage WHERE id = true AND encrypted_only_at IS NULL)
     ON CONFLICT (email) DO UPDATE SET
       tokens = google_accounts.tokens || EXCLUDED.tokens,
-      tokens_enc = NULL,
+      tokens_enc = NULL, tokens_enc_verified_at = NULL, tokens_enc_refreshed_at = NULL,
       label = COALESCE(EXCLUDED.label, google_accounts.label),
       updated_at = now()
+    WHERE EXISTS (SELECT 1 FROM google_token_storage WHERE id = true AND encrypted_only_at IS NULL)
     RETURNING tokens
   `;
-  // The upsert above cleared the encrypted copy, so a failure below only means "not encrypted yet", never "stale".
+  if (!rows.length) return saveEncryptedOnly(q, e, tokens, label || null, key, refreshed);
+  if (key) await storeEncryptedCopy(q, e, rows[0].tokens, key, refreshed);
+}
+
+/**
+ * Readiness is intentionally a protected, sanitized operator check. It NEVER
+ * grants permission or changes a real account. A verified encrypted backfill
+ * and an actual subsequent OAuth refresh are both needed per account.
+ */
+export async function inspectGoogleTokenRetirement() {
+  const q = db();
+  const active = await encryptedOnlyEnabled(q);
+  const rows = await q`SELECT tokens, tokens_enc, tokens_enc_verified_at, tokens_enc_refreshed_at FROM google_accounts`;
   const key = loadKey();
-  if (key) await storeEncryptedCopy(q, e, rows[0].tokens, key);
+  const problems = { missingKey: !key, noAccounts: rows.length === 0,
+    missingCopy: 0, corruptOrStale: 0, unverifiedBackfill: 0, refreshNotObserved: 0 };
+  for (const row of rows) {
+    if (!row.tokens_enc) { problems.missingCopy++; continue; }
+    if (!row.tokens_enc_verified_at) problems.unverifiedBackfill++;
+    if (!row.tokens_enc_refreshed_at) problems.refreshNotObserved++;
+    if (key) {
+      try {
+        const decrypted = strictEncryptedTokens(row.tokens_enc, key);
+        if (!active && canonical(decrypted) !== canonical(row.tokens)) problems.corruptOrStale++;
+      } catch { problems.corruptOrStale++; }
+    }
+  }
+  const ready = rows.length > 0 && key !== null &&
+    Object.values(problems).every(v => v === false || v === 0);
+  return { encryptedOnly: active, accountsChecked: rows.length, ready, problems,
+    notBefore: RETIREMENT_NOT_BEFORE };
+}
+
+/**
+ * Does not run from normal HTTP/OAuth startup. Only a separately confirmed
+ * operator maintenance call may activate it, after ALL accounts have proven
+ * encrypted copy, real refresh and readiness. Do not call before the daily
+ * release has retired older plaintext-only server instances.
+ */
+export async function activateGoogleTokenRetirement({ ownerConfirmed = false } = {}) {
+  if (ownerConfirmed !== true) throw new Error('Independent owner confirmation required; no tokens retired.');
+  const q = db();
+  if (await encryptedOnlyEnabled(q)) return { activated: false, alreadyActive: true };
+  if (Date.now() < Date.parse(RETIREMENT_NOT_BEFORE))
+    throw new Error('Plaintext retirement cannot start before November 1, 2026.');
+  const readiness = await inspectGoogleTokenRetirement();
+  if (!readiness.ready) throw new Error('Every Google account needs an intact encrypted backfill and observed refresh before retirement.');
+  const done = await q`UPDATE google_token_storage SET encrypted_only_at = now()
+    WHERE id = true AND encrypted_only_at IS NULL
+      AND now() >= '2026-11-01T06:00:00Z'::timestamptz
+      AND EXISTS (SELECT 1 FROM google_accounts)
+      AND NOT EXISTS (
+        SELECT 1 FROM google_accounts
+        WHERE tokens_enc IS NULL OR tokens_enc_verified_at IS NULL OR tokens_enc_refreshed_at IS NULL
+      )
+    RETURNING encrypted_only_at`;
+  if (!done.length) throw new Error('Storage readiness changed or date gate refused activation; no tokens retired.');
+  return { activated: true, alreadyActive: false };
 }
 
 export async function setDefaultGoogleAccount(email) {

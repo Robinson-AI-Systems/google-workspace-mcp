@@ -103,7 +103,7 @@ export async function getHostedAuthClient(account) {
   client.setCredentials(saved);
   client.on('tokens', (tokens) => {
     // Fire and forget; failures here shouldn't break the current request.
-    saveGoogleTokensFor(email, { ...saved, ...tokens }).catch(() => {});
+    saveGoogleTokensFor(email, { ...saved, ...tokens }, { source: 'refresh' }).catch(() => {});
   });
   client.actingAs = email; // handy for the whoami tool and error messages
   return client;

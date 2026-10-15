@@ -1172,6 +1172,26 @@ drop the column.
 
 **Acceptance.** Database test on a branch.
 
+
+**P5-2 controlled future activation (source only, no approval implied).** The
+encrypted-only transition is dormant by default and never retires production
+plaintext before November 1, 2026 (America/Denver). A protected operator can
+run `node scripts/google-token-retirement.mjs --inspect` to review sanitized
+counts only. Real connected accounts must ALL have an intact encrypted backfill
+and an observed Google OAuth token refresh, verified with the same encryption
+key. Missing/corrupt/stale data or a missing key refuses activation. After
+independent owner authorization, only on/after the date AND after the checked
+live release contains the new source and old plaintext-only instances are
+drained, set `GWS_TOKEN_RETIREMENT_OWNER_CONFIRMED=true` in a private
+operator environment and run `--activate`. No normal startup/HTTP call
+activates retirement. Activation is durable in PostgreSQL; after it, fresh and
+renewed account tokens are encrypted-only, legacy `tokens` becomes `{}`
+on its next refresh/save, and wrong/missing keys fail closed. An old live
+revision is NOT a compatible rollback after activation; preserve an
+owner-reviewed encrypted restore/reconnection plan before authorizing it.
+Source and synthetic disposable-DB tests do not claim actual production
+retirement or provider refresh acceptance.
+
 ### P5-3 · Local mode parity or retirement (S)
 
 **Build.** Decide with Chris: either make `src/index.js` use the same

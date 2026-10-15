@@ -254,6 +254,95 @@ describe.skipIf(!url)('database (real Postgres)', () => {
     });
   });
 
+
+    it('keeps retirement dormant on upgrade and denies early/unauthorized activation', async () => {
+      await reset();
+      await db.initSchema();
+      const state = await rawQuery('SELECT encrypted_only_at FROM google_token_storage WHERE id = true');
+      expect(state).toHaveLength(1);
+      expect(state[0].encrypted_only_at).toBeNull();
+      expect(await columnsOf('google_accounts')).toEqual(expect.arrayContaining([
+        'tokens_enc_verified_at','tokens_enc_refreshed_at'
+      ]));
+      await expect(db.activateGoogleTokenRetirement()).rejects.toThrow(/owner confirmation/i);
+      await expect(db.activateGoogleTokenRetirement({ownerConfirmed:true})).rejects.toThrow(/November 1/);
+      expect((await rawQuery('SELECT encrypted_only_at FROM google_token_storage WHERE id = true'))[0].encrypted_only_at).toBeNull();
+    });
+
+    it('requires all accounts to have verifiable encrypted backfill AND actual refresh evidence', async () => {
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test', tokens);
+      await db.saveGoogleTokensFor('b@example.test', tokens);
+      let report = await db.inspectGoogleTokenRetirement();
+      expect(report).toMatchObject({encryptedOnly:false,accountsChecked:2,ready:false,problems:{refreshNotObserved:2}});
+      expect(JSON.stringify(report)).not.toContain('fake-');
+      await db.saveGoogleTokensFor('a@example.test',{access_token:'refreshed-a'},{source:'refresh'});
+      report = await db.inspectGoogleTokenRetirement();
+      expect(report.problems.refreshNotObserved).toBe(1);
+      await db.saveGoogleTokensFor('b@example.test',{access_token:'refreshed-b'},{source:'refresh'});
+      expect((await db.inspectGoogleTokenRetirement()).ready).toBe(true);
+      await rawQuery("UPDATE google_accounts SET tokens_enc='v1:damaged' WHERE email='b@example.test'");
+      expect((await db.inspectGoogleTokenRetirement()).problems.corruptOrStale).toBe(1);
+      expect((await db.inspectGoogleTokenRetirement()).ready).toBe(false);
+    });
+
+    it('uses ciphertext as authority after activation, merges partial refreshes, and clears only the updated plaintext row',async()=>{
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY=crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test',tokens);
+      await db.saveGoogleTokensFor('b@example.test',tokens);
+      // Synthetic future mode ONLY inside disposable test schema: real activation
+      // still requires owner, November 1 and real refresh evidence.
+      await rawQuery("UPDATE google_token_storage SET encrypted_only_at=now() WHERE id=true");
+      const prior=await row('a@example.test');
+      await rawQuery("UPDATE google_accounts SET tokens='{\"access_token\":\"stale-plaintext\"}'::jsonb WHERE email='a@example.test'");
+      expect(await db.getGoogleTokensFor('a@example.test')).toEqual(tokens);
+      await db.saveGoogleTokensFor('a@example.test',{access_token:'new-access'},{source:'refresh'});
+      expect((await row('a@example.test')).tokens).toEqual({});
+      expect((await row('b@example.test')).tokens).toEqual(tokens);
+      expect(await db.getGoogleTokensFor('a@example.test')).toEqual({access_token:'new-access',refresh_token:'fake-refresh-1'});
+      expect((await row('a@example.test')).tokens_enc).not.toEqual(prior.tokens_enc);
+      const newRow='new@example.test';
+      await db.saveGoogleTokensFor(newRow,{access_token:'fresh',refresh_token:'only'});
+      expect((await row(newRow)).tokens).toEqual({});
+      expect(await db.getGoogleTokensFor(newRow)).toMatchObject({refresh_token:'only'});
+    });
+
+    it('never falls back to plaintext with an absent or wrong key once encrypted-only is active',async()=>{
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY=crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test',tokens);
+      await rawQuery("UPDATE google_token_storage SET encrypted_only_at=now() WHERE id=true");
+      const original=await row('a@example.test');
+      delete process.env.TOKEN_ENCRYPTION_KEY;
+      await expect(db.getGoogleTokensFor('a@example.test')).rejects.toThrow(/Encrypted Google tokens unavailable/);
+      await expect(db.saveGoogleTokensFor('a@example.test',{access_token:'unsafe'})).rejects.toThrow(/valid TOKEN_ENCRYPTION_KEY/);
+      process.env.TOKEN_ENCRYPTION_KEY=crypto.randomBytes(32).toString('base64');
+      await expect(db.getGoogleTokensFor('a@example.test')).rejects.toThrow(/integrity check failed/);
+      await expect(db.saveGoogleTokensFor('a@example.test',{access_token:'unsafe'})).rejects.toThrow(/integrity check failed/);
+      expect(await row('a@example.test')).toEqual(original);
+    });
+
+    it('reconciles concurrent encrypted-only refresh saves without losing new fields or the original refresh token',async()=>{
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY=crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test',tokens);
+      await rawQuery("UPDATE google_token_storage SET encrypted_only_at=now() WHERE id=true");
+      await Promise.all([
+        db.saveGoogleTokensFor('a@example.test',{access_token:'renewed-a',id_token:'id-a'},{source:'refresh'}),
+        db.saveGoogleTokensFor('a@example.test',{scope:'scope-b',expiry_date:12345},{source:'refresh'})
+      ]);
+      const actual=await db.getGoogleTokensFor('a@example.test');
+      expect(actual).toMatchObject({refresh_token:'fake-refresh-1',id_token:'id-a',scope:'scope-b',expiry_date:12345});
+      expect((await row('a@example.test')).tokens).toEqual({});
+    });
+
+    afterEach(async()=> {
+      // Only synthetic mode changes in our disposable schema; never real deployment state.
+      await rawQuery('UPDATE google_token_storage SET encrypted_only_at=NULL WHERE id=true');
+    });
+
   describe('attempt-log housekeeping', () => {
     it('removes every attempt older than a day when a new attempt is recorded, and keeps recent ones', async () => {
       await rawQuery(`DELETE FROM login_attempts`);
