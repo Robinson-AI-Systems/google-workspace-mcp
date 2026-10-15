@@ -3,7 +3,7 @@
 // Fixture identities stay in protected input and NEVER appear in reports.
 import { READ_ONLY_TOOL_NAMES } from '../src/rtc/read-only-semantics.js';
 import { FIXTURE_TOOL_NAMES, parseExactReadFixtures } from './smoke-readonly-fixtures.mjs';
-import { EXTRA_READ_CASES, validateReviewedCase } from './smoke-readonly-cases.mjs';
+import { EXTRA_READ_CASES, validateReviewedCase, needsCustomerWideApproval } from './smoke-readonly-cases.mjs';
 import { PROVIDER_READ_PROOFS, FIXTURE_READ_PROOFS } from './smoke-provider-shapes.mjs';
 
 const IDENT=/^[a-z][a-z0-9_]{1,119}$/;
@@ -67,7 +67,7 @@ const rtcCaseArea=name=>{
   workflow:'workflows',chrome:'chrome',identity:'identity',
   datatransfer:'datatransfer',domain:'domain',workspace:'workspace'})[prefix]||prefix;
 };
-export function planCatalogReads({catalog,safeProbes,fixtures=[],reviewedCases=[],account}={}) {
+export function planCatalogReads({catalog,safeProbes,fixtures=[],reviewedCases=[],customerWideApproved=false,account}={}) {
  const tools=validateAuthorizedReadCatalog(catalog);
  if(!Array.isArray(safeProbes)||!ACCOUNT.test(account||''))
   throw Error('approved_account_and_reviewed_probes_required');
@@ -116,7 +116,9 @@ export function planCatalogReads({catalog,safeProbes,fixtures=[],reviewedCases=[
   if(Object.hasOwn(EXTRA_READ_CASES,tool.name)){
    const selected=selectedCases.get(tool.name);
    if(!selected)return {...common,kind:'NEEDS_CASE',reason:'reviewed_owner_case_required'};
-   if(tool.area!==rtcCaseArea(tool.name)||!validateReviewedCase(selected,tool))
+   if(needsCustomerWideApproval(selected.name,selected.args)&&!customerWideApproved)
+    return {...common,kind:'NEEDS_APPROVAL',reason:'customer_wide_owner_approval_required'};
+   if(tool.area!==rtcCaseArea(tool.name)||!validateReviewedCase(selected,tool,{customerWideApproved}))
     return {...common,kind:'GAP',reason:'reviewed_case_schema_or_area_drift'};
    return {...common,kind:'CASE',probe:{...selected,area:tool.area}};
   }
@@ -172,6 +174,7 @@ export function coverageResults(entries,outcomes=[]) {
   engineeringGaps:entries.filter(e=>e.kind==='GAP').length,
   exactFixtureGates:entries.filter(e=>e.kind==='NEEDS_FIXTURE').length,
   reviewedCaseGates:entries.filter(e=>e.kind==='NEEDS_CASE').length,
+  customerWideGates:entries.filter(e=>e.kind==='NEEDS_APPROVAL').length,
   protectedBrokers:entries.filter(e=>e.kind==='PROTECTED').length
  };
  return {tools:results,summary,coverageComplete:summary.failed===0&&summary.notProbed===0,
@@ -187,6 +190,7 @@ const REASONS=new Set([
  'unreviewed_read_declaration','missing_or_invalid_read_schema',
  'unreviewed_required_arguments','unreviewed_output_or_scope',
  'reviewed_owner_case_required','reviewed_case_schema_or_area_drift','reviewed_case_not_advertised',
+ 'customer_wide_owner_approval_required',
  'reviewed_probe_not_advertised','fixture_not_advertised',
  'scheduled_probe_not_executed','provider_read_failed','request_failed',
  'result_handle_unreadable','invalid_google_read_shape','area_not_granted',
@@ -212,7 +216,8 @@ export function renderReadOnlyReport({date,revision,coverage,runType='synthetic'
    '; failed: '+coverage.summary.failed+'; not probed: '+coverage.summary.notProbed,
   '- Unfinished engineering probes: '+coverage.summary.engineeringGaps+
    '; fixture gates: '+coverage.summary.exactFixtureGates+
-   '; reviewed case gates: '+(coverage.summary.reviewedCaseGates||0),
+   '; reviewed case gates: '+(coverage.summary.reviewedCaseGates||0)+
+   '; customer-wide approval gates: '+(coverage.summary.customerWideGates||0),
   '- Full coverage: '+(coverage.coverageComplete?'YES':'NO'),
   '- No provider responses, resource IDs, bearer passes, mailbox content or recipient addresses are recorded.','',
   '| Read operation | Result | Safe reason |','| --- | --- | --- |',
