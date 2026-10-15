@@ -87,6 +87,26 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   const r=await invoke('GET',{tool:'workspace_does_not_exist'});
   expect(r.statusCode).toBe(404);expect(r.body.error.code).toBe('not_found');
  });
+ it('rejects a previously issued pass at the actual HTTPS door after TEST account withdrawal',async()=>{
+  const issued=await holder.db.createRtcPass({googleAccount:'ops@example.test',areas:['mail'],
+    allowWrites:true,confirmedAccount:'ops@example.test',hours:1});
+  const before=holder.writes;
+  const previous=process.env.RTC_TEST_ACCOUNT_EMAILS;
+  try {
+    process.env.RTC_TEST_ACCOUNT_EMAILS='other@example.test';
+    const denied=await invoke('POST',{tool:'workspace_gmail_create_label'},
+      {name:'must-not-be-created'},issued.token);
+    expect(denied.statusCode).toBe(401);
+    expect(denied.body.error.code).toBe('permission');
+    expect(holder.writes).toBe(before);
+    expect(await holder.db.getRtcPass(issued.token)).toBeNull();
+  } finally {
+    process.env.RTC_TEST_ACCOUNT_EMAILS=previous;
+  }
+  expect((await invoke('GET',{door:'whoami'},{},issued.token)).statusCode).toBe(200);
+  await holder.db.revokeRtcPass(issued.id);
+  expect((await invoke('GET',{door:'whoami'},{},issued.token)).statusCode).toBe(401);
+ });
  it('rejects a revoked pass immediately',async()=>{
   const pass=await holder.db.getRtcPass(token);
   await holder.db.revokeRtcPass(pass.id);
