@@ -1,5 +1,6 @@
 import { randomToken, verifyPkce, parseBody } from '../../src/oauth/helpers.js';
 import { getOAuthClient, consumeAuthCode, createAccessToken, getTokenByRefreshToken, initSchema } from '../../src/db.js';
+import { connectionPolicyToDb } from '../../src/oauth/connection-settings.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -34,10 +35,17 @@ export default async function handler(req, res) {
       return;
     }
 
+    let settings;
+    try { settings=connectionPolicyToDb(record,{grant:'authorization_code'}); }
+    catch {
+      res.status(400).json({error:'invalid_grant',error_description:'Connection policy could not be validated.'});
+      return;
+    }
     const accessToken = randomToken(32);
     const refreshToken = randomToken(32);
-    // The Google account chosen on the login page travels with the token from here on.
-    await createAccessToken({ accessToken, refreshToken, clientId: body.client_id, googleAccount: record.google_account, profile: record.profile, listing: record.listing, areas: record.areas });
+    // Preserve the selected account and every declared policy setting.
+    await createAccessToken({ accessToken, refreshToken, clientId: body.client_id,
+      googleAccount: record.google_account, ...settings });
     res.status(200).json({ access_token: accessToken, token_type: 'Bearer', expires_in: 3600 * 24 * 30, refresh_token: refreshToken });
     return;
   }
@@ -60,9 +68,17 @@ export default async function handler(req, res) {
       res.status(401).json({ error: 'invalid_client' });
       return;
     }
+    let settings;
+    try { settings=connectionPolicyToDb(issued,{grant:'refresh_token'}); }
+    catch {
+      // A refresh must fail closed instead of changing an unreadable profile
+      // to the database's default full privileges.
+      res.status(400).json({error:'invalid_grant',error_description:'Stored connection policy is invalid.'});
+      return;
+    }
     const accessToken = randomToken(32);
-    // Keep acting as whichever Google account the original login chose.
-    await createAccessToken({ accessToken, refreshToken: body.refresh_token, clientId: body.client_id, googleAccount: issued.google_account || null, profile: issued.profile, listing: issued.listing, areas: issued.areas });
+    await createAccessToken({ accessToken, refreshToken: body.refresh_token,
+      clientId: body.client_id, googleAccount: issued.google_account || null, ...settings });
     res.status(200).json({ access_token: accessToken, token_type: 'Bearer', expires_in: 3600 * 24 * 30 });
     return;
   }
