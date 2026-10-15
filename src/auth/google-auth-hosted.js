@@ -71,6 +71,29 @@ export async function handleGoogleCallback(code, { label } = {}) {
   return email;
 }
 
+// Explicit protected-owner maintenance only: reuse the saved refresh grant,
+// verify the Google mailbox, and await encrypted persistence before success.
+export async function refreshConnectedAccountForReadiness(account) {
+  const email = String(account || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Invalid account.');
+  const saved = await getGoogleTokensFor(email);
+  if (!saved?.refresh_token) throw new Error('Existing refresh grant required.');
+  const client = buildGoogleOAuthClient();
+  client.setCredentials(saved);
+  // No scope argument or new consent: Google can only refresh its existing grant.
+  const { credentials } = await client.refreshAccessToken();
+  if (!credentials?.access_token || !Number.isFinite(credentials.expiry_date) ||
+      credentials.expiry_date <= Date.now()) throw new Error('Refresh failed.');
+  const mailbox = await whichMailbox({ ...saved, ...credentials });
+  if (String(mailbox || '').trim().toLowerCase() !== email)
+    throw new Error('Refreshed mailbox did not match.');
+  await saveGoogleTokensFor(email, credentials, { source: 'refresh' });
+  const persisted = await getGoogleTokensFor(email);
+  if (persisted?.access_token !== credentials.access_token)
+    throw new Error('Refresh persistence not verified.');
+  return { account: email, refreshed: true, identityVerified: true };
+}
+
 /**
  * Upgrade a pre-multi-account deployment in place. The migration is idempotent;
  * api/mcp.js caches a successful run for the life of a warm function instance.
