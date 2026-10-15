@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import baseline from '../../src/data/policy-baseline.json' with {type:'json'};
 import {evaluateBaseline,validateBaseline,handlers} from '../../src/tools/policy-audit.js';
 
-const row=(type,field,value,name='policies/first')=>({name,type:'ADMIN',policyQuery:{orgUnit:'orgUnits/root'},setting:{type,value:{[field]:value}}});
+const row=(type,field,value,name='policies/'+type.replace(/[^a-zA-Z0-9]/g,'-')+'-'+field)=>({name,type:'ADMIN',policyQuery:{orgUnit:'orgUnits/root'},setting:{type,value:{[field]:value}}});
 describe('P7-2 expanded policy baseline and incomplete-audit correctness',()=>{
  it('uses 21 published, editable, unique reference rules across seven supported areas',()=>{
   expect(validateBaseline()).toHaveLength(37);
