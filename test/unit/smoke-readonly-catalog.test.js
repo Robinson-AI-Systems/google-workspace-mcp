@@ -55,7 +55,7 @@ describe('P0-2 complete authorized catalog inventory and vetted reads',()=>{
    status:'NOT_PROBED',reason:'unreviewed_required_arguments'
   });
   expect(result.tools.find(t=>t.tool==='workspace_call')).toMatchObject({
-   status:'NOT_PROBED',reason:'protected_dispatcher_not_invoked'
+   status:'NOT_PROBED',reason:'broker_not_direct_read'
   });
   expect(result.tools.find(t=>t.tool==='workspace_gmail_get_profile').status).toBe('PASS');
   const invoked=f.calls.filter(c=>c.method==='POST').map(c=>c.path.slice('/api/tools/'.length));
@@ -73,7 +73,7 @@ describe('P0-2 complete authorized catalog inventory and vetted reads',()=>{
    {name:'workspace_search_tools',area:'workspace',writes:false,annotations:{readOnlyHint:true}}]});
   const result=await runCatalogReadOnlySmoke(options(f));
   expect(result.summary.engineeringGaps).toBe(0);
-  expect(result.tools.find(t=>t.tool==='workspace_search_tools').reason).toBe('protected_dispatcher_not_invoked');
+  expect(result.tools.find(t=>t.tool==='workspace_search_tools').reason).toBe('broker_not_direct_read');
   expect(f.calls.some(c=>c.path==='/api/tools/workspace_search_tools'&&c.method==='POST')).toBe(false);
  });
  it('handles more than one complete page and records every result exactly once',async()=>{
