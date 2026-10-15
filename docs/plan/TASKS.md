@@ -1,3 +1,22 @@
+### October 15 — owner-requested bundle guidance consistency review
+
+Reviewed current main 15a547f4f7c24c9739d496bfb6f7d489cc468a8e. Aligned existing governing instructions, session
+procedure and applicable playbook/card/recipe references: cards define approved
+scope; related whole subsections form coherent bundles; PR splits need concrete
+migration/dependency/safety/reviewability reasons. Removed stale numeric ceilings
+and blanket one-risk/one-migration fragmentation rules where present. Session target
+comes from the current owner, not PR count; incidental fixes/checkpoints do not end
+an unfinished bundle. Remaining engineering must not be hidden as external proof.
+Removed a stale generic session sentence that called future work maintenance.
+All original subsection IDs, roadmap order, source/provider acceptance, independent
+approval/guard/cleanup rules, CI/review and hosting/cost gates remain unchanged.
+Dated PR-count instructions/credits below are historical to their original
+sessions, never standing quotas or credits toward the current target.
+This is explicitly requested guidance maintenance, zero product bundles; no provider
+operation or release. Required exact-head checks and review disposition govern merge.
+Preserve concurrent implementation branches; resume actual current main and the
+implementing agent's active approved outcome after reading this alignment.
+
 ### October 15 premature-stop repair — owner-requested workflow implementation
 
 Reviewed the failed five-bundle session at main `8e3e473` (#130). It delivered
@@ -80,6 +99,14 @@ publication; no Google write or new permission occurred.
 
 New offline session utility: eight behavioral tests passed, including actual Git ancestry, partial releases, unknown/failed deployments, rollback, dependency gating, invalid queues, PR alignment and bounded output. All repository queues validate. Existing source/status evidence is preserved; no provider acceptance or release was performed. Owner explicitly approved publication on October 14; publish the reviewed maintenance branch, require exact-head CI/reviews, and merge only when those gates pass. No extra production release is authorized by this approval. Full broad application suites on the shared runner were interrupted after resource/time-limit failures; do not claim them passed. Existing exact-head remote CI/review gates must pass before any main merge.
 
+### October 15 P6-1 Groups Settings guarded validation candidate
+
+The complete existing 22-setting shared-inbox handler and caller already support the 16 newer fields, preview/confirm and field-by-field readback. Current work addresses the original P6-1 requirement to refuse unknown values for the four legacy enum fields and both legacy booleans (previously allowed through), while preserving every historically accepted request value. The same guard checks cross-field dependencies against an actual before-image prior to PATCH. Synthetic tests cover accepted and denied values, risky confirmation, readback, and missing dependencies. This is not source/CI/provider completion until exact-head mandatory gates pass, and no real group was edited or deleted. Owner-authorized disposable Rentals group lifecycle remains separate.
+
+### October 15 P7-1 two-phase shared-drive lifecycle
+
+Google Drive v3 forbids submitting restrictions in the create request. The P7-1 candidate creates with a stable requestId first, then patches restrictions once it has a drive ID, returning that created ID and a coarse recovery reason if the second step fails. It never creates a second drive, deletes a partially created drive, or claims provider-verified theme IDs (Google's themeId field is write-only). A metadata update followed by a failed hide/unhide is audited as partial with readback instead of silently losing the first result. **Source/CI/review are not a substitute for genuine owner-authorized TEST Google lifecycle acceptance.**
+
 ## Current engineering disposition — October 15 owner recovery
 
 This is the engineering view of the EXISTING subsection IDs, not new work units.
@@ -96,9 +123,9 @@ restricts only the named operation. Source completion never proves actual Google
   {
     "id": "P0-2",
     "state": "OPEN",
-    "remaining": "Full read-only smoke coverage is not implemented: the catalog runner has 30 reviewed probes. At 8e3e473 all other advertised reads received an unproved fixture/approval reason; the workflow correction now reports probe_not_implemented instead. Enumeration is not a runnable per-tool probe plan.",
-    "evidence": "scripts/smoke-readonly-catalog.mjs SAFE_READ_PROBES and runCatalogReadOnlySmoke; test/unit/smoke-readonly-catalog.test.js; P0-2 original Build/Acceptance.",
-    "next": "Complete a registry/schema-driven per-read coverage plan with explicit safe arguments, original fixture requirements, result validation and denial cases; integrate existing fixture runner. Keep genuine provider execution separately gated."
+    "remaining": "PR #132 adds a schema-aware full catalog inventory, strict plan/fixture/reporting, runnable coverage of the 30 reviewed no-write probes and an existing twelve-name exact-ID fixture parser. Remaining reads without source-reviewed arguments and provider-result validators are correctly OPEN engineering gaps, not merely missing Google acceptance; genuine provider report cannot be committed without verified deployed source and authorized RTC TEST pass.",
+    "evidence": "scripts/smoke-readonly-plan.mjs, smoke-readonly-catalog.mjs, smoke-readonly-fixtures.mjs, smoke-provider-shapes.mjs; corresponding unit tests; original P0-2 acceptance. Protected dispatchers are SKIPPED as non-provider reads; gaps make aggregate ok false.",
+    "next": "Finish the original catalog-wide per-read proof/argument registry and report every failed real Google TEST read after owner-authorized independently READY release; record every actual bug or card in ARCHITECTURE.md. Do not promote catalog enumeration or synthetic TEST checks to complete P0-2."
   },
   {
     "id": "P2-7",
@@ -118,23 +145,23 @@ restricts only the named operation. Source completion never proves actual Google
   {
     "id": "P6-1",
     "state": "REVIEW",
-    "remaining": "Original card says refuse unknown settings values; six legacy fields remain passthrough. Determine approved compatibility behavior and full validation/confirmation/readback coverage, not just whether new fields exist.",
-    "evidence": "src/tools/group-settings.js PASSTHROUGH_TEXT/PASSTHROUGH_BOOLEAN; src/tools/guards-admin.js; original P6-1 Build.",
-    "next": "Reconcile preserve-existing-six versus reject-unknown acceptance against current schema and tests, implement compatible missing validation and prove each field; real group edits need separate scoped authority."
+    "remaining": "Engineering candidate on ai/p6-1-group-settings-complete-20261015 now validates all original six Google values, keeps recognized request shapes, enforces existing group setting dependencies before PATCH, preserves full preview, scoped confirmation and complete readback. Required exact-head CI/reviews and real owner-authorized disposable group preview/edit/readback/cleanup remain unverified; do not count P6-1 complete or infer approval until gates pass.",
+    "evidence": "src/tools/group-settings.js; src/tools/guards-admin.js; test/unit/group-settings.test.js; original P6-1 Build/Acceptance; October 15 candidate.",
+    "next": "Verify strict preflight against actual Google Groups reference and complete fake tests; pass required exact-head test/release-policy/reviews, then merge while leaving real scoped group lifecycle acceptance PENDING."
   },
   {
     "id": "P7-1",
     "state": "REVIEW",
-    "remaining": "Shared-drive request-ID repair #130 is not proof of every original shared-drive/member/restriction, all-drives caller and denial criterion.",
-    "evidence": "src/tools/shared-drives.js, drive.js, guards-files.js; original P7-1; #130 is a 24-line corrective addition.",
-    "next": "Trace complete six-tool lifecycle and existing sharing callers/tests, repair any connected gaps, then record exact engineering proof and independent disposable-drive acceptance."
+    "remaining": "October 15 candidate corrects the Google Drive create/restriction ordering (restriction PATCH only after create), returns a durable drive ID/requestId when stage two fails, handles hide-after-update partial failures and adds theme/color with honest write-only theme verification. Existing six tools and member callers, exact-head tests/reviews and real authorized disposable drive lifecycle require evidence before declaring completed.",
+    "evidence": "src/tools/shared-drives.js; test/unit/shared-drives.test.js; Google Drive v3 drives create/update docs; original P7-1.",
+    "next": "Run full exact-head CI and review, fix all negative paths, trace membership domain guards and existing caller coverage, merge valid code, then separately obtain owner-authorized create/member/read/delete/cleanup evidence."
   },
   {
     "id": "P7-2",
     "state": "REVIEW",
-    "remaining": "Explicit configured-policy reports exist; reconcile every approved area/baseline/console link and bounded traversal criterion. Effective inherited per-domain policy cannot be inferred from an API that does not expose it.",
-    "evidence": "src/tools/policy-audit.js, policy-scan.js, policy-baseline.js; #128; original P7-2 versus documented provider limitation.",
-    "next": "Verify scope-accurate implemented coverage and automated evidence; record unsupported effective-policy determination explicitly rather than presenting it as permission-blocked code or invented effective settings."
+    "remaining": "October 15 candidate adds a source-versioned, owner-editable advisory baseline and exact typed explicit-policy observations, cross-customer provenance checks, OU/group/CEL conditional evidence, an owner review packet and fixed truthful no-effective-compliance semantics. Prior provider pagination and all ten approved baseline areas remain. Exact-head CI/review and provider-authorized real customer-wide inspection remain separate gates.",
+    "evidence": "src/tools/policy-audit.js; src/tools/policy-scan.js; src/tools/policy-evidence.js; src/data/policy-baseline-meta.json; test/unit/policy-evidence.test.js; primary Google Cloud Identity Policy API October 15 references; original P7-2.",
+    "next": "Complete exact-head test/release-policy checks, review and reconcile all published fields with Google's currently supported Policy API setting list; merge engineering only on green. Account Super Admin/OAuth consent and manual review of BOTH domains remain independent pending external acceptance."
   },
   {
     "id": "P7-8",
@@ -146,16 +173,16 @@ restricts only the named operation. Source completion never proves actual Google
   {
     "id": "P8-2",
     "state": "REVIEW",
-    "remaining": "Profile/area/listing persistence across refresh, every dispatch door and metadata budget must be traced to complete current proof.",
-    "evidence": "src/rtc/catalog.js; src/db.js; api/oauth/token.js; test/unit/rtc-profile.test.js; real-DB connection-settings tests; P8-2 original acceptance.",
-    "next": "Reconcile full original matrix including refresh setting-copy coverage; fix missing behavior/tests before labeling external-only."
+    "remaining": "October 15 P8-2 candidate centralizes the issued OAuth profile/listing/areas, validates each authorization-code and refresh grant against one immutable policy source, refuses malformed persisted refresh rather than returning full privileges, and tests real PostgreSQL settings-column parity and same-account refresh continuity. Existing registry dispatch/compact budget gates remain. Exact-head CI/security review and real custom-service profile persistence acceptance are not yet verified.",
+    "evidence": "src/oauth/connection-settings.js; api/oauth/token.js; src/db.js; test/unit/oauth-connection-settings.test.js; test/db/upgrade.test.js; test/unit/rtc-profile.test.js; original P8-2 Build/Acceptance.",
+    "next": "Pass complete exact-head unit, real-Postgres, RTC/compact budget, release-policy and review checks; fix verified defects, merge source. Then separately verify authenticated TEST custom MCP refresh and direct/relay/Sandbox profile enforcement without enabling production."
   },
   {
     "id": "P8-3",
-    "state": "REVIEW",
-    "remaining": "Current approved TEST/read-only pass restriction intentionally narrows the original pass roadmap; distinguish intentionally gated activation from missing issuance/revocation/one-time-output engineering.",
-    "evidence": "api/rtc/passes.js; src/rtc/pass-options.js and pass-page/DB tests; P8-3 original card plus later owner restriction.",
-    "next": "Trace one-time output, expiry/revocation, account/domain/area limits and all-door denial; preserve approved restriction and document exact source proof without enabling broader passes."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "P8-3 engineering is implemented: owner passphrase and canonical-origin protected one-time TEST pass page; only token hash persisted; bounded lifespan/areas, read_only default, explicit separately confirmed TEST write option, revoke/expiry, rate limit and scope checks; runtime withdrawal of RTC_TEST_ACCOUNT_EMAILS authorization stops already-issued TEST passes immediately at the HTTPS door. Owner-authorized genuine deployed TEST pass issuance, exact read/write refusals, revocation and expiry are NOT claimed until separately observed.",
+    "evidence": "api/rtc/passes.js; src/rtc/pass-options.js; src/db.js getRtcPass/rtcPassFailureCode; api/rtc-gateway.js; test/unit/rtc-pass-page.test.js, rtc-https.test.js, rtc-route-http.test.js, rtc-pass-withdrawal.test.js; test/db/upgrade.test.js. PR #132 candidate requires exact-head checks, review and merge.",
+    "next": "After an independently verified READY checked release includes PR #132, use the existing owner-approved TEST mailbox and service-issued pass to prove protected HTTP identity, read-only and domain denial, revocation/expiry and session isolation. No TEST enrollment widening or production activation."
   },
   {
     "id": "P8-4",
@@ -1895,6 +1922,16 @@ queue *automatically*. Add new blocked work here using every column.
 | P7-2/P7-4 — **SCOPE APPROVED; PROVIDER PROOF OPEN** | Newly approved read-only OAuth scopes require individual reconnection; Cloud Identity superadmin/API setup and Postmaster verified domain/traffic remain unverified | Owner-approved account re-consent, provider API plan/permission checks, exact READ results and denied boundaries | #52 Postmaster implementation, #53 policy auditor, Google account consent | Authorized scratch credentials and verified service resources available | Run actual read-only TEST, record domain/scope/inheritance limits, no blanket readiness claims |
 | Daily checked `main → live` — **RELEASE PROOF PENDING** | Green main CI alone cannot prove live promotion/READY | Scheduled promotion tag/live commit, deployment/HTTPS observation | Saved release policy, existing Vercel project settings | Normal scheduled checked run completes | Record exact release/deploy evidence; no manual deployment or preview |
 | External Codex review — **CAPACITY LIMIT OBSERVED** | Prior PR review bot replied usage limit, not substantive approval | Review capacity or actual review findings if it becomes available | GitHub connector review service | Capacity recovers or an authorized reviewer provides findings | Resolve any threads; continue exact-head required CI and independent self-review without claiming bot approval |
+
+### October 15 — owner stop-new-PR and existing-work closure (#132 only)
+
+Current owner instruction is **finish existing work and properly merge; do not start a new PR**. The open draft PR #132 is the only permitted PR to update. Main reconciled at `21ecea9aab94cb8795972f7ae5510762d947fd2b` (#137); live at `15a547f4f7c24c9739d496bfb6f7d489cc468a8e` as inspected before this PR. Recheck both and READY source after merge; no manual release is requested. An earlier unsubmitted P8-3 scratch branch `ai/p8-3-test-pass-runtime-withdrawal-20261015` contains a same-content source/test fix already folded into PR #132, so it does **not** justify a new PR, bundle or duplicate merge.
+
+**Coherent TEST acceptance closure:** P8-3's original short-lived pass, one-time display, hashed persistence, profile/area/domain gates, revoke and read-only all-door behavior already existed. PR #132 completes its otherwise missing runtime kill switch: removing the TEST account from `RTC_TEST_ACCOUNT_EMAILS` now refuses issued credentials at each request, before provider reads or writes. Unit tests cover live de-enrollment, explicit write-pass denial and re-enrollment/revocation. This is a P8-3 acceptance hardening completion, not an invented new subsection or 400-line bundle. Real source/deployed/provider acceptance stays separate.
+
+**P0-2 remains OPEN:** #132's source-verified schema/fixture planning, 30 safe probes, 12 explicit exact-ID reads, sanitized report and aggregate non-success for engineering gaps materially advance—but do not complete—the existing read-only catalog smoke. The original requirement to safely exercise *every* authorized real-account read and commit a genuine report is not satisfied by a classification-only plan. Continue from this exact gap after the current owner no-new-PR restriction is lifted; do not rename or count the unfinished card. Protect any missing fixture IDs, OAuth consent and release confirmation independently.
+
+**Verification and merge boundary:** PR #132 remains conditional on latest-head `test`, `release-policy`, review threads and mergeability. No service-issued TEST pass was printed or Google write executed in this work. Merge only after green; record post-merge main, deployed SHA, P0-2 engineering gap and original approval/cleanup queue without inventing outcomes.
 
 ## Permanent handoff (update with each substantive implementation PR)
 
