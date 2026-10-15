@@ -159,9 +159,9 @@ restricts only the named operation. Source completion never proves actual Google
   {
     "id": "P7-2",
     "state": "REVIEW",
-    "remaining": "Explicit configured-policy reports exist; reconcile every approved area/baseline/console link and bounded traversal criterion. Effective inherited per-domain policy cannot be inferred from an API that does not expose it.",
-    "evidence": "src/tools/policy-audit.js, policy-scan.js, policy-baseline.js; #128; original P7-2 versus documented provider limitation.",
-    "next": "Verify scope-accurate implemented coverage and automated evidence; record unsupported effective-policy determination explicitly rather than presenting it as permission-blocked code or invented effective settings."
+    "remaining": "October 15 candidate adds a source-versioned, owner-editable advisory baseline and exact typed explicit-policy observations, cross-customer provenance checks, OU/group/CEL conditional evidence, an owner review packet and fixed truthful no-effective-compliance semantics. Prior provider pagination and all ten approved baseline areas remain. Exact-head CI/review and provider-authorized real customer-wide inspection remain separate gates.",
+    "evidence": "src/tools/policy-audit.js; src/tools/policy-scan.js; src/tools/policy-evidence.js; src/data/policy-baseline-meta.json; test/unit/policy-evidence.test.js; primary Google Cloud Identity Policy API October 15 references; original P7-2.",
+    "next": "Complete exact-head test/release-policy checks, review and reconcile all published fields with Google's currently supported Policy API setting list; merge engineering only on green. Account Super Admin/OAuth consent and manual review of BOTH domains remain independent pending external acceptance."
   },
   {
     "id": "P7-8",
