@@ -131,7 +131,15 @@ Everything else in the mailbox is never read into the app's database.
 **Tests.** Unit: matcher, threading headers. Integration: send to a test
 address Chris controls, then ingest and assert the OUT row and the IN reply.
 
-## Sequence of PRs in appliance-desk (suggested, one card each)
+## Suggested implementation steps in appliance-desk
+
+These are internal dependency steps, not six mandatory PR/card/bundle boundaries.
+The app repository's approved roadmap and bundle/card/PR rules govern delivery.
+Group related complete approved subsections when coherent; split only for a
+concrete migration/dependency/safety/reviewability reason. Preserve the separate
+app identity, each existing OAuth/delegation consent and Gmail authorization gate;
+listing a step here grants no permission or scope. Do not count these steps as new
+predefined subsections.
 
 1. `google-identity`: `src/lib/google.ts`, env vars, Settings → Google status
    page showing `whoami` (profile of the impersonated user). No features.
