@@ -1140,6 +1140,36 @@ suspend|patch|modify|trash|empty|revoke)_` is not wrapped.
 `google_accounts.tokens` and set it to `'{}'::jsonb` on next refresh. Do not
 drop the column.
 
+**Selected session engineering bundle — frozen plan**
+
+<!-- bundle-plan:start -->
+```json
+{
+  "baseRevision": "8c44aea0a58a1003c0722dbc66b1974869b1f7b3",
+  "outcome": "Finish the approved P5-2 encrypted-only token renewal and guarded retirement transition without touching live plaintext before the date and all-account checks",
+  "integrationBoundary": "Google OAuth callback/refresh -> src/db.js dual/retired persistence -> existing encrypted storage -> guarded all-account readiness/rollout with real Postgres concurrent writers and failure recovery",
+  "newEngineering": "Current main only dual-writes plaintext-authoritative tokens, lacks fail-closed encrypted-only reads/saves, protected activation/readiness and encrypted-only refresh/concurrency proof.",
+  "estimatedProductionLines": 300,
+  "relatedWorkDecision": "P5-2 is the only confirmed OPEN engineering; related P0-6 encryption and Google OAuth refresh are necessary seams. Existing EXTERNAL_ONLY P6/P7/P8 source will not be duplicated or expanded.",
+  "subsections": [
+    {
+      "id": "P5-2",
+      "acceptance": [
+        "After P0-6 has been live for 30 days, stop writing google_accounts.tokens and set the plaintext column to an empty JSON object on the next refresh while retaining the column.",
+        "Prove the backward-compatible inactive upgrade and full encrypted-only renewal path against a disposable real PostgreSQL database without changing production credentials.",
+        "Fail closed on missing/wrong encryption keys and incomplete per-account encrypted refresh/backfill; retain an explicit owner-controlled, not-before-November-1 production retirement gate and safe race/recovery behavior."
+      ],
+      "remainingEngineering": [
+        "Reconcile plaintext-authoritative getGoogleTokensFor and merging saveGoogleTokensFor with new encrypted-only account mode and atomic encrypted refresh.",
+        "Add an inactive default all-account retirement readiness/activation guard proving per-account encrypted refresh and no missing/corrupt/stale copies.",
+        "Add real database tests for upgrade, encrypted-only reads/writes, concurrent refresh, wrong/missing keys, legacy/plain compatibility and premature activation refusal."
+      ]
+    }
+  ]
+}
+```
+<!-- bundle-plan:end -->
+
 **Acceptance.** Database test on a branch.
 
 ### P5-3 · Local mode parity or retirement (S)
