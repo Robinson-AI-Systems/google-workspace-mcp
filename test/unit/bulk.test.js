@@ -7,7 +7,7 @@ vi.mock('../../src/db.js', async importActual => {
   return Object.fromEntries(Object.keys(real).map(name => [name, (...a) => holder.db[name](...a)]));
 });
 const { registry } = await import('../../src/tools/index.js');
-const { normalizeBulkArgs } = await import('../../src/tools/bulk.js');
+const { normalizeBulkArgs, readMailboxExact } = await import('../../src/tools/bulk.js');
 const { isWrite, allowedTool } = await import('../../src/rtc/catalog.js');
 const body = response => JSON.parse(response.content[0].text);
 const bulk = registry.handlers.workspace_bulk_operation;
@@ -167,7 +167,7 @@ describe('combined preview, confirmation and target order', () => {
 
   it('missing child audit receipt cannot become a confirmed result',async()=>{
     const {clients}=env();
-    holder.db.saveChange=async()=>{throw new Error('db unavailable')};
+    holder.db.recordChange=async()=>{throw new Error('db unavailable')};
     const out=body(await bulk(args({confirm:true}),clients)).details;
     expect(out.counts.unverified).toBe(2);
   });
@@ -203,5 +203,71 @@ describe('fixed operation-specific fences',()=>{
     expect(calls.filter(x=>/sendAs|Vacation/.test(x.path))).toHaveLength(0);
     const n=normalizeBulkArgs(args({operation:'remove_license',parameters:{skuId:'sku'}}));
     expect(n.parameters).toEqual({skuId:'sku',productId:'Google-Apps'});
+  });
+});
+
+describe('P7-8 provider mapping, readback and bounded remainder', () => {
+  it('removes exactly the named group members through guarded Directory calls', async () => {
+    const { clients, calls, when } = env();
+    when('admin.members.get').rejects(googleError(404,'notFound','member missing'));
+    const a = args({ operation:'remove_group_member', parameters: { groupKey:'staff@example.test' }, confirm:true });
+    const output = body(await bulk(a, clients)).details;
+    expect(output.counts.confirmed).toBe(2);
+    expect(calls.filter(x => x.path === 'admin.members.delete').map(x => x.args[0])).toEqual([
+      { groupKey:'staff@example.test', memberKey:'a@example.test' },
+      { groupKey:'staff@example.test', memberKey:'b@example.test' }
+    ]);
+  });
+
+  it('removes only the requested licence via the original guarded licensing API', async () => {
+    const {clients,calls,when}=env();
+    when('licensing.licenseAssignments.get').rejects(googleError(404,'notFound','absent'));
+    const output=body(await bulk(args({operation:'remove_license',parameters:{skuId:'sku-test'},confirm:true}),clients)).details;
+    expect(output.counts.confirmed).toBe(2);
+    expect(calls.filter(x=>x.path==='licensing.licenseAssignments.delete').map(x=>x.args[0])).toEqual([
+      {productId:'Google-Apps',skuId:'sku-test',userId:'a@example.test'},
+      {productId:'Google-Apps',skuId:'sku-test',userId:'b@example.test'}
+    ]);
+  });
+
+  it('compares a nonempty delegated signature exactly, never merely hasSignature', async () => {
+    const {clients}=env();
+    let signature='<b>different text</b>';
+    clients.gmailFor=()=>({users:{settings:{sendAs:{get:async()=>({data:{sendAsEmail:'a@example.test',signature}})}}}});
+    const a=normalizeBulkArgs(args({operation:'set_signature',targets:['a@example.test'],parameters:{signatureHtml:'<b>expected text</b>'}}));
+    expect(await readMailboxExact(a,'a@example.test',clients)).toBe(false);
+    signature='<b>expected text</b>';
+    expect(await readMailboxExact(a,'a@example.test',clients)).toBe(true);
+    signature='';
+    expect(await readMailboxExact(a,'a@example.test',clients)).toBe(false);
+  });
+
+  it('compares every requested vacation value, not just presence or enableAutoReply', async () => {
+    const {clients}=env();
+    let reply='a different nonempty response';
+    clients.gmailFor=()=>({users:{settings:{getVacation:async()=>({data:{enableAutoReply:true,responseBodyHtml:reply}})}}});
+    const a=normalizeBulkArgs(args({operation:'set_vacation',targets:['a@example.test'],parameters:{vacation:{enableAutoReply:true,responseBodyHtml:'right response'}}}));
+    expect(await readMailboxExact(a,'a@example.test',clients)).toBe(false);
+    reply='right response';
+    expect(await readMailboxExact(a,'a@example.test',clients)).toBe(true);
+  });
+
+  it('returns an explicit untouched remainder rather than claiming a full run after budget exhaustion',async()=>{
+    const {clients,calls}=env();
+    const clock=vi.spyOn(Date,'now').mockImplementationOnce(()=>0).mockImplementation(()=>25000);
+    try{
+      const output=body(await bulk(args({confirm:true}),clients)).details;
+      expect(output.results.map(x=>x.status)).toEqual(['not_attempted','not_attempted']);
+      expect(output.counts.not_attempted).toBe(2);
+      expect(calls.filter(x=>x.path==='admin.members.insert')).toEqual([]);
+    }finally{clock.mockRestore();}
+  });
+
+  it('blocks denied bulk tools through workspace_call, not only direct entry and read-only batch',async()=>{
+    const {clients,calls}=env();
+    clients.rtcPolicy={profile:'read_only'};
+    const result=await registry.handlers.workspace_call({name:'workspace_bulk_operation',args:args({confirm:true})},clients);
+    expect(result.isError).toBe(true);
+    expect(calls.filter(x=>x.path==='admin.members.insert')).toEqual([]);
   });
 });

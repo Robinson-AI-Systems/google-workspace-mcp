@@ -106,7 +106,7 @@ function denial(a, target, clients, op) {
   if (op.spending) return 'independent_spending_approval_required';
   return null;
 }
-async function readMailboxExact(a, target, clients) {
+export async function readMailboxExact(a, target, clients) {
   const gmail = delegatedGmail(clients, target);
   if (a.operation === 'set_signature') {
     const observed = (await gmail.users.settings.sendAs.get({ userId: 'me', sendAsEmail: target })).data;
