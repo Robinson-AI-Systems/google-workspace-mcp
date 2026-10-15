@@ -43,3 +43,18 @@ You do not need tool names. Say what you want in a sentence. This page lists the
 
 - Reading Google's security alerts (the Alert Center tools). Google's sign-in screen will not let this server ask for that permission, so those three tools are turned down by Google. The security snapshot works without them.
 - Email features inside the appliance desk app (reading customer mail, replying from the customer record). They need two more permissions that are not approved yet; see the end of DEPLOY.md.
+
+
+## Bulk operations (P7-8, source on main only after reviewed merge)
+
+The bounded `workspace_bulk_operation` accepts one operation and **1–20 explicitly named user email addresses**. Operations are `set_signature`, `set_vacation`, `add_group_member`, `remove_group_member`, `assign_license`, `change_license`, and `remove_license`. Provide the shared `parameters` for that operation; no automatic "all users" expansion exists. A mixed-business request still requires explicit, separately authorized `crossDomain:true`; it is never inferred from `confirm`.
+
+For example, preview a group membership change before requesting owner confirmation:
+
+```json
+{"operation":"add_group_member","targets":["a@example.test","b@example.test"],"parameters":{"groupKey":"staff@example.test","role":"MEMBER"},"dryRun":true}
+```
+
+These fake example addresses are not authorization to change accounts. Inspect **each target**, then, only after the owner explicitly agrees to the exact targets and parameters, send the same inputs with `confirm:true` and no `dryRun`. Any changed target, operation, parameters or business scope requires a new preview and confirmation. Every child retains its own permissions, domain limits, delegation and readback. A bulk confirmation does not approve added spend: potential paid license assignment/change remains refused until separately authorized. Source implementation does not authorize production bulk execution.
+
+A result can be `complete` only when **every target** is independently `confirmed`; otherwise it is `incomplete`. Inspect `details.results` and `details.counts` (or the standard output/result handle) rather than treating outer `done:true` as blanket success. `unknown` means a write might have happened; `unverified` means it was not independently proved; `not_attempted` means no child ran. **Never replay an entire partially completed list**. Read back uncertain targets with the existing guarded tools, then preview and confirm a new operation only for targets needing action. No automatic retry or rollback is performed; any supported undo requires its own preview and confirmation.

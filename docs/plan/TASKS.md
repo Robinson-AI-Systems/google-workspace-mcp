@@ -240,6 +240,17 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "2026-10-14: source and synthetic guarded-subtool acceptance implemented; no real deployed Google console readback performed, separate original provider evidence pending."
+  },
+  {
+    "id": "P7-8-GUARDED-BULK",
+    "priority": 2,
+    "requiredRevision": "200c70a4eefd29d7cce9e554c712ff1681cce19c",
+    "task": "Verify deployed guarded workspace_bulk_operation with original owner-authorized scoped TEST targets and non-production approval. Prove permitted mappings, exact provider readbacks, safe domain refusal, partial failure and cleanup; no paid license actions without independent spending approval.",
+    "procedure": "docs/plan/TASKS.md — P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "Exact READY deployment and authenticated custom MCP connection; owner-approved isolated TEST targets, permission/domain limits, exact fixture IDs and operation-specific approvals; no production bulk writes or autonomous spending",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "Source/automated candidate only; deployed custom Google bulk acceptance and production permission remain outstanding."
   }
 ]
 ```
@@ -1451,7 +1462,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P7-5 | DONE | #61 | All stated unit acceptance passed: reviewed reversible families, irreversible refusals and undo-of-undo. Merged after exact-head test/release-policy. Real Google undo remains separate unverified provider evidence. |
 | P7-6 | SUPERSEDED | | Delivered by P8-2 (read_only profile) — Phase 8 added 2026-10-10 |
 | P7-7 | SUPERSEDED | | Delivered by P8-2 (profiles, area filters, compact listing) — Phase 8 added 2026-10-10 |
-| P7-8 | TODO | | Implementation design and owner review completed October 14; see P7-8 decision above. Seven bounded child mappings, 20 explicit targets, sequential execution, per-target evidence, no automatic retry/rollback. Source implementation and all acceptance still outstanding; no repeated design approval needed. |
+| P7-8 | IN_PROGRESS | | Source candidate includes bounded wrapper; test/CI/merge/provider acceptance not yet complete. Implementation design and owner review completed October 14; see P7-8 decision above. Seven bounded child mappings, 20 explicit targets, sequential execution, per-target evidence, no automatic retry/rollback. Source implementation and all acceptance still outstanding; no repeated design approval needed. |
 | P8-1 | DONE | #31, #34, #41, #44, #55, #57, #63 | Stated automated acceptance passed: all 161 read names bounded with 100-item wrapper fakes, projection, real-DB handle isolation, annotation parity, 13 typed reads and all seven guarded write workflows. Genuine deployed Google/Hub routes remain separate P8-3/4/5 acceptance. |
 | P8-2 | IN_PROGRESS | #30 | Profile persistence, read-only dispatch, compact meta-tools and filters implemented; full service conformance / profile acceptance remains pending |
 | P8-3 | IN_PROGRESS | #32 | Owner-protected hashed, short-lived, scratch-account TEST read-only passes, revocation, limit guards; live issuance acceptance unverified |
