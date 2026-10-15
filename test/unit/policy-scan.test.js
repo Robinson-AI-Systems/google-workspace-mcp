@@ -29,10 +29,10 @@ describe('P7-2 complete bounded provider page and evidence contract', () => {
       {data:{policies:[{name:'policies/1'}]}},
       {data:{policies:[{...row,setting:{...row.setting,value:null}}]}},
       {data:{policies:[{...row,type:'UNKNOWN'}]}},
-      {data:{nextPageToken:17}},
-      {data:{nextPageToken:'',policies:[]}}
+      {data:{nextPageToken:17}}
     ]) expect(() => parsePolicyPage(bad)).toThrow();
     expect(parsePolicyPage({data:{}})).toEqual({policies:[],nextPageToken:null});
+    expect(parsePolicyPage({data:{policies:[],nextPageToken:''}})).toEqual({policies:[],nextPageToken:null});
   });
   it('reads all pages, waits per customer, sends the same filter each time, and deduplicates identical resources', async () => {
     const calls=[],waits=[];

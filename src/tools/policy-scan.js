@@ -29,11 +29,12 @@ export function parsePolicyPage(response) {
         !p.setting.value || typeof p.setting.value !== 'object' ||
         Array.isArray(p.setting.value) ||
         (p.policyQuery !== undefined && (!p.policyQuery || typeof p.policyQuery !== 'object')) ||
-        (p.type !== undefined && !['ADMIN', 'SYSTEM'].includes(p.type))) {
+        (p.type !== undefined && !['ADMIN', 'SYSTEM', 'POLICY_TYPE_UNSPECIFIED'].includes(p.type))) {
       throw new Error('Google Policy API returned an invalid policy resource; scan incomplete.');
     }
   }
-  const nextPageToken = data.nextPageToken ?? null;
+  // Google documents an absent OR empty cursor as the end of pagination.
+  const nextPageToken = data.nextPageToken === '' ? null : (data.nextPageToken ?? null);
   if (nextPageToken !== null &&
       (typeof nextPageToken !== 'string' || !nextPageToken || nextPageToken.length > 4096)) {
     throw new Error('Google Policy API returned an invalid nextPageToken; scan incomplete.');
