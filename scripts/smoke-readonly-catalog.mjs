@@ -3,6 +3,9 @@
 // tools needing real fixture IDs or organization-wide approval remain unprobed.
 // Secrets and provider response bodies are never written to the report.
 import { runReadOnlySmoke, originFromEnv } from './smoke-readonly.mjs';
+import { preparedFixtureProbes, planCatalogReads, coverageResults,
+  renderReadOnlyReport, validateTestAuthorization } from './smoke-readonly-plan.mjs';
+import { writeFile } from 'node:fs/promises';
 
 export const SAFE_READ_PROBES = Object.freeze([
   {name:'workspace_whoami',area:'workspace',args:{}},
@@ -63,7 +66,7 @@ export async function readAuthorizedCatalog({origin,token,fetcher=fetch}){
       tool.annotations?.readOnlyHint!==true&&!PROTECTED_DISPATCHERS.has(tool.name))
     throw Error('read_only_catalog_unsafe_or_duplicate');
    names.add(tool.name);
-   tools.push({name:tool.name,area:tool.area,writes:tool.writes===true});
+   tools.push({name:tool.name,area:tool.area,writes:tool.writes===true,annotations:tool.annotations,inputSchema:tool.inputSchema});
   }
   if(result.next===null){return tools;}
   const next=Number(result.next);
@@ -74,31 +77,34 @@ export async function readAuthorizedCatalog({origin,token,fetcher=fetch}){
  throw Error('read_only_catalog_page_cap');
 }
 
-export async function runCatalogReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher=fetch}){
+export async function runCatalogReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fixtures,fetcher=fetch}){
+ // Validate the exact fixture manifest BEFORE the first HTTP request.
+ validateTestAuthorization({token,account:expectedAccount,revision:expectedRevision});
+ const selectedFixtures=preparedFixtureProbes(fixtures,expectedAccount);
  // Identity, exact deployed revision and existing five essential reads are
  // checked before walking or invoking the wider catalog.
  const baseline=await runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher});
  if(!baseline.ok)return {ok:false,catalogComplete:false,baseline:baseline.outcomes,
   tools:[],summary:{discovered:0,probed:0,failed:baseline.outcomes.filter(x=>x.status==='FAIL').length,notProbed:0,engineeringGaps:0}};
  const catalog=await readAuthorizedCatalog({origin,token,fetcher});
- const byName=new Map(catalog.map(t=>[t.name,t]));
- const reviewed=SAFE_READ_PROBES.filter(p=>byName.has(p.name));
- const run=await runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher,probes:reviewed});
- const tested=new Map(run.outcomes.map(x=>[x.tool,x]));
- const tools=catalog.map(tool=>{
-  const found=tested.get(tool.name);
-  // The full catalog advertised this exact read, so a narrower q lookup that
-  // cannot locate it is contract drift, not an "unavailable" optional area.
-  if(found?.status==='NOT_AVAILABLE')return {tool:tool.name,status:'FAIL',reason:'advertised_probe_unavailable'};
-  if(found)return {tool:tool.name,status:found.status,...(found.reason?{reason:found.reason}:{})};
-  return {tool:tool.name,status:'NOT_PROBED',reason:PROTECTED_DISPATCHERS.has(tool.name)?'protected_dispatcher_not_invoked':'probe_not_implemented'};
- });
- const failed=tools.filter(t=>t.status==='FAIL').length;
- const engineeringGaps=tools.filter(t=>t.reason==='probe_not_implemented').length;
- const notProbed=tools.filter(t=>t.status==='NOT_PROBED'||t.status==='NOT_AVAILABLE').length;
- return {ok:baseline.ok&&run.ok&&failed===0,catalogComplete:true,coverageComplete:notProbed===0,
-  account:expectedAccount,revision:expectedRevision,baseline:baseline.outcomes,
-  tools,summary:{discovered:tools.length,probed:tools.length-notProbed,failed,notProbed,engineeringGaps}};
+ const plan=planCatalogReads({catalog,safeProbes:SAFE_READ_PROBES,fixtures:selectedFixtures,account:expectedAccount});
+ const probes=plan.filter(entry=>entry.probe).map(entry=>entry.probe);
+ const run=await runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher,probes});
+ const coverage=coverageResults(plan,run.outcomes);
+ // A missing advertised exact name is a contract drift, not an optional skip.
+ const tools=coverage.tools.map(row=>row.status==='NOT_AVAILABLE'&&
+  row.reason==='read_tool_not_advertised'
+  ? {...row,status:'FAIL',reason:'advertised_probe_unavailable'}:row);
+ const failed=tools.filter(row=>row.status==='FAIL').length;
+ const summary={...coverage.summary,failed,probed:coverage.summary.passed+failed,
+  notProbed:tools.filter(row=>row.status==='NOT_PROBED'||row.status==='NOT_AVAILABLE').length};
+ const coverageComplete=failed===0&&summary.notProbed===0;
+ // Success means the selected approved catalog was actually fully checked.
+ // A partly implemented plan may still have zero individual provider errors.
+ // Never expose that partial result to library callers as a passing smoke.
+ return {ok:baseline.ok&&run.ok&&coverageComplete,catalogComplete:true,
+  coverageComplete,baseline:baseline.outcomes,
+  tools,summary};
 }
 
 export async function main(argv=process.argv.slice(2),env=process.env){
@@ -113,15 +119,22 @@ export async function main(argv=process.argv.slice(2),env=process.env){
  try{
   const result=await runCatalogReadOnlySmoke({
    origin:env.RTC_ORIGIN,token:env.RTC_TEST_PASS,expectedAccount:env.RTC_EXPECTED_ACCOUNT,
-   expectedRevision:env.RTC_EXPECTED_REVISION
+   expectedRevision:env.RTC_EXPECTED_REVISION,fixtures:env.RTC_READ_FIXTURES_JSON
   });
+  if(result.catalogComplete){
+   const date=new Date().toISOString().slice(0,10);
+   const markdown=renderReadOnlyReport({date,revision:env.RTC_EXPECTED_REVISION,
+    coverage:result,runType:'authorized_test'});
+   // Sanitized report is written locally for review/commit, not sent to Google.
+   await writeFile('docs/plan/smoke-report-'+date+'.md',markdown,{flag:'wx'});
+  }
   for(const entry of result.tools)console.log(entry.status+' '+entry.tool+(entry.reason?' ('+entry.reason+')':''));
   console.log('Read-only catalog enumerated: '+result.catalogComplete+
    '; probes passed: '+(result.summary.probed-result.summary.failed)+
    '; failed: '+result.summary.failed+'; not probed: '+result.summary.notProbed+
    '; probe implementation gaps: '+result.summary.engineeringGaps+
    '; NOT a claim of full provider or Hub acceptance or external-only exhaustion.');
-  return result.ok?0:1;
+  return result.ok&&result.coverageComplete?0:1;
  }catch{
   console.error('FAIL read-only catalog acceptance; no provider data or secrets printed');
   return 1;

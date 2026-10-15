@@ -211,7 +211,8 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       if(typeof token!=='string'||!/^rtc_pass_[A-Za-z0-9_-]{43}$/.test(token))return null;
       const hash=crypto.createHash('sha256').update(token).digest('hex');
       const row=[...state.rtcPasses.values()].find(x=>x.token_hash===hash&&!x.revoked_at&&x.expires_at>at());
-      return row?{...row}:null;
+      return row&&String(process.env.RTC_TEST_ACCOUNT_EMAILS||'').split(',')
+        .some(x=>x.trim().toLowerCase()===row.google_account)?{...row}:null;
     },
     async rtcPassFailureCode(token){if(typeof token!=='string'||!/^rtc_pass_[A-Za-z0-9_-]{43}$/.test(token))return 'permission';const hash=crypto.createHash('sha256').update(token).digest('hex');const row=[...state.rtcPasses.values()].find(x=>x.token_hash===hash);return !row?'permission':row.revoked_at?'pass_revoked':row.expires_at<=at()?'pass_expired':'permission';},
     async revokeRtcPass(id){const row=state.rtcPasses.get(id);if(!row||row.revoked_at)return 0;row.revoked_at=at();return 1;},

@@ -1,5 +1,14 @@
 // Server-owned issuance validation, shared by SQL and the fake contract adapter.
 import {RTC_AREAS} from './catalog.js';
+// Revoking an account's TEST enrollment stops ALL already-issued passes on
+// their NEXT authenticated request. SQL issuance alone is not a sufficient
+// kill switch for pass credentials that outlive a deployment configuration.
+export function testAccountEnrolled(account,configured=process.env.RTC_TEST_ACCOUNT_EMAILS){
+ if(typeof account!=='string'||!account.trim())return false;
+ const selected=String(configured||'').split(',').map(x=>x.trim().toLowerCase())
+   .filter(x=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));
+ return selected.includes(account.trim().toLowerCase());
+}
 export function passOptions({areas=null,rateLimit=120,hours=24,forHub=false,allowWrites=false,confirmedAccount,googleAccount}={}){
  const account=String(googleAccount||'').trim().toLowerCase();
  if(typeof forHub!=='boolean'||typeof allowWrites!=='boolean')throw Error('Pass options must be explicit booleans.');

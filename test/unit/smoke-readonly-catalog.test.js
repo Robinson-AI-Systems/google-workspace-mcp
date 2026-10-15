@@ -9,8 +9,8 @@ const origin='https://mcp.example.test';
 
 function fake({catalog,revisionFound=revision,failedTool='',missingProbe='',wrongMailbox=false,cycle=false}={}){
  const tools=catalog||[
-  ...SAFE_READ_PROBES.map(p=>({name:p.name,area:p.area,writes:false,annotations:{readOnlyHint:true}})),
-  {name:'workspace_admin_get_user',area:'admin',writes:false,annotations:{readOnlyHint:true}},
+  ...SAFE_READ_PROBES.map(p=>({name:p.name,area:p.area,writes:false,annotations:{readOnlyHint:true},inputSchema:{type:'object',properties:{},required:[]}})),
+  {name:'workspace_admin_get_user',area:'admin',writes:false,annotations:{readOnlyHint:true},inputSchema:{type:'object',properties:{userKey:{type:'string'}},required:['userKey']}},
   {name:'workspace_call',area:'workspace',writes:true,annotations:{readOnlyHint:false}}
  ];
  const calls=[];
@@ -46,16 +46,16 @@ describe('P0-2 complete authorized catalog inventory and vetted reads',()=>{
  it('retrieves every permitted page without mutating and labels untested resource-specific tools',async()=>{
   const f=fake();
   const result=await runCatalogReadOnlySmoke(options(f));
-  expect(result.ok).toBe(true);
+  expect(result.ok).toBe(false); // an unimplemented read is not a successful smoke
   expect(result.catalogComplete).toBe(true);
   expect(result.coverageComplete).toBe(false);
   expect(result.summary.engineeringGaps).toBe(1);
   expect(result.summary.discovered).toBe(f.tools.length);
   expect(result.tools.find(t=>t.tool==='workspace_admin_get_user')).toMatchObject({
-   status:'NOT_PROBED',reason:'probe_not_implemented'
+   status:'NOT_PROBED',reason:'unreviewed_required_arguments'
   });
   expect(result.tools.find(t=>t.tool==='workspace_call')).toMatchObject({
-   status:'NOT_PROBED',reason:'protected_dispatcher_not_invoked'
+   status:'SKIPPED',reason:'broker_not_direct_read'
   });
   expect(result.tools.find(t=>t.tool==='workspace_gmail_get_profile').status).toBe('PASS');
   const invoked=f.calls.filter(c=>c.method==='POST').map(c=>c.path.slice('/api/tools/'.length));
@@ -69,11 +69,11 @@ describe('P0-2 complete authorized catalog inventory and vetted reads',()=>{
   expect(f.calls.every(c=>JSON.stringify(c).includes(token)===false)).toBe(true);
  });
  it('does not classify a read-only broker as an unimplemented direct probe',async()=>{
-  const f=fake({catalog:[...SAFE_READ_PROBES.map(p=>({name:p.name,area:p.area,writes:false,annotations:{readOnlyHint:true}})),
+  const f=fake({catalog:[...SAFE_READ_PROBES.map(p=>({name:p.name,area:p.area,writes:false,annotations:{readOnlyHint:true},inputSchema:{type:'object',properties:{},required:[]}})),
    {name:'workspace_search_tools',area:'workspace',writes:false,annotations:{readOnlyHint:true}}]});
   const result=await runCatalogReadOnlySmoke(options(f));
   expect(result.summary.engineeringGaps).toBe(0);
-  expect(result.tools.find(t=>t.tool==='workspace_search_tools').reason).toBe('protected_dispatcher_not_invoked');
+  expect(result.tools.find(t=>t.tool==='workspace_search_tools').reason).toBe('broker_not_direct_read');
   expect(f.calls.some(c=>c.path==='/api/tools/workspace_search_tools'&&c.method==='POST')).toBe(false);
  });
  it('handles more than one complete page and records every result exactly once',async()=>{

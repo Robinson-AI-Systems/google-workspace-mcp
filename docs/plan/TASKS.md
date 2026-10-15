@@ -123,9 +123,9 @@ restricts only the named operation. Source completion never proves actual Google
   {
     "id": "P0-2",
     "state": "OPEN",
-    "remaining": "Full read-only smoke coverage is not implemented: the catalog runner has 30 reviewed probes. At 8e3e473 all other advertised reads received an unproved fixture/approval reason; the workflow correction now reports probe_not_implemented instead. Enumeration is not a runnable per-tool probe plan.",
-    "evidence": "scripts/smoke-readonly-catalog.mjs SAFE_READ_PROBES and runCatalogReadOnlySmoke; test/unit/smoke-readonly-catalog.test.js; P0-2 original Build/Acceptance.",
-    "next": "Complete a registry/schema-driven per-read coverage plan with explicit safe arguments, original fixture requirements, result validation and denial cases; integrate existing fixture runner. Keep genuine provider execution separately gated."
+    "remaining": "PR #132 adds a schema-aware full catalog inventory, strict plan/fixture/reporting, runnable coverage of the 30 reviewed no-write probes and an existing twelve-name exact-ID fixture parser. Remaining reads without source-reviewed arguments and provider-result validators are correctly OPEN engineering gaps, not merely missing Google acceptance; genuine provider report cannot be committed without verified deployed source and authorized RTC TEST pass.",
+    "evidence": "scripts/smoke-readonly-plan.mjs, smoke-readonly-catalog.mjs, smoke-readonly-fixtures.mjs, smoke-provider-shapes.mjs; corresponding unit tests; original P0-2 acceptance. Protected dispatchers are SKIPPED as non-provider reads; gaps make aggregate ok false.",
+    "next": "Finish the original catalog-wide per-read proof/argument registry and report every failed real Google TEST read after owner-authorized independently READY release; record every actual bug or card in ARCHITECTURE.md. Do not promote catalog enumeration or synthetic TEST checks to complete P0-2."
   },
   {
     "id": "P2-7",
@@ -179,10 +179,11 @@ restricts only the named operation. Source completion never proves actual Google
   },
   {
     "id": "P8-3",
-    "state": "REVIEW",
-    "remaining": "Current approved TEST/read-only pass restriction intentionally narrows the original pass roadmap; distinguish intentionally gated activation from missing issuance/revocation/one-time-output engineering.",
-    "evidence": "api/rtc/passes.js; src/rtc/pass-options.js and pass-page/DB tests; P8-3 original card plus later owner restriction.",
-    "next": "Trace one-time output, expiry/revocation, account/domain/area limits and all-door denial; preserve approved restriction and document exact source proof without enabling broader passes."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "P8-3 engineering is implemented: owner passphrase and canonical-origin protected one-time TEST pass page; only token hash persisted; bounded lifespan/areas, read_only default, explicit separately confirmed TEST write option, revoke/expiry, rate limit and scope checks; runtime withdrawal of RTC_TEST_ACCOUNT_EMAILS authorization stops already-issued TEST passes immediately at the HTTPS door. Owner-authorized genuine deployed TEST pass issuance, exact read/write refusals, revocation and expiry are NOT claimed until separately observed.",
+    "evidence": "api/rtc/passes.js; src/rtc/pass-options.js; src/db.js getRtcPass/rtcPassFailureCode; api/rtc-gateway.js; test/unit/rtc-pass-page.test.js, rtc-https.test.js, rtc-route-http.test.js, rtc-pass-withdrawal.test.js; test/db/upgrade.test.js. PR #132 candidate requires exact-head checks, review and merge.",
+    "next": "After an independently verified READY checked release includes PR #132, use the existing owner-approved TEST mailbox and service-issued pass to prove protected HTTP identity, read-only and domain denial, revocation/expiry and session isolation. No TEST enrollment widening or production activation.",
+    "gate": "Independently verified production READY source containing PR #132, existing owner-approved RTC_TEST_ACCOUNT_EMAILS enrollment, service-issued short-lived TEST pass and native /api/tools custom-MCP authorization/denial evidence; no broader consent, spending, or production writes."
   },
   {
     "id": "P8-4",
@@ -1922,6 +1923,16 @@ queue *automatically*. Add new blocked work here using every column.
 | P7-2/P7-4 — **SCOPE APPROVED; PROVIDER PROOF OPEN** | Newly approved read-only OAuth scopes require individual reconnection; Cloud Identity superadmin/API setup and Postmaster verified domain/traffic remain unverified | Owner-approved account re-consent, provider API plan/permission checks, exact READ results and denied boundaries | #52 Postmaster implementation, #53 policy auditor, Google account consent | Authorized scratch credentials and verified service resources available | Run actual read-only TEST, record domain/scope/inheritance limits, no blanket readiness claims |
 | Daily checked `main → live` — **RELEASE PROOF PENDING** | Green main CI alone cannot prove live promotion/READY | Scheduled promotion tag/live commit, deployment/HTTPS observation | Saved release policy, existing Vercel project settings | Normal scheduled checked run completes | Record exact release/deploy evidence; no manual deployment or preview |
 | External Codex review — **CAPACITY LIMIT OBSERVED** | Prior PR review bot replied usage limit, not substantive approval | Review capacity or actual review findings if it becomes available | GitHub connector review service | Capacity recovers or an authorized reviewer provides findings | Resolve any threads; continue exact-head required CI and independent self-review without claiming bot approval |
+
+### October 15 — owner stop-new-PR and existing-work closure (#132 only)
+
+Current owner instruction is **finish existing work and properly merge; do not start a new PR**. The open draft PR #132 is the only permitted PR to update. Main reconciled at `21ecea9aab94cb8795972f7ae5510762d947fd2b` (#137); live at `15a547f4f7c24c9739d496bfb6f7d489cc468a8e` as inspected before this PR. Recheck both and READY source after merge; no manual release is requested. An earlier unsubmitted P8-3 scratch branch `ai/p8-3-test-pass-runtime-withdrawal-20261015` contains a same-content source/test fix already folded into PR #132, so it does **not** justify a new PR, bundle or duplicate merge.
+
+**Coherent TEST acceptance closure:** P8-3's original short-lived pass, one-time display, hashed persistence, profile/area/domain gates, revoke and read-only all-door behavior already existed. PR #132 completes its otherwise missing runtime kill switch: removing the TEST account from `RTC_TEST_ACCOUNT_EMAILS` now refuses issued credentials at each request, before provider reads or writes. Unit tests cover live de-enrollment, explicit write-pass denial and re-enrollment/revocation. This is a P8-3 acceptance hardening completion, not an invented new subsection or 400-line bundle. Real source/deployed/provider acceptance stays separate.
+
+**P0-2 remains OPEN:** #132's source-verified schema/fixture planning, 30 safe probes, 12 explicit exact-ID reads, sanitized report and aggregate non-success for engineering gaps materially advance—but do not complete—the existing read-only catalog smoke. The original requirement to safely exercise *every* authorized real-account read and commit a genuine report is not satisfied by a classification-only plan. Continue from this exact gap after the current owner no-new-PR restriction is lifted; do not rename or count the unfinished card. Protect any missing fixture IDs, OAuth consent and release confirmation independently.
+
+**Verification and merge boundary:** PR #132 remains conditional on latest-head `test`, `release-policy`, review threads and mergeability. No service-issued TEST pass was printed or Google write executed in this work. Merge only after green; record post-merge main, deployed SHA, P0-2 engineering gap and original approval/cleanup queue without inventing outcomes.
 
 ## Permanent handoff (update with each substantive implementation PR)
 
