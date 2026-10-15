@@ -81,7 +81,7 @@ test('real git refs and ancestry drive the offline CLI without network/mutations
     assert.match(output, /PR work unit = one whole predefined batch subsection/);
     assert.match(output, /Partial subsection = zero completed batch subsections/);
     assert.match(output, /remaining approved/);
-    assert.match(output, /PR planning averages: 400–800 changed production lines and 2–5/);
+    assert.match(output, /ENGINEERING guide: 400–800 production lines and 2–5/);
     assert.match(output, /FIRST DEPLOYED_CANDIDATE_CHECK_GATES/); assert.match(output, /SECOND WAIT_RELEASE_OR_FETCH_HISTORY/); assert.match(output, /Latest observed PR: #104 \(informational only/); assert.doesNotMatch(output, /Next session boundary/);
     assert.match(run(root, ['--deployed', first, '--state', 'READY', '--acceptance-review', 'acceptance.json']), /accounting checked/);
     assert.equal(git('status', '--porcelain'), before);
@@ -250,4 +250,18 @@ test('an empty queue cannot bypass deployment/ref ancestry verification', () => 
   assert.throws(() => reviewWithAncestry([], obs, report));
   assert.throws(() => reviewWithAncestry([], obs, report, () => null));
   assert.throws(() => reviewWithAncestry([], obs, report, () => false));
+});
+
+test('work selection continues exact original obligations instead of requesting new features', async () => {
+  const { nextRequiredWork } = await import('./session-status.mjs');
+  const merged = { id: 'P6-1', state: 'EXTERNAL_ONLY', next: 'Original scoped group lifecycle' };
+  const missing = { id: 'P5-2', state: 'OPEN', next: 'Implement inactive encrypted-only read/save/refresh now; production stays gated until November 1' };
+  assert.equal(nextRequiredWork([merged, missing], []).id, 'P5-2');
+  assert.match(nextRequiredWork([merged, missing], []).action, /inactive encrypted-only/);
+  assert.equal(nextRequiredWork([{ ...merged, state: 'REVIEW' }], []).kind, 'RECONCILE_CRITERION');
+  const pending = { id: 'P8-8-CONSOLE-WALK', disposition: 'DEPLOYED_CANDIDATE_CHECK_GATES', task: 'Original dated authenticated Console walkthrough' };
+  assert.deepEqual(nextRequiredWork([merged], [pending]).action, pending.task);
+  assert.equal(nextRequiredWork([merged], [pending]).kind, 'COMPLETION');
+  assert.match(nextRequiredWork([], [{ ...pending, disposition: 'VERIFY_DEPLOYMENT' }]).action, /EACH check/);
+  assert.equal(nextRequiredWork([merged], [{ ...pending, disposition: 'RECORDED_PASS' }]).kind, 'VERIFY_FINISH');
 });

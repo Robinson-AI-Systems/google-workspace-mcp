@@ -115,6 +115,15 @@ checks during development. Product acceptance stays open until real evidence pas
 The owner explicitly authorized this cross-repository guidance/tooling optimization;
 routine implementation sessions still prohibit filler/documentation-only PRs.
 
+## Completion workload — owner correction October 15
+
+SESSION-START.md's ENGINEERING / COMPLETION accounting governs “Do N bundles.”
+Production-line guides apply to engineering; substantial genuine acceptance and
+configuration completion can qualify without new code, with frozen original scope,
+new passed queue evidence and substantive review. Never invent features to meet N.
+P8-6 is optional. P8-8's dated console walk is already approved work, not an expansion.
+Use TASKS.md's current reconciliation; older candidate handoffs are historical.
+
 ## Roadmap-throughput and context-safe execution — owner correction 2026-10-14
 
 **Completion outranks PR count.** The goal is completed, usable, safely proven product
