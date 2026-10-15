@@ -252,8 +252,6 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       expect(JSON.stringify(warn.mock.calls)).not.toContain('fake-');
       warn.mockRestore();
     });
-  });
-
 
     it('keeps retirement dormant on upgrade and denies early/unauthorized activation', async () => {
       await reset();
@@ -342,6 +340,7 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       // Only synthetic mode changes in our disposable schema; never real deployment state.
       await rawQuery('UPDATE google_token_storage SET encrypted_only_at=NULL WHERE id=true');
     });
+  });
 
   describe('attempt-log housekeeping', () => {
     it('removes every attempt older than a day when a new attempt is recorded, and keeps recent ones', async () => {
