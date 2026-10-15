@@ -628,14 +628,13 @@ export async function rtcPassFailureCode(token){
  if(typeof token!=='string'||!/^rtc_pass_[A-Za-z0-9_-]{43}$/.test(token))return 'permission';
  const hash=crypto.createHash('sha256').update(token).digest('hex');
  const q=db();
- const rows=await q`SELECT revoked_at,expires_at FROM rtc_passes WHERE token_hash=${hash}`;
+ const rows=await q`SELECT revoked_at,expires_at,google_account FROM rtc_passes WHERE token_hash=${hash}`;
  if(!rows[0])return 'permission';
  if(rows[0].revoked_at)return 'pass_revoked';
  if(new Date(rows[0].expires_at).getTime()<=Date.now())return 'pass_expired';
  // Do not reveal the configured enrollment list to unauthenticated callers.
  // Report the same neutral permission denial as any unrecognized pass.
- const detail=await q`SELECT google_account FROM rtc_passes WHERE token_hash=${hash}`;
- if(!testAccountEnrolled(detail[0]?.google_account))return 'permission';
+ if(!testAccountEnrolled(rows[0].google_account))return 'permission';
  return 'permission';
 }
 
