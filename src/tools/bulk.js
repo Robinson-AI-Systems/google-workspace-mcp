@@ -65,9 +65,21 @@ export function normalizeBulkArgs(args) {
 const schema = { type: 'object', additionalProperties: false, required: ['operation','targets','parameters'], properties: {
   operation: { type: 'string', enum: Object.keys(OPS) },
   targets: { type: 'array', items: { type: 'string', format: 'email' }, minItems: 1, maxItems: 20, uniqueItems: true },
-  parameters: { type: 'object', description: 'Only the parameters for the selected operation (strictly validated before dispatch).' },
+  parameters: { type: 'object', description: 'Exact operation-specific parameters. Unknown fields refused.' },
   crossDomain: { type: 'boolean', description: 'Separate, explicitly owner-authorized cross-business intent; confirmation alone does not grant it.' }
-} };
+}, allOf: Object.entries(OPS).map(([operation, op]) => ({
+  if: { properties: { operation: { const: operation } }, required: ['operation'] },
+  then: { properties: { parameters: {
+    type: 'object', additionalProperties: false, required: op.required,
+    properties: Object.fromEntries(op.keys.map(key => {
+      const property = key === 'vacation'
+        ? { type: 'object', additionalProperties: false, required: ['enableAutoReply'], properties: vacationFields }
+        : key === 'role' ? { type: 'string', enum: ['MEMBER', 'MANAGER', 'OWNER'] }
+        : str;
+      return [key, property];
+    }))
+  }}}
+})) };
 function childArgs(op, p, target, crossDomain) {
   const args = { [op.field]: target };
   for (const key of op.keys) if (Object.hasOwn(p, key)) args[key] = p[key];
@@ -93,6 +105,7 @@ function countsFor(rows) {
 }
 const report = (a, rows, preview) => ({
   operation: a.operation, total: a.targets.length,
+  ...(preview ? { parameters: a.parameters } : {}),
   status: preview ? 'preview' : rows.every(r => r.status === 'confirmed') ? 'complete' : 'incomplete',
   counts: countsFor(rows), results: rows
 });
@@ -136,7 +149,7 @@ async function run(a, clients, preview) {
       const response = await handler({ ...childArgs(op, a.parameters, target, a.crossDomain), ...(preview ? { dryRun: true } : { confirm: true }) }, derived);
       const inspected = readResult(response);
       if (inspected.refused) { rows.push({ target, status: 'refused', reason: 'guarded_child_refused' }); continue; }
-      if (inspected.error) { rows.push({ target, status: 'failed', reason: 'child_operation_failed' }); continue; }
+      if (inspected.error) { rows.push({ target, status: preview ? 'failed' : 'unknown', reason: 'child_operation_outcome_uncertain' }); continue; }
       const value = inspected.value;
       if (preview) {
         rows.push(inspected.unverified ? { target, status: 'refused', reason: 'preview_audit_unavailable' } : { target, status: 'preview', child: { tool: op.child, eligible: true } });
@@ -171,7 +184,14 @@ export const handlers = {
     // The parent write guard supplies the non-preview confirmation fence.
     if (!a.dryRun) {
       const response = await built.handler(a, clients);
-      return shapeReadResult(response, { detail: 'full', toolName: 'workspace_bulk_operation' }, clients?.connection);
+      let result; try { result = JSON.parse(response.content[0].text); } catch { throw Error('invalid_bulk_result'); }
+      if (result.auditFailure || result.logged === false) {
+        // The children can have valid receipts while the parent audit failed.
+        // Never claim complete batch success with an unreadable parent receipt.
+        result.details = { ...result.details, status: 'incomplete',
+          aggregateAuditFailure: true, reason: 'bulk_audit_unavailable' };
+      }
+      return shapeReadResult(ok(result), { detail: 'full', toolName: 'workspace_bulk_operation' }, clients?.connection);
     }
     // A true combined preview must run each guarded child preview, not just
     // defineWrite's generic summary. Never invoke the parent's apply path here.

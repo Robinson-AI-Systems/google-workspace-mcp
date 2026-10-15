@@ -271,3 +271,63 @@ describe('P7-8 provider mapping, readback and bounded remainder', () => {
     expect(calls.filter(x=>x.path==='admin.members.insert')).toEqual([]);
   });
 });
+
+describe('P7-8 complete published contract and aggregate audit', () => {
+  it('publishes a strict schema for all seven exact operation parameter sets',()=>{
+    const schema=registry.tools.find(x=>x.name==='workspace_bulk_operation').inputSchema;
+    expect(schema.allOf).toHaveLength(7);
+    expect(schema.allOf.map(x=>x.if.properties.operation.const)).toEqual([
+      'set_signature','set_vacation','add_group_member','remove_group_member',
+      'assign_license','change_license','remove_license'
+    ]);
+    for(const entry of schema.allOf){
+      const parameters=entry.then.properties.parameters;
+      expect(parameters.additionalProperties).toBe(false);
+      expect(parameters.required).toEqual(expect.any(Array));
+      expect(Object.keys(parameters.properties).length).toBeGreaterThan(0);
+    }
+    const mailbox=schema.allOf.find(x=>x.if.properties.operation.const==='set_vacation');
+    expect(mailbox.then.properties.parameters.properties.vacation.additionalProperties).toBe(false);
+    expect(mailbox.then.properties.parameters.properties.vacation.required).toEqual(['enableAutoReply']);
+  });
+
+  it('includes exact shared intended changes in the one combined preview without writes',async()=>{
+    const {clients,calls}=env();
+    const response=body(await bulk(args({parameters:{groupKey:'staff@example.test',role:'OWNER'},dryRun:true}),clients));
+    expect(response.details).toMatchObject({
+      operation:'add_group_member',parameters:{groupKey:'staff@example.test',role:'OWNER'},
+      total:2,status:'preview',counts:{preview:2}
+    });
+    expect(calls.filter(x=>x.path==='admin.members.insert')).toEqual([]);
+  });
+
+  it('does not mark the aggregate complete if the parent audit fails after valid child receipts',async()=>{
+    const {clients}=env();
+    const original=holder.db.recordChange.bind(holder.db);
+    holder.db.recordChange=async function(change){
+      if(change.tool==='workspace_bulk_operation')throw Error('audit unavailable');
+      return original(change);
+    };
+    const output=body(await bulk(args({confirm:true}),clients));
+    expect(output.logged).toBe(false);
+    expect(output.auditFailure).toBe(true);
+    expect(output.details.status).toBe('incomplete');
+    expect(output.details.aggregateAuditFailure).toBe(true);
+    expect(output.details.reason).toBe('bulk_audit_unavailable');
+    expect(output.details.counts.confirmed).toBe(2); // real child evidence is not erased
+    expect(output.details.results.map(x=>x.status)).toEqual(['confirmed','confirmed']);
+  });
+
+  it('treats an encoded child error after dispatch as unknown, not proved-not-written',async()=>{
+    const {clients}=env();
+    const target=registry.handlers.admin_add_group_member;
+    // The final composed registry is mutable only within this isolated test,
+    // and the handler reference is restored even if the assertion fails.
+    registry.handlers.admin_add_group_member=async()=>({isError:true,content:[{type:'text',text:'redacted'}]});
+    try{
+      const result=body(await bulk(args({confirm:true}),clients)).details;
+      expect(result.results.map(x=>x.status)).toEqual(['unknown','unknown']);
+      expect(result.status).toBe('incomplete');
+    }finally{registry.handlers.admin_add_group_member=target;}
+  });
+});
