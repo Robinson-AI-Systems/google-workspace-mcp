@@ -1,5 +1,8 @@
 # Robinson Google Workspace MCP: implementation plan
 
+Agent entry: [AGENTS.md](../../AGENTS.md). Complete SESSION-START §§0–1 before
+selecting new implementation; preserve the existing session:finish workload check.
+
 ## Session workload comes from the current owner prompt
 
 There is no repository-default session PR count, upper quota or PR-number
