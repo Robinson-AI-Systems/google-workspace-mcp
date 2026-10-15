@@ -192,8 +192,8 @@ export const GUARDS_SHARED_DRIVES = {
       if (!bits.length) throw new Error('Nothing to change: give a name, hidden, or at least one restriction. Nothing was changed.');
       return { target: a.driveId, summary: `On the shared drive ${a.driveId}: ${bits.join(', ')}` };
     },
-    before: async (a, { drive }) => { const d = await driveView(drive, a); return { ...pick(d, ['id', 'name', 'hidden']), restrictions: d.restrictions }; },
-    after: async (a, { drive }) => { const d = await driveView(drive, a); return { ...pick(d, ['id', 'name', 'hidden']), restrictions: d.restrictions }; },
+    before: async (a, { drive }) => { const d = await driveView(drive, a); return { ...pick(d, ['id', 'name', 'hidden', 'colorRgb']), restrictions: d.restrictions }; },
+    after: async (a, { drive }) => { const d = await driveView(drive, a); return { ...pick(d, ['id', 'name', 'hidden', 'colorRgb']), restrictions: d.restrictions }; },
     verify: (a, b, after, details) => !details?.partialFailure &&
       !a.themeId /* write-only, not independently verifiable */ &&
       (!a.name || after?.name === a.name) &&
