@@ -62,7 +62,7 @@ export function checkPolicySnapshot(policies){
   if(p.customer)customers.add(p.customer);
  }
  if(customers.size>1)throw Error('Policy API snapshot crossed customer boundaries');
- return {resources:policies.length,customerVerified:customers.size===1,
+ return {resources:policies.length,customerVerified:customers.size===1&&policies.every(p=>!!p.customer),
   customerScope:customers.size===1?[...customers][0]:null};
 }
 
@@ -92,16 +92,17 @@ export function observedPolicyField(p,rule){
  // a default or passing match. Protobuf Struct still carries normal JS
  // booleans, numbers and strings in its JSON representation.
  const expectedType=typeof rule.expected;
- const known=present&&raw!==null&&typeof raw===expectedType&&
+ const supplied=present&&raw!==null;
+ const known=supplied&&typeof raw===expectedType&&
    !(expectedType==='number'&&!Number.isFinite(raw));
  const match=known&&(rule.comparator==='atLeast'
   ?raw>=rule.expected:raw===rule.expected);
  return {
   name:p.name,
   ...sourceScope(p),
-  present,validType:known,
+  present,validType:known,invalidType:supplied&&!known,
   value:known?raw:null,
-  result:!known?'unknown':match?'match':'mismatch'
+  result:!supplied?'unknown':match?'match':'mismatch'
  };
 }
 
@@ -138,7 +139,7 @@ export function evaluatePolicyEvidence(policies,rules,{
    unavailableExplicitValues:observations.filter(o=>o.result==='unknown').length,
    incompleteScan:!complete,
    reason:mismatch?
-     'An explicitly configured value differs from the advisory comparison baseline. Check its target and inherited setting in Admin console.':
+     'One or more observed explicit policies differ from the advisory baseline or contain invalid value types. Check their targets and inherited settings in Admin console.':
      !complete?'The provider scan is partial; matching available pages cannot verify completeness.':
      unknown?'The requested explicit value was not readable; no inherited/default value can be assumed.':
      'All observed explicit policy values match this baseline; reduced or effective settings remain unverified.',
