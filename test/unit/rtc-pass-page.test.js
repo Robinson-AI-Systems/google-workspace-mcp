@@ -43,6 +43,9 @@ describe('owner RTC pass setup',()=>{
   expect(canonical.statusCode).toBe(200);
   expect(canonical.body).toContain('method="POST"');
   expect(canonical.body).toContain('value="1"');
+  expect(canonical.headers['Referrer-Policy']).toBe('same-origin');
+  expect(canonical.headers['Content-Security-Policy']).toContain("form-action 'self'");
+  expect(alias.headers['Referrer-Policy']).toBe('no-referrer');
  });
  it('shows the safe canonical link on wrong-origin submission without issuing a pass',async()=>{
   const res=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'ops@example.test'},'https://rtc-alias.vercel.app');
@@ -69,6 +72,13 @@ describe('owner RTC pass setup',()=>{
   expect(res.statusCode).toBe(403);
   expect(await holder.db.listRtcPasses()).toHaveLength(0);
  });
+ it.each(['null', undefined, '', 'https://evil.example.test', 'https://rtc.example.test/'])('refuses an absent, opaque or nonexact form origin %s',async origin=>{
+  const req={method:'POST',headers:{origin},body:{passphrase:process.env.ADMIN_PASSPHRASE,google_account:'ops@example.test'}};
+  const res=response();await handler(req,res);
+  expect(res.statusCode).toBe(403);
+  expect(res.headers['Referrer-Policy']).toBe('no-referrer');
+  expect(await holder.db.listRtcPasses()).toHaveLength(0);
+ });
  it('requires the real owner passphrase',async()=>{
   const res=await post({passphrase:'incorrect',google_account:'ops@example.test'});
   expect(res.statusCode).toBe(401);
@@ -77,6 +87,7 @@ describe('owner RTC pass setup',()=>{
  it('issues only a read-only TEST pass and does not store the wire secret',async()=>{
   const res=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'ops@example.test',hours:'24',rate_limit:'5',areas:'mail'});
   expect(res.statusCode).toBe(200);
+  expect(res.headers['Referrer-Policy']).toBe('no-referrer');
   const token=res.body.match(/rtc_pass_[A-Za-z0-9_-]{43}/)?.[0];
   expect(token).toBeTruthy();
   const pass=await holder.db.getRtcPass(token);
