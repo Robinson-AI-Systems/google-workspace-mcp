@@ -308,6 +308,34 @@ export const handlers={
  async workspace_admin_console_capabilities(args={},clients){return ok(discoverConsoleReadbacks(args,clients));}
 };
 
+// Compact complete coverage ledger: an owner sees what is genuinely
+// available for an entire category, not just the current page of results.
+export function summarizeConsoleCategories(items){
+ if(!Array.isArray(items))throw Error('Category coverage needs the reviewed topic set.');
+ const categories=Object.create(null);
+ for(const group of Object.keys(CONSOLE_REVIEW_GROUPS)){
+  categories[group]={total:0,eligible:0,outsideScope:0,needsTarget:0,manualOnly:0};
+ }
+ const unique=new Set();
+ for(const item of items){
+  if(!obj(item)||!TOPICS.has(item.id)||unique.has(item.id)||!CATEGORY.has(item.id))
+   throw Error('Incomplete or duplicate Admin console topic identity.');
+  unique.add(item.id);
+  const row=categories[CATEGORY.get(item.id)];
+  row.total++;
+  if(item.status==='eligible')row.eligible++;
+  else if(item.status==='outside_scope')row.outsideScope++;
+  else if(item.status==='needs_target')row.needsTarget++;
+  else if(item.status==='manual_only')row.manualOnly++;
+  else throw Error('Unreviewed console availability state.');
+ }
+ for(const row of Object.values(categories)){
+  if(row.eligible+row.outsideScope+row.needsTarget+row.manualOnly!==row.total)
+   throw Error('Console category counts did not reconcile.');
+ }
+ return categories;
+}
+
 const PREVIEW_STATES=new Set(['eligible','outside_scope','manual_only','needs_target']);
 export function discoverConsoleReadbacks(args={},clients={}){
  const {category,query='',status,page=1,pageSize=10}=args;
@@ -336,12 +364,14 @@ export function discoverConsoleReadbacks(args={},clients={}){
  const counts={eligible:0,outside_scope:0,manual_only:0,needs_target:0};
  for(const item of found)counts[item.status]++;
  const filtered=status?found.filter(item=>item.status===status):found;
+ const categories=summarizeConsoleCategories(found);
  const start=(page-1)*pageSize;
  return {
   mode:'read_only_discovery',account:clients.actingAs,totalMapped:CONSOLE_MAP.length,
   totalMatched:filtered.length,
   filters:{category:category||null,status:status||null,query:query.trim()},
-  counts, page,pageSize,nextPage:start+pageSize<filtered.length?page+1:null,
+  counts,categoryCoverage:categories, page,pageSize,
+  nextPage:start+pageSize<filtered.length?page+1:null,
   items:filtered.slice(start,start+pageSize),
   note:'This is a protected scope/shape inventory only. Eligible does not mean Google granted the permission or applied an effective Admin policy; run workspace_admin_console_verify for exact provider reads.'
  };
