@@ -1,4 +1,5 @@
 import { ok } from './util.js';
+import {delegatedGmail,delegationReady,mailboxAllowed} from './delegated.js';
 
 function toBase64Url(str) {
   return Buffer.from(str).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -325,8 +326,18 @@ export const handlers = {
     await gmail.users.settings.sendAs.delete({ userId: 'me', sendAsEmail: args.sendAsEmail });
     return ok({ deleted: args.sendAsEmail });
   },
-  gmail_list_delegates: async (_args, { gmail }) => {
-    const res = await gmail.users.settings.delegates.list({ userId: 'me' });
+  gmail_list_delegates: async (_args, clients) => {
+    // Google's delegates endpoint rejects ordinary user OAuth, even for an
+    // owner mailbox: use only the already-approved domain-wide delegated
+    // Gmail settings client, bound to this authenticated connection identity.
+    const actingAs = clients?.actingAs;
+    if (typeof actingAs !== 'string' ||
+        !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(actingAs) ||
+        !mailboxAllowed(clients, actingAs))
+      throw new Error('Gmail delegates read requires an authenticated mailbox inside the connection domain.');
+    if (!delegationReady(clients))
+      throw new Error('Gmail delegates read requires configured domain-wide delegation.');
+    const res = await delegatedGmail(clients, actingAs).users.settings.delegates.list({ userId: 'me' });
     return ok(res.data.delegates || []);
   },
   gmail_add_delegate: async (args, { gmail }) => {
