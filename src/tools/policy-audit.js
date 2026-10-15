@@ -67,11 +67,6 @@ export function validateBaseline(rules=baseline){
   if (rules === baseline) checkPolicyBaseline(rules,metadata);
   return rules;
 }
-function differs(observed,rule){
-  if(observed===undefined)return false;
-  if(rule.comparator==='atLeast')return typeof observed!=='number'||!Number.isFinite(observed)||observed<rule.expected;
-  return observed!==rule.expected;
-}
 export function evaluateBaseline(policies,{complete=true,chosen=null,orgUnit=null}={}) {
   validateBaseline();
   validatePolicies(policies);
