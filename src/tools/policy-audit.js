@@ -3,6 +3,8 @@
 import { ok } from './util.js';
 import { matchSettings } from './ops.js';
 import baseline from '../data/policy-baseline.json' with { type:'json' };
+import { createHash } from 'node:crypto';
+import { policyFilter, readPolicyPage, scanPolicyPages } from './policy-scan.js';
 
 const AREAS=Object.freeze(['gmail','drive_and_docs','calendar','chat','groups_for_business','api_controls','workspace_marketplace','meet','devices','security','other']);
 function area(value) {
@@ -21,7 +23,7 @@ function request(args={}) {
   const pageSize=args.pageSize===undefined?100:args.pageSize;
   if(!Number.isInteger(pageSize)||pageSize<1||pageSize>100)throw new Error('pageSize must be an integer from 1 through 100.');
   if(args.pageToken!==undefined&&(typeof args.pageToken!=='string'||!args.pageToken))throw new Error('Invalid page token.');
-  return {chosen,orgUnit,filter:'customer == "customers/my_customer"',pageSize,...(args.pageToken?{pageToken:args.pageToken}:{})};
+  return {chosen,orgUnit,filter:policyFilter(chosen),pageSize,...(args.pageToken?{pageToken:args.pageToken}:{})};
 }
 const label=(p)=>String(p?.setting?.type||'').replace(/^settings\//,'').split('.')[0];
 const scopeNote='Cloud Identity Policy API returns customer-wide explicitly-set policies and OU/group overrides, not per-domain effective settings. The supplied domain is a connection boundary, not an API filter. Google may omit inherited/default values. An optional orgUnit selector only compares exact policyQuery.orgUnit helper IDs; complex CEL policies, inherited values and per-user reduced/effective settings are NOT inferred. Inspect the scope and Admin console before changing anything.';
@@ -35,10 +37,11 @@ function validatePolicies(policies){
 }
 async function listOne(args,clients){
   if(Array.isArray(clients?.allowedDomains)&&clients.crossDomain!==true) throw new Error('Organization-wide Cloud Identity policies include other business domains. Ask the owner before running with crossDomain: true. Nothing was read.');
-  const cfg=request(args);const response=await clients.cloudidentity.policies.list({filter:cfg.filter,pageSize:cfg.pageSize,...(args.pageToken?{pageToken:args.pageToken}:{})});
-  const all=response.data?.policies||[];validatePolicies(all);
+  const cfg=request(args);
+  const page=await readPolicyPage(clients,{filter:cfg.filter,pageSize:cfg.pageSize,...(args.pageToken?{pageToken:args.pageToken}:{})});
+  const all=page.policies;validatePolicies(all);
   const matching=all.filter(p=>(!cfg.chosen||label(p)===cfg.chosen)&&(!cfg.orgUnit||p.policyQuery?.orgUnit===cfg.orgUnit));
-  return {policies:matching,nextPageToken:response.data?.nextPageToken||null,
+  return {policies:matching,nextPageToken:page.nextPageToken,
     ...(cfg.orgUnit?{orgUnit:cfg.orgUnit,scopeMode:'exact_explicit_org_unit_overrides',effective:false}:{}),scopeNote};
 }
 export function validateBaseline(rules=baseline){
@@ -88,18 +91,15 @@ export const handlers={
  async identity_list_policies(args={},clients){return ok(await listOne(args,clients));},
  async identity_policy_audit(args={},clients){
    if(Array.isArray(clients?.allowedDomains)&&clients.crossDomain!==true) throw new Error('Organization-wide Cloud Identity policies include other business domains. Ask the owner before running with crossDomain: true. Nothing was read.');
-   const cfg=request(args),seen=new Set(),policies=[];
-   let token,complete=false;
-   for(let page=0;page<20;page++){
-     const v=await listOne({...args,pageToken:token,pageSize:100},clients);
-     policies.push(...v.policies);
-     if(!v.nextPageToken){complete=true;break;}
-     if(seen.has(v.nextPageToken))throw new Error('Google repeated a policy page token; the audit is incomplete.');
-     seen.add(v.nextPageToken);token=v.nextPageToken;
-   }
-   const results=evaluateBaseline(policies,{complete,chosen:cfg.chosen});
+   const cfg=request(args);
+   const scan=await scanPolicyPages(clients,{filter:cfg.filter,pageSize:100});
+   const policies=scan.policies.filter(p=>(!cfg.chosen||label(p)===cfg.chosen)&&(!cfg.orgUnit||p.policyQuery?.orgUnit===cfg.orgUnit));
+   const results=evaluateBaseline(policies,{complete:scan.complete,chosen:cfg.chosen});
    const coverageByArea=[...new Set(baseline.map(r=>r.area))].map(area=>{const areaResults=results.filter(r=>r.area===area);return {area,checks:areaResults.length,matchingExplicitPolicies:areaResults.filter(r=>r.status==='ok').length,needsAttention:areaResults.filter(r=>r.status==='needs_attention').length,notReadable:areaResults.filter(r=>r.status==='not_readable').length};});
-   return ok({domain:args.domain.toLowerCase(),customerWide:true,complete,policiesRead:policies.length,
+   return ok({domain:args.domain.toLowerCase(),customerWide:true,complete:scan.complete,pagesRead:scan.pagesRead,
+      nextPageToken:scan.nextPageToken,incompleteReason:scan.incompleteReason,
+      baselineRevision:createHash('sha256').update(JSON.stringify(baseline)).digest('hex'),
+      baselineSource:'src/data/policy-baseline.json',effective:false,policiesRead:policies.length,
       ...(cfg.orgUnit?{orgUnit:cfg.orgUnit,scopeMode:'exact_explicit_org_unit_overrides',effective:false}:{}),
       baselineRules:baseline.length,areasWithRules:[...new Set(baseline.map(r=>r.area))],coverageByArea,results,scopeNote,
       summary:{needsAttention:results.filter(r=>r.status==='needs_attention').length,notReadable:results.filter(r=>r.status==='not_readable').length,matchingExplicitPolicies:results.filter(r=>r.status==='ok').length}});

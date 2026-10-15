@@ -14,7 +14,7 @@ describe('P7-2 evidence-based Cloud Identity policy checks',()=>{
   const clients=mk([row('settings/gmail.external_recipient_warning','enabled',true)]);
   const result=JSON.parse((await registry.handlers.identity_list_policies({domain:'rentals.example',area:'gmail',pageSize:17,crossDomain:true},clients)).content[0].text);
   expect(result.policies).toHaveLength(1);expect(result.scopeNote).toMatch(/customer-wide/);
-  expect(clients.cloudidentity.policies.list).toHaveBeenCalledWith({filter:'customer == "customers/my_customer"',pageSize:17});
+  expect(clients.cloudidentity.policies.list).toHaveBeenCalledWith({filter:expect.stringContaining("setting.type.matches('^settings/gmail"),pageSize:17});
  });
  it('identifies exact mismatches but never claims missing/inherited policies are compliant',()=>{
   const type='settings/gmail.external_recipient_warning';
