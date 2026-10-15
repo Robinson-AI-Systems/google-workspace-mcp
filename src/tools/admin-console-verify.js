@@ -8,7 +8,7 @@ import {callReadForComposition} from '../rtc/results.js';
 import {CONSOLE_MAP,CONSOLE_VERIFICATION} from '../data/console-map.js';
 import {CONSOLE_REVIEW_GROUPS} from '../data/console-review.js';
 
-const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL=/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}$/;
 const SKU=/^[a-zA-Z0-9_-]{2,100}$/;
 const REPORT_DATE=/^\d{4}-\d{2}-\d{2}$/;
 const DOMAIN=/^[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?\.[a-z]{2,63}$/i;
