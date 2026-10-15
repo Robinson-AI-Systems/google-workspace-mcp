@@ -314,7 +314,8 @@ restricts only the named operation. Source completion never proves actual Google
     "gate": "Authenticated read-only Google Admin Console session for the intended authorized organization/role; observe only approved scope, no policy changes. Record inaccessible/edition-specific pages honestly; an API-generated checklist alone is not the walkthrough.",
     "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
   }
-]```
+]
+```
 <!-- engineering-readiness:end -->
 
 ## Release acceptance queue — workflow optimization 2026-10-14
@@ -619,7 +620,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "status": "PENDING",
     "lastEvidence": "2026-10-15 source proof only. November 1 date and every-account verification are not satisfied by code/CI. Protected operator --activate is never called by normal production runtime. Do not mark PASSED until exact real refresh/readback of every account after approved activation."
   }
-]```
+]
+```
 <!-- release-acceptance:end -->
 
 ### October 14 verified release catch-up checkpoint
