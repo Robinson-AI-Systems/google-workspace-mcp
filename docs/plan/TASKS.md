@@ -221,6 +221,17 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "2026-10-14: source and synthetic provider tests implemented to prove exact resource identifiers and reject denied or other-account responses; no live custom-service requests to these private exact IDs have been executed or accepted."
+  },
+  {
+    "id": "P8-8-CONSOLE-READBACK",
+    "priority": 3,
+    "requiredRevision": "5ad809437ec5f63786ab00e420d69842bb209cd0",
+    "task": "Execute one original owner-authorized real custom-service Admin-console readback through workspace_admin_console_verify for an eligible mailbox-only topic and verify exact returned metadata, deny/foreign/customer-wide gates, then separately exercise approved customer-wide reads where scope and TEST permissions permit",
+    "procedure": "src/tools/admin-console-verify.js; test/unit/admin-console-verify.test.js; test/unit/admin-console-discovery.test.js",
+    "gates": "Independently READY custom Workspace MCP revision, original owner-connected account/TEST pass as applicable, read_only and explicit owner intent for customer-wide/foreign domain. No provider writes, no claiming inherited policy or purchased seats.",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-14: source and synthetic guarded-subtool acceptance implemented; no real deployed Google console readback performed, separate original provider evidence pending."
   }
 ]
 ```
@@ -1927,3 +1938,10 @@ The connected Robinson Google Workspace Cloud adapter reported its existing upst
 **User/developer capability:** Existing `workspace_dev_check_integration` now inspects the exact Google Gmail message/thread, Drive file, Tasks list and task, Chat space and People/Contacts resource name the app needs. The same read-only spec also validates declared Calendar access role, Drive folder write/share/read capability, exact shared-drive member role for the connected mailbox, verified Gmail send-as aliases and narrow exact Calendar free/busy windows (only statuses returned, never busy slots). These are per-existing-connection metadata-only provider reads with exact returned identifiers, explicit Google denied/missing/wrong-ID status, no message body, no send, no Google mutation and no cross-account impersonation. Max twelve per type and twenty-four new exact resources per inspection; duplicate pairs are deduplicated, invalid URLs and foreign categories rejected. This augments, not replaces, Calendar labels/events, Drive folders and Docs/Sheets/Slides/Forms checks. RTC Contacts/Directory reads now belong to the existing 'people' area instead of unreachable unmapped area names. Generated README catalog is aligned to the corrected registry-derived areas.
 
 **Tests and separate gates:** Source fakes exercise all seven families, metadata-only Google call arguments, absent/wrong IDs, trashed Drive items, 403/404 results, scoped area exclusion, actor-required guard, bounded specs and no provider details in reported findings. A genuine custom-service check against owner-approved precise resources and verified READY live revision remains **PENDING** in the queue (P8-7-EXACT-APP-READS). No optional consent, production release or new owner grant was performed. Exact-head test/release-policy, review and merge must pass; the source change alone never asserts real provider or Hub acceptance. Continue the approved remaining implementation and acceptance order.
+
+
+### October 14 P8-8 guided read-only Console verification continuation
+
+**Engineering outcome:** Owners can now use `workspace_admin_console_capabilities` to page/filter all 50 mapped Admin topics by existing protected connection, scope, target and owner intent. `workspace_admin_console_verify` performs read-only guarded child operations for the 20 fully reviewed topic/parameter/shape combinations, up to ten exact topics per call, without guessing resource IDs or invoking any write. The reporter distinguishes narrow `observed`, paged/customer-wide `observed_partial`, `manual_only`, `outside_scope`, `needs_target`, `not_readable` and `planned`; the owner sees safe hand-curated Google navigation, no provider data, untrusted error payload or false Admin policy green. Customer-wide and cross-business reads require `crossDomain:true` as explicit owner intent and still pass every existing RTC/Google child guard.
+
+**Status and gates:** Added fake-provider readback, malformed HTTP-success/denial/foreign-ID, pagination, category/search, per-profile and zero-read preview tests. Exact-head GitHub Actions must pass before source is considered CI accepted. The real Google provider check, independently READY deployed source and any specifically owner-authorized customer-wide acceptance remain PENDING as row P8-8-CONSOLE-READBACK; this implementation cannot upgrade manual-only/Admin-console policy topics into asserted verified settings. The underlying 380-tool registry, read-only semantic classification and generated README must remain in parity.
