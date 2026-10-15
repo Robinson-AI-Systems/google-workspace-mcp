@@ -3,7 +3,8 @@
 // drive_list_permissions, drive_share_file, drive_update_permission, drive_remove_permission.
 //
 // Google's rules, checked against its Drive API reference on 2026-10-02:
-//   - create needs a unique requestId (made here, so a retry cannot make a second drive);
+//   - Google deduplicates creation only when a retry uses the *same* requestId.
+//     Auto-generated IDs are unique per invocation, NOT stable across caller retries.
 //   - a shared drive can only be deleted when it holds no untrashed files, and only by an organizer
 //     (or an administrator using asAdmin). This file never asks Google to delete files inside it.
 //   - hiding is its own call (hide / unhide), not a field of update.
@@ -15,6 +16,17 @@ import { gone } from './write.js';
 const RESTRICTION_KEYS = ['copyRequiresWriterPermission', 'domainUsersOnly', 'driveMembersOnly', 'adminManagedRestrictions', 'sharingFoldersRequiresOrganizerPermission'];
 const VIEW = 'id,name,hidden,themeId,colorRgb,createdTime,orgUnitId,restrictions,capabilities(canManageMembers,canDeleteDrive,canRenameDrive,canChangeDriveBackground)';
 const LIST_VIEW = 'nextPageToken,drives(id,name,hidden,createdTime,orgUnitId)';
+
+// The caller can retain a UUID across a transport timeout. Without that, a new
+// random UUID on a later call is a new Google create, not an idempotent retry.
+const REQUEST_ID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export function savedSharedDriveRequestId(args = {}) {
+  if (args.requestId === undefined) return null;
+  if (typeof args.requestId !== 'string' || !REQUEST_ID_V4.test(args.requestId))
+    throw Error('requestId must be a saved UUID v4, e.g. 123e4567-e89b-42d3-a456-426614174000. Nothing was created.');
+  return args.requestId.toLowerCase();
+}
+const REQUEST_ID = { type: 'string', description: 'Optional UUID v4 chosen and saved before the first create. Reuse the identical UUID and unchanged name/restrictions after an uncertain timeout; a new UUID may create another drive.' };
 
 const ADMIN = { type: 'boolean', description: 'Act as a Workspace administrator: see or change shared drives you are not a member of (needs the Drive admin privilege).' };
 const restrictionProps = {
@@ -28,7 +40,7 @@ const restrictionProps = {
 export const tools = [
   { name: 'drive_list_shared_drives', description: 'List the shared drives you belong to (or, as an administrator, all of them). Use a shared drive id as the fileId of the permission tools to see or change who is a member.', inputSchema: { type: 'object', properties: { query: { type: 'string', description: "Drive search, e.g. \"name contains 'Finance'\"" }, maxResults: { type: 'number', default: 50 }, pageToken: { type: 'string' }, asAdmin: ADMIN } } },
   { name: 'drive_get_shared_drive', description: 'Get one shared drive: name, restrictions, hidden or not, and what you may do with it.', inputSchema: { type: 'object', properties: { driveId: { type: 'string' }, asAdmin: ADMIN }, required: ['driveId'] } },
-  { name: 'drive_create_shared_drive', description: 'Create a shared drive. The person acting becomes its organizer. Add members afterwards with drive_share_file (fileId = the new drive id).', inputSchema: { type: 'object', properties: { name: { type: 'string' }, ...restrictionProps }, required: ['name'] } },
+  { name: 'drive_create_shared_drive', description: 'Create a shared drive. The person acting becomes its organizer. Add members afterwards with drive_share_file (fileId = the new drive id).', inputSchema: { type: 'object', properties: { name: { type: 'string' }, requestId: REQUEST_ID, ...restrictionProps }, required: ['name'] } },
   { name: 'drive_update_shared_drive', description: 'Rename a shared drive, hide or show it, or change its restrictions. Give only what you want to change.', inputSchema: { type: 'object', properties: { driveId: { type: 'string' }, name: { type: 'string' }, hidden: { type: 'boolean', description: 'true hides it from the usual list, false shows it again.' }, ...restrictionProps, asAdmin: ADMIN }, required: ['driveId'] } },
   { name: 'drive_delete_shared_drive', description: 'Permanently delete a shared drive. Google only allows it when the drive holds no files that are not in the trash; this tool never deletes files inside it.', inputSchema: { type: 'object', properties: { driveId: { type: 'string' }, asAdmin: ADMIN }, required: ['driveId'] } },
   { name: 'drive_update_permission', description: "Change a person's role on a Drive file, folder or shared drive (use a shared drive id as fileId to change a member's role). Roles: reader, commenter, writer, fileOrganizer (shared drives), organizer (shared drives), owner is not allowed here (use drive_transfer_ownership).", inputSchema: { type: 'object', properties: { fileId: { type: 'string' }, permissionId: { type: 'string', description: 'From drive_list_permissions.' }, role: { type: 'string', enum: ['reader', 'commenter', 'writer', 'fileOrganizer', 'organizer'] } }, required: ['fileId', 'permissionId', 'role'] } }
@@ -52,9 +64,12 @@ export const handlers = {
   },
   drive_get_shared_drive: async (a, { drive }) => ok((await drive.drives.get({ driveId: a.driveId, fields: VIEW, ...asAdmin(a) })).data),
   drive_create_shared_drive: async (a, { drive }) => {
+    const requestId = savedSharedDriveRequestId(a) || randomUUID();
     const requestBody = { name: a.name, restrictions: restrictionsOf(a) };
-    const res = await drive.drives.create({ requestId: randomUUID(), requestBody, fields: VIEW });
-    return ok(res.data);
+    // Never mint another UUID or automatically retry an ambiguous provider failure.
+    // Google binds a requestId to its original create body across retries.
+    const res = await drive.drives.create({ requestId, requestBody, fields: VIEW });
+    return ok({ ...res.data, requestId });
   },
   drive_update_shared_drive: async (a, { drive }) => {
     const requestBody = {};
@@ -84,7 +99,11 @@ const opens = (a) => Object.entries(OPENING).some(([k, v]) => a[k] === v);
 
 export const GUARDS_SHARED_DRIVES = {
   drive_create_shared_drive: { destructive: false,
-    describe: (a) => ({ target: `new shared drive "${shortName(a.name)}"`, summary: `Create the shared drive "${shortName(a.name)}"${wantedRestrictions(a) ? ` with ${wantedRestrictions(a)}` : ''}` }),
+    describe: (a) => {
+      const saved = savedSharedDriveRequestId(a); // fail before any provider mutation
+      return { target: `new shared drive "${shortName(a.name)}"`,
+        summary: `Create the shared drive "${shortName(a.name)}"${wantedRestrictions(a) ? ` with ${wantedRestrictions(a)}` : ''}.${saved ? ` Retain requestId ${saved} and reuse it with identical settings if the result is uncertain.` : ' No saved requestId: after a timeout inspect existing drives before starting another create.'}` };
+    },
     after: (a, { drive }, details) => (details?.id ? data(drive.drives.get({ driveId: details.id, fields: VIEW })) : { note: "Google did not return the new drive's id." }),
     verify: (a, b, after) => !!after?.id && after.name === a.name && Object.entries(restrictionsOf(a) || {}).every(([k, v]) => same(after.restrictions?.[k], v)) },
   drive_update_shared_drive: { destructive: false, confirmWhen: opens,

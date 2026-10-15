@@ -8,7 +8,7 @@ vi.mock('../../src/db.js', async (importActual) => {
   return Object.fromEntries(Object.keys(real).map((name) => [name, (...args) => holder.db[name](...args)]));
 });
 const { registry } = await import('../../src/tools/index.js');
-const { restrictionsOf } = await import('../../src/tools/shared-drives.js');
+const { restrictionsOf, savedSharedDriveRequestId } = await import('../../src/tools/shared-drives.js');
 
 const body = (r) => JSON.parse(r.content[0].text);
 const call = (name, args, clients) => registry.handlers[name](args, clients);
@@ -45,6 +45,41 @@ describe('create', () => {
     expect(sent.requestId).toMatch(/^[0-9a-f-]{36}$/);
     expect(sent.requestBody).toEqual({ name: 'Ops', restrictions: { domainUsersOnly: true } });
     expect(out).toMatchObject({ done: true, confirmed: true });
+  });
+  it('allows a saved UUID across uncertain retries and preserves identical Google create parameters', async () => {
+    const requestId = '123e4567-e89b-42d3-a456-426614174000';
+    const args = { name: 'Ops', domainUsersOnly: true, requestId };
+    const first = makeFakeClients();
+    first.when('drive.drives.create').rejects(new Error('connection lost after Google may have created drive'));
+    await expect(call('drive_create_shared_drive', args, first.clients)).rejects.toThrow(/connection lost/);
+    expect(paths(first.calls, 'drive.drives.create')).toHaveLength(1);
+    const second = makeFakeClients();
+    second.when('drive.drives.create').resolves({ data: { id: 'same1' } });
+    second.when('drive.drives.get').resolves({ data: { id: 'same1', name: 'Ops', restrictions: { domainUsersOnly: true } } });
+    const result = body(await call('drive_create_shared_drive', args, second.clients));
+    const firstArgs = paths(first.calls, 'drive.drives.create')[0].args[0];
+    const secondArgs = paths(second.calls, 'drive.drives.create')[0].args[0];
+    expect(firstArgs).toEqual(secondArgs);
+    expect(firstArgs.requestId).toBe(requestId);
+    expect(result).toMatchObject({ confirmed: true, details: { requestId, id: 'same1' } });
+    expect(result.summary).toContain(requestId);
+  });
+  it('fails closed on invalid saved IDs even during dry-run, and never calls Google', async () => {
+    for (const id of ['', 'not-a-uuid', '123e4567-e89b-12d3-a456-426614174000', null, 44]) {
+      const x = makeFakeClients();
+      await expect(call('drive_create_shared_drive', { name: 'Ops', requestId: id, dryRun: true }, x.clients)).rejects.toThrow(/requestId must be a saved UUID v4/);
+      expect(x.calls).toHaveLength(0);
+    }
+    expect(savedSharedDriveRequestId({ requestId: '123E4567-E89B-42D3-A456-426614174000' })).toBe('123e4567-e89b-42d3-a456-426614174000');
+    expect(tool('drive_create_shared_drive').inputSchema.properties.requestId.description).toMatch(/Reuse/);
+  });
+  it('never retries a denied or ambiguous create by silently minting a different UUID', async () => {
+    const x = makeFakeClients();
+    x.when('drive.drives.create').rejects(googleError(409, 'alreadyExists', 'Previous UUID already used'));
+    const requestId = '123e4567-e89b-42d3-a456-426614174001';
+    await expect(call('drive_create_shared_drive', { name: 'Ops', requestId }, x.clients)).rejects.toThrow(/Previous UUID/);
+    expect(paths(x.calls, 'drive.drives.create')).toHaveLength(1);
+    expect(paths(x.calls, 'drive.drives.create')[0].args[0].requestId).toBe(requestId);
   });
   it('dryRun creates nothing', async () => {
     const x = makeFakeClients();
