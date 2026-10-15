@@ -50,6 +50,8 @@ test('optional and planned scope cannot satisfy a target even with a new merged 
     // of the original approved session. Reconcile actual owner scope first.
     c.index = { cards: expanded.cards.map(card => card.id === 'P8-6' ? { ...card, status: 'MERGED' } : card) };
     assert.throws(() => assessCompletion(r, c), /unapproved/);
+    const completion = { ...report(), bundles: [{ ...bundle(), workKind: 'COMPLETION', subsections: ['P8-6'], acceptanceTasks: ['P8-6-REAL'] }] };
+    assert.throws(() => assessCompletion(completion, { ...c, scopeCheck: () => ({ status: 'SCOPE_ACCOUNTING_CHECKED' }) }), /unapproved/);
   }
 });
 test('a merged label cannot replace a missing engineering-completion record', () => {
