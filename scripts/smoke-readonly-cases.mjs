@@ -51,7 +51,7 @@ drive_export_file sheets_get_sheet_as_csv slides_export_as_pdf`
 const entries = Object.entries(GROUPS).flatMap(([kind,names]) =>
  names.trim().split(/\s+/).map(name => [name,kind]));
 export const EXTRA_READ_CASES = Object.freeze(Object.fromEntries(
- entries.map(([name,kind])=>['workspace_'+name,kind])
+ entries.map(([name,kind])=>[name.startsWith('workspace_')?name:'workspace_'+name,kind])
 ));
 if(Object.keys(EXTRA_READ_CASES).length!==entries.length ||
  entries.some(([name])=>!READ_ONLY_TOOL_NAMES.has(name))) {

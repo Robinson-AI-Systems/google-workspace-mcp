@@ -18,12 +18,12 @@ describe('P0-2 reviewed catalog-wide read cases',()=>{
   expect(additional).toHaveLength(123);
   expect(new Set(additional).size).toBe(additional.length);
   for(const name of READ_ONLY_TOOL_NAMES){
-   const rtc='workspace_'+name;
+   const rtc=name.startsWith('workspace_')?name:'workspace_'+name;
    expect(safe.has(rtc)||fixtures.has(rtc)||Object.hasOwn(EXTRA_READ_CASES,rtc),
     name).toBe(true);
   }
   for(const name of additional){
-   expect(READ_ONLY_TOOL_NAMES.has(name.slice(10))).toBe(true);
+   expect(READ_ONLY_TOOL_NAMES.has(name)||READ_ONLY_TOOL_NAMES.has(name.slice(10))).toBe(true);
    expect(safe.has(name)||fixtures.has(name)).toBe(false);
   }
   expect(Object.hasOwn(EXTRA_READ_CASES,'workspace_admin_delete_user')).toBe(false);
@@ -56,7 +56,7 @@ describe('P0-2 reviewed catalog-wide read cases',()=>{
   expect(validateReviewedCase(good,t)).toBe(true);
   expect(validateReviewedCase({name:t.name,args:{}},t)).toBe(false);
   expect(validateReviewedCase({name:t.name,args:{userKey:account,confirm:true}},t)).toBe(false);
-  expect(validateReviewedCase({name:t.name,args:{userKey:'a\\nb'}},t)).toBe(false);
+  expect(validateReviewedCase({name:t.name,args:{userKey:'a'+String.fromCharCode(10)+'b'}},t)).toBe(false);
   expect(validateReviewedCase(good,{...t,writes:true})).toBe(false);
   expect(validateReviewedCase(good,{...t,inputSchema:schema({other:{type:'string'}})})).toBe(false);
  });

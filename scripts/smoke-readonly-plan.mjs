@@ -58,7 +58,8 @@ export function preparedFixtureProbes(fixtures,account) {
 }
 
 const rtcCaseArea=name=>{
- const prefix=name.split('_')[1];
+ const internal=READ_ONLY_TOOL_NAMES.has(name)?name:name.slice('workspace_'.length);
+ const prefix=internal.split('_')[0];
  return ({admin:'admin',reports:'admin',vault:'admin',licensing:'admin',
   gmail:'mail',postmaster:'mail',drive:'files',docs:'files',sheets:'files',
   slides:'files',forms:'files',calendar:'calendar',tasks:'tasks',
