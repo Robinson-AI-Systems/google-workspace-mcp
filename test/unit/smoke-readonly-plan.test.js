@@ -48,7 +48,7 @@ describe('P0-2 complete read-catalog engineering inventory',()=>{
    discovered:SAFE_READ_PROBES.length+3,
    scheduled:SAFE_READ_PROBES.length,
    passed:SAFE_READ_PROBES.length,
-   failed:0,notProbed:3,engineeringGaps:1,exactFixtureGates:1,
+   failed:0,notProbed:2,engineeringGaps:1,exactFixtureGates:1,
    protectedBrokers:1
   });
   expect(checks.coverageComplete).toBe(false);
