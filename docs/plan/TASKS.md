@@ -240,6 +240,17 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "2026-10-14: source and synthetic guarded-subtool acceptance implemented; no real deployed Google console readback performed, separate original provider evidence pending."
+  },
+  {
+    "id": "P7-8-GUARDED-BULK",
+    "priority": 2,
+    "requiredRevision": "200c70a4eefd29d7cce9e554c712ff1681cce19c",
+    "task": "Verify deployed guarded workspace_bulk_operation with original owner-authorized scoped TEST targets and non-production approval. Prove permitted mappings, exact provider readbacks, safe domain refusal, partial failure and cleanup; no paid license actions without independent spending approval.",
+    "procedure": "docs/plan/TASKS.md — P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
+    "gates": "Exact READY deployment and authenticated custom MCP connection; owner-approved isolated TEST targets, permission/domain limits, exact fixture IDs and operation-specific approvals; no production bulk writes or autonomous spending",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "Source/automated candidate only; deployed custom Google bulk acceptance and production permission remain outstanding."
   }
 ]
 ```

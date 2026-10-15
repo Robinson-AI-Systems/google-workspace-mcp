@@ -143,10 +143,10 @@ async function run(a, clients, preview) {
         continue;
       }
       let exact;
-      if (op.field === 'userEmail' && value?.done === true && !inspected.unverified) {
+      if (op.field === 'userEmail' && value?.done === true && value?.details?.done === true && !inspected.unverified) {
         try { exact = await readMailboxExact(a, target, derived); } catch { exact = false; }
       }
-      const confirmed = !inspected.unverified && value?.done === true && value?.logged === true && (op.field === 'userEmail' ? exact === true : value?.confirmed === true);
+      const confirmed = !inspected.unverified && value?.done === true && value?.logged === true && (op.field === 'userEmail' ? value?.details?.done === true && exact === true : value?.confirmed === true);
       rows.push({ target, status: confirmed ? 'confirmed' : 'unverified', child: childSafe(op.child, value, exact) });
     } catch (err) {
       const common = commonAuthFailure(err);
