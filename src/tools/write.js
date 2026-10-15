@@ -81,7 +81,7 @@ export function defineWrite({ name, description, inputSchema, destructive = fals
     const { dryRun, confirm, ...rest } = args;
     const callArgs = inputSchema?.properties?.confirm ? { ...rest, confirm: true } : rest; // tools that already took `confirm` still get it once it is given
 
-    const p = await plan(callArgs, clients);
+    const p = await plan(callArgs, clients, { dryRun: dryRun === true });
     let before;
     try { before = p.readBefore ? await p.readBefore() : undefined; }
     catch (err) { before = { unreadable: reasonOf(err) }; } // informational; the change itself will report the real problem
@@ -130,9 +130,17 @@ export function guard(tool, oldHandler, spec) {
     inputSchema: tool.inputSchema,
     destructive: spec.destructive === true,
     confirmWhen: spec.confirmWhen,
-    plan: (args, clients) => {
+    plan: async (args, clients, { dryRun } = {}) => {
+      // Value checks in describe always run first, before any Google request.
+      // A preview only shows the current state; cross-field preconditions
+      // are a mandatory fail-closed read before a *real* apply. Unlike an
+      // ordinary before-image, a precheck failure must not be swallowed.
       const d = spec.describe(args);
-      return { summary: d.summary, target: d.target, readBefore: spec.before ? () => spec.before(args, clients) : undefined };
+      const checked = spec.precheck && !dryRun ?
+        await spec.precheck(args, clients) : undefined;
+      return { summary: d.summary, target: d.target,
+        readBefore: spec.precheck && !dryRun ? async () => checked :
+          spec.before ? () => spec.before(args, clients) : undefined };
     },
     apply: oldHandler,
     readAfter: spec.after,

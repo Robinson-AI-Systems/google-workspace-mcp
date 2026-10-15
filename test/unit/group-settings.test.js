@@ -8,7 +8,7 @@ vi.mock('../../src/db.js', async (importActual) => {
   return Object.fromEntries(Object.keys(real).map((name) => [name, (...args) => holder.db[name](...args)]));
 });
 const { registry } = await import('../../src/tools/index.js');
-const { buildSettingsBody, SETTING_KEYS, CHOICE_FIELDS, BOOLEAN_FIELDS, TEXT_FIELDS } = await import('../../src/tools/group-settings.js');
+const { buildSettingsBody, SETTING_KEYS, CHOICE_FIELDS, BOOLEAN_FIELDS, TEXT_FIELDS, LEGACY_CHOICES, validateSettingsTransition } = await import('../../src/tools/group-settings.js');
 
 const body = (r) => JSON.parse(r.content[0].text);
 const run = (args, clients) => registry.handlers.admin_update_group_settings(args, clients);
@@ -51,10 +51,40 @@ describe('group settings: the checking and request body', () => {
     expect(Object.keys(CHOICE_FIELDS).length + BOOLEAN_FIELDS.length + Object.keys(TEXT_FIELDS).length).toBe(Object.keys(NEW_SAFE).length);
   });
 
-  it('passes the original six through exactly as before (text unchecked, booleans as the words true/false)', () => {
+  it('preserves the six original accepted values and Boolean request shapes', () => {
     expect(buildSettingsBody({ groupEmail: GROUP, whoCanJoin: 'INVITED_CAN_JOIN', whoCanPostMessage: 'ALL_IN_DOMAIN_CAN_POST', whoCanViewMembership: 'ALL_MANAGERS_CAN_VIEW', whoCanViewGroup: 'ALL_MEMBERS_CAN_VIEW', allowExternalMembers: false, isArchived: true }))
       .toEqual({ whoCanJoin: 'INVITED_CAN_JOIN', whoCanPostMessage: 'ALL_IN_DOMAIN_CAN_POST', whoCanViewMembership: 'ALL_MANAGERS_CAN_VIEW', whoCanViewGroup: 'ALL_MEMBERS_CAN_VIEW', allowExternalMembers: 'false', isArchived: 'true' });
-    expect(buildSettingsBody({ groupEmail: GROUP, whoCanJoin: 'SOME_NEW_GOOGLE_VALUE' })).toEqual({ whoCanJoin: 'SOME_NEW_GOOGLE_VALUE' });
+    expect(LEGACY_CHOICES.whoCanJoin).toContain('INVITED_CAN_JOIN');
+    expect(() => buildSettingsBody({ whoCanJoin: 'SOME_NEW_GOOGLE_VALUE' }))
+      .toThrow(/not a valid whoCanJoin.*Allowed values/);
+  });
+
+  it('rejects unknown old values with complete allowed lists before Google calls', () => {
+    for (const [name, allowed] of Object.entries(LEGACY_CHOICES)) {
+      expect(allowed.length).toBeGreaterThan(1);
+      expect(() => buildSettingsBody({ [name]: 'UNRECOGNIZED' })).toThrow(name);
+      expect(() => buildSettingsBody({ [name]: 'UNRECOGNIZED' })).toThrow(allowed.join(', '));
+      for (const valid of allowed)
+        expect(buildSettingsBody({ [name]: valid })).toEqual({ [name]: valid });
+    }
+    for(const name of ['allowExternalMembers','isArchived'])
+      expect(() => buildSettingsBody({[name]:'yes'})).toThrow('must be true or false');
+  });
+
+  it('validates dependent controls against the current provider settings', () => {
+    expect(() => validateSettingsTransition({replyTo:'REPLY_TO_CUSTOM'},{}))
+      .toThrow('needs customReplyTo');
+    expect(validateSettingsTransition({replyTo:'REPLY_TO_CUSTOM'},
+      {customReplyTo:'already@example.test'})).toEqual({replyTo:'REPLY_TO_CUSTOM'});
+    expect(() => validateSettingsTransition({defaultMessageDenyNotificationText:'No'},
+      {sendMessageDenyNotification:'false'})).toThrow('needs sendMessageDenyNotification');
+    expect(validateSettingsTransition({defaultMessageDenyNotificationText:'No'},
+      {sendMessageDenyNotification:'true'}))
+      .toEqual({defaultMessageDenyNotificationText:'No'});
+    expect(() => validateSettingsTransition({whoCanPostMessage:'NONE_CAN_POST'},
+      {archiveOnly:'false'})).toThrow('archiveOnly');
+    expect(validateSettingsTransition({whoCanPostMessage:'NONE_CAN_POST'},
+      {archiveOnly:'true'})).toEqual({whoCanPostMessage:'NONE_CAN_POST'});
   });
 
   it('turns every new setting into the request body, with booleans as the words true/false', () => {
@@ -94,6 +124,45 @@ describe('group settings: the checking and request body', () => {
 
 describe('admin_update_group_settings through the safety layer', () => {
   const fresh = (held = {}) => { const x = makeFakeClients(); x.when('groupssettings.groups.get').resolves({ data: held }); return x; };
+
+  it('rejects unknown legacy values before any Google read/write, even in preview', async () => {
+    for(const values of [
+      {whoCanJoin:'WRONG_JOIN'},{whoCanPostMessage:'wrong_post'},
+      {whoCanViewMembership:'ANYONE_CAN_VIEW'},{whoCanViewGroup:'ALL_CAN_VIEW'},
+      {allowExternalMembers:'yes'},{isArchived:17}
+    ])for(const dryRun of [false,true]){
+      const x=fresh({});
+      await expect(run({groupEmail:GROUP,...values,dryRun},x.clients))
+        .rejects.toThrow(/Nothing was changed/);
+      expect(x.calls).toEqual([]);
+    }
+  });
+
+  it('rejects illegal interdependent changes after a read but before PATCH', async () => {
+    const cases=[
+      [{replyTo:'REPLY_TO_CUSTOM'},{}],
+      [{defaultMessageDenyNotificationText:'no'},
+        {sendMessageDenyNotification:'false'}],
+      [{whoCanPostMessage:'NONE_CAN_POST'}, {archiveOnly:'false'}]
+    ];
+    for(const [input,existing] of cases) {
+      const x=fresh(existing);
+      await expect(run({groupEmail:GROUP,...input,confirm:true},x.clients))
+        .rejects.toThrow(/Nothing was changed/);
+      expect(patches(x.calls)).toHaveLength(0);
+      expect(x.calls.filter(c=>c.path==='groupssettings.groups.get')).toHaveLength(1);
+    }
+  });
+
+  it('preserves valid archived and existing reply-to transitions', async () => {
+    const custom=fresh({customReplyTo:'existing@example.test',
+      replyTo:'REPLY_TO_CUSTOM'});
+    expect(body(await run({groupEmail:GROUP,replyTo:'REPLY_TO_CUSTOM'},custom.clients)))
+      .toMatchObject({done:true,confirmed:true});
+    const archived=fresh({archiveOnly:'true',whoCanPostMessage:'NONE_CAN_POST'});
+    expect(body(await run({groupEmail:GROUP,whoCanPostMessage:'NONE_CAN_POST'},
+      archived.clients))).toMatchObject({done:true,confirmed:true});
+  });
 
   it('sends every new setting to Google and returns what Google holds afterwards, confirmed', async () => {
     const x = fresh(stringified(NEW_SAFE));

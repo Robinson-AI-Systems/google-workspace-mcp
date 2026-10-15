@@ -80,6 +80,10 @@ publication; no Google write or new permission occurred.
 
 New offline session utility: eight behavioral tests passed, including actual Git ancestry, partial releases, unknown/failed deployments, rollback, dependency gating, invalid queues, PR alignment and bounded output. All repository queues validate. Existing source/status evidence is preserved; no provider acceptance or release was performed. Owner explicitly approved publication on October 14; publish the reviewed maintenance branch, require exact-head CI/reviews, and merge only when those gates pass. No extra production release is authorized by this approval. Full broad application suites on the shared runner were interrupted after resource/time-limit failures; do not claim them passed. Existing exact-head remote CI/review gates must pass before any main merge.
 
+### October 15 P6-1 Groups Settings guarded validation candidate
+
+The complete existing 22-setting shared-inbox handler and caller already support the 16 newer fields, preview/confirm and field-by-field readback. Current work addresses the original P6-1 requirement to refuse unknown values for the four legacy enum fields and both legacy booleans (previously allowed through), while preserving every historically accepted request value. The same guard checks cross-field dependencies against an actual before-image prior to PATCH. Synthetic tests cover accepted and denied values, risky confirmation, readback, and missing dependencies. This is not source/CI/provider completion until exact-head mandatory gates pass, and no real group was edited or deleted. Owner-authorized disposable Rentals group lifecycle remains separate.
+
 ## Current engineering disposition — October 15 owner recovery
 
 This is the engineering view of the EXISTING subsection IDs, not new work units.
@@ -118,9 +122,9 @@ restricts only the named operation. Source completion never proves actual Google
   {
     "id": "P6-1",
     "state": "REVIEW",
-    "remaining": "Original card says refuse unknown settings values; six legacy fields remain passthrough. Determine approved compatibility behavior and full validation/confirmation/readback coverage, not just whether new fields exist.",
-    "evidence": "src/tools/group-settings.js PASSTHROUGH_TEXT/PASSTHROUGH_BOOLEAN; src/tools/guards-admin.js; original P6-1 Build.",
-    "next": "Reconcile preserve-existing-six versus reject-unknown acceptance against current schema and tests, implement compatible missing validation and prove each field; real group edits need separate scoped authority."
+    "remaining": "Engineering candidate on ai/p6-1-group-settings-complete-20261015 now validates all original six Google values, keeps recognized request shapes, enforces existing group setting dependencies before PATCH, preserves full preview, scoped confirmation and complete readback. Required exact-head CI/reviews and real owner-authorized disposable group preview/edit/readback/cleanup remain unverified; do not count P6-1 complete or infer approval until gates pass.",
+    "evidence": "src/tools/group-settings.js; src/tools/guards-admin.js; test/unit/group-settings.test.js; original P6-1 Build/Acceptance; October 15 candidate.",
+    "next": "Verify strict preflight against actual Google Groups reference and complete fake tests; pass required exact-head test/release-policy/reviews, then merge while leaving real scoped group lifecycle acceptance PENDING."
   },
   {
     "id": "P7-1",

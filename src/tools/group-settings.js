@@ -7,8 +7,19 @@
 // Left out on purpose: showInGroupDirectory, which Google has deprecated, and the fields Google has
 // merged into others (whoCanInvite, whoCanAdd, whoCanApproveMembers, whoCanBanUsers, ...).
 
-// The original six. Their values are passed through as given (Google checks them), exactly as before.
-const PASSTHROUGH_TEXT = ['whoCanJoin', 'whoCanPostMessage', 'whoCanViewMembership', 'whoCanViewGroup'];
+// Legacy values retain their existing accepted spelling and request shape, but
+// an unknown value is rejected BEFORE a provider read/write. This fulfills the
+// original P6-1 refusal contract without retiring any accepted legacy setting.
+// Source: https://developers.google.com/workspace/admin/groups-settings/v1/reference/groups
+export const LEGACY_CHOICES = Object.freeze({
+  whoCanJoin: ['ANYONE_CAN_JOIN','ALL_IN_DOMAIN_CAN_JOIN','INVITED_CAN_JOIN','CAN_REQUEST_TO_JOIN'],
+  whoCanPostMessage: ['NONE_CAN_POST','ALL_MANAGERS_CAN_POST','ALL_MEMBERS_CAN_POST',
+    'ALL_OWNERS_CAN_POST','ALL_IN_DOMAIN_CAN_POST','ANYONE_CAN_POST'],
+  whoCanViewMembership: ['ALL_IN_DOMAIN_CAN_VIEW','ALL_MEMBERS_CAN_VIEW','ALL_MANAGERS_CAN_VIEW'],
+  whoCanViewGroup: ['ANYONE_CAN_VIEW','ALL_IN_DOMAIN_CAN_VIEW','ALL_MEMBERS_CAN_VIEW',
+    'ALL_MANAGERS_CAN_VIEW','ALL_OWNERS_CAN_VIEW']
+});
+const PASSTHROUGH_TEXT = Object.keys(LEGACY_CHOICES);
 const PASSTHROUGH_BOOLEAN = ['allowExternalMembers', 'isArchived'];
 
 // Settings with a fixed list of allowed values. A value outside the list is refused with the list.
@@ -46,8 +57,18 @@ export function buildSettingsBody(args = {}) {
   const body = {};
   const problems = [];
 
-  for (const k of PASSTHROUGH_TEXT) if (args[k]) body[k] = args[k];
-  for (const k of PASSTHROUGH_BOOLEAN) if (typeof args[k] === 'boolean') body[k] = String(args[k]);
+  for (const [k, allowed] of Object.entries(LEGACY_CHOICES)) {
+    const v = args[k];
+    if (v === undefined || v === null || v === '') continue;
+    if (typeof v === 'string' && allowed.includes(v)) body[k] = v;
+    else problems.push(`"${String(v).slice(0, 80)}" is not a valid ${k}. Allowed values: ${allowed.join(', ')}.`);
+  }
+  for (const k of PASSTHROUGH_BOOLEAN) {
+    const v = args[k];
+    if (v === undefined || v === null || v === '') continue;
+    if (typeof v === 'boolean') body[k] = String(v);
+    else problems.push(`${k} must be true or false (you gave "${String(v).slice(0, 80)}").`);
+  }
 
   for (const [k, allowed] of Object.entries(CHOICE_FIELDS)) {
     const v = args[k];
@@ -78,15 +99,31 @@ export function buildSettingsBody(args = {}) {
   return body;
 }
 
+// Field dependencies are checked against Google's actual current setting
+// before PATCH. A failed preflight cannot partially change a real group.
+export function validateSettingsTransition(args, existing = {}) {
+  const wanted = buildSettingsBody(args);
+  if (wanted.replyTo === 'REPLY_TO_CUSTOM' &&
+      !(wanted.customReplyTo || existing.customReplyTo))
+    throw Error('REPLY_TO_CUSTOM needs customReplyTo or an existing custom reply address. Nothing was changed.');
+  if (wanted.defaultMessageDenyNotificationText !== undefined &&
+      String(wanted.sendMessageDenyNotification ?? existing.sendMessageDenyNotification).toLowerCase() !== 'true')
+    throw Error('A custom rejection notice needs sendMessageDenyNotification enabled. Nothing was changed.');
+  if (wanted.whoCanPostMessage === 'NONE_CAN_POST' &&
+      String(existing.archiveOnly).toLowerCase() !== 'true')
+    throw Error('NONE_CAN_POST is available only for an existing archiveOnly group. Nothing was changed.');
+  return wanted;
+}
+
 const list = (a) => a.join(', ');
 
 /** The input fields of admin_update_group_settings, with the allowed values spelled out for Claude. */
 export const SETTINGS_SCHEMA_PROPERTIES = {
   groupEmail: { type: 'string' },
-  whoCanJoin: { type: 'string', description: 'ANYONE_CAN_JOIN, ALL_IN_DOMAIN_CAN_JOIN, INVITED_CAN_JOIN or CAN_REQUEST_TO_JOIN.' },
-  whoCanPostMessage: { type: 'string', description: 'NONE_CAN_POST, ALL_MANAGERS_CAN_POST, ALL_MEMBERS_CAN_POST, ALL_OWNERS_CAN_POST, ALL_IN_DOMAIN_CAN_POST or ANYONE_CAN_POST.' },
-  whoCanViewMembership: { type: 'string', description: 'ALL_IN_DOMAIN_CAN_VIEW, ALL_MEMBERS_CAN_VIEW or ALL_MANAGERS_CAN_VIEW.' },
-  whoCanViewGroup: { type: 'string', description: 'ANYONE_CAN_VIEW, ALL_IN_DOMAIN_CAN_VIEW, ALL_MEMBERS_CAN_VIEW, ALL_MANAGERS_CAN_VIEW or ALL_OWNERS_CAN_VIEW.' },
+  whoCanJoin: { type: 'string', enum: LEGACY_CHOICES.whoCanJoin, description: 'Who may join the group; public joining needs confirmation.' },
+  whoCanPostMessage: { type: 'string', enum: LEGACY_CHOICES.whoCanPostMessage, description: 'Who may post. NONE_CAN_POST requires an existing archiveOnly group; internet posting needs confirmation.' },
+  whoCanViewMembership: { type: 'string', enum: LEGACY_CHOICES.whoCanViewMembership, description: 'Who may view membership.' },
+  whoCanViewGroup: { type: 'string', enum: LEGACY_CHOICES.whoCanViewGroup, description: 'Who may view messages; public visibility needs confirmation.' },
   allowExternalMembers: { type: 'boolean' },
   isArchived: { type: 'boolean' },
   replyTo: { type: 'string', enum: CHOICE_FIELDS.replyTo, description: `Where replies go. ${list(CHOICE_FIELDS.replyTo)}. REPLY_TO_CUSTOM needs customReplyTo.` },

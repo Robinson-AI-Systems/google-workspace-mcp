@@ -9,7 +9,7 @@
 import { isNotFound } from './write.js';
 import { CUSTOMER, pick, data, orgPath, D, same, SCALARS } from './guard-helpers.js';
 import { normalizeDomains, domainOfEmail } from '../domains.js';
-import { SETTING_KEYS, buildSettingsBody } from './group-settings.js';
+import { SETTING_KEYS, buildSettingsBody, validateSettingsTransition } from './group-settings.js';
 
 const lower = (v) => String(v ?? '').trim().toLowerCase();
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -130,7 +130,13 @@ export const GUARDS_ADMIN = {
       const shown = SETTING_KEYS.filter((k) => body[k] !== undefined).map((k) => `${k} = ${shortText(body[k])}`);
       return { target: a.groupEmail, summary: `Change the settings of the group ${a.groupEmail}: ${shown.join(', ') || 'nothing given'}` };
     },
-    before: (a, { groupssettings }) => data(groupssettings.groups.get({ groupUniqueId: a.groupEmail })).then(settingsView),
+    before: (a, { groupssettings }) =>
+      data(groupssettings.groups.get({ groupUniqueId: a.groupEmail })).then(settingsView),
+    precheck: async (a, { groupssettings }) => {
+      const existing = await data(groupssettings.groups.get({ groupUniqueId: a.groupEmail }));
+      validateSettingsTransition(a, existing);
+      return settingsView(existing);
+    },
     after: (a, { groupssettings }) => data(groupssettings.groups.get({ groupUniqueId: a.groupEmail })).then(settingsView) },
 
   // ---------- Org units ----------
