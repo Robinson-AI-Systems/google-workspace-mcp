@@ -45,7 +45,7 @@ describe('P0-2 complete read-catalog engineering inventory',()=>{
   const checks=coverageResults(entries,entries.filter(e=>e.kind==='SAFE')
    .map(e=>({tool:e.name,status:'PASS'})));
   expect(checks.summary).toMatchObject({
-   discovered:SAFE_READ_PROBES.length+2,
+   discovered:SAFE_READ_PROBES.length+3,
    scheduled:SAFE_READ_PROBES.length,
    passed:SAFE_READ_PROBES.length,
    failed:0,notProbed:3,engineeringGaps:1,exactFixtureGates:1,
