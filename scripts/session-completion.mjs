@@ -4,12 +4,13 @@ import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readRoadmapLedger, readEngineeringQueue } from './session-status.mjs';
+import { verifyFrozenPlan, assessBundleDelivery } from './bundle-plan.mjs';
 
 const SHA = /^[a-f0-9]{40}$/;
 function text(value) { return typeof value === 'string' && value.trim().length > 0 && value.length <= 1800; }
 function evidence(value) { return Array.isArray(value) && value.length > 0 && value.every(text); }
 
-export function assessCompletion(report, { target, index, baselineIndex, baselineEngineering, engineering, mergedAfterBase }) {
+export function assessCompletion(report, { target, index, baselineIndex, baselineEngineering, engineering, mergedAfterBase, scopeCheck, requireScopePlans = false }) {
   if (!Number.isSafeInteger(target) || target < 1 || target > 1000) throw Error('Use the current owner bundle target (1–1000).');
   if (!report || !SHA.test(report.baseRevision) || !Array.isArray(report.bundles)) throw Error('Report needs exact session baseRevision and bundles.');
   const cards = new Set(index.cards.filter(card => !['ON_REQUEST', 'PLANNED'].includes(card.status)).map(card => card.id));
@@ -25,6 +26,8 @@ export function assessCompletion(report, { target, index, baselineIndex, baselin
         !Number.isSafeInteger(bundle.productionRemoved) || bundle.productionRemoved < 0 ||
         bundle.productionAdded + bundle.productionRemoved === 0)
       throw Error('Bundle needs a full outcome, subsection IDs, merged revisions, production counts and acceptance proof.');
+    if (requireScopePlans && (typeof scopeCheck !== 'function' || scopeCheck(bundle)?.status !== 'SCOPE_ACCOUNTING_CHECKED'))
+      throw Error('Counted bundle needs frozen pre-code scope comparison; incomplete contributions must continue.');
     // Workload averages are not hard thresholds. Review whether the stated
     // scope is substantial; the checker must not encourage line-count padding.
     for (const id of bundle.subsections) {
@@ -59,6 +62,33 @@ export function assessCompletion(report, { target, index, baselineIndex, baselin
   return { status: 'INCOMPLETE_CHECKPOINT', completed: count, target, reason: stop.kind };
 }
 
+// Combine preserved card plans once when a small completion needed related work.
+// Scope/criteria are machine-checked; the substantive NEW workload still needs review.
+export function checkBundleScope(root, bundle) {
+  const scope = bundle.scopeReview;
+  if (!scope || !Array.isArray(scope.plans) || !scope.plans.length)
+    throw Error('Bundle needs scopeReview with original planning SHAs/cards and delivery comparisons.');
+  const plans = [], rows = [];
+  let additions = 0, removals = 0;
+  for (const item of scope.plans) {
+    const plan = verifyFrozenPlan(root, item.cardPath, item.plannedAt);
+    // Validate every original criterion even when the individual report correctly
+    // records a small contribution as CONTINUE. Assess substantiality in aggregate.
+    assessBundleDelivery(plan, { ...item.delivery, decision: 'CONTINUE' });
+    plans.push(plan); rows.push(...item.delivery.subsections);
+    additions += item.delivery.productionAdded; removals += item.delivery.productionRemoved;
+  }
+  const ids = rows.map(row => row.id);
+  if (ids.length !== bundle.subsections.length || !ids.every(id => bundle.subsections.includes(id)) ||
+      new Set(ids).size !== ids.length || additions !== bundle.productionAdded || removals !== bundle.productionRemoved)
+    throw Error('Bundle scope, production measurements and preserved card delivery totals must agree.');
+  return assessBundleDelivery({ ...plans[0], outcome: bundle.outcome,
+    estimatedProductionLines: plans.reduce((sum, plan) => sum + plan.estimatedProductionLines, 0),
+    subsections: plans.flatMap(plan => plan.subsections) }, {
+    ...scope, subsections: rows, productionAdded: additions, productionRemoved: removals
+  });
+}
+
 export function run(root, args) {
   if (args.length !== 4 || args[0] !== '--bundles' || !/^[1-9]\d*$/.test(args[1]) || args[2] !== '--report')
     throw Error('Usage: npm run session:finish -- --bundles OWNER_TARGET --report PATH');
@@ -76,6 +106,9 @@ export function run(root, args) {
   const baselineEngineering = baseline.includes('<!-- engineering-readiness:start -->') ? readEngineeringQueue(baseline, baselineIndex) : [];
   return assessCompletion(report, {
     target: Number(args[1]), index, baselineIndex, baselineEngineering, engineering,
+    // Do not fabricate retrospective plans for an already-started owner session.
+    requireScopePlans: baseline.includes('BUNDLE_SCOPE_VERSION_1'),
+    scopeCheck: bundle => checkBundleScope(root, bundle),
     mergedAfterBase: (sha, base) => ancestor(sha, main) && (!base || !ancestor(sha, base))
   });
 }
@@ -84,7 +117,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   try {
     const result = run(resolve(fileURLToPath(new URL('..', import.meta.url))), process.argv.slice(2));
     console.log(JSON.stringify(result));
-    console.log('Claim validation only: independently review whole-subsection scope, CI, reviews and real acceptance. No permission or functionality is attested.');
+    console.log('Claim validation only: independently review substantial NEW workload, whole-subsection scope, CI, reviews and real acceptance. No permission or functionality is attested.');
     if (result.status === 'INCOMPLETE_CHECKPOINT') process.exitCode = 2;
   } catch (error) { console.error(`Session finish refused: ${error.message}`); process.exitCode = 1; }
 }

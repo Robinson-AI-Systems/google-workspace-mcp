@@ -105,3 +105,63 @@ test('CLI reads merged main proof, rejects old/unmerged commits and cannot mutat
     assert.throws(() => run(root,['--bundles','0','--report',path]), /Usage/);
   } finally { rmSync(root,{recursive:true,force:true}); }
 });
+
+test('new sessions require scope comparison, never a bare green accounting claim', () => {
+  const r = { ...report(), bundles: [bundle()] };
+  const c = { ...config, target: 1, engineering: [external('P0-2')], requireScopePlans: true };
+  assert.throws(() => assessCompletion(r, c), /frozen pre-code scope/);
+  assert.throws(() => assessCompletion(r, { ...c, scopeCheck: () => ({ status: 'CONTINUE_BUNDLE' }) }), /incomplete contributions/);
+  assert.equal(assessCompletion(r, { ...c, scopeCheck: () => ({ status: 'SCOPE_ACCOUNTING_CHECKED' }) }).status, 'TARGET_CLAIM_CHECKED');
+});
+
+test('preserved small contributions combine once, with all original criteria and exact totals', async () => {
+  const { checkBundleScope } = await import('./session-completion.mjs');
+  const root = mkdtempSync(join(tmpdir(), 'combined-bundle-'));
+  const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore','pipe','ignore'] }).trim();
+  try {
+    git('init'); git('config', 'user.name', 'Fixture'); git('config', 'user.email', 'fixture@example.invalid');
+    mkdirSync(join(root, 'docs/pr-cards'), { recursive: true });
+    writeFileSync(join(root, 'docs/base.md'), 'Approved original roadmap'); git('add','.'); git('commit','-m','baseline');
+    const plans = [];
+    for (const [id, lines] of [['P0-2',186], ['P7-1',250]]) {
+      const p = { baseRevision: git('rev-parse','HEAD'), outcome: 'Complete related approved domain behavior',
+        integrationBoundary: 'Service, domain, callers and shared persistence', newEngineering: 'New missing provider and caller behavior',
+        relatedWorkDecision: 'Keep related whole approved subsections in one bundle', estimatedProductionLines: 300,
+        subsections: [{ id, acceptance: ['Complete original domain behavior and refused paths'], remainingEngineering: ['Build missing domain behavior and persistence'] }] };
+      const cardPath = 'docs/pr-cards/' + id + '.md';
+      writeFileSync(join(root,cardPath), '<!-- bundle-plan:start -->\n```json\n'+JSON.stringify(p)+'\n```\n<!-- bundle-plan:end -->');
+      git('add','.'); git('commit','-m','plan '+id); const plannedAt = git('rev-parse','HEAD');
+      writeFileSync(join(root,id+'.js'), 'export const actual = true;'); git('add','.'); git('commit','-m','implement '+id);
+      plans.push({ cardPath, plannedAt, delivery: { subsections: [{ id, remainingEngineering: [],
+        criteria: [{ criterion: p.subsections[0].acceptance[0], evidence: 'Actual provider request and proving domain regression references' }] }],
+        productionAdded: lines, productionRemoved: 0, decision: 'CONTINUE',
+        newEngineering: 'Completed related actual new domain behavior', planComparison: 'Original criterion delivered with actual regression evidence',
+        relatedWorkDecision: 'Contribute this small outcome to the same coherent bundle' } });
+    }
+    const b = { outcome: 'Complete the related coherent domain workflow', subsections: ['P0-2','P7-1'], productionAdded: 436, productionRemoved: 0,
+      scopeReview: { plans, decision: 'SUBSTANTIAL', newEngineering: 'Both related domain behaviors and callers now integrated',
+        planComparison: 'Every criterion from both original plans delivered and verified', relatedWorkDecision: 'Combined two small completed outcomes once rather than two bundles' } };
+    assert.equal(checkBundleScope(root,b).status,'SCOPE_ACCOUNTING_CHECKED');
+    assert.throws(() => checkBundleScope(root,{ ...b, productionAdded: 500 }), /totals must agree/);
+    plans[1].delivery.subsections[0].remainingEngineering = ['Actual unfinished persistence and recovery'];
+    assert.equal(checkBundleScope(root,b).status,'CONTINUE_BUNDLE');
+    plans[1].delivery.subsections[0].criteria = [];
+    assert.throws(() => checkBundleScope(root,b), /Every planned criterion/);
+  } finally { rmSync(root,{recursive:true,force:true}); }
+});
+
+test('CLI turns scope enforcement on from the actual session-baseline ledger', () => {
+  const root = mkdtempSync(join(tmpdir(), 'scope-enforcement-'));
+  const git = (...args) => execFileSync('git',args,{cwd:root,encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim();
+  const ledger = state => '<!-- BUNDLE_SCOPE_VERSION_1 -->\n## Status ledger\n| P0-2 | IN_PROGRESS | | scope |\n' +
+    '<!-- engineering-readiness:start -->\n```json\n'+JSON.stringify([{...review('P0-2'),state,...(state==='EXTERNAL_ONLY'?{gate:'Original TEST pass'}:{})}])+'\n```\n<!-- engineering-readiness:end -->';
+  try {
+    git('init');git('config','user.name','Fixture');git('config','user.email','fixture@example.invalid');
+    mkdirSync(join(root,'docs/plan'),{recursive:true});
+    writeFileSync(join(root,'docs/plan/TASKS.md'),ledger('REVIEW'));git('add','.');git('commit','-m','baseline');const first=git('rev-parse','HEAD');
+    writeFileSync(join(root,'docs/plan/TASKS.md'),ledger('EXTERNAL_ONLY'));git('add','.');git('commit','-m','completed source');const second=git('rev-parse','HEAD');
+    git('update-ref','refs/remotes/origin/main',second);
+    writeFileSync(join(root,'report.json'),JSON.stringify({baseRevision:first,bundles:[{...bundle(),merges:[second]}]}));
+    assert.throws(()=>run(root,['--bundles','1','--report','report.json']),/Bundle needs scopeReview/);
+  } finally {rmSync(root,{recursive:true,force:true});}
+});
