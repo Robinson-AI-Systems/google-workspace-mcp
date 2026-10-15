@@ -24,7 +24,7 @@ can perform the authorized operation. Reuse/refresh it; request new consent only
 expired underlying grant, a new provider credential or a genuinely additional permission.
 
 
-**Standing owner workflow (2026-10-12):** plan around a useful outcome; five substantial PRs is the normal upper planning boundary, not a quota or proof of acceptance. No docs-only PRs or placeholders; track each external dependency and its precise re-entry trigger. See the authoritative plan README.
+**Standing owner workflow (2026-10-12):** plan around a useful outcome; the current owner prompt sets this session's PR count or scope; the repository has no standing count or PR-number alignment. No docs-only PRs or placeholders; track each external dependency and its precise re-entry trigger. See the authoritative plan README.
 
 
 **Prompt role:** a progress guardrail, not a replacement for the repository's roadmap or a finished-session certificate. Include the next missing end-to-end capability and explicit evidence needed; avoid repetitive hardening or revisiting green work without an observed defect. If a PR is review-blocked, continue independent eligible milestones; mark the batch incomplete with specific re-entry instructions rather than handoff-as-completion. The source of truth remains README.md and TASKS.md.
@@ -49,10 +49,8 @@ Recheck TASKS.md blocked/deferred items when dependency merges, owner input
 or environment changes resolve their conditions. Do not re-request
 previously recorded decisions.
 
-Target five significant PRs; adjust this session count so its final PR
-number ends on the next multiple of five, recalculating current numbering
-and concurrency. No padding; fewer PRs is acceptable if safe eligible work
-or required gates prevent reaching that boundary. Preserve review and exact-head CI, authorization, data integrity,
+Use the PR count or scope in the current owner prompt for this session only.
+Do not infer a count from the repository or PR numbering. Preserve review and exact-head CI, authorization, data integrity,
 recovery, scoped TEST accounts, scheduled checked daily main→live,
 disabled previews, idle resource limits and owner gates. Distinguish
 fakes/reference tests from deployed and real-provider acceptance.
