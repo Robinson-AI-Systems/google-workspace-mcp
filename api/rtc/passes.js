@@ -5,10 +5,13 @@ import { initSchema, createRtcPass, recordLoginAttempt, countRecentFailedLogins,
 import { evaluateLogin, clientIp, LOCKOUT_WINDOW_MINUTES } from '../../src/oauth/login-guard.js';
 import { RTC_AREAS } from '../../src/rtc/catalog.js';
 const escape = s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function respond(res,code,body){
+function respond(res,code,body,{isForm=false}={}){
  res.setHeader('Cache-Control','no-store, no-cache, max-age=0');
  res.setHeader('Pragma','no-cache');
- res.setHeader('Referrer-Policy','no-referrer');
+ // A navigation POST under no-referrer sends Origin: null (Fetch §3.2).
+ // Only the credential-entry form retains its same-origin referrer. Never
+ // disclose referrers cross-origin or from the one-time-secret result page.
+ res.setHeader('Referrer-Policy',isForm?'same-origin':'no-referrer');
  res.setHeader('X-Content-Type-Options','nosniff');
  res.setHeader('X-Frame-Options','DENY');
  res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'");
@@ -46,7 +49,7 @@ export default async function handler(req,res){
  if(req.method==='GET'&&directToCanonical(req,res,origin))return;
  await initSchema();
  if(req.method==='GET'){
-  respond(res,200,'<h1>Create one-time TEST pass</h1><p>Non-production; read only by default. The secret appears only once after confirmation. Save it in the agent protected environment, never chat.</p><form method="POST"><label>Admin passphrase <input name="passphrase" type="password" required></label><p><label>Connected account email <input type="email" name="google_account" required></label></p><p><label>Allowed areas (optional, comma separated) <input name="areas"></label></p><p><label>Hours (1–720) <input type="number" name="hours" value="1" min="1" max="8760"></label></p><p><label>Calls/minute (1–600) <input type="number" name="rate_limit" value="120" min="1" max="600"></label></p><p><label><input type="checkbox" name="for_hub" value="yes"> For Robinson’s Toolkit (up to 365 days, read-only)</label></p><fieldset><legend>Optional TEST writes</legend><p>Only temporary isolated resources in the approved mailbox. Existing confirmation, domain and cleanup guards still apply. Writes expire within 24 hours and require explicit areas.</p><label><input type="checkbox" name="allow_writes" value="yes"> I authorize TEST writes in the selected areas</label><p><label>Repeat the exact account email to confirm TEST writes <input name="confirmed_account" type="email"></label></p></fieldset><button type="submit">Create TEST pass</button></form>');
+  respond(res,200,'<h1>Create one-time TEST pass</h1><p>Non-production; read only by default. The secret appears only once after confirmation. Save it in the agent protected environment, never chat.</p><form method="POST"><label>Admin passphrase <input name="passphrase" type="password" required></label><p><label>Connected account email <input type="email" name="google_account" required></label></p><p><label>Allowed areas (optional, comma separated) <input name="areas"></label></p><p><label>Hours (1–720) <input type="number" name="hours" value="1" min="1" max="8760"></label></p><p><label>Calls/minute (1–600) <input type="number" name="rate_limit" value="120" min="1" max="600"></label></p><p><label><input type="checkbox" name="for_hub" value="yes"> For Robinson’s Toolkit (up to 365 days, read-only)</label></p><fieldset><legend>Optional TEST writes</legend><p>Only temporary isolated resources in the approved mailbox. Existing confirmation, domain and cleanup guards still apply. Writes expire within 24 hours and require explicit areas.</p><label><input type="checkbox" name="allow_writes" value="yes"> I authorize TEST writes in the selected areas</label><p><label>Repeat the exact account email to confirm TEST writes <input name="confirmed_account" type="email"></label></p></fieldset><button type="submit">Create TEST pass</button></form>',{isForm:true});
   return;
  }
  const expected=origin;
