@@ -3,39 +3,63 @@ import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readRoadmapLedger, readEngineeringQueue } from './session-status.mjs';
+import { readRoadmapLedger, readEngineeringQueue, readQueue } from './session-status.mjs';
 import { verifyFrozenPlan, assessBundleDelivery } from './bundle-plan.mjs';
 
 const SHA = /^[a-f0-9]{40}$/;
 function text(value) { return typeof value === 'string' && value.trim().length > 0 && value.length <= 1800; }
 function evidence(value) { return Array.isArray(value) && value.length > 0 && value.every(text); }
 
-export function assessCompletion(report, { target, index, baselineIndex, baselineEngineering, engineering, mergedAfterBase, scopeCheck, requireScopePlans = false }) {
+export function assessCompletion(report, { target, index, baselineIndex, baselineEngineering, engineering, mergedAfterBase, scopeCheck, requireScopePlans = false, baselineQueue = [], queue = [] }) {
   if (!Number.isSafeInteger(target) || target < 1 || target > 1000) throw Error('Use the current owner bundle target (1–1000).');
   if (!report || !SHA.test(report.baseRevision) || !Array.isArray(report.bundles)) throw Error('Report needs exact session baseRevision and bundles.');
   const cards = new Set(index.cards.filter(card => !['ON_REQUEST', 'PLANNED'].includes(card.status)).map(card => card.id));
   const eligibleAtStart = new Set(baselineIndex.cards.filter(card => ['IN_PROGRESS', 'APPROVED', 'BLOCKED'].includes(card.status)).map(card => card.id));
   const alreadyComplete = new Set(baselineIndex.cards.filter(card => ['MERGED', 'COMPLETE'].includes(card.status)).map(card => card.id));
   for (const row of baselineEngineering) if (row.state === 'EXTERNAL_ONLY') alreadyComplete.add(row.id);
-  const seen = new Set();
+  const seen = new Set(), completedTasks = new Set();
   for (const bundle of report.bundles) {
+    const completion = bundle?.workKind === 'COMPLETION';
+    if (bundle?.workKind !== undefined && !['ENGINEERING', 'COMPLETION'].includes(bundle.workKind)) throw Error('Unknown bundle workKind.');
     if (!bundle || !text(bundle.outcome) || !evidence(bundle.proof) ||
         !Array.isArray(bundle.subsections) || !bundle.subsections.length ||
         !Array.isArray(bundle.merges) || !bundle.merges.length ||
         !Number.isSafeInteger(bundle.productionAdded) || bundle.productionAdded < 0 ||
         !Number.isSafeInteger(bundle.productionRemoved) || bundle.productionRemoved < 0 ||
-        bundle.productionAdded + bundle.productionRemoved === 0)
+        (!completion && bundle.productionAdded + bundle.productionRemoved === 0))
       throw Error('Bundle needs a full outcome, subsection IDs, merged revisions, production counts and acceptance proof.');
-    if (requireScopePlans && (typeof scopeCheck !== 'function' || scopeCheck(bundle)?.status !== 'SCOPE_ACCOUNTING_CHECKED'))
+    if ((requireScopePlans || completion) && (typeof scopeCheck !== 'function' || scopeCheck(bundle)?.status !== 'SCOPE_ACCOUNTING_CHECKED'))
       throw Error('Counted bundle needs frozen pre-code scope comparison; incomplete contributions must continue.');
     // Workload averages are not hard thresholds. Review whether the stated
     // scope is substantial; the checker must not encourage line-count padding.
     for (const id of bundle.subsections) {
-      if (!cards.has(id) || !eligibleAtStart.has(id) || seen.has(id) || alreadyComplete.has(id))
+      if (!cards.has(id) || (!completion && !eligibleAtStart.has(id)) || seen.has(id) || (!completion && alreadyComplete.has(id)))
         throw Error('Unknown, unapproved, repeated or previously completed subsection: ' + id);
-      if (!engineering.some(row => row.id === id && row.state === 'EXTERNAL_ONLY'))
+      if (!completion && !engineering.some(row => row.id === id && row.state === 'EXTERNAL_ONLY'))
         throw Error('Unfinished engineering cannot count as a completed subsection: ' + id);
       seen.add(id);
+    }
+    if (completion) {
+      const tasks = bundle.acceptanceTasks;
+      if (!Array.isArray(tasks) || !tasks.length || new Set(tasks).size !== tasks.length)
+        throw Error('Completion bundle needs distinct existing acceptanceTasks.');
+      for (const id of tasks) {
+        const before = baselineQueue.find(row => row.id === id), after = queue.find(row => row.id === id);
+        if (!before || !after || before.status === 'PASSED' || after.status !== 'PASSED' ||
+            before.requiredRevision !== after.requiredRevision || before.task !== after.task ||
+            before.procedure !== after.procedure || before.gates !== after.gates ||
+            JSON.stringify(before.dependsOn) !== JSON.stringify(after.dependsOn) ||
+            JSON.stringify(before.subsections) !== JSON.stringify(after.subsections) ||
+            before.lastEvidence === after.lastEvidence || completedTasks.has(id))
+          throw Error('Completion requires NEW passed acceptance with unchanged scope/gates and new evidence: ' + id);
+        if (!after.dependsOn.every(dep => queue.some(row => row.id === dep && row.status === 'PASSED')))
+          throw Error('Completion acceptance dependency is not passed: ' + id);
+        if (!bundle.subsections.some(subsection => id.startsWith(subsection + '-') || after.subsections?.includes(subsection)))
+          throw Error('Acceptance task is not mapped to a planned original subsection: ' + id);
+        completedTasks.add(id);
+      }
+      if (!bundle.subsections.every(subsection => tasks.some(id => id.startsWith(subsection + '-') || queue.find(row => row.id === id)?.subsections?.includes(subsection))))
+        throw Error('Each completion subsection needs newly passed acceptance; old code and audits count zero.');
     }
     const revisions = new Set();
     for (const sha of bundle.merges) {
@@ -69,15 +93,20 @@ export function checkBundleScope(root, bundle) {
   if (!scope || !Array.isArray(scope.plans) || !scope.plans.length)
     throw Error('Bundle needs scopeReview with original planning SHAs/cards and delivery comparisons.');
   const plans = [], rows = [];
+  const completion = bundle.workKind === 'COMPLETION';
   let additions = 0, removals = 0;
   for (const item of scope.plans) {
     const plan = verifyFrozenPlan(root, item.cardPath, item.plannedAt);
+    if ((plan.workKind === 'COMPLETION') !== completion) throw Error('Bundle and frozen plan workKind must agree.');
     // Validate every original criterion even when the individual report correctly
     // records a small contribution as CONTINUE. Assess substantiality in aggregate.
     assessBundleDelivery(plan, { ...item.delivery, decision: 'CONTINUE' });
     plans.push(plan); rows.push(...item.delivery.subsections);
     additions += item.delivery.productionAdded; removals += item.delivery.productionRemoved;
   }
+  if (completion && (plans.length !== 1 ||
+      JSON.stringify(plans[0].acceptanceTasks) !== JSON.stringify(bundle.acceptanceTasks)))
+    throw Error('Completion bundle must preserve one whole planned acceptance outcome and its exact task list.');
   const ids = rows.map(row => row.id);
   if (ids.length !== bundle.subsections.length || !ids.every(id => bundle.subsections.includes(id)) ||
       new Set(ids).size !== ids.length || additions !== bundle.productionAdded || removals !== bundle.productionRemoved)
@@ -106,6 +135,8 @@ export function run(root, args) {
   const baselineEngineering = baseline.includes('<!-- engineering-readiness:start -->') ? readEngineeringQueue(baseline, baselineIndex) : [];
   return assessCompletion(report, {
     target: Number(args[1]), index, baselineIndex, baselineEngineering, engineering,
+    baselineQueue: report.bundles.some(bundle => bundle.workKind === 'COMPLETION') ? readQueue(baseline) : [],
+    queue: report.bundles.some(bundle => bundle.workKind === 'COMPLETION') ? readQueue(current) : [],
     // Do not fabricate retrospective plans for an already-started owner session.
     requireScopePlans: baseline.includes('BUNDLE_SCOPE_VERSION_1'),
     scopeCheck: bundle => checkBundleScope(root, bundle),

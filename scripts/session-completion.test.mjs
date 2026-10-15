@@ -165,3 +165,74 @@ test('CLI turns scope enforcement on from the actual session-baseline ledger', (
     assert.throws(()=>run(root,['--bundles','1','--report','report.json']),/Bundle needs scopeReview/);
   } finally {rmSync(root,{recursive:true,force:true});}
 });
+
+test('completion counts newly passed original work on already-merged source, never old code or audit prose', () => {
+  const before = { id: 'P0-2-PROVIDER', status: 'PENDING', requiredRevision: base,
+    task: 'Original full provider acceptance workflow', procedure: 'Original card', gates: 'Original scoped TEST permission',
+    dependsOn: [], lastEvidence: 'Not performed' };
+  const after = { ...before, status: 'PASSED', lastEvidence: 'New exact deployed provider readback, denied path, recovery and cleanup evidence' };
+  const b = { ...bundle(), workKind: 'COMPLETION', productionAdded: 0, productionRemoved: 0,
+    acceptanceTasks: [before.id] };
+  const r = { ...report(), bundles: [b] };
+  const mergedIndex = { cards: index.cards.map(row => ({ ...row, status: 'MERGED' })) };
+  const c = { ...config, target: 1, index: mergedIndex, baselineIndex: mergedIndex,
+    baselineEngineering: [external('P0-2')], engineering: [external('P0-2')],
+    baselineQueue: [before], queue: [after], scopeCheck: () => ({ status: 'SCOPE_ACCOUNTING_CHECKED' }) };
+  assert.equal(assessCompletion(r, c).status, 'TARGET_CLAIM_CHECKED');
+  // Removing the completion declaration cannot turn inherited source into new engineering.
+  assert.throws(() => assessCompletion({ ...r, bundles: [{ ...b, workKind: 'ENGINEERING', productionAdded: 650 }] }, c), /previously completed/);
+  for (const change of [
+    { baselineQueue: [after] }, { queue: [{ ...after, status: 'PENDING' }] },
+    { queue: [{ ...after, gates: 'Weakened gate' }] }, { queue: [{ ...after, requiredRevision: merge }] },
+    { queue: [{ ...after, task: 'Only easier discovery' }] }, { queue: [{ ...after, lastEvidence: before.lastEvidence }] },
+    { baselineQueue: [] }, { queue: [] }, { scopeCheck: () => ({ status: 'CONTINUE_BUNDLE' }) }
+  ]) assert.throws(() => assessCompletion(r, { ...c, ...change }));
+  assert.throws(() => assessCompletion({ ...r, bundles: [{ ...b, subsections: ['P7-1'] }] }, c), /not mapped/);
+  assert.throws(() => assessCompletion({ ...r, bundles: [{ ...b, acceptanceTasks: [before.id,before.id] }] }, c), /distinct/);
+  const dep = { ...before, id: 'DEPENDENCY', status: 'PENDING' };
+  assert.throws(() => assessCompletion(r, { ...c, baselineQueue: [{ ...before, dependsOn: [dep.id] }, dep],
+    queue: [{ ...after, dependsOn: [dep.id] }, dep] }), /dependency/);
+});
+
+test('real Git CLI accepts newly merged zero-code provider evidence and rejects republishing its prior pass', () => {
+  const root = mkdtempSync(join(tmpdir(), 'completion-evidence-'));
+  const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore','pipe','ignore'] }).trim();
+  const task = { id: 'P0-2-REAL', priority: 1, status: 'PENDING', requiredRevision: base,
+    task: 'Original full approved provider lifecycle', procedure: 'Original card and approved runner',
+    gates: 'Unchanged original permission and cleanup', dependsOn: [], lastEvidence: 'Not performed' };
+  const ledger = row => '<!-- BUNDLE_SCOPE_VERSION_1 -->\n## Status ledger\n| P0-2 | MERGED | | Original requirement |\n' +
+    '<!-- engineering-readiness:start -->\n```json\n'+JSON.stringify([external('P0-2')])+'\n```\n<!-- engineering-readiness:end -->\n'+
+    '<!-- release-acceptance:start -->\n```json\n'+JSON.stringify([row])+'\n```\n<!-- release-acceptance:end -->';
+  try {
+    git('init'); git('config','user.name','Fixture'); git('config','user.email','fixture@example.invalid');
+    mkdirSync(join(root,'docs/plan'),{recursive:true}); mkdirSync(join(root,'docs/pr-cards'),{recursive:true});
+    writeFileSync(join(root,'docs/plan/TASKS.md'),ledger(task)); git('add','.'); git('commit','-m','original source already complete');
+    const first = git('rev-parse','HEAD');
+    const plan = { workKind: 'COMPLETION', baseRevision: first, estimatedProductionLines: 0,
+      outcome: 'Complete the full original real-provider workflow', integrationBoundary: 'Actual deployed service, provider and exact cleanup',
+      newEngineering: 'No new application code; original provider proof remains', relatedWorkDecision: 'One coherent original full workflow, not an isolated read',
+      acceptanceTasks: [task.id], subsections: [{ id: 'P0-2', acceptance: [task.task], remainingEngineering: [],
+        remainingWork: ['Perform the original authorized lifecycle with positive, denied, recovery and cleanup evidence'] }] };
+    const cardPath='docs/pr-cards/existing.md';
+    writeFileSync(join(root,cardPath),'<!-- bundle-plan:start -->\n```json\n'+JSON.stringify(plan)+'\n```\n<!-- bundle-plan:end -->');
+    git('add','.'); git('commit','-m','freeze original completion scope'); const plannedAt=git('rev-parse','HEAD');
+    writeFileSync(join(root,'docs/plan/TASKS.md'),ledger({...task,status:'PASSED',lastEvidence:'New exact deployed provider readback, denial and cleanup receipts'}));
+    git('add','.'); git('commit','-m','record original full completion evidence'); const final=git('rev-parse','HEAD');
+    git('update-ref','refs/remotes/origin/main',final);
+    const proof={ decision:'SUBSTANTIAL_EXCEPTION', productionAdded:0, productionRemoved:0,
+      newEngineering:plan.newEngineering, relatedWorkDecision:plan.relatedWorkDecision,
+      planComparison:'Every frozen original criterion completed, including provider cleanup',
+      exceptionEvidence:['Substantial original full lifecycle verification across positive/denied/recovery paths; no inherited code counted'],
+      subsections:[{id:'P0-2',remainingEngineering:[],remainingWork:[],criteria:[{criterion:task.task,evidence:'New exact provider lifecycle and cleanup evidence in permanent merged ledger'}]}] };
+    const b={workKind:'COMPLETION',outcome:plan.outcome,subsections:['P0-2'],acceptanceTasks:[task.id],merges:[final],
+      productionAdded:0,productionRemoved:0,proof:['Original full workflow with actual provider readback and cleanup'],
+      scopeReview:{...proof,plans:[{cardPath,plannedAt,delivery:proof}]}};
+    const path=join(root,'report.json');writeFileSync(path,JSON.stringify({baseRevision:first,bundles:[b]}));
+    const args=['--bundles','1','--report',path];const before=git('status','--porcelain');
+    assert.equal(run(root,args).status,'TARGET_CLAIM_CHECKED');
+    assert.equal(git('status','--porcelain'),before);
+    // New evidence commits cannot recount a pass already present at the session baseline.
+    writeFileSync(path,JSON.stringify({baseRevision:final,bundles:[b]}));
+    assert.throws(()=>run(root,args),/NEW passed acceptance/);
+  } finally {rmSync(root,{recursive:true,force:true});}
+});

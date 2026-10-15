@@ -28,6 +28,7 @@ export function readQueue(text) {
     for (const key of ['task', 'procedure', 'gates', 'lastEvidence']) {
       if (typeof row[key] !== 'string' || !row[key].trim() || row[key].length > 1200) throw new Error(`Missing/bounded ${key}: ${row.id}`);
     }
+    if (row.subsections !== undefined && (!Array.isArray(row.subsections) || !row.subsections.length || new Set(row.subsections).size !== row.subsections.length || row.subsections.some(id => !/^P\d+-\d+$/.test(id)))) throw new Error('Invalid acceptance subsection mapping: ' + row.id);
     if (!Array.isArray(row.dependsOn) || row.dependsOn.some(id => typeof id !== 'string') || new Set(row.dependsOn).size !== row.dependsOn.length) throw new Error(`Invalid dependencies: ${row.id}`);
   }
   const visiting = new Set(), visited = new Set();
@@ -185,7 +186,7 @@ export function acceptanceSummary(plan, limit = 10) {
   const action = plan.filter(row => ['DEPLOYED_CANDIDATE_CHECK_GATES', 'RECHECK_EXTERNAL_GATE'].includes(row.disposition));
   const waiting = plan.filter(row => !['DEPLOYED_CANDIDATE_CHECK_GATES', 'RECHECK_EXTERNAL_GATE', 'RECORDED_PASS'].includes(row.disposition));
   const passed = plan.length - action.length - waiting.length;
-  const lines = [`Acceptance first: ${action.length} deployed tasks to act on/recheck; ${waiting.length} waiting/verification tasks; ${passed} recorded passes.`,
+  const lines = [`Acceptance first: ${action.length} deployed tasks to act on/recheck; ${waiting.length} waiting/verification tasks; ${passed} usable deployed passes.`,
     'Main ahead of live does not defer included checks. Listing a task is NOT executing it.',
     'Acceptance snapshot: ' + acceptanceSnapshot(plan)];
   for (const [label, rows] of [['ACT OR RECHECK GATES NOW', action], ['WAITING OR VERIFY SPECIFIC PREREQUISITE', waiting]]) {
@@ -229,6 +230,27 @@ export function reviewAcceptance(plan, observation, report, isAncestor = () => n
   return 'Acceptance accounting checked for this snapshot; evidence truth, authorization and required workflow remain independently reviewed.';
 }
 
+/** Select required work without manufacturing features or treating code size as a blocker.
+ * Engineering rows arrive in original roadmap order. This is a next action,
+ * never permission or an automatic completion claim. */
+export function nextRequiredWork(engineering, plan) {
+  const source = engineering.find(row => ['OPEN', 'REVIEW'].includes(row.state));
+  if (source) return { kind: source.state === 'OPEN' ? 'ENGINEERING' : 'RECONCILE_CRITERION',
+    id: source.id, action: source.next,
+    note: 'Continue this required action now. A future activation date gates only actual activation; do not invent scope or stop for bundle size.' };
+  const pending = plan.find(row => row.disposition !== 'RECORDED_PASS');
+  if (pending) return { kind: 'COMPLETION', id: pending.id,
+    action: pending.disposition === 'VERIFY_DEPLOYMENT'
+      ? 'Independently verify the deployed revision/READY state, then evaluate EACH check against deployed ancestry.'
+      : pending.disposition === 'WAIT_RELEASE_OR_FETCH_HISTORY'
+        ? 'Check ancestry/history and the authorized release path for this task; continue independently deployed checks.'
+        : pending.task,
+    note: 'Use original criteria and exact gates. A substantial new verified completion may be a COMPLETION bundle with zero code; checklist discovery and repeated denial do not count.' };
+  return { kind: 'VERIFY_FINISH', id: null,
+    action: 'Check original merged-card acceptance and unqueued obligations before declaring the approved product complete.',
+    note: 'A clean queue or source ledger is not proof of complete product acceptance. Ask for new scope only after establishing completion or exact blockers.' };
+}
+
 function git(root, ...args) {
   try { return execFileSync('git', args, { cwd: root, encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'] }).trim(); }
   catch { return null; }
@@ -269,6 +291,8 @@ export function run(root, args) {
     `Observed production=${observation.deployed || 'UNKNOWN'} state=${observation.deploymentState}`,
     'Fetch refs first. Independently verify production provenance; supplied observations are not attestation.',
     'Candidates need existing authorization, fixture isolation and cleanup. This command never runs provider tests or releases.'];
+  const next = nextRequiredWork(engineering, plan);
+  lines.push(`After acceptance catch-up, next required work: ${next.kind}${next.id ? ' ' + next.id : ''}: ${next.action}`, next.note);
   lines.push(...acceptanceSummary(plan, limit));
   if (flags['--acceptance-review']) {
     const raw = readFileSync(resolve(root, flags['--acceptance-review']), 'utf8');
@@ -291,14 +315,14 @@ export function run(root, args) {
     if (batch.blocked.length) lines.push('Blocked ' + batch.batch + ': ' + batch.blocked.join(', '));
   }
   const actionable = engineering.filter(row => ['OPEN', 'REVIEW'].includes(row.state));
-  lines.push(`Engineering: ${actionable.length} OPEN/REVIEW; ${engineering.filter(row => row.state === 'EXTERNAL_ONLY').length} verified EXTERNAL_ONLY; ${engineering.filter(row => row.state === 'TIME_GATED').length} TIME_GATED.`);
+  lines.push(`Engineering: ${actionable.length} OPEN/REVIEW; ${engineering.filter(row => row.state === 'EXTERNAL_ONLY').length} recorded EXTERNAL_ONLY; ${engineering.filter(row => row.state === 'TIME_GATED').length} TIME_GATED.`);
   for (const row of engineering.slice(0, flags['--limit'] ? limit : 3))
     lines.push(`${row.id} ${row.state}: ${row.remaining}`, `   Source/proof: ${row.evidence}`, `   Next: ${row.next}${row.gate ? '; gate: ' + row.gate : ''}`);
   if (engineering.length > (flags['--limit'] ? limit : 3)) lines.push(`Additional engineering rows remain in ${policy.ledger}; use --limit ${engineering.length} for all. Nothing is resolved or omitted from validation.`);
   lines.push(actionable.length ? 'Do not stop for live lag: OPEN engineering and unresolved scope reviews remain. REVIEW is not proof of missing code, but cannot justify external-only exhaustion.' : 'No OPEN/REVIEW rows recorded. Revalidate source/proof and authorization before claiming exhaustion.');
-  lines.push('PR planning averages: 400–800 changed production lines and 2–5 fully completed predefined batch subsections; count only whole predefined batch subsections with evidence, never helpers or packet subtasks.');
+  lines.push('ENGINEERING guide: 400–800 production lines and 2–5 full original subsections. COMPLETION: substantial newly verified original requirements may have zero production lines; frozen scope and new passed task evidence are required. Neither guide permits filler or double credit.');
   lines.push('PR work unit = one whole predefined batch subsection (such as H-3 or B-5). Technical slices, functions, tools, UI wiring, guards and packet tasks do not count separately. Partial subsection = zero completed batch subsections.');
-  lines.push(`Queue: ${plan.length} total; ${plan.length - active.length} recorded passes; ${active.length} tasks to reconsider.`);
+  lines.push(`Queue: ${plan.length} total; ${rows.filter(row => row.status === 'PASSED').length} recorded passes; ${active.length} tasks require planner consideration.`);
 
   return lines.join('\n');
 }

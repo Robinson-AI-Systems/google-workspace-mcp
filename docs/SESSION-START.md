@@ -22,181 +22,130 @@ An actual execution limit gets an explicit incomplete recoverable checkpoint, ne
 a completion claim. Preserve every real safety, spending, release and approval gate.
 
 
-## Current owner bundle target controls the session — October 15 recovery
-
-A request for N bundles means N complete implementation outcomes, not N PRs,
-one corrective fix, reconciliation, a provider-read report or a clean-main handoff.
-Keep the target and completed count visible from the first checkpoint. After an
-incidental repair merges, return to the same planned bundle; it contributes zero
-bundles unless it actually finishes that full original subsection outcome.
-Read TASKS.md **Current engineering disposition** before claiming only external
-acceptance remains. OPEN is confirmed engineering; REVIEW is unresolved full-scope
-reconciliation and cannot be reclassified as an external blocker by assumption.
-A README catalog, merged tool or passing test is not criterion-level completion.
-Review each unit once at its relevant revision, keep the result, and reopen only
-for relevant changes/new failure evidence. REVIEW rows are this recovery backlog,
-not permission for a repeated whole-repo audit ritual before every bundle.
-
-At startup, name the existing subsection IDs and full acceptance for the first
-bundle and the next eligible outcome. Reconcile each remaining unit's original
-requirements with actual callers/code/tests; update its existing engineering row
-with concrete remaining work or exact complete source/test proof plus external gate.
-Do not fabricate implementation to fill N; if the approved remaining scope cannot
-support N substantial outcomes, explain that promptly with this per-unit evidence
-and ask for the smallest necessary owner scope/permission decision while continuing
-all eligible authorized work. Do not silently substitute an acceptance-only session.
-
-When the owner supplied a bundle target, before final reporting run
-`npm run session:finish -- --bundles N --report PATH`. Other explicitly scoped
-maintenance/review tasks finish their actual requested scope; invent no bundle target.
-Use the actual current owner target, never lower it to match completed work. PATH
-is a local JSON report (no secrets/provider bodies), also summarized in the normal
-permanent handoff; no second roadmap. Each counted bundle also includes `scopeReview`:
-
-```json
-{
-  "baseRevision": "EXACT_FULL_MAIN_SHA_AT_SESSION_START",
-  "bundles": [{
-    "outcome": "Complete the originally selected substantial outcome",
-    "subsections": ["EXISTING-APPROVED-ID"],
-    "merges": ["EXACT_NEW_MERGED_SHA"],
-    "productionAdded": 650,
-    "productionRemoved": 40,
-    "proof": ["Every original criterion -> code/test and exact-head CI"],
-    "scopeReview": {
-      "plans": [{"cardPath": "docs/EXISTING-CARD.md", "plannedAt": "EXACT_FULL_PLANNING_SHA", "delivery": {}}],
-      "newEngineering": "Evidence of substantial NEW connected behavior delivered",
-      "planComparison": "Compare actual delivery to the preserved original scope",
-      "relatedWorkDecision": "Why related work was included or legitimately excluded",
-      "decision": "SUBSTANTIAL_EXCEPTION",
-      "exceptionEvidence": ["Concrete substantial single-subsection NEW workload proof"]
-    }
-  }]
-}
-```
-
-Replace each empty `delivery` placeholder with the full sanitized delivery object
-specified below; this schema illustration is not a valid completed report. Multiple
-plans preserve small contributions plus related scope, counted together ONCE.
-For owner sessions whose starting main contains BUNDLE_SCOPE_VERSION_1,
-`session:finish` verifies each frozen plan and checks the combined scope/measurements;
-a missing plan, omitted criterion or incomplete contribution refuses successful finish.
-An already-started session keeps its original evidence and records a plan for new
-remaining work now; never invent historical planning commits. The substantive
-workload comparison remains mandatory regardless of the transition.
-Retain a completed subsection's exact engineering-completion row through session
-accounting, even after its coarse status becomes MERGED; that label alone is not
-completion proof. Counts exclude prior sessions and duplicate subsection IDs. Repeated merge
-references within one bundle are invalid; one substantial PR may deliver multiple
-independently complete bundles only with distinct whole-subsection outcomes. The command checks
-merged origin/main, not local unmerged claims. Before using it, fetch/reconcile
-actual main and verify CI/reviews independently. It cannot judge proof truth or
-make a small helper substantial; reviewer and owner rules still govern. A check
-passing is not permission, real provider proof or automated enforcement of chat.
-
-An unmet target refuses normal finish. Genuine exhaustion requires every remaining
-approved subsection to be EXTERNAL_ONLY/TIME_GATED with full inspected engineering
-proof, exact gate, attempted remedy and next action. Report `stop.kind` as
-`EXTERNAL_EXHAUSTION`, `stop.evidence` as a nonempty list, `stop.nextAction`, and
-`stop.bySubsection` mapping EVERY remaining ID to concrete evidence/remedy strings.
-For an actual execution limit use `EXECUTION_LIMIT` with that evidence/nextAction,
-`constraint` describing the actual failure and `checkpoint` giving the recoverable
-main SHA. Neither path is success: the command reports INCOMPLETE_CHECKPOINT and
-exits 2. A pending release, clean git, vague context concern, elapsed minutes or
-uninvestigated provider permission alone is not evidence of global exhaustion.
-Missing owner input must be asked in the active conversation, never hidden in a
-final handoff. Preserve every safety, CI, scope, activation and cleanup gate.
-
-
-## Bundle target and delivery boundaries — owner correction 2026-10-15
+## Implementation bundles advance the approved product to completion
 <!-- BUNDLE_SCOPE_VERSION_1 -->
 
-The current owner's N counts substantial NEW engineering outcomes, not PRs or
-small card remainders. Normal guides remain 2–5 completed existing subsections
-and about 400–800 meaningful production lines; neither is a padding requirement,
-ceiling or automatic certificate. Previously implemented behavior, reconciliation,
-test volume, CI waiting and closeout do not make a small remainder substantial.
+“Do N bundles” sets substantial NEW completion workload within the existing plan.
+It does not require new features or production-code changes when the remaining
+requirements are deployment, configuration, integration or genuine acceptance.
+Never expand scope merely to create code. Old implementation, checklist discovery,
+repeated permission-denied probes, audit prose, waiting and status updates count zero.
 
-**Plan before code.** In the existing selected execution card, preserve one
-`bundle-plan` JSON block (schema below). Inspect actual main and record the NEW
-remaining engineering, original full acceptance for each existing approved ID,
-integration boundary, honest new-work estimate and why related adjacent approved
-work is included or excluded. Prefer a coherent group of whole related subsections.
-Run `npm run session:bundle -- --card docs/EXISTING-CARD.md`, then commit that
-card before implementation; retain the exact planning SHA. That local docs commit
-is a checkpoint in the implementation PR, never a separate plan-only PR or an
-owner approval stop. Do not copy the whole roadmap or plan distant bundles.
+Select in this order after acceptance catch-up:
+1. Finish confirmed OPEN engineering in roadmap order. REVIEW means resolve a
+   specific undecided requirement once; it is work to do, not a stopping point.
+2. When no eligible engineering remains, pursue a substantial connected completion
+   outcome from the original requirements, with existing acceptance task IDs.
+3. If all remaining paths are actually blocked, report project completion state,
+   each exact prerequisite, attempted remedy and the smallest actionable owner
+   request. Ask during the session, not merely as a suggested future task.
+   Optional P8-6 never blocks standalone completion. Do not propose new phases
+   until every approved requirement is reconciled and the real finish path is known.
 
-The block is bounded by `<!-- bundle-plan:start -->` and
-`<!-- bundle-plan:end -->`, containing one fenced `json` object:
+The default ENGINEERING bundle retains the normal guide of 2–5 full original
+subsections and 400–800 meaningful production lines, excluding tests/docs/generated
+or mechanical changes. One substantial subsection may qualify. These are workload
+guides, not padding requirements. Completing a small remainder contributes to the
+same bundle; continue related work rather than paying publication overhead per helper.
 
-```json
-{
-  "baseRevision": "EXACT_FULL_HEAD_BEFORE_PLANNING_COMMIT",
-  "outcome": "Observable coherent outcome from approved scope",
-  "integrationBoundary": "Domain, persistence, callers and failure/recovery paths",
-  "newEngineering": "Missing NEW behavior; distinguish already implemented code",
-  "estimatedProductionLines": 650,
-  "relatedWorkDecision": "Related approved work selected or concrete reason to exclude",
-  "subsections": [{
-    "id": "EXISTING-APPROVED-ID",
-    "acceptance": ["Full original criterion, repeat for every criterion"],
-    "remainingEngineering": ["Actual missing engineering at inspected baseline"]
-  }]
-}
-```
+A COMPLETION bundle finishes substantial previously unmet real-world criteria,
+possibly with zero production lines. It must deliver new verified results, not
+recount the engineering behind them. Preserve original subsection IDs and full
+criteria, and review substantive workload explicitly. A single read, already
+recorded pass, small fix or newly invented subcard does not become a bundle.
+Eligible acceptance is always required; count a substantial acceptance outcome
+once only when explicitly planned as a completion bundle. Other obligations remain
+additional. Full product acceptance and code completion remain separate states.
 
-**Compare before publication and completion.** Preserve the original block; record
-deviations beside it rather than rewriting it to match a small delivery. A temporary
-sanitized delivery JSON has `subsections` rows with the same `id`, `criteria`
-(each with exact `criterion` and concrete `evidence`) and `remainingEngineering`
-(empty only when complete); plus actual `productionAdded`, `productionRemoved`,
-`newEngineering`, `planComparison`, `relatedWorkDecision` and `decision`.
+### Plan once, retain scope, verify the outcome
+
+Use the existing execution card, never a second roadmap. Before doing the selected
+work preserve one JSON object between `<!-- bundle-plan:start -->` and
+`<!-- bundle-plan:end -->` in a fenced `json` block. Common fields:
+`baseRevision` (full current SHA), `outcome`, `integrationBoundary`,
+`newEngineering` (state explicitly when none is needed), `estimatedProductionLines`,
+`relatedWorkDecision`, and `subsections` with existing `id`, full original
+`acceptance` strings and `remainingEngineering` strings.
+
+ENGINEERING is the default. For `workKind: "COMPLETION"`, use
+`estimatedProductionLines: 0` if appropriate, an empty `remainingEngineering` list
+and a nonempty `remainingWork` list per subsection, plus `acceptanceTasks` listing
+the existing precise queue IDs. Freeze the whole intended outcome, not convenient
+passing fragments. No production-code minimum applies to this mode.
+
+Run `npm run session:bundle -- --card docs/EXISTING-CARD.md`, commit the plan
+locally before the work and retain its exact SHA. This recovery commit belongs in
+the outcome PR; it is not a separate plan-only PR or permission stop. Already-started
+work retains honest transition evidence; never invent a historical planning commit.
+
+Delivery JSON retains every subsection and original criterion in order, with
+`criteria: [{"criterion": "original text", "evidence": "concrete proof"}]`,
+`remainingEngineering: []` when finished, and `remainingWork: []` for completion.
+Also supply actual `productionAdded`, `productionRemoved`, `newEngineering`,
+`planComparison`, `relatedWorkDecision`, and `decision`:
+`CONTINUE` while incomplete; `SUBSTANTIAL` when at guide; otherwise
+`SUBSTANTIAL_EXCEPTION` with concrete `exceptionEvidence` of substantial new work.
+Zero-code completion therefore requires an explicit substantive review, not a waiver.
+
 Run `npm run session:bundle -- --card docs/EXISTING-CARD.md --planned-at FULL_SHA
---report /tmp/bundle-delivery.json`. Retain the comparison in the existing PR/card
-handoff; the temporary JSON is accounting, not another roadmap or private evidence.
+--report /tmp/bundle-delivery.json`. Never rewrite a frozen plan to match a smaller
+delivery. Multiple small ENGINEERING contributions can be combined and counted once;
+a COMPLETION bundle preserves one whole connected plan/task list.
 
-Use `decision: "CONTINUE"` when only a small remainder is done or planned engineering
-remains. Keep it as contribution toward this same bundle and continue related
-approved work; a merged small PR is not a successful session finish. Do not recount
-old work. For a complete substantial delivery use `SUBSTANTIAL`. A delivery with
-fewer than two subsections or below 400 changed production lines instead requires
-`SUBSTANTIAL_EXCEPTION` and `exceptionEvidence`: concrete NEW workload/integration
-proof and why grouping related remaining work is unsuitable. Merely finishing a
-card, reusing extensive old implementation or passing many tests is insufficient.
-The checker flags these exceptions for substantive review; it cannot judge the
-truth or substance of prose. Its `SCOPE_ACCOUNTING_CHECKED` result is never a
-bundle certificate, CI/review pass, merge permission or real acceptance proof.
-If a planned outcome turns out small, retain that plan and delivery as a
-contribution. Plan related additional scope in its existing selected execution
-card before coding; compare each preserved plan and review the combined NEW
-workload before counting this bundle once. A contribution report may correctly
-remain CONTINUE_BUNDLE; it is not a separate bundle or a failed implementation. Never shrink away unfinished scope, pad code or
-invent approval.
+### Closeout accounting
 
-Use focused checks while assembling; run all required publication/CI/review gates
-on the substantial coherent tree. Split only for a concrete migration, dependency,
-safety or reviewability reason, keep all guards distinct and count the bundle once.
-If insufficient related approved engineering remains, show the inspected scope and
-ask the smallest necessary owner decision while continuing independent eligible
-work. Actual execution limits require an explicitly INCOMPLETE recoverable handoff.
-Maintenance/review-only requests (including this owner-requested workflow repair)
-claim zero product bundles and need no fabricated implementation bundle plan.
-For already-started work, preserve it, record the current baseline and plan remaining
-work now; never fabricate a pre-code plan for work already performed.
+Run `npm run session:finish -- --bundles N --report PATH` using the actual owner
+target. The sanitized JSON has `baseRevision` and `bundles`, each with `outcome`,
+`subsections`, `merges` (new permanent evidence/source commits on origin/main),
+`productionAdded`, `productionRemoved`, `proof`, and `scopeReview`.
+`scopeReview.plans` lists `{cardPath, plannedAt, delivery}` objects; also include
+its combined `newEngineering`, `planComparison`, `relatedWorkDecision`, `decision`
+and any `exceptionEvidence`. Completion bundles additionally retain
+`workKind: "COMPLETION"` and the frozen `acceptanceTasks` list.
 
-**Acceptance and blockers remain additional obligations.** Test each eligible check
-against actual deployed ancestry, even when main is ahead. An unavailable TEST
-principal, original fixture ownership, runner or optional provider consent is a
-specific dependency to investigate, not a blanket acceptance deferral. Record the
-exact check, current evidence, attempted remedy, needed action/authority, responsible
-party and re-entry trigger. “Coordinate with the runner” alone is not a remedy:
-actually coordinate when authorized, or ask the owner the exact actionable question
-in the active chat. Do not copy credentials, take over another runner's rotating
-grant, recreate uncertain fixtures or bypass approval to clear that dependency.
-Continue independent engineering while it remains blocked. Final reporting includes
-checks actually performed and actionable remaining prerequisites, not merely
-“deployment-dependent checks queued.” Use existing queue/handoff records.
+A completion claim requires those existing tasks to change from not-passed at the
+session baseline to PASSED in merged permanent records, with new genuine evidence
+and unchanged scope, prerequisites and source pin. Every named subsection must
+map to newly passed work. Previously completed engineering may host NEW acceptance;
+it is not counted again as engineering. Reused passes, copied receipts, changed
+gates and shared tasks across bundles cannot satisfy the new-work target. Genuine
+acceptance artifacts may form the substantive outcome PR without a source change;
+this permits real evidence publication, not filler documentation-only PRs.
+
+These commands check accounting, not evidence truth, permission, substantiality,
+CI or product readiness. Independently review all required gates. Maintenance
+requests such as this workflow correction claim zero product bundles.
+
+An unmet target stays incomplete. For a real execution limit, use `stop.kind:
+"EXECUTION_LIMIT"`, nonempty `stop.evidence`, `stop.nextAction`, an exact current-main
+`checkpoint`, and the actual failed `constraint`. For true external exhaustion use
+`EXTERNAL_EXHAUSTION`, evidence/nextAction and `stop.bySubsection` evidence/remedies
+for EVERY remaining ID. Unresolved OPEN/REVIEW rows refuse that exhaustion claim.
+Neither path is success; the command exits 2 with INCOMPLETE_CHECKPOINT. Elapsed
+minutes, clean git, main ahead of live or inability to find 400 lines is not a blocker.
+
+### Reuse reconciled scope and isolate external prerequisites
+
+Read TASKS.md's current disposition, not stale historical candidate handoffs.
+Merged candidate branches do not need reimplementation. Reopen reconciled criteria
+only for changed relevant source/provider contracts, a real failure or new evidence.
+Record missing engineering immediately; do not hide it behind a future activation date.
+P5-2's November 1 gate restricts production retirement, not implementing its dormant
+behavior and synthetic database proof now.
+
+P8-8 already authorizes a dated authenticated Admin Console walkthrough, comparison
+with guidance/readbacks, and correcting missing map coverage. It does not require
+new owner scope approval, an observation-storage feature or a new phase. Use an
+available authorized browser route. If access is missing, investigate that route
+and ask for the exact necessary sign-in/account or role action. Do not ask for
+policy changes, broader OAuth scopes or customer-wide reads without their real approval.
+An API checklist is not an observed console walk.
+
+Original-runner/pass ownership is binding for recovering ITS old fixtures. It does
+not block unrelated read-only checks or a separately authorized fresh TEST run.
+Do not seize a rotating grant, copy credentials, recreate uncertain fixtures or
+claim that a new pass owns an old run. Identify each check's actual prerequisite,
+remedy, responsible party and re-entry trigger, then continue independent work.
 
 ## Count complete predefined batch subsections
 
