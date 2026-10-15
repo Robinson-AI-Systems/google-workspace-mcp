@@ -130,7 +130,7 @@ export function rtcOpenapi(origin = '') {
             ['handle','page','pages','bytes','content','next']),
           object({ handle: string, bytes: integer, payload: string })
         ] },
-        Manifest: object({ rtc: { const: 1 }, server: { const: 'google-workspace-mcp' }, prefix: { const: 'workspace_' }, version: string,
+        Manifest: object({ rtc: { const: 1 }, server: { const: 'google-workspace-mcp' }, prefix: { const: 'workspace' }, version: string,
           areas: strings, counts: object({ tools: integer, writes: integer, money: integer }),
           profiles: strings, listingModes: strings, modes: { type: 'array', items: { const: 'test' } }, devTools: bool,
           conformance: object({ status: string }), deployment: object({ sourceRevision: { type: ['string','null'], pattern: '^[a-f0-9]{40}$' } })

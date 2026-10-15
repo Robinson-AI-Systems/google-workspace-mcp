@@ -1,3 +1,4 @@
+import { fixtureIntent } from './dev-run-state.js';
 // TEST-only self-mailbox fixtures. Insert directly into Gmail; never send mail.
 import crypto from 'node:crypto';
 import {startDevRun,reserveDevStep,recordDevObject,markDevStepRecorded,getDevRun,markDevObjectCleaned} from '../db.js';
@@ -46,7 +47,7 @@ async function recoverMessage(c,id,kind,owner,label){
 export async function createGmailFixtures(args,c,owner){
  if(args.folder!==undefined||args.calendarId!==undefined||args.startAt!==undefined)throw Error('Gmail fixtures cannot target folders or calendars.');
  const id=args.runId||crypto.randomUUID();
- await startDevRun({id,...owner,scenario:'gmail'});
+ await startDevRun({id,...owner,scenario:'gmail',requestSpec:fixtureIntent({scenario:'gmail'})});
  const run=await getDevRun({runId:id,...owner});
  if(run.objects.length&&!run.steps.length)throw Error('Legacy Gmail run has no durable reservations.');
  let label=null;const objects=[];

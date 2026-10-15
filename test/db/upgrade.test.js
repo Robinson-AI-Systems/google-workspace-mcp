@@ -99,6 +99,16 @@ describe.skipIf(!url)('database (real Postgres)', () => {
      await rawQuery('DELETE FROM dev_runs WHERE id=$1',[id]);
    });
   });
+  it('binds real-Postgres fixture creation to immutable intent without depending on JSON key order',async()=>{
+    const id=crypto.randomUUID(),actingAs='intent@example.test',connection='intent-owner';
+    const requestSpec={version:1,scenario:'calendar',calendarId:'owned-calendar',startAt:'2027-01-01T12:00:00.000Z'};
+    const args={id,actingAs,connection,scenario:'calendar',calendarId:'owned-calendar',requestSpec};
+    expect((await db.startDevRun(args)).created).toBe(true);
+    expect((await db.startDevRun({...args,requestSpec:{startAt:requestSpec.startAt,calendarId:'owned-calendar',scenario:'calendar',version:1}})).created).toBe(false);
+    await expect(db.startDevRun({...args,requestSpec:{...requestSpec,startAt:'2027-01-02T12:00:00.000Z'}})).rejects.toThrow(/immutable/);
+    expect((await db.getDevRun({runId:id,actingAs,connection})).request_spec).toEqual(requestSpec);
+    expect(await db.getDevRun({runId:id,actingAs,connection:'foreign'})).toBeNull();
+  });
   describe('RTC hashed read-only passes and atomic limits',()=>{
     it('stores only a hash, honors revocation, and counts concurrent calls atomically',async()=>{
       await db.initSchema();

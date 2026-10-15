@@ -40,7 +40,7 @@ reports_groups_activity reports_login_activity reports_mobile_activity
 reports_oauth_token_activity workflow_audit_external_sharing workflow_email_health
 workflow_health_report workflow_search_presence_check workflow_security_snapshot
 workspace_admin_overview workspace_delegation_status
-workspace_dev_check_integration workspace_dev_list_runs workspace_list_accounts
+workspace_dev_check_integration workspace_dev_get_run workspace_dev_list_runs workspace_list_accounts
 workspace_list_connections workspace_admin_console_capabilities
 workspace_admin_console_verify workspace_plan_summary workspace_where_is_setting`,
  data: `
@@ -130,6 +130,9 @@ const exactRows=(value,key)=>obj(value)&&Array.isArray(value[key])&&
 const optionalCursor=value=>value.nextPageToken===undefined||
  str(value.nextPageToken);
 export const SOURCE_RESULT_PROOFS=Object.freeze({
+ workspace_dev_get_run:(v,_account,args)=>obj(v)&&v.runId===args.runId&&v.providerVerified===false&&
+   ['legacy_needs_review','cleaned','partially_cleaned','needs_reconciliation','recorded'].includes(v.state)&&
+   Array.isArray(v.slots)&&v.slots.every(s=>obj(s)&&s.providerVerified===false)&&obj(v.recovery),
  workspace_admin_list_users:(v)=>exactRows(v,'users')&&optionalCursor(v),
  workspace_admin_list_groups:(v)=>exactRows(v,'groups')&&optionalCursor(v),
  workspace_contacts_list:(v)=>exactRows(v,'connections')&&optionalCursor(v),
@@ -229,7 +232,7 @@ export function parseReviewedReadCases(input) {
   if(input.length>100000)throw Error('reviewed_read_manifest_too_large');
   try {input=JSON.parse(input)}catch{throw Error('invalid_reviewed_read_manifest')}
  }
- if(!Array.isArray(input)||!input.length||input.length>123)
+ if(!Array.isArray(input)||!input.length||input.length>124)
   throw Error('invalid_reviewed_read_manifest');
  const found=new Set();
  return input.map(entry=>{

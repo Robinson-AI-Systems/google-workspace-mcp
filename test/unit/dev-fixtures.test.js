@@ -378,7 +378,7 @@ it('retries a Calendar cleanup after provider deletion without deleting any othe
  when('calendar.calendarList.get').resolves({data:{id:calendarId,accessRole:'owner'}});
  when('calendar.events.get').resolves({data:{id:eventId,status:'cancelled'}});
  const owner={actingAs:clients.actingAs,connection:clients.connection};
- await state.db.startDevRun({id:runId,...owner,scenario:'calendar',calendarId});
+ await state.db.startDevRun({id:runId,...owner,scenario:'calendar',calendarId,requestSpec:{version:1,scenario:'calendar',calendarId,startAt:null}});
  await state.db.reserveDevStep({runId,...owner,kind:'event'});
  await state.db.recordDevObject({runId,...owner,kind:'event',googleId:eventId,parentId:calendarId});
  await state.db.markDevStepRecorded({runId,...owner,kind:'event',googleId:eventId});
@@ -402,7 +402,7 @@ describe('P8-7 independently bound Calendar ledger ID evidence',()=>{
      extendedProperties:{private:{rtc_run:runId,rtc_kind:'event'}}};
    when('calendar.events.get').resolves({data:event});
    const seed=async()=>{
-     await state.db.startDevRun({id:runId,...identity,scenario:'calendar',calendarId});
+     await state.db.startDevRun({id:runId,...identity,scenario:'calendar',calendarId,requestSpec:{version:1,scenario:'calendar',calendarId,startAt:null}});
      await state.db.reserveDevStep({runId,...identity,kind:'event'});
      await state.db.recordDevObject({runId,...identity,kind:'event',googleId,parentId:calendarId});
      await state.db.markDevStepRecorded({runId,...identity,kind:'event',googleId});

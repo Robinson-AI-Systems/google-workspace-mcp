@@ -4,6 +4,7 @@
 // state -- lives in Postgres (Neon) instead.
 import { neon } from '@neondatabase/serverless';
 import crypto from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
 import { loadKey, encryptJson, decryptJson } from './crypto.js';
 import { normalizeDomains, domainOfEmail } from './domains.js';
 import {passOptions,testAccountEnrolled} from './rtc/pass-options.js';
@@ -191,6 +192,7 @@ export async function initSchema() {
   await q`CREATE UNIQUE INDEX IF NOT EXISTS dev_run_objects_single_kind ON dev_run_objects(run_id,kind)`;
   await q`ALTER TABLE dev_runs ADD COLUMN IF NOT EXISTS root_folder TEXT`;
   await q`ALTER TABLE dev_runs ADD COLUMN IF NOT EXISTS calendar_id TEXT`;
+  await q`ALTER TABLE dev_runs ADD COLUMN IF NOT EXISTS request_spec JSONB`;
   // An immutable reservation exists BEFORE any provider mutation. A retry is
   // reconciliation-only while a slot is pending; never blindly create again.
   await q`CREATE TABLE IF NOT EXISTS dev_run_steps (
@@ -648,16 +650,17 @@ export async function rtcPassFailureCode(token){
 
 // Exact-account and exact-connection fixture ledger; Google IDs are never guessed.
 
-export async function startDevRun({id,actingAs,connection,scenario,folder=null,calendarId=null}){
+export async function startDevRun({id,actingAs,connection,scenario,folder=null,calendarId=null,requestSpec=null}){
  if(!id||!actingAs||!connection||!scenario)throw Error('Authenticated fixture run required.');
  const q=db(),email=normalizeEmail(actingAs);
- const inserted=await q`INSERT INTO dev_runs(id,acting_as,connection,scenario,root_folder,calendar_id)
-    VALUES (${id},${email},${connection},${scenario},${folder},${calendarId})
+ const inserted=await q`INSERT INTO dev_runs(id,acting_as,connection,scenario,root_folder,calendar_id,request_spec)
+    VALUES (${id},${email},${connection},${scenario},${folder},${calendarId},${requestSpec===null?null:JSON.stringify(requestSpec)}::jsonb)
     ON CONFLICT DO NOTHING RETURNING id`;
- const found=await q`SELECT id,scenario,root_folder,calendar_id FROM dev_runs
+ const found=await q`SELECT id,scenario,root_folder,calendar_id,request_spec FROM dev_runs
     WHERE id=${id} AND acting_as=${email} AND connection=${connection}`;
- if(!found[0]||found[0].scenario!==scenario||found[0].root_folder!==folder||found[0].calendar_id!==calendarId)
-   throw Error('Run ID belongs to a different account, connection, scenario or root folder.');
+ if(found[0]?.request_spec===null&&requestSpec!==null)throw Error('Legacy fixture run requires an exact-ID reviewed recovery plan, never recreation.');
+ if(!found[0]||found[0].scenario!==scenario||found[0].root_folder!==folder||found[0].calendar_id!==calendarId||!isDeepStrictEqual(found[0].request_spec,requestSpec))
+   throw Error('Run ID belongs to a different account, connection, scenario, immutable request or root folder.');
  return {created:inserted.length===1,runId:id};
 }
 // The UNIQUE slot is durably reserved before calling Drive. Even after a crash,
@@ -699,7 +702,7 @@ export async function markDevStepRecorded({runId,actingAs,connection,kind,google
 export async function getDevRun({runId,actingAs,connection}){
  if(!runId||!actingAs||!connection)return null;
  const q=db(),email=normalizeEmail(actingAs);
- const runs=await q`SELECT id,scenario,root_folder,calendar_id,created_at FROM dev_runs
+ const runs=await q`SELECT id,scenario,root_folder,calendar_id,request_spec,created_at FROM dev_runs
    WHERE id=${runId} AND acting_as=${email} AND connection=${connection}`;
  if(!runs[0])return null;
  const objects=await q`SELECT kind,google_id,parent_id,cleaned_at FROM dev_run_objects

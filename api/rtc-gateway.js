@@ -1,5 +1,6 @@
 // RTC 1 HTTPS door, sharing the exact wrapped handlers used by /api/mcp.
 // Existing legacy MCP tool names remain untouched; HTTPS uses workspace_ aliases.
+import { rtcWriteReceipt,rtcReceiptSchema } from '../src/rtc/write-receipt.js';
 import { rtcOpenapi } from '../src/rtc/openapi.js';
 import { registry } from '../src/tools/index.js';
 import { RTC_AREAS,RTC_META,allowedTool,listedTools,toolMetadata,isWrite } from '../src/rtc/catalog.js';
@@ -15,7 +16,7 @@ export function toInternal(name){
  const candidate=name.slice(prefix.length);
  return Object.hasOwn(registry.handlers,candidate)?candidate:null;
 }
-const expose=t=>({...toolMetadata(t),name:toExternal(t.name)});
+const expose=t=>({...toolMetadata(t),name:toExternal(t.name),...(t.outputSchema?{outputSchema:rtcReceiptSchema(t.outputSchema)}:{})});
 // A service-issued pass must never appear in any RTC JSON success or
 // provider error, including batch responses or retrieved stored results.
 const SERVICE_PASS_RE=/rtc_pass_[A-Za-z0-9_-]{43}/g;
@@ -28,7 +29,7 @@ function reply(res,status,data,retryAfter){
  return res.status(status).json(data);
 }
 const success=(res,result,mode='test')=>{
- const data={ok:true,result,mode};
+ const data={ok:true,result:rtcWriteReceipt(result),mode};
  if(result&&typeof result==='object'&&typeof result.handle==='string'){
    data.handle=result.handle;
    data.count=result.count;
@@ -73,7 +74,7 @@ function errorStatus(code){
 }
 export function manifest(){
  const metadata=registry.tools.map(expose);
- return {rtc:1,server:'google-workspace-mcp',prefix:'workspace_',version:'1.0.0',
+ return {rtc:1,server:'google-workspace-mcp',prefix:'workspace',version:'1.0.0',
   areas:RTC_AREAS,counts:{tools:metadata.length,writes:metadata.filter(t=>t.writes).length,money:0},
   profiles:['read_only','everyday','full'],listingModes:['catalog','compact'],modes:['test'],
   devTools:true,conformance:{status:'pending_real_D4_acceptance'},

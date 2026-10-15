@@ -47,7 +47,7 @@ describe('P0-2 reviewed catalog-wide read cases',()=>{
   const safe=new Set(SAFE_READ_PROBES.map(x=>x.name));
   const fixtures=new Set(FIXTURE_TOOL_NAMES);
   const additional=Object.keys(EXTRA_READ_CASES);
-  expect(additional).toHaveLength(123);
+  expect(additional).toHaveLength(124);
   expect(new Set(additional).size).toBe(additional.length);
   for(const name of READ_ONLY_TOOL_NAMES){
    const rtc=name.startsWith('workspace_')?name:'workspace_'+name;
@@ -79,7 +79,7 @@ describe('P0-2 reviewed catalog-wide read cases',()=>{
    }else expect(()=>parseReviewedReadCases(entries)).toThrow();
   }
   expect(()=>parseReviewedReadCases('{}')).toThrow();
-  expect(()=>parseReviewedReadCases(Array(124).fill(one))).toThrow();
+  expect(()=>parseReviewedReadCases(Array(125).fill(one))).toThrow();
  });
  it('uses deployed input schema and refuses extra args, missing IDs, drift and unsafe nested data',()=>{
   const t=tool('workspace_admin_get_user','admin',

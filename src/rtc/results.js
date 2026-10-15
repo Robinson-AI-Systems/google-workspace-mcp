@@ -76,6 +76,7 @@ export async function shapeReadResult(output,args,connection,store=storeRtcResul
    }
  }
  return ok({handle,bytes,count:resultCount(data),summary,
+   ...(typeof args?.toolName==='string'&&isWrite(args.toolName)&&data?.logged===true&&Number.isSafeInteger(data?.changeId)&&data.changeId>0?{logged:true,changeId:data.changeId}:{}),
    ...(compactData!==data?{data:shown}:{}),
    preview:compactData===data?full.slice(0,768):undefined});
 }
