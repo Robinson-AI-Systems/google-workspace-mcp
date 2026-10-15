@@ -130,6 +130,8 @@ export const GUARDS_ADMIN = {
       const shown = SETTING_KEYS.filter((k) => body[k] !== undefined).map((k) => `${k} = ${shortText(body[k])}`);
       return { target: a.groupEmail, summary: `Change the settings of the group ${a.groupEmail}: ${shown.join(', ') || 'nothing given'}` };
     },
+    before: (a, { groupssettings }) =>
+      data(groupssettings.groups.get({ groupUniqueId: a.groupEmail })).then(settingsView),
     precheck: async (a, { groupssettings }) => {
       const existing = await data(groupssettings.groups.get({ groupUniqueId: a.groupEmail }));
       validateSettingsTransition(a, existing);
