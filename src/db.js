@@ -325,11 +325,14 @@ export async function getGoogleTokensFor(email) {
 async function storeEncryptedCopy(q, email, tokens, key, refreshed = false) {
   try {
     const enc = encryptJson(tokens, key);
-    await q`UPDATE google_accounts SET tokens_enc = ${enc},
+    await q`WITH mode_guard AS MATERIALIZED (
+      SELECT id FROM google_token_storage WHERE id = true AND encrypted_only_at IS NULL FOR SHARE
+    )
+    UPDATE google_accounts SET tokens_enc = ${enc},
       tokens_enc_verified_at = now(),
       tokens_enc_refreshed_at = CASE WHEN ${refreshed}::boolean THEN now() ELSE tokens_enc_refreshed_at END
       WHERE email = ${email} AND tokens = ${JSON.stringify(tokens)}::jsonb
-        AND EXISTS (SELECT 1 FROM google_token_storage WHERE id = true AND encrypted_only_at IS NULL)`;
+        AND EXISTS (SELECT 1 FROM mode_guard)`;
   } catch {
     console.warn('[crypto] Could not store the encrypted copy of an account\'s tokens; the plain copy is still correct.');
   }

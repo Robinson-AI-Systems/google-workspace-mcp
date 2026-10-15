@@ -253,6 +253,21 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       warn.mockRestore();
     });
 
+    it('atomically keeps ciphertext equal to plaintext across competing dormant-mode refresh saves', async () => {
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY = crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test',tokens);
+      await Promise.all([
+        db.saveGoogleTokensFor('a@example.test',{access_token:'latest-a',id_token:'token-a'},{source:'refresh'}),
+        db.saveGoogleTokensFor('a@example.test',{scope:'read-scope',expiry_date:45678},{source:'refresh'})
+      ]);
+      const current=await row('a@example.test');
+      expect(current.tokens).toMatchObject({refresh_token:'fake-refresh-1',id_token:'token-a',scope:'read-scope',expiry_date:45678});
+      const {decryptJson}=await import('../../src/crypto.js');
+      expect(decryptJson(current.tokens_enc,Buffer.from(process.env.TOKEN_ENCRYPTION_KEY,'base64'))).toEqual(current.tokens);
+      expect((await db.inspectGoogleTokenRetirement()).ready).toBe(true);
+    });
+
     it('keeps retirement dormant on upgrade and denies early/unauthorized activation', async () => {
       await reset();
       await db.initSchema();
