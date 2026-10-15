@@ -208,6 +208,19 @@ export const handlers = { [name]: async (args, clients) => ok(...) };
 
 ## Robinson Tool Contract (Phase 8; partial integration, not certified)
 
+P8-4 exposes eight generic OpenAPI operations from `src/rtc/openapi.js`, including
+explicit service-pass bearer authentication, public metadata, authorized discovery,
+request/result schemas, bounded batch and UTF-8 result recovery, and RTC error codes.
+Provider schemas remain available via authorized tool discovery; they are not expanded
+into hundreds of OpenAPI operations. Invalid configured server URLs fall back to the
+serving origin. The gateway rejects ambiguous query values and non-object POST bodies
+before dispatch, returns sanitized RTC errors for thrown failures, and treats failed
+writes as uncertain until read back. `createRtcGateway()` owns only an initialization
+latch per instance; authorization, revocation and atomic per-pass limits remain in the
+shared DB. The P8-4 DB test uses two independently constructed handlers and a pool of
+real concurrent PostgreSQL backends, including configured limits and window rollover.
+Source/local/CI evidence remains separate from deployed or genuine Google acceptance.
+
 RTC profiles, metadata, bounded result handles, guarded HTTPS tool routes and short-lived read-only TEST passes are implemented and locally tested. The authoritative implementation and blocked external acceptance live in `TASKS.md`. Neither pinned Hub reference conformance nor simulated Google proves protected deployed direct/relay/Sandbox and revocation against a real service. Never widen scopes or treat test profile acceptance as production activation.
 
 ## Known gaps (as of 2026-10-02)
