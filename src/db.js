@@ -385,24 +385,48 @@ export async function saveGoogleTokensFor(email, tokens, { label, source } = {})
   const refreshed = source === 'refresh';
   const key = loadKey();
   if (await encryptedOnlyEnabled(q)) return saveEncryptedOnly(q, e, tokens, label || null, key, refreshed);
-  const count = await q`SELECT count(*)::int AS n FROM google_accounts`;
-  const makeDefault = count[0].n === 0;
-  // The mode condition handles an activation between our read and the upsert.
-  // No plaintext is intentionally written by a new-version post-activation save.
-  const rows = await q`
-    INSERT INTO google_accounts (email, label, tokens, is_default, updated_at)
-    SELECT ${e}, ${label || null}, ${JSON.stringify(tokens)}::jsonb, ${makeDefault}, now()
-    WHERE EXISTS (SELECT 1 FROM google_token_storage WHERE id = true AND encrypted_only_at IS NULL)
-    ON CONFLICT (email) DO UPDATE SET
-      tokens = google_accounts.tokens || EXCLUDED.tokens,
-      tokens_enc = NULL, tokens_enc_verified_at = NULL, tokens_enc_refreshed_at = NULL,
-      label = COALESCE(EXCLUDED.label, google_accounts.label),
-      updated_at = now()
-    WHERE EXISTS (SELECT 1 FROM google_token_storage WHERE id = true AND encrypted_only_at IS NULL)
-    RETURNING tokens
-  `;
-  if (!rows.length) return saveEncryptedOnly(q, e, tokens, label || null, key, refreshed);
-  if (key) await storeEncryptedCopy(q, e, rows[0].tokens, key, refreshed);
+  // Write both copies in ONE PostgreSQL statement. Locking the mode row
+  // for this statement serializes activation against any in-flight dual save.
+  // CAS on the previous JSON value prevents concurrent refreshes losing fields.
+  for (let attempt = 0; attempt < 10; attempt++) {
+    if (await encryptedOnlyEnabled(q))
+      return saveEncryptedOnly(q, e, tokens, label || null, key, refreshed);
+    const previous = await q`SELECT tokens FROM google_accounts WHERE email = ${e}`;
+    const current = previous[0];
+    const merged = { ...(current?.tokens || {}), ...tokens };
+    const encrypted = key ? encryptJson(merged, key) : null;
+    let rows;
+    if (current) {
+      rows = await q`WITH mode_guard AS MATERIALIZED (
+        SELECT id FROM google_token_storage WHERE id = true AND encrypted_only_at IS NULL FOR SHARE
+      )
+      UPDATE google_accounts SET
+        tokens = ${JSON.stringify(merged)}::jsonb, tokens_enc = ${encrypted},
+        tokens_enc_verified_at = CASE WHEN ${encrypted}::text IS NULL THEN NULL ELSE now() END,
+        tokens_enc_refreshed_at = CASE
+          WHEN ${encrypted}::text IS NULL THEN NULL
+          WHEN ${refreshed}::boolean THEN now()
+          ELSE tokens_enc_refreshed_at END,
+        label = COALESCE(${label || null}, label), updated_at = now()
+      WHERE email = ${e} AND tokens = ${JSON.stringify(current.tokens)}::jsonb
+        AND EXISTS (SELECT 1 FROM mode_guard)
+      RETURNING email`;
+    } else {
+      rows = await q`WITH mode_guard AS MATERIALIZED (
+        SELECT id FROM google_token_storage WHERE id = true AND encrypted_only_at IS NULL FOR SHARE
+      )
+      INSERT INTO google_accounts
+        (email, label, tokens, tokens_enc, tokens_enc_verified_at, tokens_enc_refreshed_at, is_default, updated_at)
+      SELECT ${e}, ${label || null}, ${JSON.stringify(merged)}::jsonb, ${encrypted},
+        CASE WHEN ${encrypted}::text IS NULL THEN NULL ELSE now() END,
+        CASE WHEN ${encrypted}::text IS NOT NULL AND ${refreshed}::boolean THEN now() ELSE NULL END,
+        NOT EXISTS (SELECT 1 FROM google_accounts), now()
+      WHERE EXISTS (SELECT 1 FROM mode_guard)
+      ON CONFLICT (email) DO NOTHING RETURNING email`;
+    }
+    if (rows.length) return;
+  }
+  throw new Error('Concurrent Google token refresh could not be safely reconciled; retry using the same credentials.');
 }
 
 /**
