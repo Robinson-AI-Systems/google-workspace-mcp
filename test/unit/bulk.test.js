@@ -8,6 +8,7 @@ vi.mock('../../src/db.js', async importActual => {
 });
 const { registry } = await import('../../src/tools/index.js');
 const { normalizeBulkArgs, readMailboxExact } = await import('../../src/tools/bulk.js');
+const { inheritGuardedWrite } = await import('../../src/tools/write.js');
 const { isWrite, allowedTool } = await import('../../src/rtc/catalog.js');
 const body = response => JSON.parse(response.content[0].text);
 const bulk = registry.handlers.workspace_bulk_operation;
@@ -323,7 +324,7 @@ describe('P7-8 complete published contract and aggregate audit', () => {
     const target=registry.handlers.admin_add_group_member;
     // The final composed registry is mutable only within this isolated test,
     // and the handler reference is restored even if the assertion fails.
-    registry.handlers.admin_add_group_member=async()=>({isError:true,content:[{type:'text',text:'redacted'}]});
+    registry.handlers.admin_add_group_member=inheritGuardedWrite(target,async()=>({isError:true,content:[{type:'text',text:'redacted'}]}));
     try{
       const result=body(await bulk(args({confirm:true}),clients)).details;
       expect(result.results.map(x=>x.status)).toEqual(['unknown','unknown']);
