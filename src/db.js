@@ -6,7 +6,7 @@ import { neon } from '@neondatabase/serverless';
 import crypto from 'node:crypto';
 import { loadKey, encryptJson, decryptJson } from './crypto.js';
 import { normalizeDomains, domainOfEmail } from './domains.js';
-import {passOptions} from './rtc/pass-options.js';
+import {passOptions,testAccountEnrolled} from './rtc/pass-options.js';
 
 let sql;
 function db() {
@@ -579,8 +579,7 @@ export async function getRtcResult(handle,connection){
 export async function createRtcPass(options){
  const {account,areas,limit,ttl,forHub,allowWrites,profile}=passOptions(options);
  if(!account)throw new Error('Missing connected account.');
- const allowlist=String(process.env.RTC_TEST_ACCOUNT_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
- if(!allowlist.includes(account))throw new Error('Account is not authorized for RTC non-production TEST passes. Configure RTC_TEST_ACCOUNT_EMAILS with the approved scratch mailbox.');
+ if(!testAccountEnrolled(account))throw new Error('Account is not authorized for RTC non-production TEST passes. Configure RTC_TEST_ACCOUNT_EMAILS with the approved scratch mailbox.');
  const q=db();
  const accountRows=await q`SELECT 1 FROM google_accounts WHERE email=${account}`;
  if(!accountRows[0])throw new Error('Unknown connected account.');
@@ -597,7 +596,10 @@ export async function getRtcPass(token){
  const q=db();
  const rows=await q`SELECT id,google_account,profile,areas,listing,mode,allow_writes,for_hub,rate_limit_per_minute,expires_at
  FROM rtc_passes WHERE token_hash=${hash} AND revoked_at IS NULL AND expires_at>now()`;
- return rows[0]||null;
+ const pass=rows[0]||null;
+ // Revocation of the TEST enrollment takes effect at every RTC gateway
+ // request, not only during pass creation. Do not reissue or widen scope.
+ return pass&&testAccountEnrolled(pass.google_account)?pass:null;
 }
 export async function revokeRtcPass(id){
  const q=db();
@@ -630,6 +632,10 @@ export async function rtcPassFailureCode(token){
  if(!rows[0])return 'permission';
  if(rows[0].revoked_at)return 'pass_revoked';
  if(new Date(rows[0].expires_at).getTime()<=Date.now())return 'pass_expired';
+ // Do not reveal the configured enrollment list to unauthenticated callers.
+ // Report the same neutral permission denial as any unrecognized pass.
+ const detail=await q`SELECT google_account FROM rtc_passes WHERE token_hash=${hash}`;
+ if(!testAccountEnrolled(detail[0]?.google_account))return 'permission';
  return 'permission';
 }
 
