@@ -129,3 +129,93 @@ export function planConsoleReadbacks(args={},clients={}){
    tool:spec.tool,scope:spec.scope,target,args:spec.args(target),guidance};
  });
 }
+
+function decodeRead(output){
+ if(!obj(output)||output.isError===true)return null;
+ const part=output.content?.find(x=>x.type==='text');
+ if(!part||typeof part.text!=='string'||part.text.length>4*1024*1024)return null;
+ // Never treat plain English or a transport wrapper as Google evidence.
+ let value;
+ try{value=JSON.parse(part.text);}catch{return null;}
+ if(obj(value)&&(['error','isError','content'].some(k=>own(value,k))))return null;
+ return value;
+}
+function shapeStatus(spec,value,target){
+ try{
+  if(!spec.proof(value,target))return {status:'not_readable',reason:'google_evidence_missing_or_malformed'};
+  if(['customer_sample','customer'].includes(spec.scope))
+   return {status:'observed_partial',reason:'a_supported_account_or_customer_subset_not_an_effective_policy'};
+  // The API may return a legitimate empty list for one mailbox; that is
+  // a valid read of the connected mailbox, not proof of org-wide policy.
+  return {status:'observed',reason:'narrow_metadata_readback_only'};
+ }catch{
+  return {status:'not_readable',reason:'google_evidence_missing_or_malformed'};
+ }
+}
+export async function executeConsoleReadbacks(args={},clients={},invoke){
+ if(args.dryRun!==undefined&&typeof args.dryRun!=='boolean')
+  throw Error('dryRun must be boolean.');
+ if(typeof invoke!=='function')throw Error('A guarded source reader is required.');
+ const planned=planConsoleReadbacks(args,clients);
+ const entries=[];
+ for(const plannedItem of planned){
+  const {tool,scope,target,args:input,...base}=plannedItem;
+  if(plannedItem.status!=='eligible'){
+   entries.push(base);
+   continue;
+  }
+  if(args.dryRun===true){
+   entries.push({...base,status:'planned',reason:'read_only_provider_probe_not_run'});
+   continue;
+  }
+  let output;
+  try{output=await invoke(tool,input,clients);}catch{
+   entries.push({...base,status:'not_readable',reason:'google_read_threw_or_was_denied'});
+   continue;
+  }
+  const value=decodeRead(output);
+  const observed=shapeStatus(READBACK[base.id],value,target);
+  entries.push({...base,status:observed.status,reason:observed.reason,
+   ...(value!==null&&Array.isArray(value)&&observed.status!=='not_readable'?
+    {observedCount:value.length}:{})});
+ }
+ const summary={total:entries.length,observed:0,observedPartial:0,
+  notReadable:0,outsideScope:0,manualOnly:0,needsTarget:0,planned:0};
+ for(const entry of entries){
+  if(entry.status==='observed')summary.observed++;
+  else if(entry.status==='observed_partial')summary.observedPartial++;
+  else if(entry.status==='not_readable')summary.notReadable++;
+  else if(entry.status==='outside_scope')summary.outsideScope++;
+  else if(entry.status==='manual_only')summary.manualOnly++;
+  else if(entry.status==='needs_target')summary.needsTarget++;
+  else if(entry.status==='planned')summary.planned++;
+ }
+ const allObserved=summary.observed+summary.observedPartial===summary.total;
+ return {
+  account:clients.actingAs,checkedAt:new Date().toISOString(),
+  mode:args.dryRun===true?'review_preview':'read_only_google_observation',
+  complete:args.dryRun!==true&&allObserved,
+  summary,entries,
+  note:'Observed is this exact accessible Google API read only. Partial reads, other domains, purchased licenses, inherited settings, delivery rules and Admin console policy toggles still need independent proof; this tool changes nothing.'
+ };
+}
+export const tools=[{
+ name:'workspace_admin_console_verify',
+ description:'Read-only exact Admin-console topic verification: choose up to ten mapped topics to observe current Google metadata, with per-account/domain scope, partial-evidence and safe manual guidance. Never edits policies or treats an API read as proof of effective organization settings.',
+ inputSchema:{type:'object',properties:{
+  ids:{type:'array',minItems:1,maxItems:10,items:{type:'string',
+    enum:[...TOPICS.keys()].sort()}},
+  subjectEmail:{type:'string',description:'Exact named employee mailbox for 2-Step or recovery checks; never guessed.'},
+  groupEmail:{type:'string',description:'Exact owned/approved group email for its effective group settings read.'},
+  domain:{type:'string',description:'Exact reviewed DNS domain for a narrow published email-authentication check.'},
+  crossDomain:{type:'boolean',description:'Explicit owner authorization for customer-wide or other-business reads; default false.'},
+  dryRun:{type:'boolean',description:'True: list eligible provider reads and scope gates only, no Google requests.'}
+ },required:['ids']}
+}];
+export const handlers={
+ async workspace_admin_console_verify(args={},clients){
+  const {registry}=await import('./index.js');
+  return ok(await executeConsoleReadbacks(args,clients,
+   (name,childArgs,account)=>callReadForComposition(registry,name,childArgs,account)));
+ }
+};
