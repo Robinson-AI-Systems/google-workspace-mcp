@@ -1,3 +1,13 @@
+### October 15 P5-2 substantive engineering delivery / PR #147
+
+Frozen plan at ab23be959cd35c352626ce1b3f82efb53ded4867; original base 8c44aea0a58a1003c0722dbc66b1974869b1f7b3. One existing approved subsection P5-2, full source criteria intact. Original Build: stop plaintext token writes after 30 days and clear only on next refresh, never drop the column. Implemented an inactive-by-default, database-persisted transition with encrypted-only read/write/new-account and partial-refresh handling, no plaintext authority once active, all-account encrypted-backfill/refresh readiness, hard November 1 gate, owner-controlled operator entrypoint and concurrency-safe CAS/read locking.
+
+Source revision `fc8a922e1fc515c506a22b443fdd5a365bfb2e18` passed Actions 38798504715 (parallel test/check, 1,697 unit; actual disposable PostgreSQL; RTC) and release-policy 38798504738. Automatic Codex review quota previously exhausted; inspect all threads and conduct source/security self-review at final head before merge. No Google account, credential, production row, release or retirement was changed; deployed READY still 15a547f4f7c24c9739d496bfb6f7d489cc468a8e.
+
+**Workload exception review:** Single original P5-2 is security-critical, not a cosmetic helper. Production code from this session modifies real OAuth refresh persistence, durable storage state, atomic dual-copy synchronization, encrypted-only optimistic merge, per-account readiness, time/owner gates and fail-closed recovery together. Approximately 189 added / 27 removed production lines at the source compare, excluding fake/real SQL tests, documentation and operator script; below ordinary 2–5 subsection / 400-line guidance, but whole sensitive cross-layer migration is independent, cohesive and fully testable now. No unrelated P8 features padded into the bundle. Automated accounting does not certify substantiality.
+
+**External follow-up:** P5-2-ENCRYPTED-READY and P5-2-PLAINTEXT-RETIRE are separate new queue rows; never activate production before November 1 and original external approval/renewal proof. Earlier queued TEST fixture/RTC/domain Console acceptance retains its independent prerequisites, not a blanket engineering stop. Post-merge handoff must append merge SHA, final exact-head checks/reviews, cleanup and following approved completion work.
+
 ## Current completion reconciliation — owner correction October 15
 
 Two fresh chats stopped at 0/1 by searching for substantial NEW code, rechecking
@@ -6,13 +16,15 @@ existing requirements. Current baseline 28e6486 includes those candidate branche
 The disposition below is reconciled against original Build/Acceptance and actual
 source/tests, not branch names. Historical candidate handoffs below are not new work.
 
-**Next engineering outcome: P5-2 encrypted-only token retirement.** Its source is
-actually missing, despite the earlier TIME_GATED label. Implement the complete
-inactive transition and meaningful disposable-DB proof now; do not retire real
-plaintext before November 1 AND verified encrypted renewal/backfill for every
-connected account. The current dual-write reader treats plaintext as authority;
-merely clearing it would break refresh. Finish the connected read/save/refresh path,
-not a date flag alone. Existing original card governs scope, no new phase needed.
+**P5-2 engineering recovery — PR #147.** The original missing encrypted-only
+get/save/refresh transition, durable inactive mode, all-account inspected evidence,
+operator-only activation, strict decryption and concurrent atomic token update are
+implemented at source revision `fc8a922e1fc515c506a22b443fdd5a365bfb2e18`, with real PostgreSQL tests. This is
+engineering completion only; production plaintext retirement remains gated until
+November 1, 2026, separately verified backfill/Google refresh for every account,
+checked release ancestry, drained old server code and independent owner approval.
+The next eligible work after this source merge is connected acceptance on released
+work, not inventing another encrypted-token feature. Existing original card governs scope, no new phase needed.
 
 After eligible engineering, substantial real-world completion can satisfy an
 explicit COMPLETION bundle under SESSION-START, without invented code. P8-8's dated
@@ -209,12 +221,12 @@ restricts only the named operation. Source completion never proves actual Google
   },
   {
     "id": "P5-2",
-    "state": "OPEN",
-    "remaining": "Confirmed missing engineering at main28e6486: getGoogleTokensFor treats plaintext as authority; saveGoogleTokensFor always merges into/writes plaintext and only then creates an encrypted copy. No encrypted-only post-retirement read/write/refresh path or retirement DB tests exist. November 1 gates actual production retirement ONLY, not this source work.",
-    "evidence": "src/db.js getGoogleTokensFor, storeEncryptedCopy, saveGoogleTokensFor; test/db/upgrade.test.js encryption/backfill/healing cases (dual-write only). Original P5-2 requires no plaintext writes and clearing tokens on next refresh after the gate; existing tests do not prove that path.",
-    "next": "Implement the complete encrypted-only read/save/refresh/backfill transition with an inactive-by-default gate preserving pre-November-1 and all-account proof restrictions. Cover legacy rows, encrypted-only rows, missing/wrong keys, partial refresh-token merge, concurrent refresh and rollback compatibility in disposable Postgres; retain no-drop/additive policy. Do not activate retirement or clear real tokens.",
-    "gate": "Actual production retirement not before 2026-11-01 AND independently verified encrypted refresh/backfill for every connected account; implementation and synthetic testing are eligible now.",
-    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Approved P5-2 engineering is implemented: atomic dual plaintext/ciphertext CAS with storage-state read locks; post-activation encrypted-only reads, strict missing/invalid key refusal, optimistic concurrent refresh merge, new-account encrypted-only inserts and per-account plaintext cleared on next save. Real future activation is dormant, explicitly owner-confirmed and date/all-account encrypted-backfill/observed-refresh gated. The deployed-mode and actual provider renewal remain separate production acceptance, not missing code.",
+    "evidence": "Source fc8a922e1fc515c506a22b443fdd5a365bfb2e18: src/db.js durable google_token_storage marker, tokens_enc_verified_at and tokens_enc_refreshed_at, locked dual save/backfill, encrypted-only CAS and inspect/activate; src/auth/google-auth-hosted.js marks actual tokens event; scripts/google-token-retirement.mjs protected operator CLI. Real PostgreSQL test/db/upgrade.test.js checks simultaneous dual and encrypted-only writers, retained refresh token, existing/created accounts, wrong/missing key, stale ciphertext, pre-November date/owner refusal, all-account readiness. 1,697 unit, DB/RTC/check and exact-head Actions 38798504715 PASS at source revision. This is synthetic DB proof, not production token migration.",
+    "next": "After independently verified READY promotion of the source revision, use the protected operator --inspect command to verify sanitized all-account backfill and genuine Google refresh readiness. After 2026-11-01 and independent explicit owner confirmation, old-version drain and approved rollback/recovery plan, use protected --activate and verify each account's subsequent refresh clears plaintext while preserving encrypted tokens. Never initiate early retirement.",
+    "gate": "Not before 2026-11-01 00:00 America/Denver, all connected accounts having verified encrypted backfill AND observed real Google OAuth refresh, checked READY release and drained older plaintext-only instances, independent owner approval and recovery plan. No production activation in PR #147.",
+    "reviewedAt": "fc8a922e1fc515c506a22b443fdd5a365bfb2e18"
   },
   {
     "id": "P6-1",
@@ -302,8 +314,7 @@ restricts only the named operation. Source completion never proves actual Google
     "gate": "Authenticated read-only Google Admin Console session for the intended authorized organization/role; observe only approved scope, no policy changes. Record inaccessible/edition-specific pages honestly; an API-generated checklist alone is not the walkthrough.",
     "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
   }
-]
-```
+]```
 <!-- engineering-readiness:end -->
 
 ## Release acceptance queue — workflow optimization 2026-10-14
@@ -501,7 +512,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "priority": 2,
     "requiredRevision": "7426e266752c8e97f4b970b6f4b31ab49d81275f",
     "task": "Verify deployed guarded workspace_bulk_operation with original owner-authorized scoped TEST targets and non-production approval. Prove permitted mappings, exact provider readbacks, safe domain refusal, partial failure and cleanup; no paid license actions without independent spending approval.",
-    "procedure": "docs/plan/TASKS.md \u2014 P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md — P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Exact READY deployment and authenticated custom MCP connection; owner-approved isolated TEST targets, permission/domain limits, exact fixture IDs and operation-specific approvals; no production bulk writes or autonomous spending",
     "dependsOn": [],
     "status": "PENDING",
@@ -557,7 +568,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "28e648611cf1e4a634490630201c517dfc501d7c",
     "status": "PENDING",
     "task": "Original disposable-group full-settings preview/edit/readback/cleanup through the actual scoped custom Google service.",
-    "procedure": "docs/plan/TASKS.md \u2014 P6-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md — P6-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Checked independently READY source containing 80c0870; original approved group fixture, scoped Google permission and operation-specific edit/cleanup authorization.",
     "dependsOn": [],
     "lastEvidence": "2026-10-15 repository reconciliation only. Original acceptance was outstanding but absent as its own precise queue row; no actual Google lifecycle/console walk was performed in this maintenance. Establish exact deployed ancestry and existing authorization, then execute or ask the specific access/fixture question."
@@ -568,7 +579,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "28e648611cf1e4a634490630201c517dfc501d7c",
     "status": "PENDING",
     "task": "Original disposable shared-drive create, member add/change/readback/remove and empty-drive delete lifecycle; preserve exact IDs, domain limits, no production file deletion and cleanup.",
-    "procedure": "docs/plan/TASKS.md \u2014 P7-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md — P7-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Independently READY checked source including 81264c1; explicit disposable-drive/member fixture permission and eligible Google role/edition. No paid account or production file changes.",
     "dependsOn": [],
     "lastEvidence": "2026-10-15 repository reconciliation only. Original acceptance was outstanding but absent as its own precise queue row; no actual Google lifecycle/console walk was performed in this maintenance. Establish exact deployed ancestry and existing authorization, then execute or ask the specific access/fixture question."
@@ -579,13 +590,36 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "28e648611cf1e4a634490630201c517dfc501d7c",
     "status": "PENDING",
     "task": "Complete the already-approved dated authenticated Google Admin Console walkthrough: inventory actual in-scope pages, compare mapped paths/steps/expected results, reconcile permitted API readbacks and correct real missing coverage. Do not add a new observation-storage feature.",
-    "procedure": "docs/plan/TASKS.md \u2014 P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md — P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Authenticated read-only Google Admin Console session for the intended authorized organization/role; observe only approved scope, no policy changes. Record inaccessible/edition-specific pages honestly; an API-generated checklist alone is not the walkthrough.",
     "dependsOn": [],
     "lastEvidence": "2026-10-15 repository reconciliation only. Original acceptance was outstanding but absent as its own precise queue row; no actual Google lifecycle/console walk was performed in this maintenance. Establish exact deployed ancestry and existing authorization, then execute or ask the specific access/fixture question."
+  },
+  {
+    "id": "P5-2-ENCRYPTED-READY",
+    "priority": 2,
+    "requiredRevision": "fc8a922e1fc515c506a22b443fdd5a365bfb2e18",
+    "task": "On the independently checked deployed P5-2 source, prove every connected account has a valid encrypted backfill and a genuine subsequent OAuth token-refresh observation via protected sanitized readiness inspection, with zero plaintext retirement.",
+    "procedure": "docs/plan/TASKS.md P5-2 controlled future activation",
+    "gates": "Protected operator environment; current correct TOKEN_ENCRYPTION_KEY; verified source/READY deployment; exact all-account count and encrypted/refresh evidence; no token values in logs or report, no real retirement or unsolicited Google mutation.",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-15: exact-source isolated PostgreSQL upgrade/integrity/refresh/concurrency tests passed Actions 38798504715. No actual deployed Google account refresh or protected operator readiness proof was run. Next: checked live promotion plus existing operator authority; report only sanitized counts and per-condition PASS/FAIL."
+  },
+  {
+    "id": "P5-2-PLAINTEXT-RETIRE",
+    "priority": 5,
+    "requiredRevision": "fc8a922e1fc515c506a22b443fdd5a365bfb2e18",
+    "task": "After the full 30-day P0-6 interval, independently approved secure cutover to encrypted-only Google tokens, then prove next provider renewal clears each plaintext tokens column without losing credentials; verify recovery and no old code active.",
+    "procedure": "docs/plan/TASKS.md P5-2 controlled future activation",
+    "gates": "Not before 2026-11-01 00:00 America/Denver, P5-2-ENCRYPTED-READY PASSED, written independent owner approval, all old plaintext-only instances drained, reviewed no-rollback-after-retirement response, protected operator mode; no early activation.",
+    "dependsOn": [
+      "P5-2-ENCRYPTED-READY"
+    ],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-15 source proof only. November 1 date and every-account verification are not satisfied by code/CI. Protected operator --activate is never called by normal production runtime. Do not mark PASSED until exact real refresh/readback of every account after approved activation."
   }
-]
-```
+]```
 <!-- release-acceptance:end -->
 
 ### October 14 verified release catch-up checkpoint
@@ -1833,7 +1867,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P4-3 | MERGED | #20 | `workspace_business_calendar`, `workspace_business_folders` + `business_resources` table (contract-tested on the in-memory fake and on a real Postgres 16, 44 DB tests passing). Acts as the connection's own account, so it needs no delegation. Idempotent; a remembered ID that no longer exists is not trusted; the main folder is searched across all of Drive and two matches stop it rather than guess; the preview and the read-back look at Drive itself. Manual check still to do: returns the existing `c_dd214eeb…` calendar and `13yNQodb…` folder tree |
 | P4-4 | MERGED | #21 | DEPLOY.md Part 5 updated and Part 8 added (the app's own service account, its four scopes, the Vercel variables, how it finds the IDs). Cross-linked to APPLIANCE-DESK-INTEGRATION.md. Chris can follow it in about 15 minutes |
 | P5-1 | DONE (automated safety acceptance) | #45, #49 | All eleven missing mutators guarded (#45); #49's exhaustive assembled-registry contract reviews 156 exact read-only tools and proves 209 handler-provenance-guarded writes; unknown name effects fail closed regardless of `dryRun`. Private WeakSet provenance is not forgeable with a public Symbol. Exact-head `test`+`release-policy` and automated fake-Google/Postgres/RTC tests passed; actual provider/Hub routes remain separate P0-2/P8 acceptance and are NOT claimed. |
-| P5-2 | IN_PROGRESS |  | Confirmed OPEN encrypted-only read/save/refresh and retirement DB proof; see current engineering disposition. Source work is eligible now; actual retirement stays gated until November 1 plus verified all-account encrypted refresh/backfill. |
+| P5-2 | IN_PROGRESS | #147 | Encrypted-only source and real disposable PostgreSQL tests complete; activation not before November 1 and only after protected all-account readiness, checked release, old-instance drain, independent owner confirmation and recovery plan. Queue P5-2-ENCRYPTED-READY / P5-2-PLAINTEXT-RETIRE remains PENDING. |
 | P5-3 | DONE | | Chris decided to retire local mode (2026-10-02). Local files, scripts and README sections removed; hosted only. README, DEPLOY and ARCHITECTURE checked against the code in the 2026-10-02 audit and match. |
 | P5-4 | DONE (automated) | #50 | Generated 370-name catalog, clean-regeneration and drift tests, version 2.0.0 and changelog; exact-head `test` + `release-policy` passed then #50 merged. No production/Google provider deployment acceptance asserted. |
 | P6-1 | IN_PROGRESS | #25 and merged80c0870 | Original field/schema/guard/preview/readback engineering reconciled on main; no candidate remains to implement. Actual scoped disposable-group lifecycle remains P6-1-GROUP-LIFECYCLE. |
