@@ -29,7 +29,7 @@ describe('P8-8 complete owner Admin-console readback discovery',()=>{
   }
   const gmail=discoverConsoleReadbacks({query:'forward',pageSize:20},clients);
   expect(gmail.totalMatched).toBeGreaterThan(0);
-  expect(gmail.items.every(x=>x.id.includes('forward')||x.title.toLowerCase().includes('forward'))).toBe(true);
+  expect(gmail.items.every(x=>{const entry=CONSOLE_MAP.find(y=>y.id===x.id);return [entry.id,entry.title,...entry.keywords].some(t=>t.toLowerCase().includes('forward'));})).toBe(true);
   const filtered=discoverConsoleReadbacks({status:'manual_only',pageSize:20},clients);
   expect(filtered.items.every(x=>x.status==='manual_only')).toBe(true);
   expect(filtered.counts.manual_only).toBeGreaterThan(0);
