@@ -1,8 +1,9 @@
 import {describe,it,expect,vi,beforeEach} from 'vitest';
 import {Readable} from 'node:stream';
 const mocks=vi.hoisted(()=>({initSchema:vi.fn(),inspectGoogleTokenRetirement:vi.fn(),
- recordLoginAttempt:vi.fn(),countRecentFailedLogins:vi.fn(),markLoginAttemptSucceeded:vi.fn()}));
+ recordLoginAttempt:vi.fn(),countRecentFailedLogins:vi.fn(),markLoginAttemptSucceeded:vi.fn(),refresh:vi.fn()}));
 vi.mock('../../src/db.js',()=>mocks);
+vi.mock('../../src/auth/google-auth-hosted.js',()=>({refreshConnectedAccountForReadiness:mocks.refresh}));
 const {default:handler}=await import('../../api/owner/token-readiness.js');
 function response(){const r={headers:{},statusCode:200,body:''};
  r.setHeader=(k,v)=>r.headers[k]=v;r.status=n=>(r.statusCode=n,r);
@@ -17,6 +18,21 @@ beforeEach(()=>{vi.resetAllMocks();process.env.PUBLIC_BASE_URL=origin;process.en
  mocks.recordLoginAttempt.mockResolvedValue(1);mocks.countRecentFailedLogins.mockResolvedValue(1);
  mocks.inspectGoogleTokenRetirement.mockResolvedValue(sample());});
 describe('owner-only token readiness inspection',()=>{
+ it('refreshes only the explicitly repeated account after owner authentication, then reinspects',async()=>{
+  const r=await request({passphrase:'fake-owner-passphrase',action:'refresh',account:' OPS@EXAMPLE.TEST ',confirm_account:'ops@example.test'});
+  expect(r.statusCode).toBe(200);expect(mocks.refresh).toHaveBeenCalledExactlyOnceWith('ops@example.test');
+  expect(mocks.refresh.mock.invocationCallOrder[0]).toBeLessThan(mocks.inspectGoogleTokenRetirement.mock.invocationCallOrder[0]);
+  expect(r.body).toContain('Existing account refreshed');
+ });
+ it.each([{account:'a@example.test',confirm_account:'b@example.test'},{account:'bad',confirm_account:'bad'},{account:['a@example.test'],confirm_account:'a@example.test'},{account:'a@example.test',confirm_account:'a@example.test',activate:true}])('rejects invalid refresh selection %j',async extra=>{
+  expect((await request({passphrase:'fake-owner-passphrase',action:'refresh',...extra})).statusCode).toBe(400);expect(mocks.refresh).not.toHaveBeenCalled();
+ });
+ it('does not refresh on bad credentials or echo provider errors',async()=>{
+  const body={passphrase:'wrong',action:'refresh',account:'a@example.test',confirm_account:'a@example.test'};
+  expect((await request(body)).statusCode).toBe(401);expect(mocks.refresh).not.toHaveBeenCalled();
+  mocks.refresh.mockRejectedValue(Error('private-refresh-secret'));body.passphrase='fake-owner-passphrase';
+  const r=await request(body);expect(r.statusCode).toBe(503);expect(r.body).not.toContain('private-refresh-secret');expect(mocks.inspectGoogleTokenRetirement).not.toHaveBeenCalled();
+ });
  it('renders only a safe same-origin form without touching account storage',async()=>{
   const r=await request(undefined,{host:'rtc.example.test'},'GET');expect(r.statusCode).toBe(200);
   expect(r.headers['Referrer-Policy']).toBe('same-origin');expect(r.headers['Cache-Control']).toContain('no-store');
