@@ -121,6 +121,77 @@ const data=value=>str(value)||
   ['base64','base64Data','bytes','omitted','content','html','text',
    'fileId','token','txt','verificationToken','mimeType','data','url'].includes(key)));
 
+
+// These outputs were traced from the actual handler's Google client method
+// and wrapped return value, not inferred from a tool name or HTTP status.
+const exactRows=(value,key)=>obj(value)&&Array.isArray(value[key])&&
+ value[key].length<=200&&value[key].every(item=>obj(item)&&
+  Object.keys(item).length>0);
+const optionalCursor=value=>value.nextPageToken===undefined||
+ str(value.nextPageToken);
+export const SOURCE_RESULT_PROOFS=Object.freeze({
+ workspace_admin_list_users:(v)=>exactRows(v,'users')&&optionalCursor(v),
+ workspace_admin_list_groups:(v)=>exactRows(v,'groups')&&optionalCursor(v),
+ workspace_contacts_list:(v)=>exactRows(v,'connections')&&optionalCursor(v),
+ workspace_directory_list_people:(v)=>exactRows(v,'people')&&optionalCursor(v),
+ workspace_drive_list_changes:(v)=>exactRows(v,'changes')&&optionalCursor(v),
+ workspace_gmail_list_history:(v)=>obj(v)&&str(v.historyId)&&
+  (v.history===undefined||exactRows(v,'history'))&&optionalCursor(v),
+ workspace_gmail_search:(v)=>obj(v)&&
+  (exactRows(v,'messages')||v.resultSizeEstimate===0)&&optionalCursor(v),
+ workspace_postmaster_list_domains:(v)=>exactRows(v,'domains')&&
+  Number.isSafeInteger(v.count)&&v.count===v.domains.length&&optionalCursor(v),
+ workspace_postmaster_list_traffic_stats:(v,_account,args)=>obj(v)&&
+  str(v.domain)&&v.domain===args.domain&&
+  Array.isArray(v.stats)&&v.stats.length<=200&&
+  v.stats.every(x=>obj(x)&&Object.keys(x).length>0)&&optionalCursor(v),
+ workspace_reports_activity:(v,_account,args)=>obj(v)&&
+  v.application===args.application&&exactRows(v,'activities')&&optionalCursor(v),
+ workspace_calendar_verify_calendar_deletion:(v)=>obj(v)&&
+  ['calendar_not_found','calendar_deleted_marker','not_found_but_listed',
+   'deleted_marker_still_listed','still_listed','not_listed_metadata_readable',
+   'inconclusive'].includes(v.verification)&&
+  [true,false,null].includes(v.exists)&&
+  [true,false,null].includes(v.listed)&&
+  typeof v.metadataReadable==='boolean',
+ workspace_gmail_get_attachment:(v)=>obj(v)&&
+  Number.isSafeInteger(v.size)&&v.size>=0&&
+  (typeof v.base64Data==='string'||
+   obj(v.base64Data)&&v.base64Data.omitted==='data'&&
+   Number.isSafeInteger(v.base64Data.bytes)),
+ workspace_sheets_get_values:(v,_account,args)=>obj(v)&&
+  str(v.range)&&v.range===args.range&&
+  (v.values===undefined||Array.isArray(v.values)&&v.values.length<=200),
+ workspace_slides_get_thumbnail:(v)=>obj(v)&&str(v.contentUrl)&&
+  /^https:\/\//.test(v.contentUrl)
+});
+
+// The original owner decisions require explicit authorization for customer-
+// wide reads, even when the account's narrower domain guard would also deny
+// an operation. An operator-selected case is NOT customer-wide approval.
+const CUSTOMER_WIDE=new Set(`
+admin_get_customer_info admin_list_admin_console_notifications
+admin_list_alerts admin_list_asp admin_list_buildings
+admin_list_calendar_resources admin_list_chrome_devices admin_list_domain_aliases
+admin_list_domains admin_list_features admin_list_group_aliases
+admin_list_group_members admin_list_groups admin_list_mobile_devices
+admin_list_orgunits admin_list_role_assignments admin_list_roles
+admin_list_schemas admin_list_tokens admin_list_users
+identity_list_policies identity_policy_audit licensing_list_assignments
+postmaster_list_domains postmaster_list_traffic_stats
+reports_activity reports_admin_activity reports_drive_activity
+reports_groups_activity reports_login_activity reports_mobile_activity
+reports_oauth_token_activity reports_usage_customer reports_usage_user
+vault_list_holds vault_list_matters
+workflow_security_snapshot workflow_health_report
+workspace_admin_overview workspace_admin_console_verify
+`.trim().split(/\s+/).map(name=>name.startsWith('workspace_')?name:'workspace_'+name));
+if([...CUSTOMER_WIDE].some(name=>!Object.hasOwn(EXTRA_READ_CASES,name)))
+ throw Error('customer-wide P0-2 rule references an unreviewed or duplicate tool');
+export function needsCustomerWideApproval(name,args={}) {
+ return CUSTOMER_WIDE.has(name)||args.crossDomain===true;
+}
+
 export function verifyAdditionalRead(name,payload,account,args={}) {
  const kind=EXTRA_READ_CASES[name];
  if(!kind||malformed(payload))return false;
@@ -133,6 +204,8 @@ export function verifyAdditionalRead(name,payload,account,args={}) {
        String(payload.id||payload.schemaId||'').toLowerCase()===
        args[bound[0]].toLowerCase()))return false;
   }
+  const exact=SOURCE_RESULT_PROOFS[name];
+  if(exact)return exact(payload,account,args)===true;
   if(kind==='array')return limitedRows(payload)||
    (STRING_ROWS.has(name)&&stringRows(payload))||
    (obj(payload)&&str(payload.truncated)&&limitedRows(payload.items));
@@ -173,7 +246,9 @@ export function parseReviewedReadCases(input) {
 // Validate against the actual protected deployed catalog, not a guessed local
 // schema, and cap provider-side page/query behavior. Names and argument values
 // never enter the sanitized report except the already public operation name.
-export function validateReviewedCase(probe,tool) {
+export function validateReviewedCase(probe,tool,{customerWideApproved=false}={}) {
+ if(needsCustomerWideApproval(probe?.name,probe?.args)&&!customerWideApproved)
+  return false;
  if(!obj(probe)||!own(EXTRA_READ_CASES,probe.name)||
    !obj(tool)||tool.name!==probe.name||tool.writes!==false||
    tool.annotations?.readOnlyHint!==true||
@@ -185,7 +260,8 @@ export function validateReviewedCase(probe,tool) {
  for(const [key,value] of Object.entries(probe.args)){
   const field=props[key];
   if(!obj(field)||!validValue(field,value,0))return false;
-  if(key==='crossDomain'&&value!==false)return false;
+  if(key==='crossDomain'&&value!==false&&
+   !customerWideApproved)return false;
   if(['confirm','dryRun','allowWrites','sendWelcome'].includes(key))return false;
   if(['maxResults','pageSize','limit','maxFilesToScan','maxPages','pageSizeLimit']
     .includes(key)&&(!Number.isInteger(value)||value<1||value>10))return false;

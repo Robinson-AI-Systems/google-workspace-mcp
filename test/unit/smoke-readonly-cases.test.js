@@ -11,6 +11,38 @@ const schema=(props={},required=[])=>({type:'object',properties:props,required})
 const tool=(name,area,inputSchema)=>({name,area,writes:false,
  annotations:{readOnlyHint:true},inputSchema});
 describe('P0-2 reviewed catalog-wide read cases',()=>{
+ it('requires a separate customer-wide owner approval beyond opt-in manifest',()=>{
+  const name='workspace_admin_list_users',inputSchema=schema({maxResults:{type:'integer',minimum:1,maximum:100}});
+  const probe={name,args:{maxResults:1}};
+  expect(validateReviewedCase(probe,tool(name,'admin',inputSchema))).toBe(false);
+  expect(validateReviewedCase(probe,tool(name,'admin',inputSchema),{customerWideApproved:true})).toBe(true);
+  const blocked=planCatalogReads({catalog:[tool(name,'admin',inputSchema)],
+   safeProbes:SAFE_READ_PROBES,reviewedCases:[probe],account});
+  expect(blocked.find(e=>e.name===name)).toMatchObject({kind:'NEEDS_APPROVAL',reason:'customer_wide_owner_approval_required'});
+  expect(coverageResults(blocked).coverageComplete).toBe(false);
+  const scheduled=planCatalogReads({catalog:[tool(name,'admin',inputSchema)],
+   safeProbes:SAFE_READ_PROBES,reviewedCases:[probe],customerWideApproved:true,account});
+  expect(scheduled.find(e=>e.name===name).kind).toBe('CASE');
+ });
+ it('rejects false Google success for actual handler-specific source contracts',()=>{
+  const testCases=[
+    ['workspace_admin_list_users',{users:[{}]},{}],
+    ['workspace_reports_activity',{application:'drive',activities:[]},{application:'calendar'}],
+    ['workspace_postmaster_list_domains',{domains:[],count:1},{}],
+    ['workspace_calendar_verify_calendar_deletion',{exists:false,verification:'done'},{}],
+    ['workspace_sheets_get_values',{range:'Sheet2!A1',values:[]},{range:'Sheet1!A1'}],
+    ['workspace_gmail_get_attachment',{size:-1,base64Data:'abc'},{}],
+    ['workspace_slides_get_thumbnail',{contentUrl:'javascript:alert(1)'},{}]
+  ];
+  for(const [name,payload,args] of testCases)
+   expect(verifyAdditionalRead(name,payload,account,args),name).toBe(false);
+  expect(verifyAdditionalRead('workspace_reports_activity',
+    {application:'calendar',activities:[]},account,{application:'calendar'})).toBe(true);
+  expect(verifyAdditionalRead('workspace_postmaster_list_domains',
+    {domains:[],count:0},account,{})).toBe(true);
+  expect(verifyAdditionalRead('workspace_calendar_verify_calendar_deletion',
+    {exists:false,verification:'calendar_not_found',listed:false,metadataReadable:false},account,{})).toBe(true);
+ });
  it('exhaustively covers original audited read inventory without trusting name prefixes',()=>{
   const safe=new Set(SAFE_READ_PROBES.map(x=>x.name));
   const fixtures=new Set(FIXTURE_TOOL_NAMES);
@@ -78,7 +110,7 @@ describe('P0-2 reviewed catalog-wide read cases',()=>{
   expect(verifyAdditionalRead('workspace_admin_get_alert',{alertId:'other-alert'},account,{alertId:'alert-1'})).toBe(false);
   expect(verifyAdditionalRead('workspace_slides_get_thumbnail',{contentUrl:'https://example.test/image'},account,{pageObjectId:'x'})).toBe(true);
   expect(verifyAdditionalRead('workspace_chat_list_spaces',[{}],account)).toBe(false);
-  expect(verifyAdditionalRead('workspace_reports_activity',{application:'login',activities:[]},account)).toBe(true);
+  expect(verifyAdditionalRead('workspace_reports_activity',{application:'login',activities:[]},account,{application:'login'})).toBe(true);
   expect(verifyAdditionalRead('workspace_docs_get_text','Hello from an owned test doc',account)).toBe(true);
   expect(verifyAdditionalRead('workspace_admin_delete_user',{id:'x'},account)).toBe(false);
  });

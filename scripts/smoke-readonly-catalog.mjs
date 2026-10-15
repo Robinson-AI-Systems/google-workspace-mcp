@@ -79,7 +79,7 @@ export async function readAuthorizedCatalog({origin,token,fetcher=fetch}){
  throw Error('read_only_catalog_page_cap');
 }
 
-export async function runCatalogReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fixtures,reviewedCases,fetcher=fetch}){
+export async function runCatalogReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fixtures,reviewedCases,customerWideApproved=false,fetcher=fetch}){
  // Validate the exact fixture manifest BEFORE the first HTTP request.
  validateTestAuthorization({token,account:expectedAccount,revision:expectedRevision});
  const selectedFixtures=preparedFixtureProbes(fixtures,expectedAccount);
@@ -91,7 +91,7 @@ export async function runCatalogReadOnlySmoke({origin,token,expectedAccount,expe
  if(!baseline.ok)return {ok:false,catalogComplete:false,baseline:baseline.outcomes,
   tools:[],summary:{discovered:0,probed:0,failed:baseline.outcomes.filter(x=>x.status==='FAIL').length,notProbed:0,engineeringGaps:0}};
  const catalog=await readAuthorizedCatalog({origin,token,fetcher:sharedFetcher});
- const plan=planCatalogReads({catalog,safeProbes:SAFE_READ_PROBES,fixtures:selectedFixtures,reviewedCases:selectedCases,account:expectedAccount});
+ const plan=planCatalogReads({catalog,safeProbes:SAFE_READ_PROBES,fixtures:selectedFixtures,reviewedCases:selectedCases,customerWideApproved,account:expectedAccount});
  const probes=plan.filter(entry=>entry.probe).map(entry=>entry.probe);
  const run=await runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher:sharedFetcher,probes,catalog});
  const coverage=coverageResults(plan,run.outcomes);
@@ -124,7 +124,8 @@ export async function main(argv=process.argv.slice(2),env=process.env){
   const result=await runCatalogReadOnlySmoke({
    origin:env.RTC_ORIGIN,token:env.RTC_TEST_PASS,expectedAccount:env.RTC_EXPECTED_ACCOUNT,
    expectedRevision:env.RTC_EXPECTED_REVISION,fixtures:env.RTC_READ_FIXTURES_JSON,
-   reviewedCases:env.RTC_REVIEWED_READ_CASES_JSON
+   reviewedCases:env.RTC_REVIEWED_READ_CASES_JSON,
+   customerWideApproved:env.RTC_OWNER_APPROVED_CUSTOMER_WIDE==='true'
   });
   if(result.catalogComplete){
    const date=new Date().toISOString().slice(0,10);

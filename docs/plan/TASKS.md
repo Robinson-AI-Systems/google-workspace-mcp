@@ -122,10 +122,11 @@ restricts only the named operation. Source completion never proves actual Google
 [
   {
     "id": "P0-2",
-    "state": "OPEN",
-    "remaining": "PR #132 adds a schema-aware full catalog inventory, strict plan/fixture/reporting, runnable coverage of the 30 reviewed no-write probes and an existing twelve-name exact-ID fixture parser. Remaining reads without source-reviewed arguments and provider-result validators are correctly OPEN engineering gaps, not merely missing Google acceptance; genuine provider report cannot be committed without verified deployed source and authorized RTC TEST pass.",
-    "evidence": "scripts/smoke-readonly-plan.mjs, smoke-readonly-catalog.mjs, smoke-readonly-fixtures.mjs, smoke-provider-shapes.mjs; corresponding unit tests; original P0-2 acceptance. Protected dispatchers are SKIPPED as non-provider reads; gaps make aggregate ok false.",
-    "next": "Finish the original catalog-wide per-read proof/argument registry and report every failed real Google TEST read after owner-authorized independently READY release; record every actual bug or card in ARCHITECTURE.md. Do not promote catalog enumeration or synthetic TEST checks to complete P0-2."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Engineering reconciliation of original P0-2 now complete in PR #138 and this source proof/owner-scope follow-up: every one of the 165 audited names has a protected explicit case or reviewed safe/fixture case; full catalog inventory, bounded exact args, per-case source handler-specific result validation where available, externally maintained false/unknown gates, TEST pass identity, synthetic handle/page replay, pacing and sanitized per-operation report/failure and skipped states are implemented. Actual provider smoke of every approved operation, committed genuine provider report, fixes or Known Bugs for any real failures and owner approval for customer-wide/export/fixture IDs remain OPEN EXTERNAL acceptance and must not be inferred from fakes. If a live provider receipt reveals a source defect reopen engineering.",
+    "evidence": "scripts/smoke-readonly-catalog.mjs, smoke-readonly-plan.mjs, smoke-readonly-cases.mjs, smoke-provider-shapes.mjs, smoke-readonly-fixtures.mjs, smoke-readonly-rate.mjs, smoke-readonly.mjs; test/unit/smoke-readonly-{cases,source-contract,plan,catalog,rate,fixtures,provider-shapes}.test.js; original P0-2 card; PR #138 and source follow-up exact-head unit/PG/RTC/Hub CI+release-policy, review and main merge needed. Synthetic checks prove engineering behavior, not real provider/API-wide proof.",
+    "next": "At independently READY checked live containing both P0-2 PRs and original owner-approved read_only TEST pass, run all permitted catalog cases/precise owned fixtures with customer-wide approval separately where needed; record failure/denial and sanitized provider smoke report, fix each real bug or file a Known Bugs card in ARCHITECTURE.md. Deployed/Hub/Sandbox acceptance remain separate and P0-2 milestone must not close until original provider report/known bugs.",
+    "gate": "Actual independently source-verified checked READY deployment; existing owner-authorized service-issued read_only TEST pass for ops@robinsonappliancerentals.com, exact approved fixture IDs and independent owner intent for cross-domain/customer-wide reads, no write/foreign data, original real Google provider report committed and all failures resolved or mapped in Known Bugs table."
   },
   {
     "id": "P2-7",
@@ -417,6 +418,17 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PENDING",
     "lastEvidence": "#126 code merged at de3db974; required test and release-policy exact-head PASSED; #127 candidate source 7426e266 fixes strict advertised params, full preview intent and aggregate audit failure. Review/CI/merge still pending for #127. Checked READY deployment and real custom Google acceptance NOT claimed."
+  },
+  {
+    "id": "P0-2-FULL-CASEBOOK-REAL-READ",
+    "priority": 1,
+    "requiredRevision": "1ff11c8dd7af3cdc1adedc1d0d4de20d14e6c5d0",
+    "task": "Run full source-reviewed P0-2 read-only catalog against approved real Google TEST account; publish sanitized report and fix or ledger each real failure",
+    "procedure": "scripts/smoke-readonly-catalog.mjs; docs/plan/GOOGLE-ACCEPTANCE.md; docs/plan/TASKS.md P0-2",
+    "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-15: PR #138 merged P0-2 reviewed catalog/casebook/real-request pacing. Follow-up source-proofs and owner-scope matrix candidate; requiredRevision pins this second PR implementation source (must verify merge ancestry). Synthetic Actions tests cannot establish actual real Google provider coverage. No owner-issued RTC TEST pass used or full provider smoke report committed."
   }
 ]
 ```
@@ -1945,6 +1957,12 @@ This session reverified Vercel **READY** deployment `dpl_GcK89MXXQDuD7cjsj9BxEXu
 ### October 15 P0-2 rate-limit implementation reconciliation (#138)
 
 The remaining 123 approved read-case profiles are now linked to a single cached, authenticated, schema-checked catalog and a shared real-HTTP request pacer. This closes the detected default per-pass throughput problem: previously each of 165 reads would consume both a catalog query and a provider call, inevitably overrunning the default per-minute pass limit. The new runner uses the full discovery once, conservative rate spacing and at most one `Retry-After` retry on HTTP 429; repeat rate-limit denial remains a failure. Fake tests are not paced. This is a **pre-merge implementation candidate** only; protected real owner TEST pass and catalog-wide Google receipts are not available at this checkpoint, and no provider mutation took place. Full source/head CI/review and checked live acceptance remain distinct.
+
+### October 15 P0-2 full audited read source-proof completion candidate
+
+This follow-up to merged PR #138 completes original P0-2 **eligible engineering**: real wrapped provider method/response fakes, source-bound positive/negative proof for account, Directory, Reports, Postmaster, Calendar, Gmail, Drive, Sheets/Slides, and explicit independent customer-wide consent that never silently enables broad scans. Existing 30 safe and twelve exact-ID cases plus 123 reviewed opt-in cases account for 165 approved operations; protected RTC brokers remain SKIPPED, not Google providers. All source checks and explicit false outcomes are required. The engineering disposition is advanced to EXTERNAL_ONLY only subject to successful exact-head full CI/review/merge; do not count until main truly includes this proof.
+
+**Remaining nonengineering acceptance:** independently source-verified READY release, fresh service-issued owner read_only TEST pass and exact owner fixture IDs/area grants and purpose-specific owner approval for sensitive reads; then run genuine Google smoke, commit only sanitized report, investigate/fix or record actual bugs. Previous 16 PENDING acceptance queue rows and a new full-casebook receipt row remain open. No autonomous provider mutation, permission expansion, production activation, spending or Hub route is authorized. The owner's current session target remains one coherent P0-2 bundle across #138 and this merged follow-up, with external acceptance tracked separately.
 
 ## Permanent handoff (update with each substantive implementation PR)
 
