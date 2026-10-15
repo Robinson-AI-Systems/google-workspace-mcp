@@ -350,8 +350,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Existing approved mailbox only; original pass/run ownership and owned non-primary calendar; no mail sending",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-15 authorized fresh Rentals TEST/full workspace/files/calendar/mail24h grant and mail-only read_only4/min grant issued securely; original5-area24h read pass retained unchanged. Real three-scenario create/replay/exact cleanup and nonprimary calendar preservation passed at5417fdb; new runs owned by new principal, no historical takeover. Low-rate refusal observed. Overall task stays pending for its wider original matrix. Final read-pass revocation actually occurred (401pass_revoked), but confirmed=false exposed listConnections token_prefix:p.id vs aliased connection_id defect; source0531edf repairs with real-Postgres regression. Write pass remains protected for exact calendar deletion readback and repaired final revocation. No uncertain fixture recreation."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-15 actual owner-approved fresh Rentals TEST direct run at READY5417fdb created Drive3/Calendar1/Gmail3, replayed identical IDs, exact cleaned all3, calendar digests unchanged; secondary calendar later exact calendar_not_found. Original run failed only revocation confirmation; preserve failed checkpoint. Reviewed correction READY601f2f2/dpl_5RWTksxFxY5mEGK8rqb7MrgczobY: exact revoked read-pass preview now1row/allrevoked; write-pass self-revoke done/confirmed true with positive durable receipt. Both new passes now401pass_revoked; original24h5area read pass remains200. Read_only write refusal, mail-only area denial, foreign TEST run404 and exact owned cleaned-ledger IDs also proved. No sending, unknown resources, fixture recreation or Hub claim."
   },
   {
     "id": "GOOGLE-RTC",
@@ -416,8 +416,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "docs/plan/TASKS.md",
     "gates": "No Google writes; check each provider individually with its authorized area and account; optional per-account consent for Chat, People or Postmaster",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-15 16:35Z custom-service check: Gmail, Drive, Calendar, Tasks and Chat ready; INBOX ready; People/Postmaster scope_or_access_denied; changesMade false at independently READY 15a547f."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-15T23:37:28Z separately authorized ordinary Rentals custom-service identity (NOT TEST substituted): real7provider individual preflight checks at READY601f2f2 returned Gmail/Drive/Calendar/Tasks/Chat ready; People and Postmaster typednot_readable/scope_or_access_denied with bounded API-specific remediation URL, steps and expected result; overallnot_readable,changesMadefalse. Every named check has correct typed structure, not HTTP200/schema-error alone. This accepts required permission-denial handling; it does NOT enable People/Postmaster or assert all7ready. No new consent/provider permission/customer-wide read."
   },
   {
     "id": "P8-8-OWNER-POLICIES",
@@ -561,8 +561,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "docs/plan/TASKS.md P8-4; docs/plan/GOOGLE-ACCEPTANCE.md; src/rtc/openapi.js",
     "gates": "Checked READY live containing exact reviewed source; original service-issued TEST pass/account and allowed resources. No production activation, fixture recreation, new spend or scope. Do not stress provider or hosted rate limits without the original isolated scenario.",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-15 original read-only runner direct HTTP boundary/handle/projection and actual rtool whoami proofs retained. Separate owner-approved mail-only TEST pass4/min exercised real GETtool metadata calls:200,200,200,429rate_limited,429rate_limited; no provider calls/stress120 pass. Fixture readOnly/area refusals succeeded; actual read-pass revocation yields401pass_revoked. Complete original HTTP matrix/final verified write-pass revocation still pending."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-15T23:35:12Z actual direct HTTPS READY601f2f2 passed11 final probes:source/OpenAPI bounded/scoped catalog/describe/readbatch/readbroker/TESTfull identity/missingbearer/non-pass bearer/malformedpage/recursionrefusal. Earlier actual original TEST read guard/owned handle/byte/page/projection probes retained; current isolated4/min mail pass returned200,200,200,429rate_limited,429rate_limited; next-window real denial checks succeeded. Original rtool0642e8c direct whoami matched Rentals TEST/read_only. Real create/replay/readback/audit/cleanup and repaired final revocation passed, both newpasses401. Exact-head actual Postgres/conformance CI38824030366 and merged38824132590 passed; no Hub/relay/Sandbox or allGoogleAPI availability inference."
   },
   {
     "id": "P8-5-WIRE-RECEIPTS",
@@ -572,8 +572,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "api/rtc-gateway.js; src/rtc/write-receipt.js; docs/plan/TASKS.md P8-5",
     "gates": "Checked READY deployment containing reviewed source; original approved short-lived Rentals TEST principal, exact owned resources and separate destructive confirmation. No provider scopes/spend, no other-pass cleanup, no uncertain fixture recreation. Preserve direct/Hub/relay/Sandbox boundaries.",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-15 authorized fresh Rentals TEST/full workspace/files/calendar/mail24h grant and mail-only read_only4/min grant issued securely; original5-area24h read pass retained unchanged. Real three-scenario create/replay/exact cleanup and nonprimary calendar preservation passed at5417fdb; new runs owned by new principal, no historical takeover. Low-rate refusal observed. Overall task stays pending for its wider original matrix. Final read-pass revocation actually occurred (401pass_revoked), but confirmed=false exposed listConnections token_prefix:p.id vs aliased connection_id defect; source0531edf repairs with real-Postgres regression. Write pass remains protected for exact calendar deletion readback and repaired final revocation. No uncertain fixture recreation."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-15 real approved Rentals TEST direct HTTPS canonical workspace_ tool metadata and11 contract probes passed on READY601f2f2. Actual seven-fixture create/replay/cleanup on original new write principal produced6create/replay+3cleanup positive durable audit rows, with returned audit references verified by runner; final corrected self-revocation returned logged.id positive/done/confirmed true, then401. Separate original read_only principal had genuine connection-owned16720byte/5page handle recovery/projection/foreign isolation proof; these are distinct authorized principals, never substituted for each other. Exact source CI uses actual local HTTP/Postgres fakeGoogle conformance separately; no Google/Hub claim from fakes, no Hub route claimed."
   },
   {
     "id": "P8-7-OWNED-RECOVERY",
@@ -617,7 +617,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "docs/plan/TASKS.md — P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Authenticated read-only Google Admin Console session for the intended authorized organization/role; observe only approved scope, no policy changes. Record inaccessible/edition-specific pages honestly; an API-generated checklist alone is not the walkthrough.",
     "dependsOn": [],
-    "lastEvidence": "2026-10-15 resumed original authenticated Rentals Admin browser; secure Google reauthentication completed, actual SSO third-party IdP page showed profiles/assignment/domain-specific URL sections; Password Management showed Strength/Length enforcement/Reuse; API Controls linked actual Domain-wide Delegation table (Name/ClientID/Scopes). No edit made. Earlier actual135-section dated core navigation inventory and corrected deployed7-page guide are retained. Full all-settings breadth is not asserted from navigation alone; remaining scope/edition-sensitive deep pages stay pending. Browser availability is not blocked in this session."
+    "lastEvidence": "2026-10-15 actual signed-in Rentals Admin walk continues, not blocked. Observed Agents>Agent access management at/ac/agents: inventory Type/Access/Status, no results; provider directs other connections to App access control. Observed Agents>Settings at/ac/managedsettings/1097476177575/agentaccesscontrols: OU/group/user targeting, Default access for Workspace Studio flows and Studio flow attribution visibility Beta. No edit; no API/effective-policy claim. These3real missing guidance topics added as manual_only in this PR (135to138). Earlier actual dated135section inventory, SSO/password/API/DWD and7page service guidance retained. Full all-settings breadth remains pending; do not claim an API-generated list is a walk."
   },
   {
     "id": "P5-2-ENCRYPTED-READY",
@@ -627,8 +627,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "docs/plan/TASKS.md P5-2 controlled future activation",
     "gates": "Protected operator environment; current correct TOKEN_ENCRYPTION_KEY; verified source/READY deployment; exact all-account count and encrypted/refresh evidence; no token values in logs or report, no real retirement or unsolicited Google mutation.",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-15 actual secure owner-authenticated keyed inspection in READY5417fdb:2accounts,missingKeyfalse,missingCopy0,corruptOrStale0,unverifiedBackfill1,refreshNotObserved1,readyfalse,encryptedOnlyfalse. Owner explicitly confirmed normal existing-grant ops@robinsonaisystems.com refresh/readiness read. Protected action added in this PR: no scopes/consent, verifies actual Gmail mailbox, awaits encrypted persistence/readback, reinspects aggregate.38focused tests passed; exact-head CI/review/deployment and real refresh remain. No retirement."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-15 actual secure owner-authenticated refresh/inspection on independently READY601f2f2/dpl_5RWTksxFxY5mEGK8rqb7MrgczobY. Previously unrefreshed real AI Systems account used existing saved grant only; real Google mailbox verified and persistence readback awaited. Keyed report accountsChecked2,readytrue,encryptedOnlyfalse; missingKeyfalse,noAccountsfalse,missingCopy0,corruptOrStale0,unverifiedBackfill0,refreshNotObserved0. Independent SQL aggregate confirms2connected/2encrypted/2verified/2refresh/2legacycopies. No key/token/passphrase exposed. Plaintext retirement NOT performed; November1 plus separate written approval/drain/recovery gates remain."
   },
   {
     "id": "P5-2-PLAINTEXT-RETIRE",
@@ -2948,3 +2948,12 @@ Actual source-pinned direct runner at5417fdb completed seven tagged fixtures, ex
 Final runner failed only at revocation confirmation: read pass truly revoked and subsequent whoami401pass_revoked, but database listConnections mapped token_prefix from p.id although listRtcPasses returns connection_id. Fix0531edf uses correct field; extended real PostgreSQL regression asserts both active prefix equality and revoked-row visibility. Preserve exact original failed report and reconcile existing runs; do not rerun creation to erase this failure. Secondary-calendar delete operation returned done:true/confirmed:false because Google still served metadata after removing the calendar from its list; subsequent exact read-only deletion verifier returned calendar_not_found,exists:false,listed:false. No repeated delete was issued. Preserve write grant only for repaired final revocation; provider fixture/calendar cleanup is now verified.
 
 P5-2 actual keyed protected inspection now works:2accounts, no missing key/copy/corruption; one unverified/unrefreshed real AI Systems account. Existing authorized normal refresh action is added behind the same strict canonical Origin, secure owner passphrase and shared login lockout. Explicit repeated account email; rejects activation/unknown fields; uses only saved Google refresh grant, checks live Gmail identity before awaiting dual encrypted storage and exact token readback, then returns whitelisted aggregate counts. No token/scope/key returned, no new consent, no account deletion/default change, no plaintext activation. Focused38tests passed. Required CI/review and checked release/provider execution still needed. This is completion/defect repair, zero new product bundles and no optional feature proposal implemented.
+
+
+### 2026-10-15 — protected readiness and fixture revocation complete; observed Agent guide gap
+
+PR157 independently READY at601f2f2d9deba5b883fa6236481486ba67ab36a4 (dpl_5RWTksxFxY5mEGK8rqb7MrgczobY), canonical HTTPS source matched; PR CI38824030366/policy38824030369 and postmerge38824132590/policy38824132614 green. Actual owner-authenticated existing-grant refresh verified real AI Systems Gmail identity and awaited persistence; keyed aggregate2accounts readytrue, zero problems. Independent SQL2encrypted/2verified/2refresh/2legacycopies. No credential/default/scope expansion, no plaintext retirement. Corrected revocation final done/confirmed/logged.id positive; both newfixture grants401pass_revoked, original24hreadpass retained200. Original failed overall checkpoint retained plus supplemental proof; no cleaned fixtures recreated. All7objects and disposablecalendar cleanup verified. Actual11HTTPprobes allpassed; separate actual7API preflight5ready+2typeddenials (not7ready).
+
+Newly passed original queue rows:GOOGLE-DIRECT,P5-2-ENCRYPTED-READY,P8-4-HTTP-CONTRACT,P8-5-WIRE-RECEIPTS,P8-7-API-SHAPES. Queue16PASSED/13PENDING of29, no new row or changed criterion. These are new real completion proofs, not product bundles or recollected implementation. Optional People/Postmaster positive access still unavailable but correct typed permission-denial behavior has been proven; do not keep that negative-handling criterion open merely to imply wider consent is needed. Exact resource/scope matrix remains separate.
+
+Current authenticated Console walkthrough genuinely found missing Agents section: actual inventory page and access-controls page with two flow settings. Add3static manual guidance topics (138total) with no verifyWith/API/observed policy assertion; preserve every original ID and24optional readbacks. Focused55tests passed; an initial local source mismatch used the stale pre154 Directory code, resolved by fetching exact601f source, not changing production or weakening tests. Required exact-head CI/review/merge remains. Full Console walk remains open; no unbounded coverage claim from these pages.
