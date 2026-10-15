@@ -214,6 +214,26 @@ before final handoff. A scheduled, delayed, recovery or separately authorized ma
 release uses the same per-check procedure. Follow the checked release policy; never
 initiate a release just to finish a development bundle.
 
+### Recognize and escalate a release dependency — owner October 15
+
+After independently verifying deployed READY/source and fetching required history,
+identify each check whose required source is on reviewed main but absent from live.
+`session:status` emits RELEASE NEEDED only for that confirmed source gap; unknown
+history requires investigation, and source already in live requires deployment/build
+follow-up rather than another release. Other permission/fixture gates remain separate.
+
+Alert the owner in the active chat when a release is needed to advance approved
+completion. Before requesting approval, prepare the exact main SHA, required green
+checks/reviews, source/live/deployed comparison, affected task IDs, remaining non-release
+prerequisites, standard checked release route and post-deployment acceptance steps.
+Explain whether the next scheduled release can clear it or a manual release would
+unblock work sooner. Request explicit approval for that concrete manual release;
+Do N bundles and permission to ask are NOT permission to release. Do not weaken
+frequency/checked promotion policy or trigger a release merely to satisfy N.
+Continue independent eligible work while waiting. After an authorized release,
+verify actual serving READY/source and immediately reassess/run newly eligible
+acceptance; never stop at a green release workflow alone.
+
 ## 1a. Choose a substantial outcome
 
 Read the authoritative `docs/plan/TASKS.md` roadmap and highest-priority eligible task.

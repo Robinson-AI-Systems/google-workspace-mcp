@@ -65,3 +65,14 @@ Regression coverage must include zero-code genuine completion, already-merged so
 old/missing/reused receipts, duplicate credit, relaxed gates, unmapped subsections,
 incomplete plans and untouched existing engineering accounting. Every normal CI,
 review, release, fixture ownership, spending and activation gate remains binding.
+
+## Explicit release-needed escalation — owner October 15
+
+The read-only session planner now distinguishes missing live source from unknown
+history and already-promoted code awaiting serving deployment. Alert the owner in
+the active chat with a prepared exact checked target and affected acceptance IDs,
+then request explicit manual-release approval when necessary. Do N bundles does not
+authorize a release. Continue independent eligible obligations in the right order;
+after authorized release verify actual READY/source and execute newly eligible checks.
+Native regressions cover positive alerts, unknown provenance/history, unrelated
+provider gates and redundant-release avoidance. No release/provider call performed.
