@@ -1027,9 +1027,211 @@ preview and a single confirmation.
 **Build.** Bulk wrappers for the jobs Chris repeats (for example set the same
 signature or vacation reply, add or remove a group member, change a licence, for a
 list of users), reusing the existing tools and guards, one combined `dryRun`
-preview, one `confirm`, a per-user result and a cap on how many at once. Design
-first (a short note on limits and partial failure) and have Chris review it
-before building.
+preview, one `confirm`, a per-user result and a cap on how many at once.
+The design-first owner review is satisfied by the October 14 decision below;
+do not ask for that same implementation approval again.
+
+#### P7-8 implementation design — owner-reviewed October 14, 2026
+
+**Decision provenance and scope.** Chris explicitly approved a maximum of 20
+targets, combined dry-run preview followed by confirmation, per-target results,
+continuation after individual failures, no automatic rollback and existing
+permission/domain guards. He then requested a repository-wide remaining-design
+review and authorized revisions as necessary. The details below resolve routine
+implementation choices under that request. They authorize source implementation
+and synthetic testing, not production bulk execution, new Google permissions,
+spending or changes to tenant boundaries. Engineering remains TODO until built.
+
+**Surface and finite workload.** Add one guarded `workspace_bulk_operation`
+tool rather than one wrapper per job. One request selects one operation and
+shared parameters, with 1–20 explicit user email targets. Reject blank/malformed
+emails, duplicate normalized targets, unknown operations/fields, conflicting
+target overrides and oversized requests before any child operation. Do not
+expand `all`, enumerate a customer, accept opaque user IDs, switch accounts or
+accept caller-selected tool names. Multiple explicitly named, owner-authorized
+domains may share a request; "all domains" means an explicit bounded target
+list, never implicit discovery or blanket consent.
+
+| Operation | Existing guarded child | Parameters supplied by the wrapper |
+| --- | --- | --- |
+| Set signature | `workflow_brand_mailbox` | Target `userEmail` and shared `signatureHtml` only |
+| Set vacation reply | `workflow_brand_mailbox` | Target `userEmail` and shared `vacation` only |
+| Add group member | `admin_add_group_member` | Shared `groupKey`/`role`, target `memberEmail` |
+| Remove group member | `admin_remove_group_member` | Shared `groupKey`, target `memberEmail` |
+| Assign licence | `licensing_assign_license` | Shared `productId`/`skuId`, target `userId` |
+| Change licence | `licensing_update_assignment` | Shared `productId`/`skuId`/`newSkuId`, target `userId` |
+| Remove licence | `licensing_remove_license` | Shared `productId`/`skuId`, target `userId` |
+
+Require an explicit group email for `groupKey`, not an opaque ID. The first two
+operations reuse the existing narrow delegated mailbox workflow;
+ordinary Gmail tools still cannot impersonate another mailbox. Do not enable
+labels, aliases, avatars, new send-as identities or other branding fields through
+these wrappers. Validate each mapping against the assembled child schema before
+coding and retain its actual Google request/readback behavior.
+
+**Exact proposed input contract.** Use top-level fields `operation`, `targets`,
+`parameters`, `dryRun`, `confirm`, `crossDomain` only. `operation`, `targets` and
+`parameters` are required; all safety flags are booleans, defaulting false.
+`targets` is an array of 1–20 normalized explicit email strings, not objects.
+Reject additional properties both at the top level and within `parameters`;
+enforce this in the handler as well as the published JSON schema. Do not use
+object spreading from caller input to build child arguments.
+
+| `operation` enum | Permitted `parameters` keys (required unless noted) |
+| --- | --- |
+| `set_signature` | `signatureHtml` (string; empty string explicitly clears it) |
+| `set_vacation` | `vacation` (object restricted to the existing child vacation fields/types; `enableAutoReply` required) |
+| `add_group_member` | `groupKey`; optional `role` = MEMBER/OWNER/MANAGER, default MEMBER |
+| `remove_group_member` | `groupKey` |
+| `assign_license` | `skuId`; optional `productId`, default Google-Apps |
+| `change_license` | `skuId`, `newSkuId`; optional `productId`, default Google-Apps |
+| `remove_license` | `skuId`; optional `productId`, default Google-Apps |
+
+Use the existing child field validators; validate the vacation object's known
+fields before any child runs, including boolean/string/time types and an
+ordered start/end range if supplied. A nonexistent user, inaccessible group or
+missing delegation is a per-target refusal/failure, not permission to bypass it.
+For example, a synthetic preview request is:
+
+```json
+{"operation":"add_group_member","targets":["a@example.test","b@example.test"],"parameters":{"groupKey":"support@example.test","role":"MEMBER"},"dryRun":true}
+```
+
+These are documentation-only fake addresses, not authorized provider targets.
+The execution request repeats those inputs, omits `dryRun` and adds
+`confirm:true` after actual owner confirmation. Never add `crossDomain:true`
+automatically to make an otherwise denied example or real request succeed.
+
+**Permissions and domains.** Register as a genuine `defineWrite` mutation,
+always requiring `confirm:true`; never add it to `RTC_META` or the read-only
+allow-list. Enforce both the parent and each selected child's current
+profile/area permissions. Resolve only final wrapped registry handlers, never
+raw provider handlers. Each target and shared group address must pass the
+existing domain/delegation guard; the new `workspace_` name does not itself
+receive the admin-family domain wrapper. Propagate explicit, independently
+authorized `crossDomain:true` only to that child call with a derived client
+context. Never persist it, mutate the shared context, treat `confirm` as
+cross-domain consent, or let a new wrapper waive an existing hard boundary.
+Licence actions retain zero autonomous spending: a preview is not a price
+quote or a seat purchase authorization. If a requested action needs additional
+spending authorization that cannot be established, refuse that target; never
+buy seats, upgrade plans or infer permission from `confirm:true`.
+
+**Preview and confirmation.** `dryRun:true` invokes only guarded child previews
+and returns one ordered report: operation, exact targets, intended changes,
+per-target eligibility/refusals and confirmation requirements. Read-only
+preflight and the existing PREVIEW audit entries are permitted; no Google
+mutation is permitted. One explicit subsequent `confirm:true` covers the same
+operation/target list/parameters reviewed by the owner. Changed inputs require
+a fresh preview/confirmation. Follow the existing explicit confirmation
+contract; do not claim that a boolean proves independent owner authorization.
+Recheck current connection and child permissions on execution. Missing
+confirmation must prevent every child write, including non-destructive children.
+
+**Execution and partial failure.** Run children sequentially in request order,
+at most one child workflow per target, using existing readbacks and audit
+logging. This avoids a 20-way provider burst. No automatic retry, rollback,
+background queue or new orchestration infrastructure is required. Catch and
+report an individual refused/failed child and continue the other targets.
+Connection revocation/expiry or a lost common authorization stops further
+dispatch; report the untouched remainder as `not_attempted`. Before exhausting
+the hosting request budget, return completed rows and an explicit untouched
+remainder rather than claim all targets ran. An interrupted HTTP request may
+still have an uncertain final target; it is not a resumable transaction.
+
+**Truthful result and recovery.** Return one row per requested target plus
+reconciled counts. Distinguish `preview`, `refused`, `confirmed`, `unverified`,
+`failed`, `unknown` and `not_attempted`; HTTP success alone is never a successful
+target. A child refusal can be a successful MCP envelope, so inspect its actual
+payload. `done:true` with `confirmed:false`/null, unreadable readback or audit
+failure is unverified, not a confirmed success. A timeout after provider
+dispatch is unknown, not proof that nothing changed. Preserve safe child audit
+references and sanitized errors; no credentials or raw untrusted provider errors
+in summaries. Use existing owned result handles for oversized output. The
+parent must not report blanket success after a partial result. No aggregate
+readback may replace the per-target provider evidence.
+
+The tool's JSON details have `{operation, total, status, counts, results}`.
+`results` preserves target order with `{target, status, reason?, child?}`;
+`child` contains the bounded safe result/evidence of that target's wrapped
+operation, not an invented success object. `counts` has all seven row-status
+keys above (including zeros), sums exactly to `total`, and equals the row
+tally. Aggregate `status` is `preview` for a dry run, `complete` only when
+every execution row is confirmed, and `incomplete` otherwise. A missing
+confirmation returns the existing `needsConfirmation:true` guarded response,
+not an execution result. A preview must distinguish an eligible proposed
+target from refused targets without calling either a confirmed mutation.
+`defineWrite` may wrap these details in its standard envelope: its outer
+`done` describes invocation completion, not all-target success. Documentation
+and callers must inspect the aggregate and per-target evidence. Synthetic
+mixed-result details, with irrelevant child details omitted here, look like:
+
+```json
+{"operation":"add_group_member","total":2,"status":"incomplete","counts":{"preview":0,"refused":1,"confirmed":1,"unverified":0,"failed":0,"unknown":0,"not_attempted":0},"results":[{"target":"a@example.test","status":"confirmed"},{"target":"b@example.test","status":"refused","reason":"outside_scope"}]}
+```
+
+**Known integration trap at the reviewed base.** The outer guard for
+`workflow_brand_mailbox` intentionally has no independent `readAfter`, so its
+outer `confirmed` is null even when its inner workflow reports completion.
+Inner `hasSignature`/`hasBody` summaries cannot prove an exact requested value.
+For P7-8's signature/vacation rows, use an authorized existing delegated
+settings readback and compare every requested field exactly; retain that
+evidence in the per-target result without exposing full signatures/bodies.
+A verified exact match may establish the row's confirmed state, but never
+overwrite or misrepresent the original child's null confirmation. Missing
+readback or an unavailable audit receipt remains unverified. Cover a wrong
+nonempty signature/body, not merely an empty/missing value, in the tests.
+
+Do not replay the whole list after a partial failure. First read back uncertain
+targets using the existing authorized tools; preview/confirm a new request for
+only the targets still requiring action. There is no exactly-once or atomicity
+claim. Rollback is deliberately manual: use existing guarded undo only where
+that operation supports it, with its own preview/confirmation. Do not invent
+compensating actions for licences or other non-reversible changes.
+
+**Finite implementation and proof.** Deliver this whole P7-8 subsection,
+including all seven mappings, schema/registry/guard/result integration and
+plain-English owner guidance, as one coherent outcome. Internal mappings and
+tests do not count as extra batch subsections. Automated proof must cover:
+1/20/21 targets; duplicate/bad input with zero child calls; all mappings with
+actual child arguments; preview/absent confirmation with zero writes; nested
+broker/read-only/area/domain/delegation denial; explicit cross-domain context
+isolation; failed first/middle target with continued later work; revoked common
+authorization and deadline remainder; unreadable/mismatched readback, audit
+failure and uncertain writes; no automatic retry/rollback; owned result paging;
+and equivalent guarded behavior through MCP, `workspace_call` and RTC dispatch.
+Keep `workspace_batch` and the RTC read-only batch endpoint read-only. Run the
+assembled semantic/catalog/budget checks and existing applicable unit/DB/RTC
+gates before merge. Queue actual deployed/custom-Google bulk acceptance against
+the reviewed source with exact permitted test resources; this design does not
+authorize changing real users, groups or licences to obtain that evidence.
+
+**Implementation seams and build checklist (one P7-8 outcome).**
+
+1. Add `src/tools/bulk.js`: the fixed operation map, strict normalization and
+   schema, `defineWrite` parent, guarded child resolution, sequential runner
+   and aggregate evidence. Reuse `src/tools/write.js`, `delegated.js`,
+   `domain-guard.js` and the permissions in `src/rtc/catalog.js`; do not change
+   their global behavior merely to support this wrapper. Follow the existing
+   late registry lookup in `rtc-meta.js` to avoid an import cycle.
+2. Register the module in `src/tools/index.js`. Check actual parent/child
+   classification through `isWrite`/`allowedTool`, and inherited guarded-write
+   provenance through result wrapping. Keep ordinary/direct/compact/RTC alias
+   discovery and the existing compact token budget consistent. No new raw
+   provider client, delegation scope, pass mode or database table is needed
+   by this design. If a real prerequisite defect appears, demonstrate and fix
+   it in the same coherent outcome rather than inventing a new design gate.
+3. Add focused `test/unit/bulk.test.js` behavior and registry/door integration
+   coverage using the repository's existing fakes and test conventions. Trace
+   every table mapping through the actual wrapped child to its recorded Google
+   request and readback; permissive generic fake success is insufficient.
+   Confirm continuation after both thrown errors and encoded MCP refusals.
+4. Update OWNER-GUIDE with preview, confirmation, partial-result and recovery
+   examples; regenerate README via `npm run gen:catalog`; update the existing
+   architecture/ledger and release acceptance queue with exact source proof.
+   Run required assembled checks once the entire coherent outcome is ready.
+   Keep P7-8 unfinished until all eligible engineering/pre-merge proof is
+   complete, and preserve actual provider acceptance as a separate open layer.
 
 **Acceptance.** Unit tests: preview changes nothing, partial failure is reported
 per user and does not stop the rest, the cap is enforced.
@@ -1249,7 +1451,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P7-5 | DONE | #61 | All stated unit acceptance passed: reviewed reversible families, irreversible refusals and undo-of-undo. Merged after exact-head test/release-policy. Real Google undo remains separate unverified provider evidence. |
 | P7-6 | SUPERSEDED | | Delivered by P8-2 (read_only profile) — Phase 8 added 2026-10-10 |
 | P7-7 | SUPERSEDED | | Delivered by P8-2 (profiles, area filters, compact listing) — Phase 8 added 2026-10-10 |
-| P7-8 | TODO | | Bulk and cross-domain operations; design note first |
+| P7-8 | TODO | | Implementation design and owner review completed October 14; see P7-8 decision above. Seven bounded child mappings, 20 explicit targets, sequential execution, per-target evidence, no automatic retry/rollback. Source implementation and all acceptance still outstanding; no repeated design approval needed. |
 | P8-1 | DONE | #31, #34, #41, #44, #55, #57, #63 | Stated automated acceptance passed: all 161 read names bounded with 100-item wrapper fakes, projection, real-DB handle isolation, annotation parity, 13 typed reads and all seven guarded write workflows. Genuine deployed Google/Hub routes remain separate P8-3/4/5 acceptance. |
 | P8-2 | IN_PROGRESS | #30 | Profile persistence, read-only dispatch, compact meta-tools and filters implemented; full service conformance / profile acceptance remains pending |
 | P8-3 | IN_PROGRESS | #32 | Owner-protected hashed, short-lived, scratch-account TEST read-only passes, revocation, limit guards; live issuance acceptance unverified |
@@ -1488,6 +1690,44 @@ Create one unique `rtc-<runId>` label and two **self-addressed, inserted-not-sen
 
 
 ## Actionable blockers and automatic re-entry (owner workflow 2026-10-12)
+
+### Remaining-design review — owner request October 14, 2026
+
+Reviewed the ordered P0–P8 cards, status ledger, architecture, testing and
+implementer guidance, developer connection/recovery card, hosting policy and
+the Appliance Desk integration reference against main `ef7600a`. The owner
+specifically requested completing remaining design requirements, then delegated
+review and revision of his P7-8 choice. This scoped design maintenance is not
+a product implementation PR, a completed batch subsection or live acceptance.
+It is explicitly requested work, not a precedent for filler docs-only PRs.
+
+**Finding:** P7-8 was the only outstanding explicit design-first owner review
+in the scheduled service roadmap. Its design is now above and its review gate
+is satisfied. Other open cards have implementation/proof/environment gates,
+not a missing general approval of the plan. Existing historical handoffs below
+that say P7-8 still needs design review are superseded by this decision; their
+original source/CI/provider observations remain unchanged.
+
+| Remaining requirement | Design disposition and precise next action |
+| --- | --- |
+| P0-2 direct/catalog/fixture reads; P2-7 verification | Existing smoke contracts and `GOOGLE-ACCEPTANCE.md` specify the work. Complete missing eligible engineering, then run source-specific authorized checks; typed UNKNOWN is not positive domain verification. Do not redesign/re-request roadmap approval. |
+| P5-2 token retirement | Existing design remains: no earlier than November 1 AND encrypted refresh/backfill verified for every connected account, disposable-DB proof, no column/table drop. Date alone cannot clear this gate. |
+| P6-1 and P7-1 provider lifecycle checks | Designs exist. Any actual group/shared-drive changes require applicable existing resource-specific authority and exact cleanup; synthetic proof is not provider acceptance. |
+| P7-2 / P7-4 policy and Postmaster | Scope additions were already approved October 2. Account reconnection/API eligibility/Super Admin and verified-domain requirements are provider prerequisites, not new design approval. Never claim effective per-domain policy from incomplete customer/OU/group observations. |
+| P7-8 bulk operations | Implement the complete design above. Keep real user/group/licence mutation authority and spending independent; do not stop eligible implementation for a second approval of this design. |
+| P8-2/3/4/5 profiles, passes, HTTPS and conformance | Existing cards and pinned contract/conformance code govern. Preserve the current TEST/read-only issuance restriction unless separately authorized to change it; the original broader pass roadmap is not permission to activate production or write passes. Genuine direct, relay, Sandbox, denial and revocation evidence remain distinct. |
+| P8-6 optional shared-package adoption | Keep on request, with zero selected exports now. No unpublished dependency or compulsory refactor. A future immutable artifact/export-specific parity decision is local to optional adoption and does not block standalone/RTC completion. |
+| P8-7 fixtures and app readiness | Existing Drive/Calendar/Gmail reservation, ownership, exact-ID cleanup and uncertainty/recovery designs govern. Reuse the authorized saved developer connection when suitable; new consent is needed only for genuinely missing/revoked authority. No invented fixture IDs or unrelated mailbox changes. |
+| P8-8 owner overview and console inventory | Existing output states, readback mappings and tests govern. The dated complete Admin console walk remains actual coverage work, not another abstract design task; record unavailable pages and permission limits without claiming completeness from the 50-topic inventory alone. |
+| Appliance Desk app-side Gmail | Reference spec explicitly leaves `gmail.readonly` and `gmail.send` delegation unapproved for that separate app identity. Do not widen them here or treat this service-design review as their approval. |
+| Considered/on-hold extensions | Keep Meet records, Search Console/Business Profile, Classroom, Alert Center and other unplanned items in their recorded disposition. This review does not schedule them or add scopes. |
+
+**Implementation authority:** proceed with the approved ordered service work and
+routine design details without redundant owner approval. Ask only for a newly
+missing owner-specific policy/permission, cite its exact gate, and first finish
+independent authorized work. This review changes no CI, review, release,
+production, spending, tenant, credential or cleanup gate. Implementation, exact
+automated proof, deployed behavior and genuine provider acceptance stay separate.
 
 Every deferred item must be revisited at session start and after relevant
 owner input, dependency merge or environment change. Reconcile prior owner
