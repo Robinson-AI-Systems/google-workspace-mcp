@@ -6,6 +6,13 @@ import {CONSOLE_REVIEW_CATEGORIES,CONSOLE_REVIEW_GROUPS} from '../../src/data/co
 
 const clients={actingAs:'ops@example.test',rtcPolicy:{profile:'read_only',areas:['workspace','mail','files']}};
 describe('P8-8 complete owner Admin-console readback discovery',()=>{
+ it('keeps observed Agent policy guidance manual-only with no invented API readback',()=>{
+  const found=discoverConsoleReadbacks({query:'agents',pageSize:20},clients);
+  for(const id of ['agents-access','agents-default-flow-access','agents-flow-attribution']){
+   expect(found.items.find(x=>x.id===id)?.status).toBe('manual_only');
+   const entry=CONSOLE_MAP.find(x=>x.id===id);expect(entry.link).toMatch(/^https:\/\/admin.google.com\/ac\//);expect(entry.path.length).toBeGreaterThan(1);
+  }
+ });
  it('reports every one of the actual mapped topics without contacting Google',()=>{
   const found=[];
   for(let page=1;page<=Math.ceil(CONSOLE_MAP.length/10);page++){
