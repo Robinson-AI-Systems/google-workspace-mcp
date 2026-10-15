@@ -453,9 +453,9 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `workspace_admin_console_verify`
 - `workspace_admin_overview`
 - `workspace_batch`
+- `workspace_bulk_operation`
 - `workspace_business_calendar`
 - `workspace_business_folders`
-- `workspace_bulk_operation`
 - `workspace_call`
 - `workspace_delegation_status`
 - `workspace_describe_tool`
