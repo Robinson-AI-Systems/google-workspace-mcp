@@ -134,6 +134,39 @@ export function readRoadmapLedger(text) {
   return { order, cards };
 }
 
+/** Engineering disposition is independent of merged code and live acceptance.
+ * Missing evidence is review work, never an inferred external-only blocker. */
+export function readEngineeringQueue(text, index = readRoadmapLedger(text)) {
+  const start = '<!-- engineering-readiness:start -->';
+  const end = '<!-- engineering-readiness:end -->';
+  if (text.split(start).length !== 2 || text.split(end).length !== 2)
+    throw new Error('Exactly one engineering-readiness block is required.');
+  const block = text.split(start)[1].split(end)[0].trim();
+  const match = /^```json\s*\n([\s\S]*?)\n```$/.exec(block);
+  if (!match) throw new Error('Engineering readiness must contain one JSON array.');
+  const rows = JSON.parse(match[1]);
+  if (!Array.isArray(rows)) throw new Error('Engineering readiness must be an array.');
+  const cards = new Map(index.cards.map(card => [card.id, card]));
+  const seen = new Set();
+  const state = new Set(['OPEN', 'REVIEW', 'EXTERNAL_ONLY', 'TIME_GATED']);
+  for (const row of rows) {
+    if (!row || !cards.has(row.id) || seen.has(row.id) || !state.has(row.state))
+      throw new Error('Unknown, duplicate or invalid engineering subsection.');
+    seen.add(row.id);
+    for (const key of ['remaining', 'evidence', 'next'])
+      if (typeof row[key] !== 'string' || !row[key].trim() || row[key].length > 1800)
+        throw new Error('Missing bounded engineering ' + key + ': ' + row.id);
+    if (['EXTERNAL_ONLY', 'TIME_GATED'].includes(row.state) &&
+        (typeof row.gate !== 'string' || !row.gate.trim()))
+      throw new Error('Exact external/date gate required: ' + row.id);
+  }
+  for (const card of index.cards)
+    if (['IN_PROGRESS', 'APPROVED', 'BLOCKED'].includes(card.status) && !seen.has(card.id))
+      throw new Error('Missing engineering disposition: ' + card.id);
+  // Keep the original roadmap order; JSON ordering cannot make an easier unit first.
+  return index.cards.flatMap(card => rows.filter(row => row.id === card.id));
+}
+
 function git(root, ...args) {
   try { return execFileSync('git', args, { cwd: root, encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'] }).trim(); }
   catch { return null; }
@@ -151,7 +184,10 @@ export function run(root, args) {
   const policy = JSON.parse(readFileSync(resolve(root, 'docs/session-policy.json'), 'utf8'));
   if (!/^[\w.-]+\/[\w.-]+$/.test(policy.repository) || !/^docs\/[\w/.-]+\.md$/.test(policy.ledger) || policy.ledger.includes('..')) throw new Error('Invalid repository/ledger policy.');
   const rows = readQueue(readFileSync(resolve(root, policy.ledger), 'utf8'));
-  const roadmap = summarizeRoadmap(readRoadmapLedger(readFileSync(resolve(root, policy.ledger), 'utf8')));
+  const ledger = readFileSync(resolve(root, policy.ledger), 'utf8');
+  const roadmapIndex = readRoadmapLedger(ledger);
+  const roadmap = summarizeRoadmap(roadmapIndex);
+  const engineering = readEngineeringQueue(ledger, roadmapIndex);
   const observation = {
     main: git(root, 'rev-parse', '--verify', 'refs/remotes/origin/main^{commit}'),
     live: git(root, 'rev-parse', '--verify', 'refs/remotes/origin/live^{commit}'),
@@ -187,6 +223,12 @@ export function run(root, args) {
     if (batch.planned.length) lines.push('Planned ' + batch.batch + ' (' + batch.planned.length + '): ' + batch.planned.join(', '));
     if (batch.blocked.length) lines.push('Blocked ' + batch.batch + ': ' + batch.blocked.join(', '));
   }
+  const actionable = engineering.filter(row => ['OPEN', 'REVIEW'].includes(row.state));
+  lines.push(`Engineering: ${actionable.length} OPEN/REVIEW; ${engineering.filter(row => row.state === 'EXTERNAL_ONLY').length} verified EXTERNAL_ONLY; ${engineering.filter(row => row.state === 'TIME_GATED').length} TIME_GATED.`);
+  for (const row of engineering.slice(0, flags['--limit'] ? limit : 3))
+    lines.push(`${row.id} ${row.state}: ${row.remaining}`, `   Source/proof: ${row.evidence}`, `   Next: ${row.next}${row.gate ? '; gate: ' + row.gate : ''}`);
+  if (engineering.length > (flags['--limit'] ? limit : 3)) lines.push(`Additional engineering rows remain in ${policy.ledger}; use --limit ${engineering.length} for all. Nothing is resolved or omitted from validation.`);
+  lines.push(actionable.length ? 'Do not stop for live lag: OPEN engineering and unresolved scope reviews remain. REVIEW is not proof of missing code, but cannot justify external-only exhaustion.' : 'No OPEN/REVIEW rows recorded. Revalidate source/proof and authorization before claiming exhaustion.');
   lines.push('PR planning averages: 400–800 changed production lines and 2–5 fully completed predefined batch subsections; count only whole predefined batch subsections with evidence, never helpers or packet subtasks.');
   lines.push('PR work unit = one whole predefined batch subsection (such as H-3 or B-5). Technical slices, functions, tools, UI wiring, guards and packet tasks do not count separately. Partial subsection = zero completed batch subsections.');
   lines.push(`Queue: ${plan.length} total; ${plan.length - active.length} recorded passes; ${active.length} tasks to reconsider.`);

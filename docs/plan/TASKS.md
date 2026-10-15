@@ -1,3 +1,29 @@
+### October 15 premature-stop repair — owner-requested workflow implementation
+
+Reviewed the failed five-bundle session at main `8e3e473` (#130). It delivered
+one corrective repair and zero bundles; clean main, CI, recorded WARN reads and
+release lag did not establish global engineering exhaustion. Found three concrete
+repository defects: stale PR #49 current handoff with an old up-to-five-PR rule,
+status output without engineering/external distinction, and a P0-2 runner that
+called unimplemented probes fixture/approval dependencies without evidence.
+
+This scoped workflow change corrects those defects, adds one engineering view of
+the existing 13 unfinished subsection IDs (one confirmed OPEN, eleven REVIEW,
+one TIME_GATED), and adds a read-only session:finish claim check. REVIEW means
+inspect full original acceptance; it is neither missing-code proof nor a completed
+feature. The check refuses 0/5 normal finish, duplicate/prior-session claims,
+unmerged/local completion claims and blanket exhaustion with OPEN/REVIEW rows.
+Genuine exhausted/limited checkpoints remain explicitly INCOMPLETE, exit 2.
+This cannot force a chat agent to obey or certify its proof. No new product bundle,
+Google mutation, scope, spending, deployment or authentic acceptance is claimed.
+
+Local `npm run check`, 20 session workflow tests, eight focused catalog tests
+and all 1,611 unit tests (83 files) passed. Required exact-head full CI/review
+remain mandatory before merge.
+Current handoff and next engineering action are below; historical acceptance stays
+unchanged. The current owner asked to diagnose/fix the workflow, not implement five
+product bundles in this repair session.
+
 ### Batch-subsection workload clarification — owner instruction October 14, 2026
 
 The PR workload unit is a whole predefined phase/batch subsection such as
@@ -50,6 +76,115 @@ publication; no Google write or new permission occurred.
 ### Workflow maintenance handoff — published in PR #107
 
 New offline session utility: eight behavioral tests passed, including actual Git ancestry, partial releases, unknown/failed deployments, rollback, dependency gating, invalid queues, PR alignment and bounded output. All repository queues validate. Existing source/status evidence is preserved; no provider acceptance or release was performed. Owner explicitly approved publication on October 14; publish the reviewed maintenance branch, require exact-head CI/reviews, and merge only when those gates pass. No extra production release is authorized by this approval. Full broad application suites on the shared runner were interrupted after resource/time-limit failures; do not claim them passed. Existing exact-head remote CI/review gates must pass before any main merge.
+
+## Current engineering disposition — October 15 owner recovery
+
+This is the engineering view of the EXISTING subsection IDs, not new work units.
+It supersedes blanket claims that remaining work is primarily external acceptance.
+OPEN is confirmed remaining engineering. REVIEW means the full original acceptance
+has not been reconciled to exact current code/tests: inspect and resolve it, do not
+invent code or call it externally blocked. EXTERNAL_ONLY requires complete
+criterion-level source/test evidence and exact remaining external gates. TIME_GATED
+restricts only the named operation. Source completion never proves actual Google use.
+
+<!-- engineering-readiness:start -->
+```json
+[
+  {
+    "id": "P0-2",
+    "state": "OPEN",
+    "remaining": "Full read-only smoke coverage is not implemented: the catalog runner has 30 reviewed probes. At 8e3e473 all other advertised reads received an unproved fixture/approval reason; the workflow correction now reports probe_not_implemented instead. Enumeration is not a runnable per-tool probe plan.",
+    "evidence": "scripts/smoke-readonly-catalog.mjs SAFE_READ_PROBES and runCatalogReadOnlySmoke; test/unit/smoke-readonly-catalog.test.js; P0-2 original Build/Acceptance.",
+    "next": "Complete a registry/schema-driven per-read coverage plan with explicit safe arguments, original fixture requirements, result validation and denial cases; integrate existing fixture runner. Keep genuine provider execution separately gated."
+  },
+  {
+    "id": "P2-7",
+    "state": "REVIEW",
+    "remaining": "Reconcile the complete search-presence contract, structured UNKNOWN and permission-positive path before declaring engineering complete.",
+    "evidence": "src/tools/workflows.js and search-presence/typed result tests; ledger #100/#105; WARN is not positive verification.",
+    "next": "Trace each original P2-7 criterion to code/test at current main; fix actual gaps together, otherwise record exact complete source and scope-specific external checks."
+  },
+  {
+    "id": "P5-2",
+    "state": "TIME_GATED",
+    "remaining": "Production plaintext retirement cannot execute before November 1 AND verified encrypted refresh/backfill for every connected account. This does not prevent synthetic retirement/backfill testing.",
+    "evidence": "P5-2 card and P0-6 encryption evidence; gate originated October 2, 2026.",
+    "next": "Inspect existing encryption/refresh/backfill and disposable-DB retirement proof now; reopen OPEN for any missing implementation or test, without retiring actual plaintext early.",
+    "gate": "Not before 2026-11-01 AND verified encrypted refresh/backfill of every connected account; no early production retirement."
+  },
+  {
+    "id": "P6-1",
+    "state": "REVIEW",
+    "remaining": "Original card says refuse unknown settings values; six legacy fields remain passthrough. Determine approved compatibility behavior and full validation/confirmation/readback coverage, not just whether new fields exist.",
+    "evidence": "src/tools/group-settings.js PASSTHROUGH_TEXT/PASSTHROUGH_BOOLEAN; src/tools/guards-admin.js; original P6-1 Build.",
+    "next": "Reconcile preserve-existing-six versus reject-unknown acceptance against current schema and tests, implement compatible missing validation and prove each field; real group edits need separate scoped authority."
+  },
+  {
+    "id": "P7-1",
+    "state": "REVIEW",
+    "remaining": "Shared-drive request-ID repair #130 is not proof of every original shared-drive/member/restriction, all-drives caller and denial criterion.",
+    "evidence": "src/tools/shared-drives.js, drive.js, guards-files.js; original P7-1; #130 is a 24-line corrective addition.",
+    "next": "Trace complete six-tool lifecycle and existing sharing callers/tests, repair any connected gaps, then record exact engineering proof and independent disposable-drive acceptance."
+  },
+  {
+    "id": "P7-2",
+    "state": "REVIEW",
+    "remaining": "Explicit configured-policy reports exist; reconcile every approved area/baseline/console link and bounded traversal criterion. Effective inherited per-domain policy cannot be inferred from an API that does not expose it.",
+    "evidence": "src/tools/policy-audit.js, policy-scan.js, policy-baseline.js; #128; original P7-2 versus documented provider limitation.",
+    "next": "Verify scope-accurate implemented coverage and automated evidence; record unsupported effective-policy determination explicitly rather than presenting it as permission-blocked code or invented effective settings."
+  },
+  {
+    "id": "P7-8",
+    "state": "REVIEW",
+    "remaining": "Bulk source #126/#127 is merged; current status still calls #127 a candidate. Reconcile all seven mappings, preview/confirm, cap, partial failures, readback/audit and permissions against the full approved design.",
+    "evidence": "src/tools/bulk.js; test/unit/bulk.test.js; P7-8 approved design and merged #126/#127.",
+    "next": "Review the entire outcome once; fix any actual integration gaps as one coherent unit, otherwise record engineering-complete source/tests and exact remaining Google TEST scenarios."
+  },
+  {
+    "id": "P8-2",
+    "state": "REVIEW",
+    "remaining": "Profile/area/listing persistence across refresh, every dispatch door and metadata budget must be traced to complete current proof.",
+    "evidence": "src/rtc/catalog.js; src/oauth/helpers.js; api/oauth/token.js; test/unit/rtc-profile.test.js; real-DB connection-settings tests; P8-2 original acceptance.",
+    "next": "Reconcile full original matrix including refresh setting-copy coverage; fix missing behavior/tests before labeling external-only."
+  },
+  {
+    "id": "P8-3",
+    "state": "REVIEW",
+    "remaining": "Current approved TEST/read-only pass restriction intentionally narrows the original pass roadmap; distinguish intentionally gated activation from missing issuance/revocation/one-time-output engineering.",
+    "evidence": "api/rtc/passes.js; src/rtc/pass-options.js and pass-page/DB tests; P8-3 original card plus later owner restriction.",
+    "next": "Trace one-time output, expiry/revocation, account/domain/area limits and all-door denial; preserve approved restriction and document exact source proof without enabling broader passes."
+  },
+  {
+    "id": "P8-4",
+    "state": "REVIEW",
+    "remaining": "HTTPS source merged does not establish all-door parity, connector-token refusal, per-pass cross-instance rate limit and result/manifest boundary coverage.",
+    "evidence": "api/rtc-gateway.js; src/rtc/; test/unit/rtc-route-http.test.js; test/db/upgrade.test.js RTC rate-limit tests; original P8-4 acceptance.",
+    "next": "Review full route/rate-limit matrix against original concurrency and changed contracts, close missing engineering, then queue only actual deployed behavior."
+  },
+  {
+    "id": "P8-5",
+    "state": "REVIEW",
+    "remaining": "Pinned local Hub conformance and actual service routes must be reconciled; real relay/Sandbox acceptance is separate, not justification to leave local conformance gaps.",
+    "evidence": "scripts/rtc-conformance-ci.mjs; .github/workflows/ci.yml; test/rtc/; P8-5 original acceptance.",
+    "next": "Verify pinned Hub runner plus actual Workspace adapter and complete exact-head automated conformance before recording remaining external routes."
+  },
+  {
+    "id": "P8-7",
+    "state": "REVIEW",
+    "remaining": "Drive/Calendar/Gmail fixture families and integration checks have many corrective PRs; original complete lifecycle/recovery/cleanup and no-foreign-data matrix needs one source-level reconciliation.",
+    "evidence": "src/tools/dev-fixtures.js, dev-calendar.js, dev-gmail.js, dev-integration*.js; fixture unit/DB/RTC tests; P8-7 original acceptance.",
+    "next": "Trace all three scenarios end to end with exact IDs, reservations, partial failure, replay, readback and cleanup; fix missing integration together; reuse saved authorized connection for separate real proof."
+  },
+  {
+    "id": "P8-8",
+    "state": "REVIEW",
+    "remaining": "Fifty-topic inventory and 24 API mappings are not proof of the required dated full Admin-console walk; distinguish source mapping completeness from unavailable actual console observations.",
+    "evidence": "src/tools/admin-console-verify.js; src/data/console-map.js; src/data/console-review.js; owner overview/audience tests; P8-8 original Build/Acceptance; #123.",
+    "next": "Reconcile owner overview states, all existing map entries/expected results, audience search and verifyWith references; build any missing coverage/reporting, then record exact external console walk constraints."
+  }
+]
+```
+<!-- engineering-readiness:end -->
 
 ## Release acceptance queue — workflow optimization 2026-10-14
 
@@ -1760,41 +1895,34 @@ queue *automatically*. Add new blocked work here using every column.
 
 ## Permanent handoff (update with each substantive implementation PR)
 
-**Latest observed before #49:** GitHub main
-`71f0ddcf3efe1403a10fd299ebe2111ec4fb8794`;
-PRs #45–#48 merged, post-merge `test` and `release-policy` green,
-no open PRs/reviews before #49. `live` was separately observed at
-`c7472dd71fce266391496bd657608cff0ef440de`; not proof of
-deployed HTTPS acceptance. Actual SHA/status must be re-read after merges.
+**Current checkpoint — October 15 workflow recovery:** source baseline
+`8e3e47360309797d15f63f199c0a5d2493a2bca1` (#130). Read actual current main,
+current engineering disposition above and current PR CI/reviews before resuming.
+Older dated checkpoints below are historical proof, never the current queue.
 
-**Current outcome:** P5-1's residual misclassification risk is addressed
-by exhaustive read semantics and a private guarded-write provenance
-registry in #49, including forged-handler/unknown-name regression tests. Permanently apply
-the outcome-first workflow and owner-prompt session scope in the existing
-plan/implementer/ledger as part of that substantive PR.
+**Outcome:** fulfill the CURRENT owner bundle target. #130 was a necessary
+corrective fix, zero bundles; merging it did not satisfy the request for five.
+P0-2 has confirmed remaining smoke-coverage engineering; other open subsections
+require criterion-level reconciliation, not a blanket external-only claim.
+Do not repeat already-proven mailbox identity/WARN calls merely to fill a session.
+Follow SESSION-START and the existing roadmap order, keep a bundle in progress
+through checkpoints, and continue after incidental repairs and CI.
 
-**Evidence layers:** Code already merged for all three P8-7 fixture
-families; mocked Google, unit and disposable-Postgres proof exists.
-#49's pre-ledger final head `39bc73f89362c3810e4bdbecc464052b25aaf1cd`
-passed required checks and 1,181 unit / 48 disposable-Postgres /
-18 RTC tests; this last ledger-only adjustment must pass exact-head
-checks again before merge. Actual scheduled live SHA, genuine Google
-TEST fixture creation/cleanup, RTC direct/restricted relay/Sandbox
-and revocation have **not** been demonstrated and are not DONE.
+**Next:** finish P0-2's complete per-read coverage plan and connected runner
+validation, original fixtures and safe refusal/reporting behavior. Review the
+original P0-2 card, current runner and full read-only registry, not only the
+30 available probes. Do not invent provider IDs, permissions or provider proof.
+Reconcile the remaining engineering rows as their approved order becomes eligible.
+Do not mark a whole existing subsection complete for another small runner helper.
 
-**Next eligible work:** Finish #49 tests/review/merge and verify
-post-merge main; then implement P5-4's generated accurate catalog
-and versioning while rechecking owner/dependency triggers above.
-Separate authentic TEST acceptance once protected owner-approved
-credentials are legitimately available. Keep P5-2 deferred until
-the date and encrypted-row evidence both pass.
-
-**Continuation contract:** Verify actual main/concurrent agents and
-unresolved reviews; read the plan, blocker table and this permanent
-handoff; select the next concrete eligible outcome; normally complete
-up to five coherent substantive PRs without padding; prove each
-acceptance layer; preserve hosting/scope/owner gates; update this
-handoff and issue another compact prompt following IMPLEMENTER.md.
+**Stop rule when the owner supplies a bundle target:** use
+`npm run session:finish -- --bundles N --report PATH`
+with the current owner's target and evidence-backed session report described in
+SESSION-START. An incomplete workload is not a successful finish. If engineering
+is genuinely exhausted, show every remaining subsection's exact source/proof,
+attempted remedies and external gate; ask for the smallest necessary owner input
+while continuing any independent work. No filler, speculative expansion or
+provider/release/production/spending/cleanup bypass is authorized.
 
 
 ### P5-1 audited outcome and proof — PR #49

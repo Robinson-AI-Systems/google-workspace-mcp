@@ -49,7 +49,10 @@ Recheck TASKS.md blocked/deferred items when dependency merges, owner input
 or environment changes resolve their conditions. Do not re-request
 previously recorded decisions.
 
-Use the PR count or scope in the current owner prompt for this session only.
+Use the bundle target or scope in the current owner prompt for this session only.
+A bundle is the documented full implementation workload, not a PR or a repair.
+Read TASKS.md's current engineering disposition, complete the requested workload,
+and use SESSION-START's session:finish claim check before final reporting.
 Do not infer a count from the repository or PR numbering. Preserve review and exact-head CI, authorization, data integrity,
 recovery, scoped TEST accounts, scheduled checked daily main→live,
 disabled previews, idle resource limits and owner gates. Distinguish
@@ -124,7 +127,7 @@ TASKS.md card, re-entry table and next eligible action reconciled.
 
 ## Checklist before opening any PR
 
-- [ ] Branch from fresh `main`; one card (or an allowed group).
+- [ ] Branch from fresh `main`; full current bundle boundary (group related whole approved subsections; incidental corrections do not end the bundle).
 - [ ] `npm run check` passes: assembled semantic inventory requires audited exact read-only declarations and genuine guarded-write provenance; `dryRun` alone proves nothing.
 - [ ] `npm test` passes and new behavior has new tests.
 - [ ] No secret in code, tests, fixtures, logs, or PR body.

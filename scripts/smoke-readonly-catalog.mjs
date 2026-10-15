@@ -79,7 +79,7 @@ export async function runCatalogReadOnlySmoke({origin,token,expectedAccount,expe
  // checked before walking or invoking the wider catalog.
  const baseline=await runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher});
  if(!baseline.ok)return {ok:false,catalogComplete:false,baseline:baseline.outcomes,
-  tools:[],summary:{discovered:0,probed:0,failed:baseline.outcomes.filter(x=>x.status==='FAIL').length,notProbed:0}};
+  tools:[],summary:{discovered:0,probed:0,failed:baseline.outcomes.filter(x=>x.status==='FAIL').length,notProbed:0,engineeringGaps:0}};
  const catalog=await readAuthorizedCatalog({origin,token,fetcher});
  const byName=new Map(catalog.map(t=>[t.name,t]));
  const reviewed=SAFE_READ_PROBES.filter(p=>byName.has(p.name));
@@ -91,13 +91,14 @@ export async function runCatalogReadOnlySmoke({origin,token,expectedAccount,expe
   // cannot locate it is contract drift, not an "unavailable" optional area.
   if(found?.status==='NOT_AVAILABLE')return {tool:tool.name,status:'FAIL',reason:'advertised_probe_unavailable'};
   if(found)return {tool:tool.name,status:found.status,...(found.reason?{reason:found.reason}:{})};
-  return {tool:tool.name,status:'NOT_PROBED',reason:tool.writes?'protected_dispatcher_not_invoked':'requires_fixture_or_separate_approval'};
+  return {tool:tool.name,status:'NOT_PROBED',reason:PROTECTED_DISPATCHERS.has(tool.name)?'protected_dispatcher_not_invoked':'probe_not_implemented'};
  });
  const failed=tools.filter(t=>t.status==='FAIL').length;
+ const engineeringGaps=tools.filter(t=>t.reason==='probe_not_implemented').length;
  const notProbed=tools.filter(t=>t.status==='NOT_PROBED'||t.status==='NOT_AVAILABLE').length;
  return {ok:baseline.ok&&run.ok&&failed===0,catalogComplete:true,coverageComplete:notProbed===0,
   account:expectedAccount,revision:expectedRevision,baseline:baseline.outcomes,
-  tools,summary:{discovered:tools.length,probed:tools.length-notProbed,failed,notProbed}};
+  tools,summary:{discovered:tools.length,probed:tools.length-notProbed,failed,notProbed,engineeringGaps}};
 }
 
 export async function main(argv=process.argv.slice(2),env=process.env){
@@ -118,7 +119,8 @@ export async function main(argv=process.argv.slice(2),env=process.env){
   console.log('Read-only catalog enumerated: '+result.catalogComplete+
    '; probes passed: '+(result.summary.probed-result.summary.failed)+
    '; failed: '+result.summary.failed+'; not probed: '+result.summary.notProbed+
-   '; NOT a claim of full provider or Hub acceptance.');
+   '; probe implementation gaps: '+result.summary.engineeringGaps+
+   '; NOT a claim of full provider or Hub acceptance or external-only exhaustion.');
   return result.ok?0:1;
  }catch{
   console.error('FAIL read-only catalog acceptance; no provider data or secrets printed');
