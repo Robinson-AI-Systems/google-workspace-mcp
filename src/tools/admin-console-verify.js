@@ -212,11 +212,64 @@ export const tools=[{
   crossDomain:{type:'boolean',description:'Explicit owner authorization for customer-wide or other-business reads; default false.'},
   dryRun:{type:'boolean',description:'True: list eligible provider reads and scope gates only, no Google requests.'}
  },required:['ids']}
+},{
+ name:'workspace_admin_console_capabilities',
+ description:'Discover which of all mapped Google Admin settings have a reviewed read-only provider check, which require exact targets or owner approval, and which remain manual.',
+ inputSchema:{type:'object',properties:{
+  category:{type:'string',enum:Object.keys(CONSOLE_REVIEW_GROUPS)},
+  query:{type:'string',maxLength:120},
+  status:{type:'string',enum:['eligible','outside_scope','manual_only','needs_target']},
+  page:{type:'integer',minimum:1,maximum:1000},
+  pageSize:{type:'integer',minimum:1,maximum:20},
+  subjectEmail:{type:'string'},
+  groupEmail:{type:'string'},
+  domain:{type:'string'},
+  crossDomain:{type:'boolean'}
+ }}
 }];
 export const handlers={
  async workspace_admin_console_verify(args={},clients){
   const {registry}=await import('./index.js');
   return ok(await executeConsoleReadbacks(args,clients,
    (name,childArgs,account)=>callReadForComposition(registry,name,childArgs,account)));
- }
+ },
+ async workspace_admin_console_capabilities(args={},clients){return ok(discoverConsoleReadbacks(args,clients));}
 };
+
+const PREVIEW_STATES=new Set(['eligible','outside_scope','manual_only','needs_target']);
+export function discoverConsoleReadbacks(args={},clients={}){
+ const {category,query='',status,page=1,pageSize=10}=args;
+ if(category!==undefined&&!Object.keys(CONSOLE_REVIEW_GROUPS).includes(category))
+  throw Error('Unknown Admin console review category.');
+ if(typeof query!=='string'||query.length>120||
+   status!==undefined&&!PREVIEW_STATES.has(status)||
+   !Number.isSafeInteger(page)||page<1||page>1000||
+   !Number.isSafeInteger(pageSize)||pageSize<1||pageSize>20)
+  throw Error('Review filter, eligibility, page or page size is invalid.');
+ const found=CONSOLE_MAP
+  .filter(entry=>(!category||CATEGORY.get(entry.id)===category)&&
+    (!query||[entry.id,entry.title,...entry.keywords].some(term=>
+      term.toLowerCase().includes(query.trim().toLowerCase()))))
+  .map(entry=>{
+   const planned=planConsoleReadbacks({
+    ids:[entry.id],crossDomain:args.crossDomain,
+    subjectEmail:args.subjectEmail,groupEmail:args.groupEmail,domain:args.domain
+   },clients)[0];
+   return {id:entry.id,category:CATEGORY.get(entry.id),
+    title:entry.title,status:planned.status,
+    ...(planned.reason?{reason:planned.reason}:{}),
+    ...(planned.tool?{tool:planned.tool}:{})};
+  });
+ const counts={eligible:0,outside_scope:0,manual_only:0,needs_target:0};
+ for(const item of found)counts[item.status]++;
+ const filtered=status?found.filter(item=>item.status===status):found;
+ const start=(page-1)*pageSize;
+ return {
+  mode:'read_only_discovery',account:clients.actingAs,totalMapped:CONSOLE_MAP.length,
+  totalMatched:filtered.length,
+  filters:{category:category||null,status:status||null,query:query.trim()},
+  counts, page,pageSize,nextPage:start+pageSize<filtered.length?page+1:null,
+  items:filtered.slice(start,start+pageSize),
+  note:'This is a protected scope/shape inventory only. Eligible does not mean Google granted the permission or applied an effective Admin policy; run workspace_admin_console_verify for exact provider reads.'
+ };
+}
