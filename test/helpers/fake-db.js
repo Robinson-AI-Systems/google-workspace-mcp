@@ -1,4 +1,5 @@
 import {passOptions} from '../../src/rtc/pass-options.js';
+import {loadKey, encryptJson, decryptJson} from '../../src/crypto.js';
 // An in-memory stand-in for src/db.js, so unit tests can run the real login
 // page, tool and OAuth code without Postgres. It must behave like the real
 // module; test/contract/db-contract.js runs the SAME checks against both this
@@ -15,6 +16,7 @@ const norm = (email) => String(email || '').trim().toLowerCase();
 export function createFakeDb({ clock = () => Date.now() } = {}) {
   const state = {
     legacyTokens: null,
+    encryptedOnlyAt: null,
     accounts: new Map(),
     clients: new Map(),
     codes: new Map(),
@@ -111,18 +113,64 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       return (await api.listGoogleAccounts())[0]?.email || null;
     },
     async getGoogleTokensFor(email) {
-      return state.accounts.get(norm(email))?.tokens || null;
+      const row = state.accounts.get(norm(email));
+      if (!row) return null;
+      if (!state.encryptedOnlyAt) return row.tokens;
+      const key = loadKey();
+      if (!key || !row.tokens_enc) throw Error('Encrypted Google tokens unavailable; reconnect using the approved recovery procedure.');
+      try { return decryptJson(row.tokens_enc, key); }
+      catch { throw Error('Encrypted Google token integrity check failed; no plaintext fallback is allowed.'); }
     },
-    async saveGoogleTokensFor(email, tokens, { label } = {}) {
+    async saveGoogleTokensFor(email, tokens, { label, source } = {}) {
       const e = norm(email);
-      const existing = state.accounts.get(e);
-      if (existing) {
-        existing.tokens = { ...existing.tokens, ...tokens };
-        existing.label = label || existing.label;
-        existing.updated_at = at();
+      const previous = state.accounts.get(e);
+      const key = loadKey();
+      if (state.encryptedOnlyAt && !key) throw Error('A valid TOKEN_ENCRYPTION_KEY is required for encrypted-only storage.');
+      const before = state.encryptedOnlyAt && previous
+        ? await api.getGoogleTokensFor(e) : (previous?.tokens || {});
+      const merged = { ...before, ...tokens };
+      const encrypted = key ? encryptJson(merged, key) : null;
+      if (previous) {
+        previous.tokens = state.encryptedOnlyAt ? {} : merged;
+        previous.tokens_enc = encrypted;
+        previous.tokens_enc_verified_at = encrypted ? at() : null;
+        previous.tokens_enc_refreshed_at = encrypted && source === 'refresh' ? at() : previous.tokens_enc_refreshed_at;
+        previous.label = label || previous.label;
+        previous.updated_at = at();
       } else {
-        state.accounts.set(e, { email: e, label: label || null, tokens: { ...tokens }, is_default: state.accounts.size === 0, created_at: at(), updated_at: at() });
+        state.accounts.set(e, { email:e, label:label || null, tokens:state.encryptedOnlyAt ? {} : merged,
+          tokens_enc:encrypted, tokens_enc_verified_at:encrypted ? at() : null,
+          tokens_enc_refreshed_at:encrypted && source === 'refresh' ? at() : null,
+          is_default:state.accounts.size === 0, created_at:at(), updated_at:at() });
       }
+    },
+    async inspectGoogleTokenRetirement() {
+      const key = loadKey(), rows = [...state.accounts.values()];
+      const problems = { missingKey: !key, noAccounts: rows.length === 0,
+        missingCopy:0, corruptOrStale:0, unverifiedBackfill:0, refreshNotObserved:0 };
+      for (const row of rows) {
+        if (!row.tokens_enc) { problems.missingCopy++; continue; }
+        if (!row.tokens_enc_verified_at) problems.unverifiedBackfill++;
+        if (!row.tokens_enc_refreshed_at) problems.refreshNotObserved++;
+        if (key) {
+          try {
+            const decrypted = decryptJson(row.tokens_enc,key);
+            if (!state.encryptedOnlyAt && !isDeepStrictEqual(decrypted,row.tokens)) problems.corruptOrStale++;
+          } catch { problems.corruptOrStale++; }
+        }
+      }
+      return {encryptedOnly:!!state.encryptedOnlyAt,accountsChecked:rows.length,
+        ready:rows.length > 0 && !!key && Object.values(problems).every(x=>x===false || x===0),
+        problems,notBefore:'2026-11-01T06:00:00Z'};
+    },
+    async activateGoogleTokenRetirement({ownerConfirmed=false}={}) {
+      if (!ownerConfirmed) throw Error('Independent owner confirmation required; no tokens retired.');
+      if (state.encryptedOnlyAt) return {activated:false,alreadyActive:true};
+      if (clock() < Date.parse('2026-11-01T06:00:00Z')) throw Error('Plaintext retirement cannot start before November 1, 2026.');
+      const readiness = await api.inspectGoogleTokenRetirement();
+      if (!readiness.ready) throw Error('Every Google account needs an intact encrypted backfill and observed refresh before retirement.');
+      state.encryptedOnlyAt = at();
+      return {activated:true,alreadyActive:false};
     },
     async setDefaultGoogleAccount(email) {
       const e = norm(email);
