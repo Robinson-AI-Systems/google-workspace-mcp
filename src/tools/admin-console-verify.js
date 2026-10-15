@@ -62,19 +62,20 @@ const READBACK=Object.freeze({
  'chrome-management':{tool:'admin_list_chrome_devices',area:'chrome',scope:'customer_sample',
    proof:listOf(x=>obj(x)&&nonempty(x.deviceId)),args:()=>({maxResults:20})},
  '2sv':{tool:'admin_get_2sv_status',area:'admin',scope:'named_user',
-   proof:(x,t)=>obj(x)&&email(x.primaryEmail||t)&&
-     (x.primaryEmail===undefined||x.primaryEmail.toLowerCase()===t.toLowerCase())&&
+   proof:(x,t)=>obj(x)&&email(x.primaryEmail)&&
+     x.primaryEmail.toLowerCase()===t.toLowerCase()&&
      bool(x.isEnrolledIn2Sv)&&bool(x.isEnforcedIn2Sv),
    args:t=>({userEmail:t})},
  'recovery':{tool:'admin_get_user',area:'admin',scope:'named_user',
    proof:(x,t)=>obj(x)&&email(x.primaryEmail)&&x.primaryEmail.toLowerCase()===t.toLowerCase(),
    args:t=>({userEmail:t})},
  'groups-settings':{tool:'admin_get_group_settings',area:'admin',scope:'named_group',
-   proof:(x,t)=>obj(x)&&(!x.email||x.email.toLowerCase()===t.toLowerCase())&&
-     Object.keys(x).some(k=>k!=='kind'&&k!=='etag'),
+   proof:(x,t)=>obj(x)&&email(x.email)&&x.email.toLowerCase()===t.toLowerCase()&&
+     Object.keys(x).some(k=>k!=='kind'&&k!=='etag'&&k!=='email'),
    args:t=>({groupEmail:t})},
  'dkim':{tool:'workflow_email_health',area:'workflows',scope:'named_domain',
-   proof:(x)=>obj(x)&&obj(x.summary)&&Array.isArray(x.checks)&&x.checks.length>0,
+   proof:(x,t)=>obj(x)&&(!x.domain||x.domain.toLowerCase()===t.toLowerCase())&&
+     obj(x.summary)&&Array.isArray(x.checks)&&x.checks.length>0,
    args:t=>({domain:t})},
  'spf-dmarc':{tool:'workflow_email_health',area:'workflows',scope:'named_domain',
    proof:(x)=>obj(x)&&obj(x.summary)&&Array.isArray(x.checks)&&x.checks.length>0,
