@@ -98,6 +98,34 @@ const READBACK=Object.freeze({
    proof:(x)=>obj(x)&&obj(x.summary)&&Array.isArray(x.checks)&&x.checks.length>0,
    args:t=>({domain:t})}
 });
+
+// Expectations are per-observed-mailbox predicates, never organizational
+// policy assertions. An expected=false is a legitimate owner policy choice;
+// failures are surfaced, not silently upgraded to verified Admin settings.
+const EXPECTATION_READBACKS=Object.freeze({
+ 'gmail-imap-pop':x=>x.enabled,
+ 'email-forwarding':x=>x.enabled,
+ 'out-of-office':x=>x.enableAutoReply,
+ 'gmail-default-routing-delegation':x=>x.length>0,
+ 'signature':x=>x.length>0,
+ '2sv':x=>x.isEnrolledIn2Sv===true&&x.isEnforcedIn2Sv===true
+});
+export function validateConsoleExpectations(args={}){
+ const requests=args.expectations===undefined?[]:args.expectations;
+ if(!Array.isArray(requests)||requests.length>MAX)
+  throw Error('Expected mailbox settings must contain at most ten checks.');
+ const ids=new Set(),map=new Map();
+ for(const item of requests){
+  if(!obj(item)||Object.keys(item).sort().join(',')!=='expected,id'||
+     !Object.hasOwn(EXPECTATION_READBACKS,item.id)||
+     !Array.isArray(args.ids)||!args.ids.includes(item.id)||
+     typeof item.expected!=='boolean'||ids.has(item.id))
+   throw Error('Expectations require distinct selected reviewed mailbox IDs and an exact boolean.');
+  ids.add(item.id);map.set(item.id,item.expected);
+ }
+ return map;
+}
+
 const TOPICS=new Map(CONSOLE_MAP.map(x=>[x.id,x]));
 const CATEGORY=new Map(Object.entries(CONSOLE_REVIEW_GROUPS).flatMap(([group,ids])=>
  ids.map(id=>[id,group])));
@@ -180,6 +208,7 @@ export async function executeConsoleReadbacks(args={},clients={},invoke){
   throw Error('dryRun must be boolean.');
  if(typeof invoke!=='function')throw Error('A guarded source reader is required.');
  const planned=planConsoleReadbacks(args,clients);
+ const expectations=validateConsoleExpectations(args);
  const entries=[];
  for(const plannedItem of planned){
   const {tool,scope,target,args:input,...base}=plannedItem;
@@ -198,22 +227,37 @@ export async function executeConsoleReadbacks(args={},clients={},invoke){
   }
   const value=decodeRead(output);
   const observed=shapeStatus(READBACK[base.id],value,target);
-  entries.push({...base,status:observed.status,reason:observed.reason,
+  const predicted=expectations.get(base.id);
+  let expectedStatus=observed;
+  if(predicted!==undefined&&observed.status==='observed'){
+   try{
+    const observedBoolean=EXPECTATION_READBACKS[base.id](value);
+    if(typeof observedBoolean==='boolean')
+     expectedStatus=observedBoolean===predicted?
+      {status:'matches_expected',reason:'observed_mailbox_setting_matches_requested_boolean'}:
+      {status:'needs_attention',reason:'observed_mailbox_setting_differs_from_expected_boolean'};
+   }catch{/* Provider data never becomes a verified boolean without a readback. */}
+  }
+  entries.push({...base,status:expectedStatus.status,reason:expectedStatus.reason,
+   ...(predicted!==undefined?{expected:predicted}:{}),
    ...(value!==null&&Array.isArray(value)&&observed.status!=='not_readable'?
     {observedCount:value.length}:{})});
  }
  const summary={total:entries.length,observed:0,observedPartial:0,
-  notReadable:0,outsideScope:0,manualOnly:0,needsTarget:0,planned:0};
+  matchesExpected:0,needsAttention:0,notReadable:0,outsideScope:0,manualOnly:0,needsTarget:0,planned:0};
  for(const entry of entries){
   if(entry.status==='observed')summary.observed++;
   else if(entry.status==='observed_partial')summary.observedPartial++;
+  else if(entry.status==='matches_expected')summary.matchesExpected++;
+  else if(entry.status==='needs_attention')summary.needsAttention++;
   else if(entry.status==='not_readable')summary.notReadable++;
   else if(entry.status==='outside_scope')summary.outsideScope++;
   else if(entry.status==='manual_only')summary.manualOnly++;
   else if(entry.status==='needs_target')summary.needsTarget++;
   else if(entry.status==='planned')summary.planned++;
  }
- const allObserved=summary.observed+summary.observedPartial===summary.total;
+ const allObserved=summary.observed+summary.observedPartial+
+  summary.matchesExpected+summary.needsAttention===summary.total;
  return {
   account:clients.actingAs,checkedAt:new Date().toISOString(),
   mode:args.dryRun===true?'review_preview':'read_only_google_observation',
@@ -234,7 +278,9 @@ export const tools=[{
   reportDate:{type:'string',description:'Exact YYYY-MM-DD date for the Reports usage read.'},
   skuId:{type:'string',description:'Exact Workspace licensing SKU ID, not a purchased-seat count.'},
   crossDomain:{type:'boolean',description:'Explicit owner authorization for customer-wide or other-business reads; default false.'},
-  dryRun:{type:'boolean',description:'True: list eligible provider reads and scope gates only, no Google requests.'}
+  dryRun:{type:'boolean',description:'True: list eligible provider reads and scope gates only, no Google requests.'},
+  expectations:{type:'array',maxItems:10,items:{type:'object',required:['id','expected'],
+    properties:{id:{type:'string',enum:Object.keys(EXPECTATION_READBACKS)},expected:{type:'boolean'}}}}
  },required:['ids']}
 },{
  name:'workspace_admin_console_capabilities',
