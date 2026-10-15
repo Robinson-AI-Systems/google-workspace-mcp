@@ -7,6 +7,7 @@ import { allowedTool } from '../rtc/catalog.js';
 import { DELEGATED_SCOPES, describeServiceAccount } from '../auth/service-account.js';
 import { normalizeExactAppResources, inspectExactAppResources } from './dev-integration-resources.js';
 import { normalizeAppCapabilities, inspectAppCapabilities } from './dev-integration-capabilities.js';
+import { normalizeCalendarAvailability, inspectCalendarAvailability } from './dev-integration-calendar-readiness.js';
 
 const API_SPECS=Object.freeze({
  gmail:{tool:'gmail_list_messages',label:'Gmail',url:'https://console.cloud.google.com/apis/library/gmail.googleapis.com',
@@ -58,7 +59,7 @@ export function validateIntegrationSpec(input={}){
    (typeof input.serviceAccountClientId!=='string'||!/^[0-9]{10,32}$/.test(input.serviceAccountClientId)))
    throw Error('serviceAccountClientId must be a Google numeric client ID.');
  out.serviceAccountClientId=input.serviceAccountClientId||null;
- Object.assign(out, normalizeExactAppResources(input), normalizeAppCapabilities(input));
+ Object.assign(out, normalizeExactAppResources(input), normalizeAppCapabilities(input), normalizeCalendarAvailability(input));
  return out;
 }
 const guide=(url,summary)=>({url,steps:[{n:1,action:'Open',target:url},{n:2,action:'Verify',target:summary}],expected:'Confirm in Google Console; no setting changed automatically.'});
@@ -243,6 +244,7 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
  }
  checks.push(...await inspectExactAppResources(request,clients));
  checks.push(...await inspectAppCapabilities(request,clients));
+ checks.push(...await inspectCalendarAvailability(request,clients));
  const statuses=checks.map(x=>x.status);
  return {actingAs:clients.actingAs,checkedAt:new Date().toISOString(),
    status:checks.length===0?'not_readable':statuses.includes('missing')?'missing':statuses.includes('not_readable')?'not_readable':'ready',
@@ -278,7 +280,10 @@ export const tools=[{
        required:['driveId','permissionId','role'],properties:{
        driveId:{type:'string'},permissionId:{type:'string'},
        role:{type:'string',enum:['organizer','fileOrganizer','writer','commenter','reader']}}}},
-     gmailSendAsAliases:{type:'array',maxItems:12,items:{type:'string'}}
+     gmailSendAsAliases:{type:'array',maxItems:12,items:{type:'string'}},
+     calendarFreeBusyWindows:{type:'array',maxItems:12,items:{type:'object',
+       required:['calendarId','timeMin','timeMax'],
+       properties:{calendarId:{type:'string'},timeMin:{type:'string'},timeMax:{type:'string'}}}}
    }}
  },required:['spec']}
 }];
