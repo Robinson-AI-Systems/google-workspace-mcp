@@ -8,6 +8,32 @@ describe('RTC result handles',()=>{
    expect(projectFields({user:{name:'A',email:'b'},id:5},'user.name,id')).toEqual({user:{name:'A'},id:5});
    expect(()=>projectFields({a:1},'__proto__.polluted')).toThrow();
  });
+ it('merges selected sibling fields by list position without losing prior fields',()=>{
+   const original={entries:[{id:'a',status:'observed',private:'omit'},
+     {id:'b',status:'outside_scope',private:'omit'}]};
+   expect(projectFields(original,'entries.id,entries.status')).toEqual({entries:[
+     {id:'a',status:'observed'},{id:'b',status:'outside_scope'}]});
+   expect(projectFields(original,'entries.id,entries.status,entries.missing')).toEqual({entries:[
+     {id:'a',status:'observed'},{id:'b',status:'outside_scope'}]});
+   expect(original.entries[0].private).toBe('omit');
+ });
+ it('preserves empty and nested lists when selecting several fields',()=>{
+   const original={groups:[{members:[{id:'one',role:'reader'},{id:'two'}]},
+     {members:[]}]};
+   expect(projectFields(original,'groups.members.id,groups.members.role')).toEqual({groups:[
+     {members:[{id:'one',role:'reader'},{id:'two'}]},{members:[]}]});
+ });
+ it('projects sibling list fields from an owned stored result without leaking omitted data',async()=>{
+   const fake=createFakeDb();
+   const original={entries:[{id:'a',status:'observed',private:'x'.repeat(10000)},
+     {id:'b',status:'outside_scope',private:'y'.repeat(10000)}]};
+   const shaped=await shapeReadResult(ok(original),{detail:'full'},'owner',fake.storeRtcResult);
+   const {handle}=JSON.parse(shaped.content[0].text);
+   const out=await readStoredResult({handle,fields:'entries.id,entries.status'},'owner',fake.getRtcResult);
+   expect(JSON.parse(JSON.parse(out.content[0].text).payload)).toEqual({entries:[
+     {id:'a',status:'observed'},{id:'b',status:'outside_scope'}]});
+   expect((await readStoredResult({handle,fields:'entries.id,entries.status'},'foreign',fake.getRtcResult)).isError).toBe(true);
+ });
  it('preserves large data behind a handle and isolates connections',async()=>{
    const fake=createFakeDb();
    const output=await shapeReadResult(ok({messages:Array.from({length:250},(_,i)=>({id:i,body:'x'.repeat(80)}))}),{},'connection-1',fake.storeRtcResult);
