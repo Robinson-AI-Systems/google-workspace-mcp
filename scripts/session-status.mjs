@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { planReleaseAlert, releaseAlertLines } from './release-needed.mjs';
 
 const SHA = /^[a-f0-9]{40}$/;
 const START = '<!-- release-acceptance:start -->';
@@ -293,6 +294,7 @@ export function run(root, args) {
     'Candidates need existing authorization, fixture isolation and cleanup. This command never runs provider tests or releases.'];
   const next = nextRequiredWork(engineering, plan);
   lines.push(`After acceptance catch-up, next required work: ${next.kind}${next.id ? ' ' + next.id : ''}: ${next.action}`, next.note);
+  lines.push(...releaseAlertLines(planReleaseAlert(plan, observation, ancestor)));
   lines.push(...acceptanceSummary(plan, limit));
   if (flags['--acceptance-review']) {
     const raw = readFileSync(resolve(root, flags['--acceptance-review']), 'utf8');
