@@ -3,14 +3,19 @@ import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {createFakeDb} from '../helpers/fake-db.js';
 
-const holder=vi.hoisted(()=>({db:null,writes:0}));
+const holder=vi.hoisted(()=>({db:null,writes:0,labels:new Map()}));
 vi.mock('../../src/db.js',async importActual=>{
  const real=await importActual();
  return Object.fromEntries(Object.keys(real).map(name=>[name,(...args)=>holder.db[name](...args)]));
 });
 vi.mock('../../src/auth/google-auth-hosted.js',()=>({
  buildHostedApiClients:async email=>({actingAs:email,gmail:{users:{getProfile:async()=>({data:{emailAddress:email}}),
-  messages:{send:async()=>{holder.writes++;return {data:{id:'sent'}};}}}}})
+  messages:{send:async()=>{holder.writes++;return {data:{id:'sent'}};}},
+  labels:{
+   create:async ({requestBody})=>{holder.writes++;const row={id:'Label_http',...requestBody};holder.labels.set(row.id,row);return {data:row};},
+   get:async ({id})=>{const row=holder.labels.get(id);if(!row)throw Object.assign(Error('missing'),{code:404});return {data:row};},
+   delete:async ({id})=>{holder.writes++;holder.labels.delete(id);return {data:{}};}
+  }}}})
 }));
 const {default:gateway}=await import('../../api/rtc-gateway.js');
 const {registry}=await import('../../src/tools/index.js');
@@ -177,7 +182,7 @@ describe('real Node HTTP to Workspace gateway using checked-in Vercel route tabl
    isError:true,content:[{type:'text',text:'service_error: unexpected '+token}]});
   try{
    const r=await request('/api/tools/workspace_list_accounts',{method:'POST',body:{}});
-   expect(r.status).toBe(400);
+   expect(r.status).toBe(503);
    expect(JSON.stringify(r.value)).not.toContain(token);
    expect(r.value.error.what).toContain('[redacted service pass]');
   }finally{registry.handlers.workspace_list_accounts=original;}
@@ -253,6 +258,77 @@ describe('real Node HTTP to Workspace gateway using checked-in Vercel route tabl
    expect(Buffer.byteLength(JSON.stringify(defaultPage.value),'utf8')).toBeLessThanOrEqual(8192);
    const stranger=await request('/api/results/'+handle+'?page=1',{bearer:wideToken});
    expect(stranger.status).toBe(404);
+  }finally{registry.handlers.workspace_list_accounts=original;}
+ });
+ it('serves the complete public OpenAPI contract on the actual rewrite without a bearer',async()=>{
+  const result=await request('/api/openapi.json',{bearer:null});
+  expect(result.status).toBe(200);
+  expect(result.value.openapi).toBe('3.1.0');
+  expect(result.value.paths['/api/tools/{name}'].post.requestBody.required).toBe(true);
+  expect(result.value.paths['/api/results/{handle}'].get.parameters.map(x=>x.name)).toEqual(['handle','page','fields']);
+  expect(result.value.components.schemas.Error.required).toEqual(['ok','error']);
+ });
+ it('rejects malformed JSON argument objects and ambiguous catalog filters with no Google writes',async()=>{
+  const before=holder.writes;
+  for(const body of [null,[],true,42,'text']){
+   const r=await fetch(origin+'/api/tools/workspace_gmail_create_label',{method:'POST',
+    headers:{authorization:'Bearer '+wideToken,'content-type':'application/json'},body:JSON.stringify(body)});
+   expect(r.status).toBe(400);
+   expect((await r.json()).error.code).toBe('invalid_args');
+  }
+  for(const query of ['area=invalid','audience=invalid','listing=invalid','area=mail&area=files','q=a&q=b']){
+   const r=await request('/api/tools?'+query,{bearer:wideToken});
+   expect(r.status).toBe(400);
+   expect(r.value.error.code).toBe('invalid_args');
+  }
+  expect(holder.writes).toBe(before);
+ });
+ it('returns the same guarded label lifecycle through direct MCP registry, broker and actual HTTPS',async()=>{
+  const pass=await holder.db.createRtcPass({googleAccount:'ops@example.test',allowWrites:true,
+   confirmedAccount:'ops@example.test',areas:['mail'],rateLimit:600});
+  // This is exactly the final registry used by api/mcp.js, with a fake Google
+  // provider and durable fake audit store, not invented success handlers.
+  const {buildHostedApiClients}=await import('../../src/auth/google-auth-hosted.js');
+  const clients=await buildHostedApiClients('ops@example.test');
+  clients.connection=pass.id;clients.allowedDomains=['example.test'];
+  clients.rtcPolicy=await holder.db.getRtcPass(pass.token);
+  const decode=r=>JSON.parse(r.content[0].text);
+  const invokeDoor=async(door,name,args)=>{
+   if(door==='mcp')return decode(await registry.handlers[name](args,clients));
+   if(door==='broker')return decode(await registry.handlers.workspace_call({name,args},clients));
+   const r=await request('/api/tools/'+(door==='http'?'workspace_'+name:'workspace_call'),{
+    method:'POST',bearer:pass.token,body:door==='http'?args:{name:'workspace_'+name,args}});
+   expect(r.status).toBe(200);return r.value.result;
+  };
+  for(const door of ['mcp','broker','http','http-broker']){
+   const before=holder.writes;
+   const preview=await invokeDoor(door,'gmail_create_label',{name:'rtc-http-preview',dryRun:true});
+   expect(preview).toMatchObject({done:false,dryRun:true,logged:true});
+   expect(holder.writes).toBe(before);
+   const create=await invokeDoor(door,'gmail_create_label',{name:'rtc-http-label'});
+   expect(create).toMatchObject({done:true,confirmed:true,logged:true,after:{id:'Label_http',name:'rtc-http-label'}});
+   expect(holder.writes).toBe(before+1);
+   const fenced=await invokeDoor(door,'gmail_delete_label',{labelId:'Label_http'});
+   expect(fenced).toMatchObject({done:false,needsConfirmation:true});
+   expect(holder.writes).toBe(before+1);
+   const remove=await invokeDoor(door,'gmail_delete_label',{labelId:'Label_http',confirm:true});
+   expect(remove).toMatchObject({done:true,confirmed:true,logged:true,after:{exists:false}});
+   expect(holder.writes).toBe(before+2);
+   expect(holder.labels.size).toBe(0);
+  }
+ });
+ it('encodes thrown provider failures with a safe RTC envelope and preserves possible-write uncertainty',async()=>{
+  const original=registry.handlers.workspace_list_accounts;
+  try{
+   for(const [code,status,errorCode] of [[401,401,'permission'],[403,403,'permission'],[429,429,'rate_limited'],[500,503,'service_error']]){
+    registry.handlers.workspace_list_accounts=async()=>{throw Object.assign(Error('private-provider-detail '+wideToken),{code});};
+    const out=await request('/api/tools/workspace_list_accounts',{method:'POST',bearer:wideToken,body:{}});
+    expect(out.status).toBe(status);
+    expect(out.value).toMatchObject({ok:false,error:{code:errorCode}});
+    expect(Object.keys(out.value.error).sort()).toEqual(['cause','code','technical','todo','what']);
+    expect(JSON.stringify(out.value)).not.toContain('private-provider-detail');
+    expect(JSON.stringify(out.value)).not.toContain(wideToken);
+   }
   }finally{registry.handlers.workspace_list_accounts=original;}
  });
  it('enforces immediate revocation over HTTP',async()=>{

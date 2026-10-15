@@ -1,12 +1,12 @@
 // RTC 1 HTTPS door, sharing the exact wrapped handlers used by /api/mcp.
 // Existing legacy MCP tool names remain untouched; HTTPS uses workspace_ aliases.
+import { rtcOpenapi } from '../src/rtc/openapi.js';
 import { registry } from '../src/tools/index.js';
 import { RTC_AREAS,RTC_META,allowedTool,listedTools,toolMetadata,isWrite } from '../src/rtc/catalog.js';
 import { initSchema,getRtcPass,rtcPassFailureCode,chargeRtcPass,getAllowedDomains } from '../src/db.js';
 import { onceSuccessful } from '../src/once.js';
 import { buildHostedApiClients } from '../src/auth/google-auth-hosted.js';
 import { readStoredResult,shapeReadResult } from '../src/rtc/results.js';
-const schemaReady=onceSuccessful(initSchema);
 const prefix='workspace_';
 export const toExternal=name=>name.startsWith(prefix)?name:prefix+name;
 export function toInternal(name){
@@ -64,6 +64,13 @@ const aliasArgs=(name,args)=>{
  }
  return args;
 };
+function errorStatus(code){
+ if(['outside_scope','refused_by_guard','permission'].includes(code))return 403;
+ if(code==='not_found')return 404;
+ if(code==='rate_limited')return 429;
+ if(code==='service_error')return 503;
+ return 400;
+}
 export function manifest(){
  const metadata=registry.tools.map(expose);
  return {rtc:1,server:'google-workspace-mcp',prefix:'workspace_',version:'1.0.0',
@@ -72,12 +79,7 @@ export function manifest(){
   devTools:true,conformance:{status:'pending_real_D4_acceptance'},
   deployment:{sourceRevision:/^[a-f0-9]{40}$/.test(process.env.VERCEL_GIT_COMMIT_SHA||'')?process.env.VERCEL_GIT_COMMIT_SHA:null}};
 }
-export function openapi(){
- return {openapi:'3.1.0',info:{title:'Robinson Google Workspace RTC tools',version:'1.0.0'},servers:[{url:process.env.PUBLIC_BASE_URL||''}],
- paths:{'/api/contract':{get:{operationId:'contract'}},'/api/whoami':{get:{operationId:'whoami'}},
- '/api/tools':{get:{operationId:'searchTools'}},'/api/tools/{name}':{get:{operationId:'describeTool'},post:{operationId:'callTool'}},
- '/api/results/{handle}':{get:{operationId:'getResult'}},'/api/tools/_batch':{post:{operationId:'batchReads'}}}};
-}
+export function openapi(){ return rtcOpenapi(process.env.PUBLIC_BASE_URL); }
 async function clientsFor(pass){
  const clients=await buildHostedApiClients(pass.google_account);
  clients.rtcPolicy=pass;
@@ -85,7 +87,17 @@ async function clientsFor(pass){
  clients.allowedDomains=await getAllowedDomains(clients.actingAs);
  return clients;
 }
-export default async function handler(req,res){
+// Each instance owns only initialization state. Authorization and rate charges
+// remain service-owned PostgreSQL operations on EVERY request.
+export function createRtcGateway(){
+ const schemaReady=onceSuccessful(initSchema);
+ return async function handler(req,res){
+ try {
+ if(!req.query||typeof req.query!=='object'||Array.isArray(req.query)||
+    Object.values(req.query).some(value=>typeof value!=='string'&&typeof value!=='number'))
+   return fail(res,400,'invalid_args','Query parameters must be single scalar values.');
+ if(req.method==='POST'&&(req.body===null||typeof req.body!=='object'||Array.isArray(req.body)))
+   return fail(res,400,'invalid_args','Tool arguments must be a JSON object.');
  const door=String(req.query?.door||'');
  const name=typeof req.query?.tool==='string'?req.query.tool:null;
  const handle=typeof req.query?.result==='string'?req.query.result:null;
@@ -111,6 +123,10 @@ export default async function handler(req,res){
   };
   const limit=parsePageNumber(req.query?.limit,10,100);
   const page=parsePageNumber(req.query?.page,1,100000);
+  if((req.query?.listing!==undefined&&!['catalog','compact'].includes(req.query.listing))||
+     (area!==undefined&&!RTC_AREAS.includes(area))||
+     (audience!==undefined&&!['owner','operator','builder'].includes(audience)))
+    return fail(res,400,'invalid_args','Unknown listing, area or audience.');
   if(limit===null||page===null)return fail(res,400,'invalid_args','Page and limit must be bounded positive integers.');
   const all=listedTools(registry.tools,pass,req.query?.listing||pass.listing)
    .map(expose).filter(t=>(!q||(t.name+' '+t.description).toLowerCase().includes(q))&&(!area||t.area===area)&&(!audience||t.audience.includes(audience)));
@@ -147,7 +163,7 @@ export default async function handler(req,res){
    // apply their same small-result/connection-owned expiring-handle rule.
    const raw=await registry.handlers.workspace_batch(args,await clientsFor(pass));
    const result=decodeMcp(await shapeReadResult(raw,{toolName:'workspace_batch'},pass.id));
-   return result?.error?fail(res,403,result.error.code,result.error.what):success(res,result);
+   return result?.error?fail(res,errorStatus(result.error.code),result.error.code,result.error.what):success(res,result);
   }
   const internal=toInternal(name);
   if(!internal)return fail(res,404,'not_found','Unknown RTC tool.');
@@ -167,7 +183,18 @@ export default async function handler(req,res){
   if(req.method!=='POST')return fail(res,405,'invalid_args','Tool invocation requires POST.');
   if(Buffer.byteLength(JSON.stringify(req.body||{}))>65536)return fail(res,413,'invalid_args','Arguments too large.');
   const result=decodeMcp(await registry.handlers[internal](aliasArgs(internal,req.body||{}),await clientsFor(pass)));
-  return result?.error?fail(res,400,result.error.code,result.error.what):success(res,result);
+  return result?.error?fail(res,errorStatus(result.error.code),result.error.code,result.error.what):success(res,result);
  }
  return fail(res,404,'not_found','Unknown RTC route.');
+ } catch(error) {
+  // Never return untrusted provider/DB messages (which can contain tokens,
+  // query strings or private data). A failed write may already have applied.
+  const code=Number(error?.response?.status||error?.code);
+  if(code===401)return fail(res,401,'permission','Google authorization is unavailable.','Check this account connection before retrying.');
+  if(code===403)return fail(res,403,'permission','Google refused this operation.','Check the selected account and its existing permissions.');
+  if(code===429)return fail(res,429,'rate_limited','Provider request limit reached.','Reconcile any possible write before retrying.',60);
+  return fail(res,503,'service_error','Operation outcome could not be established.','Read back any possible change before retrying; check service authorization and persistence.');
+ }
+ };
 }
+export default createRtcGateway();
