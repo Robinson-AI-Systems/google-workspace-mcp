@@ -40,6 +40,18 @@ test('completed claims need whole existing IDs and no remaining engineering', ()
   assert.throws(() => assessCompletion({ ...report(), bundles: [bundle(), bundle()] }, { ...c, target: 2 }), /repeated/);
   assert.throws(() => assessCompletion(r, { ...c, baselineEngineering: [external('P0-2')] }), /previously completed/);
 });
+test('optional and planned scope cannot satisfy a target even with a new merged commit', () => {
+  for (const status of ['ON_REQUEST','PLANNED']) {
+    const expanded = { cards: [...index.cards, { id: 'P8-6', status }] };
+    const c = { ...config, target: 1, index: expanded, baselineIndex: expanded };
+    const r = { ...report(), bundles: [{ ...bundle(), subsections: ['P8-6'] }] };
+    assert.throws(() => assessCompletion(r, c), /unapproved/);
+    // A local/new status or row is not evidence that optional scope was part
+    // of the original approved session. Reconcile actual owner scope first.
+    c.index = { cards: expanded.cards.map(card => card.id === 'P8-6' ? { ...card, status: 'MERGED' } : card) };
+    assert.throws(() => assessCompletion(r, c), /unapproved/);
+  }
+});
 test('genuine exhaustion requires each remaining subsection and remains incomplete', () => {
   const c = { ...config, engineering: [external('P0-2'), external('P7-1')] };
   const r = { ...report(), stop: { kind: 'EXTERNAL_EXHAUSTION', evidence: ['complete source inspection'],

@@ -12,12 +12,14 @@ the existing 13 unfinished subsection IDs (one confirmed OPEN, eleven REVIEW,
 one TIME_GATED), and adds a read-only session:finish claim check. REVIEW means
 inspect full original acceptance; it is neither missing-code proof nor a completed
 feature. The check refuses 0/5 normal finish, duplicate/prior-session claims,
-unmerged/local completion claims and blanket exhaustion with OPEN/REVIEW rows.
+unmerged/local completion claims, optional/unapproved scope and blanket exhaustion
+with OPEN/REVIEW rows. Automated review identified the optional-scope case; it
+is fixed with a regression for ON_REQUEST/PLANNED and later status relabeling.
 Genuine exhausted/limited checkpoints remain explicitly INCOMPLETE, exit 2.
 This cannot force a chat agent to obey or certify its proof. No new product bundle,
 Google mutation, scope, spending, deployment or authentic acceptance is claimed.
 
-Local `npm run check`, 20 session workflow tests, eight focused catalog tests
+Local `npm run check`, 21 session workflow tests, eight focused catalog tests
 and all 1,611 unit tests (83 files) passed. Required exact-head full CI/review
 remain mandatory before merge.
 Current handoff and next engineering action are below; historical acceptance stays
@@ -144,7 +146,7 @@ restricts only the named operation. Source completion never proves actual Google
     "id": "P8-2",
     "state": "REVIEW",
     "remaining": "Profile/area/listing persistence across refresh, every dispatch door and metadata budget must be traced to complete current proof.",
-    "evidence": "src/rtc/catalog.js; src/oauth/helpers.js; api/oauth/token.js; test/unit/rtc-profile.test.js; real-DB connection-settings tests; P8-2 original acceptance.",
+    "evidence": "src/rtc/catalog.js; src/db.js; api/oauth/token.js; test/unit/rtc-profile.test.js; real-DB connection-settings tests; P8-2 original acceptance.",
     "next": "Reconcile full original matrix including refresh setting-copy coverage; fix missing behavior/tests before labeling external-only."
   },
   {
@@ -165,7 +167,7 @@ restricts only the named operation. Source completion never proves actual Google
     "id": "P8-5",
     "state": "REVIEW",
     "remaining": "Pinned local Hub conformance and actual service routes must be reconciled; real relay/Sandbox acceptance is separate, not justification to leave local conformance gaps.",
-    "evidence": "scripts/rtc-conformance-ci.mjs; .github/workflows/ci.yml; test/rtc/; P8-5 original acceptance.",
+    "evidence": "scripts/rtc-conformance-ci.mjs; .github/workflows/ci.yml; vitest.rtc.config.js; .rtc-hub/packages/conformance/test/; P8-5 original acceptance.",
     "next": "Verify pinned Hub runner plus actual Workspace adapter and complete exact-head automated conformance before recording remaining external routes."
   },
   {

@@ -12,7 +12,8 @@ function evidence(value) { return Array.isArray(value) && value.length > 0 && va
 export function assessCompletion(report, { target, index, baselineIndex, baselineEngineering, engineering, mergedAfterBase }) {
   if (!Number.isSafeInteger(target) || target < 1 || target > 1000) throw Error('Use the current owner bundle target (1–1000).');
   if (!report || !SHA.test(report.baseRevision) || !Array.isArray(report.bundles)) throw Error('Report needs exact session baseRevision and bundles.');
-  const cards = new Set(index.cards.map(card => card.id));
+  const cards = new Set(index.cards.filter(card => !['ON_REQUEST', 'PLANNED'].includes(card.status)).map(card => card.id));
+  const eligibleAtStart = new Set(baselineIndex.cards.filter(card => ['IN_PROGRESS', 'APPROVED', 'BLOCKED'].includes(card.status)).map(card => card.id));
   const alreadyComplete = new Set(baselineIndex.cards.filter(card => ['MERGED', 'COMPLETE'].includes(card.status)).map(card => card.id));
   for (const row of baselineEngineering) if (row.state === 'EXTERNAL_ONLY') alreadyComplete.add(row.id);
   const seen = new Set();
@@ -27,8 +28,8 @@ export function assessCompletion(report, { target, index, baselineIndex, baselin
     // Workload averages are not hard thresholds. Review whether the stated
     // scope is substantial; the checker must not encourage line-count padding.
     for (const id of bundle.subsections) {
-      if (!cards.has(id) || seen.has(id) || alreadyComplete.has(id))
-        throw Error('Unknown, repeated or previously completed subsection: ' + id);
+      if (!cards.has(id) || !eligibleAtStart.has(id) || seen.has(id) || alreadyComplete.has(id))
+        throw Error('Unknown, unapproved, repeated or previously completed subsection: ' + id);
       if (engineering.some(row => row.id === id && row.state !== 'EXTERNAL_ONLY'))
         throw Error('Unfinished engineering cannot count as a completed subsection: ' + id);
       seen.add(id);
