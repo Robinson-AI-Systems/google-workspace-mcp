@@ -373,7 +373,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "No fixture writes; original account and connection identity; source/READY deployment independently verified",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Original service-issued read_only TEST pass and complete account-isolation HTTP evidence. Remedy: Custom native identity matched Rentals; metadata API reads and batch-write refusal succeeded. Native cloud connection is not the short-lived TEST RTC pass. Protected coordinating checkpoint is single-runner and not this implementation session. Next: Coordinating authorized runner must run the existing read-only HTTP matrix with its own original grant; reuse current positive read evidence."
+    "lastEvidence": "2026-10-15 production79ac338 actual separate Rentals TEST/read_only identity and29 native Google-shaped harmless reads passed across Gmail, Drive, Calendar and Tasks. Five selected console mailbox reads also observed. Original broad matrix remains PENDING: account/resource isolation, denied/foreign cases and exact fixture readbacks are distinct and were not inferred from these passes. Pass grants only workspace/mail/files/calendar/tasks; no customer-wide or foreign-business approval implied."
   },
   {
     "id": "P2-7-UNKNOWN",
@@ -484,8 +484,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "scripts/smoke-readonly.mjs; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Original owner-authorized read-only nonproduction TEST account and service-issued pass; checked READY live source at or after revision; no mutations/secrets/result bodies in logs",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-15 owner explicitly approved a separate one-hour Rentals read_only TEST pass. Canonical browser and secure-auth submissions both refused Wrong website address before checking credentials; no pass issued and no smoke run. Deployed afbc602 form sends Referrer-Policy:no-referrer, which nulls navigation POST Origin (Fetch standard); the strict canonical-origin guard then refuses it. PR151 sets same-origin only on the entry form, retaining no-referrer on secret/error/redirect pages and null/missing/foreign denial. Protected Node24 runner imports and canonical contract HTTP200 verified. Retry actual original smoke only after reviewed fix is serving. Fresh pass grants cannot recover old runs/foreign fixtures; Hub grants and per-resource confirmations remain separate."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-15T21:58:20.759Z actual independently READY production79ac338dccc2fd4d2738f44c824410338c6d6439, exact canonical RTC HTTPS and separately owner-created Rentals TEST read_only pass. Original scripts/smoke-readonly.mjs --authorized-read-only passed workspace_whoami plus native Gmail messages, Drive files, Calendar calendar-list and Tasks task-list shapes. Service and Gmail-reported identity matched; allow_writes:false. Only PASS names/time were printed, no payloads/IDs/credentials. No oversized fixture handle was fabricated; P0-2-RTC-HANDLE and exact-resource cases remain open. Source pin preserved."
   },
   {
     "id": "P0-2-EXACT-FIXTURE-READ",
@@ -551,7 +551,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Required reviewed source is not in independently verified live 15a547f. Remedy: Fetched full repository history and checked actual ancestry against Vercel READY source and alias; no extra release authorized. Next: Recheck after the scheduled checked release includes this exact source."
+    "lastEvidence": "2026-10-15T22:01:21.423Z independently READY79ac338, actual separate Rentals24h read_only TEST pass. Complete authorized five-area catalog discovery returned94 reads. Executed29 original SAFE_READ_PROBES through original runReadOnlySmoke/provider-shape validators:29PASS,0FAIL. workspace_recent_changes deliberately excluded as service-wide; no fixtures or customer-wide cases supplied. Full catalog coverage isFALSE: remaining named resources, reviewed owner cases, broker/denial/handle and wider scopes remain open. No provider data/IDs/credentials printed; safe per-tool results recorded below. No read-looking unreviewed tool was executed."
   },
   {
     "id": "P8-4-HTTP-CONTRACT",
@@ -628,7 +628,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Protected operator environment; current correct TOKEN_ENCRYPTION_KEY; verified source/READY deployment; exact all-account count and encrypted/refresh evidence; no token values in logs or report, no real retirement or unsolicited Google mutation.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: exact-source isolated PostgreSQL upgrade/integrity/refresh/concurrency tests passed Actions 38798504715. No actual deployed Google account refresh or protected operator readiness proof was run. Next: checked live promotion plus existing operator authority; report only sanitized counts and per-condition PASS/FAIL. 2026-10-15 protected provider-control inspection (aggregate SQL only): two connected accounts, two encrypted copies, zero tokens_enc_verified_at, zero tokens_enc_refreshed_at; two legacy copies retained. This is NOT cryptographic validation or genuine refresh proof. Production/Development TOKEN_ENCRYPTION_KEY is secret/write-only; named Development inspection returned decrypted:false and no value. Full keyed operator inspection remains pending; no credentials returned or retirement performed."
+    "lastEvidence": "2026-10-15 after genuine Rentals Google smoke activity, protected aggregate SQL observed2 connected accounts,2 encrypted copies,1 tokens_enc_verified_at,1 tokens_enc_refreshed_at and2 legacy copies retained (previously0verified/0refresh). This is real partial refresh progress, not all-account readiness or independent cryptographic equality inspection. Production encryption key remains secret/write-only; full keyed operator inspection and second-account evidence remain pending. No refresh timestamps were fabricated; no token/ciphertext values returned. No retirement performed."
   },
   {
     "id": "P5-2-PLAINTEXT-RETIRE",
@@ -647,12 +647,12 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "id": "P8-3-OWNER-TEST-FORM",
     "priority": 3,
     "requiredRevision": "199dfc23c11928f92418407cebc20d0bf55f4b7b",
-    "task": "Issue the approved one-hour read_only Rentals TEST pass through the corrected canonical browser form",
+    "task": "Issue the approved 24-hour read_only Rentals TEST pass through the corrected canonical browser form",
     "procedure": "api/rtc/passes.js; scripts/smoke-readonly.mjs --authorized-read-only",
     "gates": "Reviewed form fix independently READY; secure owner-authenticated entry; same approved Rentals account; no credentials in chat/logs; no TEST writes or Hub duration; retain existing rate/allowlist/origin limits",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "PR151 merged to 4c527c6; exact-head test and release-policy passed. Deployed afbc602 still rejects canonical browser form before authentication. No TEST pass issued. Approved private runner is prepared; retry only once corrected source is independently READY, then run actual smoke and revoke the short-lived grant. Scheduled release policy remains unchanged."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-15 user separately authorized early release and changed pass duration to24hours. Checked main/live79ac338, independently READY deploymentdpl_FUbgAq9bUbscjLqCq7rHmkpSAQ2J and canonical contract source match; entry GET HTTP200 Referrer-Policy:same-origin. Secure owner-authenticated browser submission showed Pass created; secret enrolled directly into private runner, never chat/logs. Aggregate DB read confirmed exactly1 new Rentals pass,24.00hours, TEST/read_only, allow_writes:false, for_hub:false, expiry2026-10-16T21:57:21.645Z. Live whoami matched exact account/profile/areas. Retained privately for the requested24h window, no revocation claimed. Existing origin/login/allowlist/limits unchanged."
   },
   {
     "id": "P8-8-WALKED-GUIDANCE",
@@ -662,8 +662,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "workspace_where_is_setting; workspace_admin_console_review",
     "gates": "Independently READY source at or after requiredRevision; read only; follow all category pages; distinguish navigation from actual OU policy and edition availability",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "Authenticated October15 console audit supplied actual links/section labels. Focused diagnostic navigation/verification/expectation/owner-coverage tests passed33. Preserve original50IDs; category pagination traverses all135 without truncation. New rows are manual navigation guidance; no new provider tools/scopes or verified-policy claims. Existing original acceptance remains open."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-15T21:59:49.609Z direct production RTC read_only TEST requests at independently READY79ac338: workspace_where_is_setting reviewAll returned135 unique IDs in exact reviewed order across7 bounded20-entry pages, each with steps/expected and no observed-policy claim. workspace_admin_console_capabilities independently paged the same135 IDs/count. Real mailbox verify observed all5 selected topics (IMAP, delegation, forwarding, vacation, send-as); complete:true,notReadable:0. No customer-wide/foreign reads or policy writes. This closes corrected deployed navigation proof, not the full all-page/all-OU walkthrough."
   }
 ]
 ```
@@ -1884,7 +1884,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | Card | Status | PR | Notes |
 | --- | --- | --- | --- |
 | P0-1 | MERGED | #6 | Tests, fakes, DB tests, CI added (on `main`; 993 unit tests pass in the 2026-10-02 audit). CI runs DB tests on a throwaway Postgres on every PR (no secret needed). Not yet proven: red-on-failure demo (do once on the PR) |
-| P0-2 | IN_PROGRESS | #39, #98, #114, #120 and current provider proof | Protected five-area TEST smoke is merged; #98 adds a complete paginated read-only pass catalog inventory and 24 vetted harmless probes, explicitly tracking every untested/scope-gated tool. Native custom-service provider reads on #96 are real, but a separately issued RTC read_only TEST pass, genuine directly deployed-run acceptance and full catalog fixture coverage are still open. |
+| P0-2 | IN_PROGRESS | #39, #98, #114, #120, #151–153 | Actual separately issued24h Rentals TEST/read_only pass and deployed79ac338 five-area smoke passed;29 selected harmless provider-shaped reads also passed. Authorized catalog enumerated94 reads. Full catalog/exact-fixture/denial/handle coverage remains open; do not promote partial probe coverage to full acceptance. |
 | P0-3 | MERGED | #6 | Fix + unit test done. Manual Drive upload check needs Chris's go-ahead (writes to his Drive) |
 | P0-4 | MERGED | #7 | Tool + unit tests done (token host check, size/redirect/timeout/private-address limits). Manual copy of the brand PDF needs Chris's go-ahead (writes to his Drive) |
 | P0-5 | MERGED | #6 | Lockout + constant-time compare + tests. Manual 5-wrong-tries check on the preview still to do |
@@ -2860,3 +2860,50 @@ Primary sources checked October15:
 No supported public eSignature initiation API was established by this review; do not invent a signing tool or equate document approval with a legal signature. All proposals need normal RTC profiles/size bounds, guard integration, dry-run/confirmation where relevant, real provider readback or an honest delivery receipt, tests and genuine acceptance.
 
 Re-entry: checked scheduled main-to-live promotion, independently verify READY/source, securely issue the approved one-hour read_only pass and run the prepared original smoke. Fresh grants cannot take over historical foreign-run fixtures. Protected all-account encryption proof still needs the correct key in an authorized operator environment: aggregate evidence is2encrypted,0verified,0refresh-observed of2accounts, not readiness. No retirement before November1 America/Denver plus independent approval. No manual deployment, new scope, spend or retirement is performed.
+
+
+### October 15 early release and genuine Rentals TEST acceptance
+
+Owner explicitly authorized another early release at15:53Denver, then changed the TEST pass to24hours at15:56. Exact-main79ac338dccc2fd4d2738f44c824410338c6d6439 passed Actions38813217574 check/unit/db/rtc/test plus release-policy38813217834. Existing standard GitHub connector fast-forwarded live with expected-oldafbc602 and force:false. Independent ref readback matched. One-time receipt branch release-markers/2026-10-15-owner-early-79ac338 preserves the exception without altering daily schedule/receipts. Vercel productiondpl_FUbgAq9bUbscjLqCq7rHmkpSAQ2J independently became READY at79ac338; canonical HTTPS contract returned sourceRevision79ac338 and the form GET returned same-origin.
+
+Secure browser owner authentication then created exactly one Rentals24h TEST/read_only pass, scoped workspace/mail/files/calendar/tasks,120calls/min, no Hub extension and no writes. Its secret moved directly into a mode0600 file under a mode0700 private runner, never chat/repository/Library/logs. The secret screen was cleared. Aggregate provider read confirmed24.00hours and expiryOctober16 15:57:21Denver (21:57:21.645Z). Retain the grant privately for the requested24h testing window; it is not shared runner ownership and cannot recover historical foreign-pass fixtures. Do not claim revocation or reuse the revoked/expired grant later.
+
+**New genuine passes:** original P0-2-CORE-LIST-SHAPES, new precise P8-3-OWNER-TEST-FORM and P8-8-WALKED-GUIDANCE. Queue now5PASSED/24PENDING of29; the original27 rows are3PASSED/24PENDING. The difference is the two legitimate new deployment-dependent form/navigation rows, not a changed finish line. Broader P0-2, full dated-console coverage, provider fixtures/denials, Hub and all-account crypto remain open.
+
+Actual five-area smoke passed at21:58:20Z. Deployed navigation/discovery matched135 exact unique topics across7 bounded pages at21:59:49Z; five mailbox readbacks observed with no unreadable result. Those are navigation and acting-mailbox facts, not organization-wide policy certification. A harmless metadata defect was found in the advertised settings-tool description still saying50topics; remove its fixed count so it follows the actual mapped checklist. This changes description only; it does not require repeating the now-passed provider reads or an extra release.
+
+Wider approved read-only run at22:01:21Z enumerated94 scoped advertised reads and passed29 selected original harmless probes,0failures. Full catalog coverage remainsFALSE; service-wide recent_changes was deliberately not invoked. The passed names were:
+
+- PASS `workspace_whoami`
+- PASS `workspace_gmail_get_profile`
+- PASS `workspace_gmail_list_labels`
+- PASS `workspace_gmail_list_messages`
+- PASS `workspace_gmail_list_threads`
+- PASS `workspace_gmail_list_drafts`
+- PASS `workspace_gmail_list_filters`
+- PASS `workspace_gmail_list_send_as`
+- PASS `workspace_gmail_get_imap_settings`
+- PASS `workspace_gmail_get_pop_settings`
+- PASS `workspace_gmail_get_vacation_settings`
+- PASS `workspace_gmail_get_forwarding_settings`
+- PASS `workspace_gmail_list_forwarding_addresses`
+- PASS `workspace_gmail_list_delegates`
+- PASS `workspace_drive_get_about`
+- PASS `workspace_drive_get_start_page_token`
+- PASS `workspace_drive_list_files`
+- PASS `workspace_drive_list_shared_drives`
+- PASS `workspace_drive_list_recent_files`
+- PASS `workspace_drive_list_starred`
+- PASS `workspace_drive_list_trash`
+- PASS `workspace_drive_list_shared_with_me`
+- PASS `workspace_drive_get_storage_quota`
+- PASS `workspace_calendar_get_settings`
+- PASS `workspace_calendar_list_calendars`
+- PASS `workspace_calendar_list_event_colors`
+- PASS `workspace_calendar_list_events`
+- PASS `workspace_tasks_list_tasklists`
+- PASS `workspace_tasks_list_tasks`
+
+Post-run aggregate encryption evidence advanced from0 to1 verified/refreshed account out of2; both encrypted copies and both legacy copies remain. Do not confuse this with independent all-account keyed inspection. Rentals authorization does not authorize refreshing another business account. Full operator proof remains pending. Plaintext retirement is still prohibited beforeNovember1 America/Denver and separate approval.
+
+Next: resume only exact owned resource/negative acceptance whose original fixture authority is established; current pass is read_only and does not permit fixture creation or policy writes. Finish remaining dated console inventory honestly, preserving inaccessible/edition-gated observations. Independently protected correct-key all-account readiness inspection is still required. The four sourced feature proposals remain research, with document approval status the suggested first business outcome. Zero bundles claimed for this maintenance/acceptance work.
