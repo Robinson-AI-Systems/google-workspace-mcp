@@ -1,3 +1,11 @@
+### Batch-subsection workload clarification — owner instruction October 14, 2026
+
+The PR workload unit is a whole predefined phase/batch subsection such as
+P7-3 or P8-2. Functions, guards, UI hookups and internal packet tasks do not
+count as completed batch subsections. Partial subsections remain unfinished; existing source,
+CI, deployed and provider acceptance evidence is preserved. Build substantial
+related subsection groups and validate the assembled PR under existing gates.
+
 ### Owner-requested throughput measurement update — October 14, 2026
 
 Focused maintenance: 400–800 changed production lines and 2–5 completely
@@ -1500,7 +1508,7 @@ deployed HTTPS acceptance. Actual SHA/status must be re-read after merges.
 **Current outcome:** P5-1's residual misclassification risk is addressed
 by exhaustive read semantics and a private guarded-write provenance
 registry in #49, including forged-handler/unknown-name regression tests. Permanently apply
-the outcome-first session and five-PR planning standard in the existing
+the outcome-first workflow and owner-prompt session scope in the existing
 plan/implementer/ledger as part of that substantive PR.
 
 **Evidence layers:** Code already merged for all three P8-7 fixture
@@ -1691,7 +1699,7 @@ The read-only `workspace_dev_check_integration` previously checked only Gmail, D
 
 ### P8-7 calendar prerequisite and preservation evidence — PR #68 candidate, October 13
 
-Actual main at session entry: `783d19259143d28e7dddc505dccf8e480b70b882` (#67 merged); exact-main CI and release-policy succeeded. Owner cadence now targets five significant PRs adjusted to a final PR-number multiple of five: this session plans three, #68–#70, without padding and subject to concurrent numbering.
+Actual main at session entry: `783d19259143d28e7dddc505dccf8e480b70b882` (#67 merged); exact-main CI and release-policy succeeded. This historical checkpoint does not set a future session count; the current owner prompt controls session scope.
 
 Independent Vercel alias inspection: `dpl_5L2QwexS9HV6wwHQc5FH8Do5PCVH`, READY, production/live, exact source `783d19259143d28e7dddc505dccf8e480b70b882`. This supersedes historical deployment evidence but does NOT prove scheduled promotion: inspected Actions runs show push/PR events, no scheduled run. A separate setup agent recorded an owner-approved one-time release; this development session preserves scheduled-only deployment and performs no release. Secure service passes and an exact independently owned disposable calendar remain unavailable in this workspace; no provider acceptance ran. Setup evidence of two accounts, eight sessions and one encrypted copy does not close P5-2: November 1 AND every-account encrypted refresh/backfill remain mandatory.
 
@@ -1744,7 +1752,7 @@ Starting verified merged main `842f54b29265699d71e1e428917a72335ae8344b`, after 
 
 **Re-entry:** check checked scheduled main→live release, exact READY Vercel source and public origin; securely obtain short-lived service-issued TEST passes (never in chat), independently verify owned non-primary calendar ID, then run `scripts/google-test-acceptance.mjs` against only already-approved real pre-business mailbox with private exact-ID checkpoint/cleanup and revocation. Missing external evidence blocks ONLY those operations. The full Admin-console walkthrough and Hub relay/Sandbox remain open, and P5-2 plaintext retirement remains gated until Nov 1 and every-account encrypted renewal. Continue independent roadmap work if needed, no manual deployment or preview-as-TEST.
 
-This session aimed #70–#75 as six substantive PRs to align final number to a multiple of five without padding. Exact-head `test` (npm/check/unit/throwaway DB/RTC upstream) and `release-policy`, review, final-main CI and a permanent GitHub handoff still need independent verification before closing the session.
+Historical work covered #70–#75; that numbering does not set later session scope. Exact-head `test` (npm/check/unit/throwaway DB/RTC upstream) and `release-policy`, review, final-main CI and a permanent GitHub handoff still need independent verification before closing the session.
 
 ### P8-1 bounded default result retrieval — PR #77 candidate (2026-10-13)
 
@@ -1772,7 +1780,7 @@ A genuine evidence gap remained: the health report emitted a `Directory coverage
 
 This session's #77–#79 already merged with exact-head test/release-policy; #79 post-merge final-main checks are a separate verification. #80 must pass both exact-head checks, review and final-main checks after merge. READY production alias was independently verified at #76, source `b15d9c1eaae0d93d3844d1228359e75d514fccd6`, deployment `dpl_ku4fCJkehL3xxo8jePt2LVnLZjPY`; no schedule-triggered GitHub run observed. #77–#80 are NOT evidenced as live at this writing. Never manually deploy to close the batch.
 
-Real custom Google/RTC acceptance and Hub relay/Sandbox remain separate, unverified external dependencies: obtain secure service-issued short-lived read_only and full TEST passes out of chat, verify an independently owned non-primary calendar and account, use only previously approved real pre-business mailbox `ops@robinsonappliancerentals.com` with `scripts/google-test-acceptance.mjs` after exact deployed source/READY; preserve crash-safe private original IDs, unrelated state, guarded cleanup and revocation. Keep independent direct service and optional external Hub/shared core. No plaintext token retirement before November 1 **and** every-account encrypted renewal/backfill. No new scopes, spending, production activation or manually triggered release. Next session normal five substantive PRs, aligned to actual final number, not padded.
+Real custom Google/RTC acceptance and Hub relay/Sandbox remain separate, unverified external dependencies: obtain secure service-issued short-lived read_only and full TEST passes out of chat, verify an independently owned non-primary calendar and account, use only previously approved real pre-business mailbox `ops@robinsonappliancerentals.com` with `scripts/google-test-acceptance.mjs` after exact deployed source/READY; preserve crash-safe private original IDs, unrelated state, guarded cleanup and revocation. Keep independent direct service and optional external Hub/shared core. No plaintext token retirement before November 1 **and** every-account encrypted renewal/backfill. No new scopes, spending, production activation or manually triggered release. Next session PR count comes only from its owner prompt; no numeric alignment.
 
 
 ### P7-4 owner-readable deliverability range summary — PR #88 candidate (2026-10-13)
