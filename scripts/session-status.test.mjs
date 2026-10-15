@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readQueue, planQueue, summarizeRoadmap, readRoadmapLedger, run } from './session-status.mjs';
+import { readQueue, planQueue, summarizeRoadmap, readRoadmapLedger, readEngineeringQueue, run } from './session-status.mjs';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,7 +9,8 @@ import { execFileSync } from 'node:child_process';
 const a = 'a'.repeat(40), b = 'b'.repeat(40), c = 'c'.repeat(40);
 const row = (id = 'READ', revision = a) => ({ id, priority: 1, requiredRevision: revision, task: 'Read custom service', procedure: 'docs/ACCEPTANCE.md', gates: 'Existing scoped owner grant', lastEvidence: 'Not run', dependsOn: [], status: 'PENDING' });
 const fixtureLedger = '## Status ledger\n| Card | Status | PR | Notes |\n| P0-1 | MERGED | | built |\n| P0-2 | IN_PROGRESS | | pending |\n| P1-1 | TODO | | pending |\n';
-const block = rows => fixtureLedger + '<!-- release-acceptance:start -->\n```json\n' + JSON.stringify(rows) + '\n```\n<!-- release-acceptance:end -->';
+const engineeringBlock = '<!-- engineering-readiness:start -->\n```json\n' + JSON.stringify(['P0-2','P1-1'].map(id => ({id,state:'REVIEW',remaining:'Review original acceptance',evidence:'fixture source and tests',next:'Trace caller and tests'}))) + '\n```\n<!-- engineering-readiness:end -->\n';
+const block = rows => fixtureLedger + engineeringBlock + '<!-- release-acceptance:start -->\n```json\n' + JSON.stringify(rows) + '\n```\n<!-- release-acceptance:end -->';
 const obs = { main: c, live: b, deployed: b, deploymentState: 'READY' };
 const fixtureRoadmap = {
   order: ['K', 'H', 'S'],
@@ -157,4 +158,23 @@ test('native COMPLETE and PLANNED statuses remain distinct from merged and appro
   assert.equal(result.planned, 1); assert.equal(result.remainingApproved, 0);
   assert.equal(result.remainingIncludingPlanned, 1);
   assert.deepEqual(result.batches[0].planned, ['A-2']);
+});
+
+
+test('engineering view preserves actionable work independently of old READY deployment', () => {
+  const index = readRoadmapLedger(block([]));
+  const rows = readEngineeringQueue(block([]), index);
+  assert.deepEqual(rows.map(row => [row.id,row.state]), [['P0-2','REVIEW'], ['P1-1','REVIEW']]);
+  assert.equal(rows[0].next, 'Trace caller and tests');
+  for (const broken of [
+    block([]).replace('"P0-2","state"', '"P9-9","state"'),
+    block([]).replace('"REVIEW"', '"READY_ENOUGH"'),
+    block([]).replace('"REVIEW"', '"EXTERNAL_ONLY"'),
+    block([]).replace('"evidence":"fixture source and tests"', '"evidence":""'),
+    block([]).replace(engineeringBlock, ''),
+    block([]) + engineeringBlock,
+    block([]).replace('"P1-1","state"', '"P0-2","state"')
+  ]) assert.throws(() => readEngineeringQueue(broken, index));
+  const incomplete = block([]).replace(/,\{"id":"P1-1"[^}]*\}/, '');
+  assert.throws(() => readEngineeringQueue(incomplete, index), /Missing engineering disposition/);
 });

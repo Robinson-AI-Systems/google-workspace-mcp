@@ -1,6 +1,6 @@
 # Robinson Google Workspace MCP: implementation plan
 
-## Session PR count comes from the current owner prompt
+## Session workload comes from the current owner prompt
 
 There is no repository-default session PR count, upper quota or PR-number
 alignment target. Follow the count or scope in the current owner prompt for that
@@ -8,6 +8,12 @@ session only; do not carry it into later sessions. If no count is specified,
 continue the approved ordered work within a safe, recoverable context budget.
 Keep checkpoints, complete coherent PRs and preserve all required gates.
 The rolling sample used for per-PR workload statistics is not a session quota.
+When the owner requests N **bundles**, those are substantial complete implementation
+outcomes under the existing 2–5 subsection / 400–800 production-line averages,
+not a PR count. Follow SESSION-START's current-target and finish rules. Corrective
+fixes, read-only checks and clean git do not clear that target. A genuine shortfall
+needs criterion-level remaining-work evidence and prompt owner escalation, not a
+blanket claim that most cards are awaiting external acceptance.
 
 ## PR workload is measured in predefined batch subsections — owner clarification 2026-10-14
 

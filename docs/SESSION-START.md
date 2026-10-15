@@ -1,5 +1,74 @@
 # SESSION-START — implement, then catch up released acceptance
 
+## Current owner bundle target controls the session — October 15 recovery
+
+A request for N bundles means N complete implementation outcomes, not N PRs,
+one corrective fix, reconciliation, a provider-read report or a clean-main handoff.
+Keep the target and completed count visible from the first checkpoint. After an
+incidental repair merges, return to the same planned bundle; it contributes zero
+bundles unless it actually finishes that full original subsection outcome.
+Read TASKS.md **Current engineering disposition** before claiming only external
+acceptance remains. OPEN is confirmed engineering; REVIEW is unresolved full-scope
+reconciliation and cannot be reclassified as an external blocker by assumption.
+A README catalog, merged tool or passing test is not criterion-level completion.
+Review each unit once at its relevant revision, keep the result, and reopen only
+for relevant changes/new failure evidence. REVIEW rows are this recovery backlog,
+not permission for a repeated whole-repo audit ritual before every bundle.
+
+At startup, name the existing subsection IDs and full acceptance for the first
+bundle and the next eligible outcome. Reconcile each remaining unit's original
+requirements with actual callers/code/tests; update its existing engineering row
+with concrete remaining work or exact complete source/test proof plus external gate.
+Do not fabricate implementation to fill N; if the approved remaining scope cannot
+support N substantial outcomes, explain that promptly with this per-unit evidence
+and ask for the smallest necessary owner scope/permission decision while continuing
+all eligible authorized work. Do not silently substitute an acceptance-only session.
+
+When the owner supplied a bundle target, before final reporting run
+`npm run session:finish -- --bundles N --report PATH`. Other explicitly scoped
+maintenance/review tasks finish their actual requested scope; invent no bundle target.
+Use the actual current owner target, never lower it to match completed work. PATH
+is a local JSON report (no secrets/provider bodies), also summarized in the normal
+permanent handoff; no second roadmap. Example for one completed bundle:
+
+```json
+{
+  "baseRevision": "EXACT_FULL_MAIN_SHA_AT_SESSION_START",
+  "bundles": [{
+    "outcome": "Complete original subsection outcome, not a helper",
+    "subsections": ["P0-2"],
+    "merges": ["EXACT_NEW_MERGED_SHA"],
+    "productionAdded": 650,
+    "productionRemoved": 40,
+    "proof": ["Original acceptance criterion -> actual code/test and exact-head CI"]
+  }]
+}
+```
+
+Retain a completed subsection's exact engineering-completion row through session
+accounting, even after its coarse status becomes MERGED; that label alone is not
+completion proof. Counts exclude prior sessions and duplicate subsection IDs. Repeated merge
+references within one bundle are invalid; one substantial PR may deliver multiple
+independently complete bundles only with distinct whole-subsection outcomes. The command checks
+merged origin/main, not local unmerged claims. Before using it, fetch/reconcile
+actual main and verify CI/reviews independently. It cannot judge proof truth or
+make a small helper substantial; reviewer and owner rules still govern. A check
+passing is not permission, real provider proof or automated enforcement of chat.
+
+An unmet target refuses normal finish. Genuine exhaustion requires every remaining
+approved subsection to be EXTERNAL_ONLY/TIME_GATED with full inspected engineering
+proof, exact gate, attempted remedy and next action. Report `stop.kind` as
+`EXTERNAL_EXHAUSTION`, `stop.evidence` as a nonempty list, `stop.nextAction`, and
+`stop.bySubsection` mapping EVERY remaining ID to concrete evidence/remedy strings.
+For an actual execution limit use `EXECUTION_LIMIT` with that evidence/nextAction,
+`constraint` describing the actual failure and `checkpoint` giving the recoverable
+main SHA. Neither path is success: the command reports INCOMPLETE_CHECKPOINT and
+exits 2. A pending release, clean git, vague context concern, elapsed minutes or
+uninvestigated provider permission alone is not evidence of global exhaustion.
+Missing owner input must be asked in the active conversation, never hidden in a
+final handoff. Preserve every safety, CI, scope, activation and cleanup gate.
+
+
 ## Count complete predefined batch subsections
 
 The PR workload target is 2–5 whole predefined batch subsections on average,
@@ -171,8 +240,9 @@ CI/review state, successor and exact blocker. Diagnose and attempt authorized re
 before deferring; isolate the operation and continue approved independent work. Limited
 release frequency is planned queued acceptance, never a project-wide stop.
 
-Normal implementation sessions complete as many fully verified, cohesive roadmap
-slices as fit a safe, recoverable chat context. A suitable PR may integrate
+When the current owner prompt sets a bundle target, continue until that target
+is met or the evidence-backed incomplete-checkpoint rule above applies. Only
+without an explicit target do normal sessions use available recoverable context. A suitable PR may integrate
 several adjacent small slices (typically targeting 400–800 changed production lines
 plus tests), but contracts, review risk and end-to-end behavior determine size;
 a complete smaller slice or a safe larger slice is legitimate. Session PR count is set only by the current owner prompt.
@@ -184,7 +254,8 @@ repair, merge and durable handoff; otherwise end at the clean checkpoint.
 Persist unfinished work on its existing approved card, not only in chat.
 Report completed roadmap slices and acceptance deltas, first-pass CI failures
 and correction cycles, not PR count as a productivity metric.
-This owner-requested repository optimization is scoped maintenance, not a product implementation batch. Preserve safety even when no further eligible work or an execution limit remains.
+Historical workflow-maintenance sessions do not redefine the current task. Follow
+the current owner scope and preserve safety; report genuine execution limits honestly.
 At completed-session end update status/cards/index, verify final main, leave a permanent
 handoff on the final merged PR and automatically give a short continuation prompt:
 repository + verified handoff + next outcome + queue pointer. Refer to the repository
