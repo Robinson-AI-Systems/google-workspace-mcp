@@ -35,7 +35,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 <!-- BEGIN GENERATED TOOL CATALOG -->
 <!-- Registry-derived; regenerate with `npm run gen:catalog`. Do not edit this section by hand. -->
 
-**378 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
+**380 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
 
 | Area | Registered tools |
 | --- | ---: |
@@ -52,7 +52,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 | people | 9 |
 | tasks | 11 |
 | workflows | 12 |
-| workspace | 24 |
+| workspace | 26 |
 
 ### admin (111)
 
@@ -447,8 +447,10 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `workflow_set_up_business`
 - `workflow_weekly_digest`
 
-### workspace (24)
+### workspace (26)
 
+- `workspace_admin_console_capabilities`
+- `workspace_admin_console_verify`
 - `workspace_admin_overview`
 - `workspace_batch`
 - `workspace_business_calendar`
@@ -540,6 +542,13 @@ and `not_readable` findings; Admin-console-only permissions remain
 unverified until separately checked. This is a complete read-only
 integration check, not fixture creation/cleanup; all three P8-7 fixture families are now implemented with exact-ID cleanup and crash reconciliation tests. Real Google TEST acceptance and full Hub routes remain open in `docs/plan/TASKS.md`.
 
+
+
+### Protected owner console readback (P8-8)
+
+`workspace_admin_console_capabilities` helps an owner browse the **50** mapped Google Admin settings by category, search term and approved readback eligibility, without contacting Google or changing anything. All 24 existing reviewed readback mappings are eligible only when their exact required inputs, scope, profile and per-account restrictions pass; other topics stay manual. Discovery returns a reconciled per-category coverage table for the whole review set, not just the visible page. This inventory does not report that a console policy is active. `workspace_admin_console_verify` can then inspect up to **10** exact selected topics using guarded child reads, with independently enforced profile/area and explicit owner intent for customer-wide or other-business data. Use `dryRun: true` to preview eligibility without provider calls.
+
+An owner may provide optional, reviewed boolean `expectations` for the selected mailbox settings; a matching exact read becomes `matches_expected`, and a mismatch becomes `needs_attention` without changing Google. A successful provider result is recorded as a **narrow observed read**, or `observed_partial` for customer-wide or bounded pages. Neither means the Admin console's effective organizational-unit policy, bought seats, external notification rules or every user was proven correct. Bad provider shapes, missing account permissions, foreign identifiers or unsupported topics are not green, and Google object data is never returned by the composed check. No settings can be changed through these two workflows.
 
 ### Gmail Postmaster (read-only, owner-approved scope)
 

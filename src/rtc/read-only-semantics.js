@@ -41,7 +41,7 @@ export const READ_ONLY_TOOL_NAMES=new Set([
   'vault_list_matters', 'workflow_audit_external_sharing', 'workflow_email_health', 'workflow_health_report',
   'workflow_search_presence_check', 'workflow_security_snapshot', 'workspace_admin_overview', 'workspace_delegation_status',
   'workspace_dev_check_integration', 'workspace_dev_list_runs', 'workspace_list_accounts', 'workspace_list_connections',
-  'workspace_plan_summary', 'workspace_recent_changes', 'workspace_where_is_setting', 'workspace_whoami',
+  'workspace_admin_console_capabilities', 'workspace_admin_console_verify', 'workspace_plan_summary', 'workspace_recent_changes', 'workspace_where_is_setting', 'workspace_whoami',
 ]);
 
 // Pure validator shared by CI and regression tests. An unrecognized operation
