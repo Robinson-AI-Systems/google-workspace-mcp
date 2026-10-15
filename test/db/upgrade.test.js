@@ -254,6 +254,53 @@ describe.skipIf(!url)('database (real Postgres)', () => {
     });
   });
 
+  describe('P8-2 connection-settings source schema and real token refresh continuity',()=>{
+    it('rejects a new policy column until both issuing schemas and the central copy list are revised',async()=>{
+      await db.initSchema();
+      const {CONNECTION_SETTINGS_FIELDS}=await import('../../src/oauth/connection-settings.js');
+      const tokenSession=new Set(['access_token','refresh_token','client_id','google_account',
+        'expires_at','created_at','last_used_at','revoked_at']);
+      const codeSession=new Set(['code','client_id','redirect_uri','code_challenge',
+        'code_challenge_method','google_account','expires_at','used']);
+      const tokens=await columnsOf('oauth_tokens');
+      const codes=await columnsOf('oauth_codes');
+      // Every non-session column is a declared connection setting, and every
+      // declared setting exists in both tables. A future additive DB setting
+      // MUST be included in the shared issuing/refresh copy before CI passes.
+      expect(tokens.filter(k=>!tokenSession.has(k)).sort())
+        .toEqual([...CONNECTION_SETTINGS_FIELDS].sort());
+      expect(codes.filter(k=>!codeSession.has(k)).sort())
+        .toEqual([...CONNECTION_SETTINGS_FIELDS].sort());
+    });
+    it('retains read_only/compact/areas through an actual Postgres token refresh',async()=>{
+      await db.initSchema();
+      const {connectionPolicyToDb,verifyPolicyCopy}=await import('../../src/oauth/connection-settings.js');
+      const source={profile:'read_only',listing:'compact',areas:['mail','calendar']};
+      const first='p8-2-access-original',next='p8-2-access-refreshed';
+      const refresh='p8-2-refresh';
+      const opts={refreshToken:refresh,clientId:'p8-2-client',
+        googleAccount:'ops@example.test'};
+      await db.createAccessToken({accessToken:first,...opts,...source});
+      const issued=await db.getTokenByRefreshToken(refresh);
+      expect(connectionPolicyToDb(issued)).toEqual(source);
+      await db.createAccessToken({accessToken:next,...opts,
+        ...connectionPolicyToDb(issued)});
+      const actual=await db.getAccessToken(next);
+      expect(verifyPolicyCopy(source,actual)).toBe(true);
+      expect(actual.google_account).toBe('ops@example.test');
+      expect(actual.profile).toBe('read_only');
+      expect(actual.areas).toEqual(['mail','calendar']);
+      // Verify the original and refresh are bound to the same client account
+      // and no privileged 'full' token was minted as a side effect.
+      const rows=await rawQuery(`SELECT access_token,client_id,google_account,profile,listing,areas
+        FROM oauth_tokens WHERE access_token IN ($1,$2) ORDER BY access_token`,[first,next]);
+      expect(rows).toHaveLength(2);
+      expect(rows.every(x=>x.profile==='read_only'&&x.listing==='compact'&&
+        x.google_account==='ops@example.test'&&x.client_id==='p8-2-client')).toBe(true);
+      await rawQuery('DELETE FROM oauth_tokens WHERE access_token IN ($1,$2)',[first,next]);
+    });
+  });
+
   runDbContract('real Postgres', {
     makeDb: async () => {
       await rawQuery(`TRUNCATE google_accounts, google_auth, oauth_clients, oauth_codes, oauth_tokens, login_attempts, change_log, business_resources`);
