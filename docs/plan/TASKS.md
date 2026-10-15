@@ -1,3 +1,9 @@
+### October 15 P8-8 delegated Gmail mailbox readback — provider defect recovery
+
+On independently READY live `15a547f4f7c24c9739d496bfb6f7d489cc468a8e`, actual read-only `workspace_admin_console_verify` observed four supported current-mailbox topics, but `gmail-default-routing-delegation` was `not_readable` (missing/malformed Google evidence). Direct `gmail_list_delegates` returned Google's service-account-only delegation refusal. The existing approved robot `workspace_delegation_status` separately passed same-mailbox Gmail settings, Calendar and Drive scopes, ruling out a global robot-key/consent failure. Cause: the delegates handler used ordinary OAuth instead of the existing `delegatedGmail` helper, despite Google requiring delegated service-account auth.
+
+Corrective **P8-8** scope only, not a new product subsection/bundle: source `91325ca774c1be52955f394930831b20a65b43a0` switches ONLY read-only delegates listing to the already approved robot, bound to the authenticated connection's exact in-domain mailbox with no caller-supplied impersonation; fails closed on missing/foreign identity, missing DWD or provider denial. Regression tests assert authorized account/client, no OAuth fallback and explicit refusal. Gmail delegation writes unchanged. No permission widening, provider mutation, TEST-pass seizure or release. Existing P8-8-CONSOLE-READBACK remains pending and the precise new P8-8-DELEGATED-MAILBOX acceptance row holds the checked post-release real-Google proof; neither mock nor prior OAuth refusal counts as success.
+
 ### October 15 P5-2 substantive engineering delivery / PR #147
 
 Frozen plan at ab23be959cd35c352626ce1b3f82efb53ded4867; original base 8c44aea0a58a1003c0722dbc66b1974869b1f7b3. One existing approved subsection P5-2, full source criteria intact. Original Build: stop plaintext token writes after 30 days and clear only on next refresh, never drop the column. Implemented an inactive-by-default, database-persisted transition with encrypted-only read/write/new-account and partial-refresh handling, no plaintext authority once active, all-account encrypted-backfill/refresh readiness, hard November 1 gate, owner-controlled operator entrypoint and concurrency-safe CAS/read locking.
@@ -329,6 +335,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
 
 <!-- release-acceptance:start -->
 ```json
+
 [
   {
     "id": "GOOGLE-DIRECT",
@@ -506,7 +513,18 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Independently READY custom Workspace MCP revision, original owner-connected account/TEST pass as applicable, read_only and explicit owner intent for customer-wide/foreign domain. No provider writes, no claiming inherited policy or purchased seats.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15 16:35Z actual custom-service verify: four exact mailbox topics observed; customer-wide domains outside_scope without crossDomain. Narrow mailbox/denial portion passed; customer-wide optional proof remains separately gated. Full acceptance remains PENDING: existing optional provider grants, TEST/fixture and other-business approvals remain separate."
+    "lastEvidence": "2026-10-15 16:35Z actual custom-service verify: four exact mailbox topics observed; customer-wide domains outside_scope without crossDomain. Narrow mailbox/denial portion passed; customer-wide optional proof remains separately gated. Full acceptance remains PENDING: existing optional provider grants, TEST/fixture and other-business approvals remain separate. 2026-10-15T20:18:48Z follow-up with same approved Rentals account: 4/5 mailbox topics observed, but gmail-default-routing-delegation returned not_readable. Direct gmail_list_delegates returned Google's service-account-only refusal, while verified workspace_delegation_status for this account reports Gmail settings/Calendar/Drive approved and working. Original P8-8 remains pending; source repair on PR successor, then checked release and readback required."
+  },
+  {
+    "id": "P8-8-DELEGATED-MAILBOX",
+    "priority": 3,
+    "requiredRevision": "91325ca774c1be52955f394930831b20a65b43a0",
+    "task": "Re-run actual read-only Gmail delegate listing through the reviewed authenticated in-scope service-account path and P8-8 Console mailbox topic after checked live promotion. Prove empty or well-formed verified delegate list, same account-only subject, and explicit refusal for foreign/missing identities without OAuth fallback; record sanitized count, no personal delegate addresses.",
+    "procedure": "src/tools/gmail.js; src/tools/delegated.js; test/unit/delegation-scopes.test.js; P8-8-CONSOLE-READBACK",
+    "gates": "Independently READY checked source including 91325ca774c1be52955f394930831b20a65b43a0; existing in-scope authorized Rentals connection and previously approved service-account Gmail settings sharing DWD; no new OAuth grant, secret disclosure, Google mutation, foreign-account impersonation or global Admin policy assertion.",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-15 actual deployed 15a547f Gmail delegates.list ordinary OAuth was denied service-account-only; service-account Gmail settings read access separately succeeded. Source repair committed at 91325ca; no real delegated provider proof or promotion yet."
   },
   {
     "id": "P7-8-GUARDED-BULK",

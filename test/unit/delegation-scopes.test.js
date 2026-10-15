@@ -120,3 +120,44 @@ describe('guards around the status tool and the default request', () => {
     expect(out.nextStep).toBeUndefined();
   });
 });
+
+describe('live Gmail delegation read path for P8-8', () => {
+  it('uses only the delegated Gmail settings client for the authenticated business mailbox', async () => {
+    const { handlers } = await import('../../src/tools/gmail.js');
+    const calls = [];
+    const clients = {
+      actingAs: 'ops@x.test', allowedDomains: ['x.test'], delegationReady: true,
+      gmail: { users: { settings: { delegates: { list: () => { throw new Error('OAuth must never be used for delegates'); } } } } },
+      gmailFor: email => {
+        calls.push(['subject', email]);
+        return { users: { settings: { delegates: { list: async args => {
+          calls.push(['list', args]);
+          return { data: { delegates: [] } };
+        } } } } };
+      }
+    };
+    const result = await handlers.gmail_list_delegates({}, clients);
+    expect(JSON.parse(result.content[0].text)).toEqual([]);
+    expect(calls).toEqual([['subject', 'ops@x.test'], ['list', { userId: 'me' }]]);
+  });
+  it('refuses missing, foreign and unauthorized delegation identities before Google', async () => {
+    const { handlers } = await import('../../src/tools/gmail.js');
+    const calls = [];
+    const base = { allowedDomains: ['x.test'], delegationReady: true,
+      gmailFor: () => { calls.push('unapproved-google-call'); return {}; } };
+    for (const actingAs of [undefined, 'attacker@other.test', 'not-an-email']) {
+      await expect(handlers.gmail_list_delegates({}, { ...base, actingAs })).rejects.toThrow(/authenticated mailbox/);
+    }
+    await expect(handlers.gmail_list_delegates({}, { ...base, actingAs: 'ops@x.test', delegationReady: false }))
+      .rejects.toThrow(/configured domain-wide delegation/);
+    expect(calls).toEqual([]);
+  });
+  it('retains strict Google failures instead of falling back to less privileged OAuth', async () => {
+    const { handlers } = await import('../../src/tools/gmail.js');
+    const clients = { actingAs: 'ops@x.test', allowedDomains: ['x.test'], delegationReady: true,
+      gmailFor: () => ({ users: { settings: { delegates: { list: async () => {
+        throw new Error('delegated_scope_refused');
+      } } } } }) };
+    await expect(handlers.gmail_list_delegates({}, clients)).rejects.toThrow('delegated_scope_refused');
+  });
+});
