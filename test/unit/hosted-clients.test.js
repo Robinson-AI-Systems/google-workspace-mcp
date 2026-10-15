@@ -2,6 +2,21 @@ import { describe, it, expect } from 'vitest';
 import { buildApiClients } from '../../src/auth/google-auth-hosted.js';
 
 describe('hosted Google API clients', () => {
+  it('sends explicit JSON through the real generated Groups Settings client for reads and patches', async () => {
+    const requests = [];
+    const group = {email:'fixture@example.test',whoCanJoin:'INVITED_CAN_JOIN'};
+    const clients = buildApiClients({actingAs:'ops@example.test',request:async options => {
+      requests.push(options);return {data:group};
+    }});
+    expect((await clients.groupssettings.groups.get({groupUniqueId:group.email})).data).toEqual(group);
+    await clients.groupssettings.groups.patch({groupUniqueId:group.email,requestBody:{whoCanJoin:group.whoCanJoin}});
+    expect(requests.map(r => r.method)).toEqual(['GET','PATCH']);
+    for (const request of requests) {
+      expect(request.params.alt).toBe('json');
+      expect(new URL(request.url).hostname).toBe('www.googleapis.com');
+      expect(new URL(request.url).pathname).toContain('/groups/v1/groups/');
+    }
+  });
   it('keeps service clients lazy until a tool actually uses them', () => {
     const auth = { actingAs: 'ops@example.test' };
     const clients = buildApiClients(auth);
