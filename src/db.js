@@ -614,7 +614,14 @@ export async function listRtcPasses(){
 export async function chargeRtcPass(id,limit){
  const q=db();
  // The database ON CONFLICT lock serializes overlapping calls across Vercel instances.
- const rows=await q`INSERT INTO rtc_rate_limits(pass_id,window_start,count)
+ // Prune only this pass's obsolete receipts in the same statement. Never
+ // delete another pass's active window or make cleanup an extra counter race.
+ const rows=await q`WITH obsolete_windows AS (
+ DELETE FROM rtc_rate_limits
+ WHERE pass_id=${id} AND window_start<date_trunc('minute',now())
+ RETURNING pass_id
+ )
+ INSERT INTO rtc_rate_limits(pass_id,window_start,count)
  VALUES (${id},date_trunc('minute',now()),1)
  ON CONFLICT(pass_id,window_start) DO UPDATE
  SET count=rtc_rate_limits.count+1

@@ -105,7 +105,7 @@ export function rtcOpenapi(origin = '') {
         operationId: 'getResult', summary: 'Read a page of an owned stored result',
         parameters: [
           parameter('handle', string, 'Exact returned handle, accessible only to its issuing connection for 24 hours.', 'path'),
-          parameter('page', { type: 'integer', minimum: 1, default: 1 }, 'One-based UTF-8 page. Omission returns the first page, never an unbounded payload.'),
+          parameter('page', { type: 'integer', minimum: 1, maximum: 100000, default: 1 }, 'One-based UTF-8 page. Omission returns the first page, never an unbounded payload.'),
           fieldsParameter
         ],
         responses: responses(envelope(ref('StoredResult')), 'Numbered bounded content with next, or a small projected payload. Concatenate content pages before parsing JSON; do not treat an individual page as a full provider object.')

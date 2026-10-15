@@ -58,6 +58,11 @@ describe.skipIf(!url)('P8-4 two independent HTTP handler instances with shared r
  });
  it('allows exactly 120 of 150 overlapping requests across two instances',async()=>{
   const {token,id}=await makePass(120);
+  // The criterion is one fixed minute. Avoid accidentally crossing its edge
+  // on a slow runner; use the database clock, not the agent's wall clock.
+  const clock=await holder.pool.query('SELECT 60-extract(second FROM now()) AS remaining');
+  const remaining=Number(clock.rows[0].remaining);
+  if(remaining<5)await holder.pool.query('SELECT pg_sleep($1)',[remaining+0.05]);
   const out=await Promise.all(Array.from({length:150},(_,i)=>invoke(i%2?left:right,token)));
   expect(out.filter(x=>x.statusCode===200)).toHaveLength(120);
   const limited=out.filter(x=>x.statusCode===429);
@@ -80,6 +85,10 @@ describe.skipIf(!url)('P8-4 two independent HTTP handler instances with shared r
   // following request executes the production SQL with the actual DB clock.
   await holder.pool.query("UPDATE rtc_rate_limits SET window_start=window_start-interval '2 minutes' WHERE pass_id=$1",[small.id]);
   expect((await invoke(left,small.token)).statusCode).toBe(200);
+  const windows=await holder.pool.query('SELECT count FROM rtc_rate_limits WHERE pass_id=$1',[small.id]);
+  expect(windows.rows).toEqual([{count:1}]); // obsolete receipt pruned, not accumulated
+  const unrelated=await holder.pool.query('SELECT count FROM rtc_rate_limits WHERE pass_id=$1',[other.id]);
+  expect(unrelated.rows).toEqual([{count:1}]); // another pass is untouched
   await db.revokeRtcPass(small.id);
   expect((await invoke(right,small.token)).body.error.code).toBe('pass_revoked');
   expect((await invoke(left,other.token)).statusCode).toBe(200);
