@@ -524,8 +524,11 @@ checks requested Google API availability, currently granted OAuth
 scopes, connected service-account client ID and declared delegated
 scopes, plus optional Calendar IDs, Gmail labels/messages/threads, exact Drive
 file/folder IDs, individual Tasks/list pairs, Chat space resource names,
-Contacts/People resource names, and Docs/Sheets/Slides/Forms IDs without
-changing Google data. Each resource probe uses the existing scoped account,
+Contacts/People resource names, and Docs/Sheets/Slides/Forms IDs, plus explicit Calendar reader/writer roles,
+Google Drive folder capabilities, shared-drive membership roles, Gmail send-as
+verification and exact Calendar free/busy windows, without changing Google data.
+Only status findings are returned: message bodies, permissions details and busy
+slots are not included. Each resource probe uses the existing scoped account,
 metadata-only reads and exact provider-ID agreement; a mismatch, permission
 denial or unavailable optional API is not declared ready. At most 24 additional
 exact app resources can be probed in one call. It returns observed `ready`, `missing`
