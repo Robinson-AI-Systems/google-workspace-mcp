@@ -76,3 +76,10 @@ authorize a release. Continue independent eligible obligations in the right orde
 after authorized release verify actual READY/source and execute newly eligible checks.
 Native regressions cover positive alerts, unknown provenance/history, unrelated
 provider gates and redundant-release avoidance. No release/provider call performed.
+
+Owner's final manual-release threshold: discovering a source gap is a dependency
+record, not an approval request. First finish every independently eligible authorized
+implementation, deployed check, repair, review/merge, cleanup and status obligation.
+Ask for manual release only when none can proceed and the prepared checked release
+would enable a specific next completion task. Report any additional blockers honestly;
+keep normal scheduled release as an alternative. No automatic release is authorized.
