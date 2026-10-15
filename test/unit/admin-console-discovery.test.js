@@ -19,6 +19,10 @@ describe('P8-8 complete owner Admin-console readback discovery',()=>{
   expect(new Set(found).size).toBe(50);
   const first=discoverConsoleReadbacks({},clients);
   expect(Object.values(first.counts).reduce((n,x)=>n+x,0)).toBe(50);
+  expect(Object.values(first.categoryCoverage).reduce((n,x)=>n+x.total,0)).toBe(50);
+  for(const row of Object.values(first.categoryCoverage)){
+   expect(row.eligible+row.manualOnly+row.outsideScope+row.needsTarget).toBe(row.total);
+  }
  });
  it('supports category, query and scoped readiness filtering with accurate independent totals',()=>{
   for(const category of CONSOLE_REVIEW_CATEGORIES){
