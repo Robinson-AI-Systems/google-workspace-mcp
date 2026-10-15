@@ -332,7 +332,7 @@ export const handlers = {
     // Gmail settings client, bound to this authenticated connection identity.
     const actingAs = clients?.actingAs;
     if (typeof actingAs !== 'string' ||
-        !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(actingAs) ||
+        !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,63}$/.test(actingAs) ||
         !mailboxAllowed(clients, actingAs))
       throw new Error('Gmail delegates read requires an authenticated mailbox inside the connection domain.');
     if (!delegationReady(clients))
