@@ -7,7 +7,8 @@ import {RTC_AREAS,allowedTool} from '../../src/rtc/catalog.js';
 const holder=vi.hoisted(()=>({
   record:null,refresh:null,created:[],client:{client_id:'client-1',client_secret:'secret'}
 }));
-vi.mock('../../src/db.js',()=>({
+vi.mock('../../src/db.js',async importActual=>({
+ ...(await importActual()),
  initSchema:vi.fn(async()=>{}),
  getOAuthClient:vi.fn(async()=>holder.client),
  consumeAuthCode:vi.fn(async()=>holder.record),
