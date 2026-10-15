@@ -1710,10 +1710,10 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-1 | DONE | #31, #34, #41, #44, #55, #57, #63 | Stated automated acceptance passed: all 161 read names bounded with 100-item wrapper fakes, projection, real-DB handle isolation, annotation parity, 13 typed reads and all seven guarded write workflows. Genuine deployed Google/Hub routes remain separate P8-3/4/5 acceptance. |
 | P8-2 | IN_PROGRESS | #30 | Profile persistence, read-only dispatch, compact meta-tools and filters implemented; full service conformance / profile acceptance remains pending |
 | P8-3 | IN_PROGRESS | #32 | Owner-protected hashed, short-lived, scratch-account TEST read-only passes, revocation, limit guards; live issuance acceptance unverified |
-| P8-4 | IN_PROGRESS | #32–#34, October 15 source | Full HTTP/OpenAPI/pass/guard/paging engineering reconciled; actual two-handler concurrent-Postgres proof requires this exact-head Actions run. Genuine deployed rtool/TEST-pass and D-4 acceptance remain open; see preserved engineering row and queue. |
-| P8-5 | IN_PROGRESS | #34 | Pinned Hub reference conformance and local gateway tests in CI; full conformance against this service and real D-4 routes still unverified |
+| P8-4 | IN_PROGRESS | #32–#34, #142 | Engineering complete and exact-head/main checked at merged9975185; retained once in combined owner workload. Real deployed TEST/provider/Hub acceptance remains open. |
+| P8-5 | IN_PROGRESS | #34, #144 | Actual local Workspace/fake Google/two-process shared-PG conformance all14 probes passed at d8415e3; full engineering evidence above. Genuine deployed D-4 remains separate. |
 | P8-6 | WAITING (optional reuse) | | Published immutable core and export-specific original-service parity; does not block P8-5, RTC routing or real Hub acceptance |
-| P8-7 | IN_PROGRESS | #40, #42–#43, #46–#48, #101–#103, #109 candidate | Existing fixture/integration workflows and earlier provider fixtures retained. #101 candidate adds exact Gmail-label and Calendar-event app preflight, closes wrong-ID Calendar/Drive-folder false readiness, with read-only permission-filtered provider probes and fake negative tests. #102 candidate independently binds every Calendar TEST fixture ledger readback, recorded replay and deletion tombstone to the exact recorded event ID, rejecting wrong-object success. Exact-head CI/review, deployment, RTC TEST pass, Hub routes and external consents remain separate gates. |
+| P8-7 | IN_PROGRESS | #40–#48, #101–#103, #109, #144 | Full engineering reconciled; immutable owned-run recovery, all3 real local HTTP/PG lost-response/replay/cleanup lifecycles PASS. Native TEST grant/original fixture ownership and genuine Google acceptance remain open; see exact gates above. |
 | P8-8 | IN_PROGRESS | #36, #56, #58–#60, #99, #110 candidate | Evidence-aware owner overview (#56), 24 permission-aware console readbacks (#58), accurate incomplete health scans (#59); #60 candidate paginates quick Directory/Alert Center security snapshot with bounded, explicit, fail-closed coverage. #99 implements complete review of the current 50-topic console inventory with categories, bounded pagination and access-aware optional readback hints. Actual complete Google Admin console walk and Hub proof remain open. |
 
 Completed before this plan (2026-09-30, Fable 5.1): multi-account support
@@ -2504,9 +2504,10 @@ NOT a completed substantial bundle by itself. The former 1/1 completion claim is
 withdrawn. Retain its source and genuine read/denial observations; do not recount
 it as another outcome. Source 89f48c2 assembles P8-5/P8-7 actual-service conformance,
 canonical namespace/audit receipts, immutable fixture intent and owned recovery
-inspection. All 1,696 local unit tests pass; exact actual-process/PG conformance,
-new SQL checks, final immutable Hub pin, required Actions and review/merge remain
-now verified in the actual-service CI run below. P8-5/P8-7 engineering proof is recorded, with live acceptance kept separate.
+inspection. Local1696 unit tests passed before publication. Source d8415e3 then
+passed1697 unit/59 PG/28 RTC tests and full actual-process conformance in Actions.
+P8-5/P8-7 engineering proof is recorded below; final-head CI/review/merge remain
+required and live acceptance stays separate.
 
 The active existing DEVELOPER-CONNECTION card preserves the conversational scope
 and a transition bundle-plan after concurrent workflow PR143. It does not invent
