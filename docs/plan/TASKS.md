@@ -205,10 +205,10 @@ restricts only the named operation. Source completion never proves actual Google
   {
     "id": "P8-4",
     "state": "EXTERNAL_ONLY",
-    "remaining": "Full original HTTP engineering reconciled at source d94ed8bcd43628a8ed67a61b9eeb0b995b464eaa: all generic routes and aliases, public manifest/counts, complete bounded OpenAPI, pass-only auth, registry write-guard parity, result ownership, shared configured SQL rate limit and safe error envelopes implemented. Exact-head CI/review must pass before merging this source; actual deployed rtool/TEST-pass/Google/Hub proof remains external, never inferred from synthetic tests.",
-    "evidence": "api/rtc-gateway.js createRtcGateway/default handler and src/rtc/openapi.js; test/unit/rtc-openapi.test.js; rtc-route-http.test.js exact Node HTTP rewrite, final MCP registry, broker and HTTP-broker label lifecycle, connector/no-token refusals, full catalog/counts, private paging and error tests; rtc-https.test.js; test/db/rtc-http.test.js two independent handlers / 12 concurrent actual PG sessions, 150 requests => 120 successes and 30 HTTP 429, per-pass limit 5, window reset, isolation/revocation. Database execution requires exact-head Actions; original P8-4 criteria all mapped.",
+    "remaining": "Full original HTTP engineering reconciled at source 4ca6af37551809c2e0c9f93e250966d15d3d9fbf: all generic routes and aliases, public manifest/counts, complete bounded OpenAPI, pass-only auth, registry write-guard parity, result ownership, shared configured SQL rate limit and safe error envelopes implemented. Exact-head CI/review must pass before merging this source; actual deployed rtool/TEST-pass/Google/Hub proof remains external, never inferred from synthetic tests.",
+    "evidence": "api/rtc-gateway.js createRtcGateway/default handler and src/rtc/openapi.js; test/unit/rtc-openapi.test.js; rtc-route-http.test.js exact Node HTTP rewrite, final MCP registry, broker and HTTP-broker label lifecycle, connector/no-token refusals, full catalog/counts, private paging and error tests; rtc-https.test.js; test/db/rtc-http.test.js two independent handlers / 12 concurrent actual PG sessions, 150 requests => 120 successes and 30 HTTP 429, per-pass limit 5, window reset, atomic same-pass obsolete-window pruning and cross-pass isolation/revocation. Database execution requires exact-head Actions; original P8-4 criteria all mapped.",
     "next": "Require exact-head test/release-policy and completed review; merge, retain queue P8-4-HTTP-CONTRACT and then perform rtool whoami and real direct TEST pass/denial/runtime checks at checked READY source. No manual release.",
-    "gate": "Checked READY live containing d94ed8bcd43628a8ed67a61b9eeb0b995b464eaa; original short-lived service-issued TEST pass and approved mailbox; genuine rtool/wire identity, denial and permitted provider behavior, with direct/Hub/relay/Sandbox evidence separated. No new credentials, production write or spend authority."
+    "gate": "Checked READY live containing 4ca6af37551809c2e0c9f93e250966d15d3d9fbf; original short-lived service-issued TEST pass and approved mailbox; genuine rtool/wire identity, denial and permitted provider behavior, with direct/Hub/relay/Sandbox evidence separated. No new credentials, production write or spend authority."
   },
   {
     "id": "P8-5",
@@ -450,13 +450,13 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P8-4-HTTP-CONTRACT",
     "priority": 2,
-    "requiredRevision": "d94ed8bcd43628a8ed67a61b9eeb0b995b464eaa",
+    "requiredRevision": "4ca6af37551809c2e0c9f93e250966d15d3d9fbf",
     "task": "Verify the complete deployed HTTP API contract, pass-only identity, configured rate refusal and guard parity with an existing short-lived TEST pass; run rtool whoami and preserve direct/provider/Hub proof separation.",
     "procedure": "docs/plan/TASKS.md P8-4; docs/plan/GOOGLE-ACCEPTANCE.md; src/rtc/openapi.js",
     "gates": "Checked READY live containing exact reviewed source; original service-issued TEST pass/account and allowed resources. No production activation, fixture recreation, new spend or scope. Do not stress provider or hosted rate limits without the original isolated scenario.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "Source d94ed8bcd43628a8ed67a61b9eeb0b995b464eaa completes actual HTTP/OpenAPI/error and two-instance PostgreSQL test matrix. Synthetic unit/DB evidence and exact-head CI/review are not deployed Google or rtool/Hub acceptance. Scheduled release remains separate."
+    "lastEvidence": "Source 4ca6af37551809c2e0c9f93e250966d15d3d9fbf completes actual HTTP/OpenAPI/error and two-instance PostgreSQL test matrix. Synthetic unit/DB evidence and exact-head CI/review are not deployed Google or rtool/Hub acceptance. Scheduled release remains separate."
   }
 ]
 ```
@@ -1996,19 +1996,21 @@ This follow-up to merged PR #138 completes original P0-2 **eligible engineering*
 
 **Current checkpoint — October 15 P8-4 complete HTTP engineering bundle:**
 session base `bbe2477371ffc79a645107ff031815bcb63baa23`; implementation source
-`d94ed8bcd43628a8ed67a61b9eeb0b995b464eaa` on `ai/p8-4-complete-http-contract-20261015`.
-Exact-head mandatory Actions, PostgreSQL execution and automated review/merge are
-pending publication, not claimed here; final merged PR handoff supplies actual results.
+`4ca6af37551809c2e0c9f93e250966d15d3d9fbf` on `ai/p8-4-complete-http-contract-20261015`.
+First candidate fa005bf passed exact-head test/release-policy: 1,688 unit, 58
+real-Postgres and 18 pinned reference tests. Final obsolete-window correction
+requires its own exact-head Actions and completed review before merge; the final
+merged PR handoff supplies those results.
 One bundle = full P8-4 remaining engineering and criterion-level reconciliation,
-not two bundles for HTTP and tests. Production changes: 178 additions / 10 deletions;
+not two bundles for HTTP and tests. Production changes: 186 additions / 11 deletions;
 smaller than the advisory planning average because existing routes/guards already
 exist and the finite missing contract/integration is completed without padding.
 P8-4 stays IN_PROGRESS for genuine external proof; its engineering row is preserved.
 
 **Proof boundaries:** `npm run check` and all 1,688 unit tests / 91 files passed;
 pinned upstream 18 reference tests and reference runner passed, with its separate
-two-process reference check explicitly skipped. New real-Postgres HTTP tests run
-in required Actions, not locally (no local PostgreSQL daemon). HTTP unit tests use
+two-process reference check explicitly skipped. New real-Postgres HTTP tests passed in required Actions at fa005bf; the final
+cleanup assertions require the correction head. No local PostgreSQL daemon. HTTP unit tests use
 the actual route table and final shared registry, with fake Google. None of these
 asserts source is deployed, real fixture cleanup or Hub routes passed.
 

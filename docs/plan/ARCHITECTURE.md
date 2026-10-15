@@ -217,7 +217,8 @@ serving origin. The gateway rejects ambiguous query values and non-object POST b
 before dispatch, returns sanitized RTC errors for thrown failures, and treats failed
 writes as uncertain until read back. `createRtcGateway()` owns only an initialization
 latch per instance; authorization, revocation and atomic per-pass limits remain in the
-shared DB. The P8-4 DB test uses two independently constructed handlers and a pool of
+shared DB. Atomic charges also prune only that pass’s obsolete windows in the same
+SQL statement; another pass’s receipts stay untouched. The P8-4 DB test uses two independently constructed handlers and a pool of
 real concurrent PostgreSQL backends, including configured limits and window rollover.
 Source/local/CI evidence remains separate from deployed or genuine Google acceptance.
 
