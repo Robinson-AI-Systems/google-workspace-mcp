@@ -1,0 +1,27 @@
+{
+  "version": "2026-10-15.1",
+  "readOnly": true,
+  "status": "advisory",
+  "approvedFor": "source comparison and synthetic testing only",
+  "description": "Owner-editable comparisons of explicit Cloud Identity policies; not a certification or mandated recommendation. Changing expectations requires owner review and a new version.",
+  "source": "src/data/policy-baseline.json",
+  "areas": [
+    "gmail",
+    "drive_and_docs",
+    "calendar",
+    "chat",
+    "meet",
+    "devices",
+    "security",
+    "api_controls",
+    "groups_for_business",
+    "workspace_marketplace"
+  ],
+  "providerReferences": [
+    "https://docs.cloud.google.com/identity/docs/reference/rest/v1/policies",
+    "https://docs.cloud.google.com/identity/docs/concepts/supported-policy-api-settings",
+    "https://docs.cloud.google.com/identity/docs/concepts/overview-policies"
+  ],
+  "effectiveSettingsApi": false,
+  "ownerAdopted": false
+}
