@@ -130,9 +130,16 @@ export function guard(tool, oldHandler, spec) {
     inputSchema: tool.inputSchema,
     destructive: spec.destructive === true,
     confirmWhen: spec.confirmWhen,
-    plan: (args, clients) => {
+    plan: async (args, clients) => {
+      // A provider-backed authorization/consistency precheck is not an
+      // informational before-image. Errors must propagate before preview,
+      // confirmation or apply; defineWrite intentionally tolerates ordinary
+      // before-image read failures, so protected prechecks live here instead.
+      const checked = spec.precheck ? await spec.precheck(args, clients) : undefined;
       const d = spec.describe(args);
-      return { summary: d.summary, target: d.target, readBefore: spec.before ? () => spec.before(args, clients) : undefined };
+      return { summary: d.summary, target: d.target,
+        readBefore: spec.precheck ? async () => checked :
+          spec.before ? () => spec.before(args, clients) : undefined };
     },
     apply: oldHandler,
     readAfter: spec.after,
