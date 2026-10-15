@@ -82,10 +82,10 @@ const READBACK=Object.freeze({
    proof:(x,t)=>obj(x)&&email(x.primaryEmail)&&
      x.primaryEmail.toLowerCase()===t.toLowerCase()&&
      bool(x.isEnrolledIn2Sv)&&bool(x.isEnforcedIn2Sv),
-   args:t=>({userEmail:t})},
+   args:t=>({userKey:t})},
  'recovery':{tool:'admin_get_user',area:'admin',scope:'named_user',
    proof:(x,t)=>obj(x)&&email(x.primaryEmail)&&x.primaryEmail.toLowerCase()===t.toLowerCase(),
-   args:t=>({userEmail:t})},
+   args:t=>({userKey:t})},
  'groups-settings':{tool:'admin_get_group_settings',area:'admin',scope:'named_group',
    proof:(x,t)=>obj(x)&&email(x.email)&&x.email.toLowerCase()===t.toLowerCase()&&
      Object.keys(x).some(k=>k!=='kind'&&k!=='etag'&&k!=='email'),

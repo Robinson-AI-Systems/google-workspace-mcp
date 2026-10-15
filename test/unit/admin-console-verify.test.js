@@ -161,7 +161,7 @@ describe('P8-8 scoped Admin console readback composition',()=>{
    });
   expect(r.complete).toBe(true);
   expect(seen).toEqual([
-   {name:'admin_get_2sv_status',args:{userEmail:actingAs}},
+   {name:'admin_get_2sv_status',args:{userKey:actingAs}},
    {name:'admin_get_group_settings',args:{groupEmail:'ops@example.test'}}
   ]);
  });
@@ -171,4 +171,31 @@ describe('P8-8 scoped Admin console readback composition',()=>{
     isEnrolledIn2Sv:true,isEnforcedIn2Sv:true}));
   expect(r.summary.notReadable).toBe(1);
  });
+ it('passes the required Admin Directory userKey for both scoped user readbacks',async()=>{
+  const seen=[];
+  const r=await executeConsoleReadbacks(
+    {ids:['2sv','recovery'],subjectEmail:actingAs},clients,
+    async (name,args)=>{
+      seen.push({name,args});
+      if (!Object.hasOwn(args,'userKey')||Object.hasOwn(args,'userEmail'))
+        throw Error('Missing required Google Directory userKey');
+      return ok(name==='admin_get_2sv_status'?samples['2sv']:samples.recovery);
+    });
+  expect(r.complete).toBe(true);
+  expect(r.summary).toMatchObject({observed:2,notReadable:0});
+  expect(seen).toEqual([
+    {name:'admin_get_2sv_status',args:{userKey:actingAs}},
+    {name:'admin_get_user',args:{userKey:actingAs}}
+  ]);
+ });
+ it('preserves foreign-user refusal for both Directory readbacks with zero provider access',async()=>{
+  const calls=[];
+  const r=await executeConsoleReadbacks({
+    ids:['2sv','recovery'],subjectEmail:'other@another.test'
+  },clients,async (...args)=>{calls.push(args);return ok({});});
+  expect(r.complete).toBe(false);
+  expect(r.entries.map(x=>x.status)).toEqual(['outside_scope','outside_scope']);
+  expect(calls).toHaveLength(0);
+ });
+
 });
