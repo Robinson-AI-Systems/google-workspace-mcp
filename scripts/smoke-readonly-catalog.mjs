@@ -2,6 +2,7 @@
 // not a blanket "all tools passed" check: only harmless reviewed probes run;
 // tools needing real fixture IDs or organization-wide approval remain unprobed.
 // Secrets and provider response bodies are never written to the report.
+import { parseReviewedReadCases } from './smoke-readonly-cases.mjs';
 import { runReadOnlySmoke, originFromEnv } from './smoke-readonly.mjs';
 import { preparedFixtureProbes, planCatalogReads, coverageResults,
   renderReadOnlyReport, validateTestAuthorization } from './smoke-readonly-plan.mjs';
@@ -77,17 +78,18 @@ export async function readAuthorizedCatalog({origin,token,fetcher=fetch}){
  throw Error('read_only_catalog_page_cap');
 }
 
-export async function runCatalogReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fixtures,fetcher=fetch}){
+export async function runCatalogReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fixtures,reviewedCases,fetcher=fetch}){
  // Validate the exact fixture manifest BEFORE the first HTTP request.
  validateTestAuthorization({token,account:expectedAccount,revision:expectedRevision});
  const selectedFixtures=preparedFixtureProbes(fixtures,expectedAccount);
+ const selectedCases=parseReviewedReadCases(reviewedCases);
  // Identity, exact deployed revision and existing five essential reads are
  // checked before walking or invoking the wider catalog.
  const baseline=await runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher});
  if(!baseline.ok)return {ok:false,catalogComplete:false,baseline:baseline.outcomes,
   tools:[],summary:{discovered:0,probed:0,failed:baseline.outcomes.filter(x=>x.status==='FAIL').length,notProbed:0,engineeringGaps:0}};
  const catalog=await readAuthorizedCatalog({origin,token,fetcher});
- const plan=planCatalogReads({catalog,safeProbes:SAFE_READ_PROBES,fixtures:selectedFixtures,account:expectedAccount});
+ const plan=planCatalogReads({catalog,safeProbes:SAFE_READ_PROBES,fixtures:selectedFixtures,reviewedCases:selectedCases,account:expectedAccount});
  const probes=plan.filter(entry=>entry.probe).map(entry=>entry.probe);
  const run=await runReadOnlySmoke({origin,token,expectedAccount,expectedRevision,fetcher,probes});
  const coverage=coverageResults(plan,run.outcomes);
@@ -119,7 +121,8 @@ export async function main(argv=process.argv.slice(2),env=process.env){
  try{
   const result=await runCatalogReadOnlySmoke({
    origin:env.RTC_ORIGIN,token:env.RTC_TEST_PASS,expectedAccount:env.RTC_EXPECTED_ACCOUNT,
-   expectedRevision:env.RTC_EXPECTED_REVISION,fixtures:env.RTC_READ_FIXTURES_JSON
+   expectedRevision:env.RTC_EXPECTED_REVISION,fixtures:env.RTC_READ_FIXTURES_JSON,
+   reviewedCases:env.RTC_REVIEWED_READ_CASES_JSON
   });
   if(result.catalogComplete){
    const date=new Date().toISOString().slice(0,10);
@@ -133,6 +136,7 @@ export async function main(argv=process.argv.slice(2),env=process.env){
    '; probes passed: '+(result.summary.probed-result.summary.failed)+
    '; failed: '+result.summary.failed+'; not probed: '+result.summary.notProbed+
    '; probe implementation gaps: '+result.summary.engineeringGaps+
+   '; additional owner-approved cases missing: '+(result.summary.reviewedCaseGates||0)+
    '; NOT a claim of full provider or Hub acceptance or external-only exhaustion.');
   return result.ok&&result.coverageComplete?0:1;
  }catch{

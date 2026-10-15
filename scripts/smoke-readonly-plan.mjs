@@ -3,6 +3,7 @@
 // Fixture identities stay in protected input and NEVER appear in reports.
 import { READ_ONLY_TOOL_NAMES } from '../src/rtc/read-only-semantics.js';
 import { FIXTURE_TOOL_NAMES, parseExactReadFixtures } from './smoke-readonly-fixtures.mjs';
+import { EXTRA_READ_CASES, validateReviewedCase } from './smoke-readonly-cases.mjs';
 import { PROVIDER_READ_PROOFS, FIXTURE_READ_PROOFS } from './smoke-provider-shapes.mjs';
 
 const IDENT=/^[a-z][a-z0-9_]{1,119}$/;
@@ -56,7 +57,16 @@ export function preparedFixtureProbes(fixtures,account) {
  return parseExactReadFixtures(fixtures,account);
 }
 
-export function planCatalogReads({catalog,safeProbes,fixtures=[],account}={}) {
+const rtcCaseArea=name=>{
+ const prefix=name.split('_')[1];
+ return ({admin:'admin',reports:'admin',vault:'admin',licensing:'admin',
+  gmail:'mail',postmaster:'mail',drive:'files',docs:'files',sheets:'files',
+  slides:'files',forms:'files',calendar:'calendar',tasks:'tasks',
+  contacts:'people',directory:'people',chat:'chat',dns:'dns',
+  workflow:'workflows',chrome:'chrome',identity:'identity',
+  datatransfer:'datatransfer',domain:'domain',workspace:'workspace'})[prefix]||prefix;
+};
+export function planCatalogReads({catalog,safeProbes,fixtures=[],reviewedCases=[],account}={}) {
  const tools=validateAuthorizedReadCatalog(catalog);
  if(!Array.isArray(safeProbes)||!ACCOUNT.test(account||''))
   throw Error('approved_account_and_reviewed_probes_required');
@@ -74,6 +84,13 @@ export function planCatalogReads({catalog,safeProbes,fixtures=[],account}={}) {
      !own(FIXTURE_READ_PROOFS,probe.name)||fixturesByName.has(probe.name))
    throw Error('unsafe_fixture_probe_definition');
   fixturesByName.set(probe.name,probe);
+ }
+ const selectedCases=new Map();
+ for(const probe of reviewedCases){
+  if(!isObject(probe)||!Object.hasOwn(EXTRA_READ_CASES,probe.name)||
+   !isObject(probe.args)||selectedCases.has(probe.name))
+   throw Error('unsafe_reviewed_read_case');
+  selectedCases.set(probe.name,probe);
  }
  const entries=tools.map(tool=>{
   const common={name:tool.name,area:tool.area||'unknown'};
@@ -95,6 +112,13 @@ export function planCatalogReads({catalog,safeProbes,fixtures=[],account}={}) {
   }
   if(FIXTURE.has(tool.name))
    return {...common,kind:'NEEDS_FIXTURE',reason:'exact_owner_fixture_required'};
+  if(Object.hasOwn(EXTRA_READ_CASES,tool.name)){
+   const selected=selectedCases.get(tool.name);
+   if(!selected)return {...common,kind:'NEEDS_CASE',reason:'reviewed_owner_case_required'};
+   if(tool.area!==rtcCaseArea(tool.name)||!validateReviewedCase(selected,tool))
+    return {...common,kind:'GAP',reason:'reviewed_case_schema_or_area_drift'};
+   return {...common,kind:'CASE',probe:{...selected,area:tool.area}};
+  }
   if(!isReviewedRead(tool.name))
    return {...common,kind:'GAP',reason:'unreviewed_read_declaration'};
   if(schemaRequired===null)
@@ -108,6 +132,8 @@ export function planCatalogReads({catalog,safeProbes,fixtures=[],account}={}) {
  });
  for(const [name] of safe)if(!entries.some(e=>e.name===name))
   entries.push({name,area:'unknown',kind:'ABSENT',reason:'reviewed_probe_not_advertised'});
+ for(const [name] of selectedCases)if(!entries.some(e=>e.name===name))
+  entries.push({name,area:'unknown',kind:'ABSENT',reason:'reviewed_case_not_advertised'});
  for(const [name] of fixturesByName)if(!entries.some(e=>e.name===name))
   entries.push({name,area:'unknown',kind:'ABSENT',reason:'fixture_not_advertised'});
  return entries;
@@ -127,7 +153,7 @@ export function coverageResults(entries,outcomes=[]) {
   seen.add(outcome.tool);tested.set(outcome.tool,outcome);
  }
  const results=entries.map(entry=>{
-  if(entry.kind==='SAFE'||entry.kind==='FIXTURE') {
+  if(entry.kind==='SAFE'||entry.kind==='FIXTURE'||entry.kind==='CASE') {
    const o=tested.get(entry.name);
    if(!o)return {tool:entry.name,status:'FAIL',reason:'scheduled_probe_not_executed'};
    return {tool:entry.name,status:o.status,...(o.reason?{reason:o.reason}:{})};
@@ -138,12 +164,13 @@ export function coverageResults(entries,outcomes=[]) {
  });
  const summary={
   discovered:entries.filter(e=>e.kind!=='ABSENT').length,
-  scheduled:entries.filter(e=>e.kind==='SAFE'||e.kind==='FIXTURE').length,
+  scheduled:entries.filter(e=>e.kind==='SAFE'||e.kind==='FIXTURE'||e.kind==='CASE').length,
   passed:results.filter(r=>r.status==='PASS').length,
   failed:results.filter(r=>r.status==='FAIL').length,
   notProbed:results.filter(r=>r.status==='NOT_PROBED'||r.status==='NOT_AVAILABLE').length,
   engineeringGaps:entries.filter(e=>e.kind==='GAP').length,
   exactFixtureGates:entries.filter(e=>e.kind==='NEEDS_FIXTURE').length,
+  reviewedCaseGates:entries.filter(e=>e.kind==='NEEDS_CASE').length,
   protectedBrokers:entries.filter(e=>e.kind==='PROTECTED').length
  };
  return {tools:results,summary,coverageComplete:summary.failed===0&&summary.notProbed===0,
@@ -158,6 +185,7 @@ const REASONS=new Set([
  'fixture_probe_schema_or_area_drift','exact_owner_fixture_required',
  'unreviewed_read_declaration','missing_or_invalid_read_schema',
  'unreviewed_required_arguments','unreviewed_output_or_scope',
+ 'reviewed_owner_case_required','reviewed_case_schema_or_area_drift','reviewed_case_not_advertised',
  'reviewed_probe_not_advertised','fixture_not_advertised',
  'scheduled_probe_not_executed','provider_read_failed','request_failed',
  'result_handle_unreadable','invalid_google_read_shape','area_not_granted',
@@ -182,7 +210,8 @@ export function renderReadOnlyReport({date,revision,coverage,runType='synthetic'
   '- Scheduled: '+coverage.summary.scheduled+'; passed: '+coverage.summary.passed+
    '; failed: '+coverage.summary.failed+'; not probed: '+coverage.summary.notProbed,
   '- Unfinished engineering probes: '+coverage.summary.engineeringGaps+
-   '; fixture gates: '+coverage.summary.exactFixtureGates,
+   '; fixture gates: '+coverage.summary.exactFixtureGates+
+   '; reviewed case gates: '+(coverage.summary.reviewedCaseGates||0),
   '- Full coverage: '+(coverage.coverageComplete?'YES':'NO'),
   '- No provider responses, resource IDs, bearer passes, mailbox content or recipient addresses are recorded.','',
   '| Read operation | Result | Safe reason |','| --- | --- | --- |',

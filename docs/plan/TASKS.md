@@ -1934,6 +1934,10 @@ Current owner instruction is **finish existing work and properly merge; do not s
 
 **Verification and merge boundary:** PR #132 remains conditional on latest-head `test`, `release-policy`, review threads and mergeability. No service-issued TEST pass was printed or Google write executed in this work. Merge only after green; record post-merge main, deployed SHA, P0-2 engineering gap and original approval/cleanup queue without inventing outcomes.
 
+### October 15 P0-2 reviewed per-read casebook candidate (not external acceptance)
+
+New protected casebook covers all 123 additional *audited* read-only operation names beyond the existing thirty safe probes and twelve exact-ID fixture operations. Each additional read is **never auto-invoked**: an exact-name case with arguments from protected RTC_REVIEWED_READ_CASES_JSON must satisfy the advertised current schema, hard bounds and profile/area gates before the existing TEST read-only executor runs it. Source-reviewed coarse result classes refuse unrelated HTTP-success envelopes and foreign stable IDs where the provider exposes exact identities; strong existing first-party validators retain precedence. Source shape validation is not a complete real Google provider proof; uncertain/empty provider receipts are investigated individually rather than relabeled passed. Original P0-2 report/known-bug remediation remains pending a genuine short-lived owner-issued read_only TEST pass, verified READY source and actual Google read observations; do not close its acceptance or count an engineering bundle merely from this candidate. Exact-head CI, reviewed diff and merge required.
+
 ## Permanent handoff (update with each substantive implementation PR)
 
 **Current checkpoint — October 15 workflow recovery:** source baseline

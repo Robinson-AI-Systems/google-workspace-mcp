@@ -49,10 +49,11 @@ describe('P0-2 complete authorized catalog inventory and vetted reads',()=>{
   expect(result.ok).toBe(false); // an unimplemented read is not a successful smoke
   expect(result.catalogComplete).toBe(true);
   expect(result.coverageComplete).toBe(false);
-  expect(result.summary.engineeringGaps).toBe(1);
+  expect(result.summary.engineeringGaps).toBe(0);
+  expect(result.summary.reviewedCaseGates).toBe(1);
   expect(result.summary.discovered).toBe(f.tools.length);
   expect(result.tools.find(t=>t.tool==='workspace_admin_get_user')).toMatchObject({
-   status:'NOT_PROBED',reason:'unreviewed_required_arguments'
+   status:'NOT_PROBED',reason:'reviewed_owner_case_required'
   });
   expect(result.tools.find(t=>t.tool==='workspace_call')).toMatchObject({
    status:'SKIPPED',reason:'broker_not_direct_read'
