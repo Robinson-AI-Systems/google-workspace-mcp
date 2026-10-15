@@ -8,6 +8,7 @@ import { DELEGATED_SCOPES, describeServiceAccount } from '../auth/service-accoun
 import { normalizeExactAppResources, inspectExactAppResources } from './dev-integration-resources.js';
 import { normalizeAppCapabilities, inspectAppCapabilities } from './dev-integration-capabilities.js';
 import { normalizeCalendarAvailability, inspectCalendarAvailability } from './dev-integration-calendar-readiness.js';
+import { summarizeAppReadiness } from './dev-integration-report.js';
 
 const API_SPECS=Object.freeze({
  gmail:{tool:'gmail_list_messages',label:'Gmail',url:'https://console.cloud.google.com/apis/library/gmail.googleapis.com',
@@ -245,10 +246,9 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
  checks.push(...await inspectExactAppResources(request,clients));
  checks.push(...await inspectAppCapabilities(request,clients));
  checks.push(...await inspectCalendarAvailability(request,clients));
- const statuses=checks.map(x=>x.status);
+ const summary=summarizeAppReadiness(checks);
  return {actingAs:clients.actingAs,checkedAt:new Date().toISOString(),
-   status:checks.length===0?'not_readable':statuses.includes('missing')?'missing':statuses.includes('not_readable')?'not_readable':'ready',
-   checks,changesMade:false,
+   status:summary.status,summary,checks,changesMade:false,
    note:'Only observed reads are marked ready. Domain-wide delegation requires independent Admin console verification.'};
 }
 export const tools=[{
