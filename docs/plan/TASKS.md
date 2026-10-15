@@ -182,7 +182,8 @@ restricts only the named operation. Source completion never proves actual Google
     "state": "EXTERNAL_ONLY",
     "remaining": "P8-3 engineering is implemented: owner passphrase and canonical-origin protected one-time TEST pass page; only token hash persisted; bounded lifespan/areas, read_only default, explicit separately confirmed TEST write option, revoke/expiry, rate limit and scope checks; runtime withdrawal of RTC_TEST_ACCOUNT_EMAILS authorization stops already-issued TEST passes immediately at the HTTPS door. Owner-authorized genuine deployed TEST pass issuance, exact read/write refusals, revocation and expiry are NOT claimed until separately observed.",
     "evidence": "api/rtc/passes.js; src/rtc/pass-options.js; src/db.js getRtcPass/rtcPassFailureCode; api/rtc-gateway.js; test/unit/rtc-pass-page.test.js, rtc-https.test.js, rtc-route-http.test.js, rtc-pass-withdrawal.test.js; test/db/upgrade.test.js. PR #132 candidate requires exact-head checks, review and merge.",
-    "next": "After an independently verified READY checked release includes PR #132, use the existing owner-approved TEST mailbox and service-issued pass to prove protected HTTP identity, read-only and domain denial, revocation/expiry and session isolation. No TEST enrollment widening or production activation."
+    "next": "After an independently verified READY checked release includes PR #132, use the existing owner-approved TEST mailbox and service-issued pass to prove protected HTTP identity, read-only and domain denial, revocation/expiry and session isolation. No TEST enrollment widening or production activation.",
+    "gate": "Independently verified production READY source containing PR #132, existing owner-approved RTC_TEST_ACCOUNT_EMAILS enrollment, service-issued short-lived TEST pass and native /api/tools custom-MCP authorization/denial evidence; no broader consent, spending, or production writes."
   },
   {
     "id": "P8-4",
