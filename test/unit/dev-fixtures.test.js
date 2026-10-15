@@ -97,7 +97,18 @@ describe('P8-7 precise confirmed cleanup',()=>{
    const owner={emailAddress:clients.actingAs};
    for(const [kind,id,mimeType] of objects)byId.set(id,{id,mimeType,appProperties:{rtc_run:run,rtc_kind:kind},parents:kind==='folder'?undefined:['f-root'],owners:[owner],trashed:false});
    byId.set('sibling',{id:'sibling',mimeType:'application/vnd.google-apps.document',appProperties:{},owners:[owner],trashed:false});
-   when('drive.files.get').resolves(({fileId})=>({data:{...byId.get(fileId)}}));
+   when('drive.files.get').resolves(({fileId,fields})=>{
+     if(!fields?.includes('parents'))throw Error('Drive GET omitted parents');
+     return {data:{...byId.get(fileId)}};
+   });
+   when('drive.files.list').resolves(({q,fields,pageSize})=>{
+     if(q!=="'f-root' in parents and trashed = false"||
+        fields!=='nextPageToken,files(id,parents,trashed)'||pageSize!==100)
+       throw Error('Unexpected Drive inventory query');
+     return {data:{files:[...byId.values()]
+       .filter(f=>f.parents?.includes('f-root')&&!f.trashed)
+       .map(f=>({id:f.id,parents:f.parents,trashed:f.trashed}))}};
+   });
    when('drive.files.update').resolves(({fileId,requestBody})=>{byId.set(fileId,{...byId.get(fileId),...requestBody});return {data:{id:fileId,trashed:true}};});
    return {clients,calls,when,byId,run,objects,owner};
  }
@@ -154,7 +165,41 @@ describe('P8-7 precise confirmed cleanup',()=>{
     await expect(handlers.workspace_dev_cleanup({runId:s.run,confirm:true},s.clients)).rejects.toThrow(/ledger/);
     expect(s.calls.filter(x=>x.path==='drive.files.update')).toHaveLength(0);
   });
-  it('marks partial failures as not confirmed and stops before parent',async()=>{
+  it('never trashes a fixture folder containing an unrecorded child',async()=>{
+   const s=ready();await seeded(s);
+   s.byId.set('owner-notes',{id:'owner-notes',parents:['f-root'],trashed:false});
+   await expect(handlers.workspace_dev_cleanup({runId:s.run,dryRun:true},s.clients))
+     .rejects.toThrow(/Unrecorded/);
+   await expect(handlers.workspace_dev_cleanup({runId:s.run,confirm:true},s.clients))
+     .rejects.toThrow(/Unrecorded/);
+   expect(s.calls.filter(c=>c.path==='drive.files.update')).toHaveLength(0);
+ });
+ it('refuses malformed, missing or paginated exact-parent inventory before writes',async()=>{
+   for(const data of [{},{files:null},{files:[],nextPageToken:'next'},
+       {files:[{id:'d-1'}]}]){
+     const s=ready();await seeded(s);
+     s.when('drive.files.list').resolves({data});
+     await expect(handlers.workspace_dev_cleanup({runId:s.run,confirm:true},s.clients))
+       .rejects.toThrow(/inventory|child/);
+     expect(s.calls.filter(c=>c.path==='drive.files.update')).toHaveLength(0);
+   }
+ });
+ it('rechecks newly arriving foreign children before touching the parent folder',async()=>{
+   const s=ready();await seeded(s);
+   let count=0;
+   s.when('drive.files.list').resolves(()=>{
+     const files=[...s.byId.values()].filter(f=>f.parents?.includes('f-root')&&!f.trashed)
+       .map(f=>({id:f.id,parents:f.parents,trashed:f.trashed}));
+     if(++count>=2)files.push({id:'unrecorded-after-start',parents:['f-root'],trashed:false});
+     return {data:{files}};
+   });
+   const out=body(await handlers.workspace_dev_cleanup({runId:s.run,confirm:true},s.clients));
+   expect(out.confirmed).toBe(false);
+   expect(s.calls.filter(c=>c.path==='drive.files.update').map(c=>c.args[0].fileId))
+     .toEqual(['s-1','d-1']);
+   expect(s.byId.get('f-root').trashed).toBe(false);
+ });
+ it('marks partial failures as not confirmed and stops before parent',async()=>{
    const s=ready();await seeded(s);
    s.when('drive.files.update').resolves(({fileId,requestBody})=>{
      if(fileId!=='s-1')return {data:{id:fileId,trashed:false}};

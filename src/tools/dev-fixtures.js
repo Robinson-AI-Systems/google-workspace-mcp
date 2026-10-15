@@ -176,6 +176,36 @@ const built=defineWrite({
 });
 
 const cleanOrder={sheet:0,doc:1,folder:2};
+// A folder trash can affect unrecorded children. Inventory the exact root
+// before any write and repeat immediately before trashing the parent. Google
+// does not offer an atomic conditional trash, so no transactional claim is made.
+async function verifyRunChildren(run,clients,{empty=false}={}) {
+ const by=new Map(run.objects.map(o=>[o.kind,o]));
+ const folder=by.get('folder'),doc=by.get('doc'),sheet=by.get('sheet');
+ if(by.size!==3||!folder||!doc||!sheet||!folder.google_id||
+    !/^[A-Za-z0-9_-]{1,180}$/.test(folder.google_id))
+   throw Error('Incomplete TEST Drive fixture ledger; folder is untouched.');
+ const data=(await clients.drive.files.list({
+   q:"'"+folder.google_id+"' in parents and trashed = false",
+   fields:'nextPageToken,files(id,parents,trashed)',pageSize:100,
+   spaces:'drive',supportsAllDrives:false
+ }))?.data;
+ if(!data||typeof data!=='object'||Array.isArray(data)||
+    !Array.isArray(data.files)||data.files.length>100||
+    (data.nextPageToken!==undefined&&data.nextPageToken!==null&&data.nextPageToken!==''))
+   throw Error('Incomplete TEST folder inventory; cleanup refused.');
+ const recorded=new Set([doc.google_id,sheet.google_id]),seen=new Set();
+ for(const item of data.files){
+   if(!item||typeof item.id!=='string'||!recorded.has(item.id)||
+      !Array.isArray(item.parents)||!item.parents.includes(folder.google_id)||
+      item.trashed===true||seen.has(item.id))
+     throw Error('Unrecorded or unverifiable TEST folder child; cleanup refused.');
+   seen.add(item.id);
+ }
+ if(empty&&seen.size)throw Error('TEST folder still has active recorded children.');
+ return seen.size;
+}
+
 function assertFixtureIdentity(run,obj,data,identity) {
  if(!data||data.id!==obj.google_id||data.mimeType!==KIND_MIME[obj.kind]||
    data.appProperties?.rtc_run!==run.id||data.appProperties?.rtc_kind!==obj.kind||
@@ -223,10 +253,11 @@ async function inspectCleanup(args,clients) {
  const proof=[];
  for(const obj of objects) {
    const res=await clients.drive.files.get({fileId:obj.google_id,
-     fields:'id,mimeType,trashed,owners(emailAddress),appProperties',supportsAllDrives:false});
+     fields:'id,mimeType,trashed,parents,owners(emailAddress),appProperties',supportsAllDrives:false});
    assertFixtureIdentity(run,obj,res?.data,identity);
    proof.push({kind:obj.kind,id:obj.google_id,trashed:res.data.trashed===true,recordedCleaned:!!obj.cleaned_at});
  }
+ await verifyRunChildren(run,clients);
  return {run,identity,objects,proof};
 }
 export async function trashRecordedFixtures(args,clients) {
@@ -238,14 +269,15 @@ export async function trashRecordedFixtures(args,clients) {
  for(const obj of objects) {
    try {
      const existing=await clients.drive.files.get({fileId:obj.google_id,
-       fields:'id,mimeType,trashed,owners(emailAddress),appProperties',supportsAllDrives:false});
+       fields:'id,mimeType,trashed,parents,owners(emailAddress),appProperties',supportsAllDrives:false});
      assertFixtureIdentity(run,obj,existing?.data,identity);
+     if(obj.kind==='folder')await verifyRunChildren(run,clients,{empty:true});
      if(existing.data.trashed!==true) {
        await clients.drive.files.update({fileId:obj.google_id,
          requestBody:{trashed:true},fields:'id,trashed',supportsAllDrives:false});
      }
      const check=await clients.drive.files.get({fileId:obj.google_id,
-       fields:'id,mimeType,trashed,owners(emailAddress),appProperties',supportsAllDrives:false});
+       fields:'id,mimeType,trashed,parents,owners(emailAddress),appProperties',supportsAllDrives:false});
      assertFixtureIdentity(run,obj,check?.data,identity);
      if(check.data.trashed!==true)throw Error('Google did not confirm trash state.');
      await markDevObjectCleaned({runId:run.id,...identity,kind:obj.kind,googleId:obj.google_id});
@@ -277,7 +309,7 @@ const cleanupBuilt=defineWrite({
    for(const obj of objects){
      try {
        const response=await clients.drive.files.get({fileId:obj.google_id,
-         fields:'id,mimeType,trashed,owners(emailAddress),appProperties',supportsAllDrives:false});
+         fields:'id,mimeType,trashed,parents,owners(emailAddress),appProperties',supportsAllDrives:false});
        assertFixtureIdentity(run,obj,response?.data,identity);
        checks.push({id:obj.google_id,trashed:response.data.trashed===true,recordedCleaned:!!obj.cleaned_at});
      } catch {checks.push({id:obj.google_id,trashed:false,recordedCleaned:false});}
