@@ -1,3 +1,4 @@
+import { fixtureIntent } from './dev-run-state.js';
 // P8-7: single non-production event on a separately owned TEST calendar.
 // No invitees, notification email, delegated users or primary calendar writes.
 import crypto from 'node:crypto';
@@ -55,7 +56,7 @@ async function findEventByRun(clients,calendarId,id,identity){
 export async function createCalendarFixture(args,clients,identity){
  const calendarId=validateCalendarRequest(args),id=args.runId||crypto.randomUUID();
  await requireTestCalendar(clients,calendarId,identity);
- await startDevRun({id,...identity,scenario:'calendar',calendarId});
+ await startDevRun({id,...identity,scenario:'calendar',calendarId,requestSpec:fixtureIntent({...args,scenario:'calendar'})});
  const run=await getDevRun({runId:id,...identity});
  if(run?.objects.length&&run.steps.length===0)throw Error('Legacy calendar run has no durable reservations; no automatic retry.');
  const step=await reserveDevStep({runId:id,...identity,kind:'event'});

@@ -11,7 +11,7 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const SCENARIOS=['files','calendar','gmail'];
 const COUNTS={files:3,calendar:1,gmail:3};
 const id=value=>typeof value==='string'&&/^[A-Za-z0-9_@.:-]{1,256}$/.test(value)&&!value.includes('rtc_pass_');
-const verified=v=>v?.done===true&&v.confirmed===true&&v.logged===true;
+const verified=v=>v?.done===true&&v.confirmed===true&&(v.logged===true||Number.isSafeInteger(v.logged?.id)&&v.logged.id>0)&&v.auditFailure!==true;
 function objectIds(value){
  if(!Array.isArray(value)||value.some(o=>!id(o.id)))throw Error('invalid_resource_ids');
  const ids=value.map(o=>o.id).sort();

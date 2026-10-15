@@ -33,7 +33,7 @@ beforeAll(async()=>{
 describe('RTC HTTPS contract and pass authorization',()=>{
  it('advertises the exact raw public RTC manifest',async()=>{
   const r=await invoke('GET',{door:'contract'}, {}, '');
-  expect(r.statusCode).toBe(200);expect(r.body).toMatchObject({rtc:1,prefix:'workspace_'});
+  expect(r.statusCode).toBe(200);expect(r.body).toMatchObject({rtc:1,prefix:'workspace'});
   expect(manifest().counts.tools).toBeGreaterThan(350);
  });
  it('exposes source revision as a validated manifest claim and authorized account only after pass auth',async()=>{
@@ -117,7 +117,7 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   let r=await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'rtc-test',dryRun:true},write.token);
   expect(r.body.result.done).toBe(false);expect(holder.writes).toBe(0);
   r=await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'rtc-test'},write.token);
-  expect(r.body.result).toMatchObject({done:true,confirmed:true,logged:true});expect(holder.writes).toBe(1);
+  expect(r.body.result).toMatchObject({done:true,confirmed:true,logged:{id:expect.any(Number)}});expect(holder.writes).toBe(1);
   r=await invoke('POST',{tool:'workspace_gmail_delete_label'},{labelId:'Label_test'},write.token);
   expect(r.body.result.needsConfirmation).toBe(true);expect(holder.writes).toBe(1);
   r=await invoke('POST',{tool:'workspace_call'},{name:'workspace_drive_create_folder',args:{name:'denied'}},write.token);

@@ -1,3 +1,4 @@
+import { fixtureIntent,fixtureIdentity,tool as runTool,inspectFixtureRun } from './dev-run-state.js';
 // P8-7: tagged scratch fixtures. No external shares or outgoing messages.
 import crypto from 'node:crypto';
 import { defineWrite } from './write.js';
@@ -21,11 +22,7 @@ function requireDriveArea(clients) {
  if(!allowedTool('drive_get_file',policy)||!allowedTool('drive_create_folder',policy))
    throw Error('outside_scope: This connection cannot create or inspect Drive fixtures.');
 }
-function owner(clients) {
-  if(!EMAIL.test(clients?.actingAs||'')||!clients?.connection)throw Error('Fixture changes need an authenticated connection and acting mailbox.');
-  requireDevMode(clients);
-  return {actingAs:clients.actingAs.toLowerCase(),connection:clients.connection};
-}
+const owner=fixtureIdentity;
 export function validateFixtureRequest(args={}) {
   if(!['files','calendar','gmail'].includes(args.scenario))throw Error('Choose files, calendar or gmail fixture scenario.');
  if(args.scenario==='calendar')validateCalendarRequest(args);
@@ -73,7 +70,7 @@ export async function createTaggedDriveFixtures(args,clients){
  const request=validateFixtureRequest(args),id=request.runId||crypto.randomUUID(),identity=owner(clients);
  requireDriveArea(clients);
  await checkParent(clients,request.folder);
- await startDevRun({id,...identity,scenario:request.scenario,folder:request.folder});
+ await startDevRun({id,...identity,scenario:request.scenario,folder:request.folder,requestSpec:fixtureIntent(args)});
  const prior=await getDevRun({runId:id,...identity});
  if(prior?.objects.length>0&&prior?.steps.length===0)
    throw Error('Legacy fixture run '+id+' has object IDs but no creation reservations. Refusing duplicate creation; recover by exact provider IDs in a separately reviewed reconciliation.');
@@ -319,12 +316,12 @@ const cleanupBuilt=defineWrite({
  verify:(_args,_before,after,details)=>after?.allTrashed===true&&details?.fullyCleaned===true
 });
 
-export const tools=[built.tool,cleanupBuilt.tool,{
+export const tools=[built.tool,cleanupBuilt.tool,runTool,{
   name:'workspace_dev_list_runs',
   description:'List this connection’s fixture run IDs and pending step counts for safe crash recovery; never searches by filename.',
   inputSchema:{type:'object',properties:{}}
 }];
-export const handlers={[built.tool.name]:built.handler,[cleanupBuilt.tool.name]:cleanupBuilt.handler,
+export const handlers={[runTool.name]:inspectFixtureRun,[built.tool.name]:built.handler,[cleanupBuilt.tool.name]:cleanupBuilt.handler,
   async workspace_dev_list_runs(_args,clients){
     const identity=owner(clients);
     return ok({runs:await listDevRuns(identity)});

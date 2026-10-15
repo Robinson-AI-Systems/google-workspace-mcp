@@ -120,3 +120,66 @@ existing operation-specific approval/isolation/spending gates.
 Google Workspace mail, calendars, Drive/Docs/Sheets/Slides and authorized administration. Identify the selected account; prefer Appliance Rentals for approved tests; preserve account/domain/fixture boundaries.
 
 Use `workspace_whoami` through this service's own saved `google` grant. The six connections were directly rechecked by the coordinating runner on October 13, 2026; all six authenticated initialize requests succeeded without desktop plugin activation. That transport observation does not complete this repository's provider/write/RTC/Hub acceptance. Current grants were saved after renewal; reverify actual identity, scope and deployed revision on the next run.
+
+## Resumed substantial service/fixture outcome — October 15 owner correction
+
+PR #142 completes P8-4 engineering as a contribution, not the requested bundle.
+The remaining P8-5/P8-7 scope was stated in the active owner conversation before
+implementation. Concurrent workflow PR #143 arrived after source checkpoint
+3bc3a14; this formal transition plan records what remains NOW. It is not a
+fabricated historical pre-code plan. The unpublished/source checkpoint already
+contains immutable requests, owned-run inspection, HTTP audit receipts, canonical
+namespace metadata and the actual-process/Google-fake integration assembly.
+Those changes are reviewed with the retained P8-4 contribution as ONE workload.
+
+<!-- bundle-plan:start -->
+```json
+{
+  "baseRevision": "89f48c2602853031690b69b920b7d56317ff0b83",
+  "outcome": "An independently testable Workspace service with exact owned fixture recovery and the real local service passing the reusable RTC contract",
+  "integrationBoundary": "Hub conformance package -> actual Workspace HTTP/OAuth modules -> shared disposable PostgreSQL -> strict stateful fake Google; production fixture ledger and recovery through the same guarded registry",
+  "newEngineering": "Retain already assembled source 89f48c2 and P8-4 PR142 as contributions. Remaining engineering is to finish actual-process conformance integration, remedy concrete failures found by that full boundary, pin the corrected immutable Hub dependency and complete durable recovery/receipt proof. No old provider/guard implementation or test volume is counted as new production.",
+  "estimatedProductionLines": 50,
+  "relatedWorkDecision": "P8-5 and P8-7 form the next related approved service/developer outcome; P8-4 is retained once. P8-6 shared runtime adoption is optional/unapproved, not included; P8-8 is the independent owner-console outcome. Hub K-2 dependency PRs are not separate bundles.",
+  "subsections": [
+    {
+      "id": "P8-5",
+      "acceptance": ["The Hub conformance package passes in Workspace CI against the actual local Workspace server with fake Google, retaining every named contract assertion and separating deployed Google/Hub acceptance."],
+      "remainingEngineering": ["Finish two-process actual HTTP/OAuth/real-Postgres execution; fix demonstrated contract/integration failures, retain all probes with no skips, and pin the corrected reviewed Hub package source."]
+    },
+    {
+      "id": "P8-7",
+      "acceptance": [
+        "Tagged Drive folder/Docs/Sheets, named TEST Calendar event and mailbox-local Gmail fixtures record every provider ID in durable owned runs/reservations.",
+        "Cleanup touches only recorded owner/tag/parent-verified objects; foreign same-name objects remain untouched and Drive cleanup uses reversible trash.",
+        "App integration reports actual API/scope/resource readiness or exact manual console remediation without changing settings.",
+        "Dry run changes no provider state; destructive cleanup requires confirmation; writes read back and audit; no other user's data is acted on."
+      ],
+      "remainingEngineering": ["Complete immutable creation intent and owner-only recovery inspection integration across all three scenarios, including lost responses, same-run replay, changed-intent denial, no duplicate creation, exact cleanup, audit linkage and terminal cleaned-state proof. Reconcile existing integration-check and unit-negative evidence against the full original card, not as new code credit."]
+    }
+  ]
+}
+```
+<!-- bundle-plan:end -->
+
+This transition plan is a contribution plan, not a new bundle. Its small remaining
+estimate cannot certify the workload alone. Final comparison must include actual
+new engineering from PR142 and the resumed source, the necessary Hub package
+implementation, exact production/test separation and all original criteria.
+
+
+### Final preserved-plan comparison
+
+All planned P8-5/P8-7 remaining engineering and original criteria passed at source
+d8415e3 (Actions38779326658, all14 actual-service probes and all3 fixture lifecycles;
+unit1697/PG59/RTC28). The transition contribution is122/27 Workspace production
+plus98/27 necessary reusable Hub production:220 additions/54 deletions. Its
+standalone report correctly remains CONTINUE_BUNDLE because this contribution is
+below the ordinary substantial guide. It is combined with retained PR142's186/11
+P8-4 contribution ONCE:406 additions/65 deletions across the3 complete approved
+subsections. The original session baseline bbe2477371ffc79a645107ff031815bcb63baa23
+predates the formal-plan marker. No historical P8-4 plan is fabricated, and no
+accounting command establishes owner substantiality by itself. Coherent new service,
+audit and owned recovery behavior plus the actual integration boundary justify the
+combined workload. Test/harness/generated/docs and inherited fixture code receive
+zero production credit. Deployed/provider/Hub acceptance remains separately gated.

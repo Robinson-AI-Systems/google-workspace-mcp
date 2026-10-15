@@ -8,6 +8,7 @@ import {passOptions} from '../../src/rtc/pass-options.js';
 // function returning the current time in milliseconds, so tests can move time
 // forward (for lockout windows and token expiry) without waiting.
 import crypto from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
 import { normalizeDomains, domainOfEmail } from '../../src/domains.js';
 const norm = (email) => String(email || '').trim().toLowerCase();
 
@@ -35,15 +36,16 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     connectionId: (accessToken) => crypto.createHash('sha256').update(String(accessToken), 'utf8').digest('hex').slice(0, 8),
     async initSchema() {},
 
-    async startDevRun({id,actingAs,connection,scenario,folder=null,calendarId=null}){
+    async startDevRun({id,actingAs,connection,scenario,folder=null,calendarId=null,requestSpec=null}){
       if(!id||!actingAs||!connection)throw Error('Authenticated unique run required.');
       const old=state.devRuns.get(id);
       if(old) {
-       if(old.acting_as!==norm(actingAs)||old.connection!==connection||old.scenario!==scenario||old.root_folder!==folder||old.calendar_id!==calendarId)
-         throw Error('Run ID belongs to a different account, connection, scenario or root folder.');
+       if(old.request_spec===null&&requestSpec!==null)throw Error('Legacy fixture run requires an exact-ID reviewed recovery plan, never recreation.');
+       if(old.acting_as!==norm(actingAs)||old.connection!==connection||old.scenario!==scenario||old.root_folder!==folder||old.calendar_id!==calendarId||!isDeepStrictEqual(old.request_spec,requestSpec))
+         throw Error('Run ID belongs to a different account, connection, scenario, immutable request or root folder.');
        return {created:false,runId:id};
       }
-      state.devRuns.set(id,{id,acting_as:norm(actingAs),connection,scenario,root_folder:folder,calendar_id:calendarId,created_at:at(),objects:[],steps:[]});
+      state.devRuns.set(id,{id,acting_as:norm(actingAs),connection,scenario,root_folder:folder,calendar_id:calendarId,request_spec:structuredClone(requestSpec),created_at:at(),objects:[],steps:[]});
       return {created:true,runId:id};
     },
     async reserveDevStep({runId,actingAs,connection,kind}){

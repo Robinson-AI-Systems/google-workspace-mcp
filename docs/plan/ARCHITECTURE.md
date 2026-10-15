@@ -286,3 +286,34 @@ The registry advertises schemas for four existing JSON workflows and five newer 
 Hub talks to this server's RTC HTTPS doors; direct `/api/mcp` remains independent. Provider identity, credentials,
 delegation scopes, domain guard, write provenance and durable state remain service-owned. P8-6 is optional
 published-export reuse, not an external protocol or deployment prerequisite. See README and TASKS recovery sections.
+
+### P8-5/P8-7 actual service conformance and fixture recovery
+
+The RTC manifest namespace is `workspace`; external tools still use `workspace_`.
+This aligns the frozen contract's `<prefix>_` naming rule without renaming tools.
+Guarded writes retain native MCP `logged:boolean` compatibility and now preserve
+the real `changeId`. The HTTPS door exposes that reference as `logged:{id}` under
+RTC §8; advertised workflow schemas reflect its wire receipt. An unusable receipt
+cannot establish a confirmed audited change. Owned large write handles retain the
+receipt metadata without exposing the stored payload. The real fixture acceptance
+client accepts current receipts and legacy deployed boolean results during rollout.
+
+Fixture runs add nullable JSONB `request_spec` (additive only). New creations bind
+scenario, exact parent/calendar and explicit normalized start time to the original
+run before any provider call. Different replay intent fails before another create;
+legacy null-intent runs require reviewed recovery rather than silent rebinding.
+`workspace_dev_get_run` is a reviewed read-only tool, available only to the same
+trusted TEST account and connection. It reports immutable request, exact slots,
+pending/recorded/partially-cleaned/cleaned state and next recovery action. It never
+claims that ledger state is a fresh provider readback or acts on another principal.
+
+The conformance entry point retains upstream reference tests AND runs the pinned
+Hub package against actual Workspace HTTP/OAuth modules in two separate Node
+processes, using an isolated real local Postgres schema and a strict stateful fake
+Google provider. No production module substitutes a provider or DB. Process/import
+substitution lives exclusively under test/conformance. The run covers actual
+profile-preserving refresh, all named RTC probes (no missing-role skips), shared
+rate limits, every fixture scenario's lost-response recovery, same-run replay,
+foreign-pass refusal, immutable intent, confirmation, provider readback/audit,
+exact cleanup and cleaned-run non-recreation. Missing local TEST_DATABASE_URL
+fails the service conformance step; reference success cannot substitute for it.

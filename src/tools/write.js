@@ -88,7 +88,7 @@ export function defineWrite({ name, description, inputSchema, destructive = fals
 
     if (dryRun === true) {
       const logged = await recordChange(clients, { tool: name, target: p.target, summary: `PREVIEW: ${p.summary}`, before, dryRun: true });
-      return ok({ done: false, dryRun: true, summary: p.summary, target: p.target, before, note: 'Nothing was changed. Run it again without dryRun to do it.' + (needsConfirm(callArgs, clients) ? ' It will also need confirm: true.' : ''), logged: logged.logged });
+      return ok({ done: false, dryRun: true, summary: p.summary, target: p.target, before, note: 'Nothing was changed. Run it again without dryRun to do it.' + (needsConfirm(callArgs, clients) ? ' It will also need confirm: true.' : ''), logged: logged.logged, ...(logged.logged?{changeId:logged.id}:{}) });
     }
     if (needsConfirm(callArgs, clients) && confirm !== true) {
       return ok({ done: false, needsConfirmation: true, summary: p.summary, target: p.target, before, note: 'Nothing was changed. Ask the person, then run it again with confirm: true (or dryRun: true to preview).' });
@@ -111,7 +111,7 @@ export function defineWrite({ name, description, inputSchema, destructive = fals
     if(!logged.logged)confirmed=false;
     return ok({ done: true, summary: p.summary, target: p.target, before, after, confirmed,
       ...(!logged.logged?{auditFailure:true,warning:'Google may have changed the item, but audit logging failed. Do not treat this as verified success.'}:{}),
-      ...(mismatch ? { warning: 'Google does not show the result that was asked for. Check it before telling the person it worked.' } : {}), details, logged: logged.logged });
+      ...(mismatch ? { warning: 'Google does not show the result that was asked for. Check it before telling the person it worked.' } : {}), details, logged: logged.logged, ...(logged.logged?{changeId:logged.id}:{}) });
   };
   markGuardedWrite(handler);
   return { tool, handler };

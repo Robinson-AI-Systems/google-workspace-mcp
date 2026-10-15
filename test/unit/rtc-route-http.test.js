@@ -77,7 +77,7 @@ describe('real Node HTTP to Workspace gateway using checked-in Vercel route tabl
  it('serves a public raw manifest without secret material',async()=>{
   const r=await request('/api/contract',{bearer:null});
   expect(r.status).toBe(200);
-  expect(r.value).toMatchObject({rtc:1,prefix:'workspace_'});
+  expect(r.value).toMatchObject({rtc:1,prefix:'workspace'});
   expect(r.headers.get('cache-control')).toBe('no-store');
   expect(JSON.stringify(r.value)).not.toContain('rtc_pass_');
  });
@@ -96,6 +96,12 @@ describe('real Node HTTP to Workspace gateway using checked-in Vercel route tabl
   expect(tools.status).toBe(200);
   expect(tools.value.result.tools).toHaveLength(2);
   expect(tools.value.result.next).toBe('2');
+ });
+ it('searches the full permitted catalog for compact connections',async()=>{
+  const result=await request('/api/tools?q=workspace_gmail_get_label',{bearer:wideToken});
+  expect(result.value.result.tools.some(t=>t.name==='workspace_gmail_get_label')).toBe(true);
+  const denied=await request('/api/tools?q=workspace_gmail_get_label');
+  expect(denied.value.result.tools).toEqual([]);
  });
  it('permits the read-only meta dispatcher only for the exact authorized read',async()=>{
   const direct=await request('/api/tools/workspace_list_accounts',{method:'POST',body:{}});
@@ -302,17 +308,18 @@ describe('real Node HTTP to Workspace gateway using checked-in Vercel route tabl
   };
   for(const door of ['mcp','broker','http','http-broker']){
    const before=holder.writes;
+   const receipt=door.startsWith('http')?{id:expect.any(Number)}:true;
    const preview=await invokeDoor(door,'gmail_create_label',{name:'rtc-http-preview',dryRun:true});
-   expect(preview).toMatchObject({done:false,dryRun:true,logged:true});
+   expect(preview).toMatchObject({done:false,dryRun:true,logged:receipt});
    expect(holder.writes).toBe(before);
    const create=await invokeDoor(door,'gmail_create_label',{name:'rtc-http-label'});
-   expect(create).toMatchObject({done:true,confirmed:true,logged:true,after:{id:'Label_http',name:'rtc-http-label'}});
+   expect(create).toMatchObject({done:true,confirmed:true,logged:receipt,after:{id:'Label_http',name:'rtc-http-label'}});
    expect(holder.writes).toBe(before+1);
    const fenced=await invokeDoor(door,'gmail_delete_label',{labelId:'Label_http'});
    expect(fenced).toMatchObject({done:false,needsConfirmation:true});
    expect(holder.writes).toBe(before+1);
    const remove=await invokeDoor(door,'gmail_delete_label',{labelId:'Label_http',confirm:true});
-   expect(remove).toMatchObject({done:true,confirmed:true,logged:true,after:{exists:false}});
+   expect(remove).toMatchObject({done:true,confirmed:true,logged:receipt,after:{exists:false}});
    expect(holder.writes).toBe(before+2);
    expect(holder.labels.size).toBe(0);
   }
