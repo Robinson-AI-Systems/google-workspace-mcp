@@ -38,6 +38,7 @@ async function call(origin,token,name,args){
 async function lifecycle(server,passes){
  const results=[];
  for(const scenario of ['files','calendar','gmail']){
+  try {
   const runId=crypto.randomUUID();
   const args={scenario,runId,...(scenario==='calendar'?{calendarId:'fixture-calendar',startAt:new Date(Date.now()+86400000).toISOString()}: {})};
   const read=()=>call(server.url,passes.full,'workspace_dev_get_run',{runId});
@@ -79,6 +80,7 @@ async function lifecycle(server,passes){
   const forbiddenReplay=await call(server.url,passes.full,'workspace_dev_create_fixtures',args);
   assert(forbiddenReplay.result?.confirmed!==true,'A cleaned run was recreated');
   results.push({scenario,ok:true});
+  }catch(error){results.push({scenario,ok:false,message:String(error.message).slice(0,200)});}
  }
  return results;
 }

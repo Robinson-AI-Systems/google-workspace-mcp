@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Robinson-AI-Systems/robinsons-toolkit-hub
-          ref: 3065105af56976fa350ddcc1a3f76de5f5194402
+          ref: f173a0aeb070f1ca52188e9acab5bcccf53d81c7
           path: .rtc-hub
           persist-credentials: false
       - uses: actions/setup-node@v4

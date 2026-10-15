@@ -22,7 +22,7 @@ try{
  if(!process.env.TEST_DATABASE_URL)throw Error('Missing disposable localhost TEST_DATABASE_URL; actual Workspace conformance is NOT verified.');
  const report=await runWorkspaceConformance({databaseUrl:process.env.TEST_DATABASE_URL,runConformance});
  for(const check of report.checks)console.log('[RTC Workspace] '+(check.ok&&!check.skipped?'PASS ':'FAIL ')+check.name+': '+check.message);
- for(const item of report.lifecycles)console.log('[RTC Workspace fixture] '+(item.ok?'PASS ':'FAIL ')+item.scenario+' recovery/readback/cleanup');
+ for(const item of report.lifecycles)console.log('[RTC Workspace fixture] '+(item.ok?'PASS ':'FAIL ')+item.scenario+' recovery/readback/cleanup'+(item.message?': '+item.message:''));
  if(!report.ok)process.exitCode=1;
  console.log('[RTC evidence] Actual local Workspace HTTP/OAuth + fake Google + two processes/shared real Postgres. Deployed Google/Hub D-4 remains separate.');
 }catch(error){console.error('[RTC Workspace] FAIL '+String(error.message).slice(0,200));process.exitCode=1;}
