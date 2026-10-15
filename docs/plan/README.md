@@ -267,6 +267,14 @@ agent to repeat the same process.
 
 ## Order of work
 
+**Design readiness (owner-requested review, October 14):** TASKS.md's P7-8
+design and **Remaining-design review** record the resolved bulk-operation
+choices and distinguish remaining implementation/proof gates from new owner
+decisions. P7-8's design-first review is satisfied; do not ask for it again.
+The review does not authorize production bulk changes, spending, new scopes or
+optional/unplanned features. Follow the existing ordered cards and preserve
+their specific execution and acceptance gates.
+
 | Phase | Theme | Cards | Rough size |
 | --- | --- | --- | --- |
 | P0 | Safety and hygiene | P0-1 … P0-7 | 1 week |
