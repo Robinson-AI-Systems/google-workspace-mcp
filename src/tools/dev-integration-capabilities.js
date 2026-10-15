@@ -85,8 +85,8 @@ export async function inspectAppCapabilities(request,clients){
    detail:'Verify this exact calendar is shared with the expected reader/writer/owner access.',
    read:()=>clients.calendar.calendarList.get({calendarId}),
    prove:v=>v.id!==calendarId?mismatch:
-     ROLE_ORDER.indexOf(v.accessRole)<ROLE_ORDER.indexOf(minimumRole)?missing:
-     ROLE_ORDER.includes(v.accessRole)?success: {status:'not_readable',reason:'calendar_role_unreadable'}
+     !ROLE_ORDER.includes(v.accessRole)?{status:'not_readable',reason:'calendar_role_unreadable'}:
+     ROLE_ORDER.indexOf(v.accessRole)<ROLE_ORDER.indexOf(minimumRole)?missing:success
   }));
  }
  for(const {folderId,capability} of request.driveFolderCapabilities||[]){
