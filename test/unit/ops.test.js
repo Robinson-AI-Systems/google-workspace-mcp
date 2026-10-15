@@ -139,8 +139,8 @@ describe('workspace_where_is_setting', () => {
     const dkim = body(await handlers.workspace_where_is_setting({ query: 'dkim' })).matches[0];
     expect(dkim.link).toMatch(/^https:\/\/admin\.google\.com\//);
     expect(dkim.steps[0]).toMatch(/^1\. Apps/);
-    const gemini = body(await handlers.workspace_where_is_setting({ query: 'gemini' })).matches[0];
-    expect(gemini.link).toMatch(/follow the clicks below/);
+    const unavailable = body(await handlers.workspace_where_is_setting({ query: 'context aware access' })).matches[0];
+    expect(unavailable.link).toMatch(/follow the clicks below/);
   });
   it('the map itself is well formed: unique ids, titles, clicks, and links only to Google addresses', () => {
     const ids = CONSOLE_MAP.map((e) => e.id);
@@ -271,11 +271,11 @@ describe('workflow_search_presence_check', () => {
 });
 
 describe('P8-8 complete owner Admin console review', () => {
-  it('covers each of the 50 mapped settings exactly once with no stale review categories', () => {
+  it('covers each of the reviewed mapped settings exactly once with no stale review categories', () => {
     expect(consoleReviewCoverageErrors()).toEqual([]);
-    expect(CONSOLE_MAP).toHaveLength(50);
+    expect(CONSOLE_MAP).toHaveLength(135);
     expect(Object.keys(CONSOLE_REVIEW_GROUPS)).toEqual(CONSOLE_REVIEW_CATEGORIES);
-    expect(new Set(Object.values(CONSOLE_REVIEW_GROUPS).flat()).size).toBe(50);
+    expect(new Set(Object.values(CONSOLE_REVIEW_GROUPS).flat()).size).toBe(CONSOLE_MAP.length);
     expect(consoleReviewCoverageErrors([...CONSOLE_MAP,{...CONSOLE_MAP[0]}]))
       .toContain('Duplicate console entry: dkim');
     expect(consoleReviewCoverageErrors(CONSOLE_MAP.filter(e=>e.id!=='dkim')))
@@ -283,14 +283,15 @@ describe('P8-8 complete owner Admin console review', () => {
     expect(consoleReviewCoverageErrors([...CONSOLE_MAP,{id:'new-uncategorized'}]))
       .toContain('Unclassified console entry: new-uncategorized');
   });
-  it('returns every category entry over five bounded pages without accidental green status', async () => {
+  it('returns every category entry over all bounded pages without accidental green status', async () => {
     const all=[];
-    for(let page=1;page<=5;page++){
+    const pages=Math.ceil(CONSOLE_MAP.length/10);
+    for(let page=1;page<=pages;page++){
       const out=body(await handlers.workspace_where_is_setting({reviewAll:true,page,pageSize:10}));
-      expect(out).toMatchObject({review:true,totalMapped:50,totalMatching:50,page,pageSize:10});
-      expect(out.items).toHaveLength(10);
-      expect(out.nextPage).toBe(page<5?page+1:null);
-      expect(out.summary).toMatchObject({readbackAvailable:24,manualOnly:26,outsideScope:0});
+      expect(out).toMatchObject({review:true,totalMapped:CONSOLE_MAP.length,totalMatching:CONSOLE_MAP.length,page,pageSize:10});
+      expect(out.items).toHaveLength(Math.min(10,CONSOLE_MAP.length-(page-1)*10));
+      expect(out.nextPage).toBe(page<pages?page+1:null);
+      expect(out.summary).toMatchObject({readbackAvailable:24,manualOnly:CONSOLE_MAP.length-24,outsideScope:0});
       all.push(...out.items.map(x=>x.id));
       for(const item of out.items){
         expect(item.steps.length).toBeGreaterThan(0);
@@ -299,16 +300,16 @@ describe('P8-8 complete owner Admin console review', () => {
       }
     }
     expect(all).toEqual(CONSOLE_MAP.map(e=>e.id));
-    expect(new Set(all).size).toBe(50);
+    expect(new Set(all).size).toBe(CONSOLE_MAP.length);
   });
   it('filters topics and categories and keeps complete matching counters', async () => {
     const out=body(await handlers.workspace_where_is_setting({reviewAll:true,category:'mail',query:'gmail',pageSize:20}));
-    expect(out.totalMapped).toBe(50);
+    expect(out.totalMapped).toBe(CONSOLE_MAP.length);
     expect(out.items.length).toBeGreaterThan(1);
     expect(out.items.every(x=>x.category==='mail')).toBe(true);
     expect(out.items.every(x=>x.id.includes('gmail')||x.setting.toLowerCase().includes('gmail'))).toBe(true);
     expect(out.summary.readbackAvailable+out.summary.manualOnly+out.summary.outsideScope).toBe(out.totalMatching);
-    expect(out.categories.reduce((n,c)=>n+c.count,0)).toBe(50);
+    expect(out.categories.reduce((n,c)=>n+c.count,0)).toBe(CONSOLE_MAP.length);
     const manual=body(await handlers.workspace_where_is_setting({reviewAll:true,category:'security',pageSize:20}));
     expect(manual.items.find(x=>x.id==='session-length').verification.state).toBe('manual_only');
   });
@@ -333,7 +334,7 @@ describe('P8-8 complete owner Admin console review', () => {
       {pageSize:0},{pageSize:21},{pageSize:2.5},{query:'x'.repeat(121)},{query:{foo:'bar'}}]){
       expect(()=>buildConsoleReview(input,fn),JSON.stringify(input)).toThrow();
     }
-    expect(buildConsoleReview({page:100},fn)).toMatchObject({totalMatching:50,nextPage:null,items:[]});
+    expect(buildConsoleReview({page:100},fn)).toMatchObject({totalMatching:CONSOLE_MAP.length,nextPage:null,items:[]});
   });
   it('preserves original single-setting query behavior and no-query guidance', async () => {
     const individual=body(await handlers.workspace_where_is_setting({query:'DKIM'}));
