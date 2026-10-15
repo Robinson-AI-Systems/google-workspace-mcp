@@ -9,6 +9,8 @@ import {CONSOLE_MAP,CONSOLE_VERIFICATION} from '../data/console-map.js';
 import {CONSOLE_REVIEW_GROUPS} from '../data/console-review.js';
 
 const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SKU=/^[a-zA-Z0-9_-]{2,100}$/;
+const REPORT_DATE=/^\d{4}-\d{2}-\d{2}$/;
 const DOMAIN=/^[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?\.[a-z]{2,63}$/i;
 const MAX=10;
 const obj=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
@@ -43,6 +45,21 @@ const READBACK=Object.freeze({
  'drive-storage':{tool:'drive_get_storage_quota',area:'files',scope:'acting_mailbox',
    proof:x=>obj(x)&&['limit','usage','usageInDrive','usageInDriveTrash'].some(k=>
      typeof x[k]==='string'&&/^\d+$/.test(x[k])),args:()=>({})},
+ 'drive-sharing':{tool:'workflow_audit_external_sharing',area:'workflows',scope:'account_sample',
+   proof:x=>obj(x)&&integer(x.scanned)&&x.scanned<=20&&
+     bounded(x.filesWithExternalOrPublicSharing)&&
+     x.filesWithExternalOrPublicSharing.every(f=>obj(f)&&nonempty(f.fileId)),
+   args:()=>({maxFilesToScan:20})},
+ 'reports':{tool:'reports_usage_customer',area:'admin',scope:'named_report_date',
+   proof:listOf(x=>obj(x)&&nonempty(x.customerId||x.date||x.entity?.customerId)),
+   args:t=>({date:t})},
+ 'license-assign-ui':{tool:'licensing_list_assignments',area:'admin',scope:'named_sku',
+   proof:listOf(x=>obj(x)&&nonempty(x.userId)&&nonempty(x.skuId)),
+   args:t=>({skuId:t})},
+ 'api-controls':{tool:'workspace_delegation_status',area:'workspace',scope:'customer',
+   proof:x=>obj(x)&&bool(x.configured)&&Array.isArray(x.scopesToAuthorize)&&
+     x.scopesToAuthorize.every(nonempty),
+   args:()=>({})},
  'billing-plan':{tool:'workspace_plan_summary',area:'workspace',scope:'customer',
    proof:countOf,args:()=>({})},
  'domains':{tool:'admin_list_domains',area:'admin',scope:'customer',
@@ -100,8 +117,11 @@ export function planConsoleReadbacks(args={},clients={}){
   throw Error('crossDomain must be boolean.');
  if(args.subjectEmail!==undefined&&!email(args.subjectEmail)||
    args.groupEmail!==undefined&&!email(args.groupEmail)||
-   args.domain!==undefined&&!domain(args.domain))
-  throw Error('Invalid exact mailbox, group or DNS domain.');
+   args.domain!==undefined&&!domain(args.domain)||
+   args.skuId!==undefined&&(typeof args.skuId!=='string'||!SKU.test(args.skuId))||
+   args.reportDate!==undefined&&(typeof args.reportDate!=='string'||!REPORT_DATE.test(args.reportDate)||
+     Number.isNaN(Date.parse(args.reportDate+'T00:00:00Z'))))
+  throw Error('Invalid exact mailbox, group, DNS domain, SKU or usage-report date.');
  if(!email(clients.actingAs))throw Error('An authenticated acting mailbox is required.');
  const actingDomain=domainOf(clients.actingAs);
  const permissions=clients.rtcPolicy||{};
@@ -112,11 +132,13 @@ export function planConsoleReadbacks(args={},clients={}){
    note:'The Google API can observe this narrow fact, not the effective domain/OU-wide console policy.'};
   if(!spec)return {id,category:CATEGORY.get(id),status:'manual_only',
    reason:'no_reviewed_live_readback',guidance};
-  const requiresCustomer=['customer','customer_sample'].includes(spec.scope);
+  const requiresCustomer=['customer','customer_sample','named_report_date','named_sku'].includes(spec.scope);
   const target=spec.scope==='named_user'?args.subjectEmail:
    spec.scope==='named_group'?args.groupEmail:
-   spec.scope==='named_domain'?args.domain:null;
-  if(['named_user','named_group','named_domain'].includes(spec.scope)&&!target)
+   spec.scope==='named_domain'?args.domain:
+   spec.scope==='named_report_date'?args.reportDate:
+   spec.scope==='named_sku'?args.skuId:null;
+  if(['named_user','named_group','named_domain','named_report_date','named_sku'].includes(spec.scope)&&!target)
    return {id,category:CATEGORY.get(id),status:'needs_target',
     reason:'supply_exact_approved_resource_identity',guidance};
   if((requiresCustomer||target&&domainOf(target)!==actingDomain&&spec.scope!=='named_domain'||
@@ -144,7 +166,7 @@ function decodeRead(output){
 function shapeStatus(spec,value,target){
  try{
   if(!spec.proof(value,target))return {status:'not_readable',reason:'google_evidence_missing_or_malformed'};
-  if(['customer_sample','customer'].includes(spec.scope))
+  if(['customer_sample','customer','account_sample','named_report_date','named_sku'].includes(spec.scope))
    return {status:'observed_partial',reason:'a_supported_account_or_customer_subset_not_an_effective_policy'};
   // The API may return a legitimate empty list for one mailbox; that is
   // a valid read of the connected mailbox, not proof of org-wide policy.
@@ -209,6 +231,8 @@ export const tools=[{
   subjectEmail:{type:'string',description:'Exact named employee mailbox for 2-Step or recovery checks; never guessed.'},
   groupEmail:{type:'string',description:'Exact owned/approved group email for its effective group settings read.'},
   domain:{type:'string',description:'Exact reviewed DNS domain for a narrow published email-authentication check.'},
+  reportDate:{type:'string',description:'Exact YYYY-MM-DD date for the Reports usage read.'},
+  skuId:{type:'string',description:'Exact Workspace licensing SKU ID, not a purchased-seat count.'},
   crossDomain:{type:'boolean',description:'Explicit owner authorization for customer-wide or other-business reads; default false.'},
   dryRun:{type:'boolean',description:'True: list eligible provider reads and scope gates only, no Google requests.'}
  },required:['ids']}
@@ -224,6 +248,8 @@ export const tools=[{
   subjectEmail:{type:'string'},
   groupEmail:{type:'string'},
   domain:{type:'string'},
+  reportDate:{type:'string'},
+  skuId:{type:'string'},
   crossDomain:{type:'boolean'}
  }}
 }];
@@ -253,7 +279,8 @@ export function discoverConsoleReadbacks(args={},clients={}){
   .map(entry=>{
    const planned=planConsoleReadbacks({
     ids:[entry.id],crossDomain:args.crossDomain,
-    subjectEmail:args.subjectEmail,groupEmail:args.groupEmail,domain:args.domain
+    subjectEmail:args.subjectEmail,groupEmail:args.groupEmail,domain:args.domain,
+    reportDate:args.reportDate,skuId:args.skuId
    },clients)[0];
    return {id:entry.id,category:CATEGORY.get(entry.id),
     title:entry.title,status:planned.status,
