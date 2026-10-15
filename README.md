@@ -531,7 +531,11 @@ Only status findings are returned: message bodies, permissions details and busy
 slots are not included. Each resource probe uses the existing scoped account,
 metadata-only reads and exact provider-ID agreement; a mismatch, permission
 denial or unavailable optional API is not declared ready. At most 24 additional
-exact app resources can be probed in one call. It returns observed `ready`, `missing`
+exact app resources and 24 explicit permission/capability requirements can be
+probed in one call, plus up to 12 narrow Calendar availability windows. The
+response includes total/ready/missing/not-readable counts, per-resource-type
+and API-area breakdowns, and a bounded list of trusted Google Console remediation
+links. Unsupported or unobservable authorizations remain `not_readable`. It returns observed `ready`, `missing`
 and `not_readable` findings; Admin-console-only permissions remain
 unverified until separately checked. This is a complete read-only
 integration check, not fixture creation/cleanup; all three P8-7 fixture families are now implemented with exact-ID cleanup and crash reconciliation tests. Real Google TEST acceptance and full Hub routes remain open in `docs/plan/TASKS.md`.
