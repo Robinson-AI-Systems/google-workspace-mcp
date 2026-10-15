@@ -14,6 +14,7 @@ const EMAIL_ARGS = ['emailTo', 'userKey', 'userId', 'primaryEmail', 'email', 'gr
 const EMAIL_LIST_ARGS = ['groupEmails', 'aliases', 'accountEmails'];
 const DOMAIN_ARGS = ['domainName', 'domainAliasName', 'parentDomainName', 'domain', 'scope']; // scope: a domain, or the word "all" (which targets no domain)
 const TOOL_FAMILY = /^(admin|licensing|datatransfer|workflow|identity|reports|vault|dns|domain|postmaster)_/;
+const DOMAIN_SCOPED_DRIVE_MEMBERSHIP = new Set(['drive_share_file']);
 const CROSS_DOMAIN_FIELD = { type: 'boolean', description: 'Set to true only when you really mean to act on an address or domain outside the domains this connection is limited to.' };
 // Reports API "all" queries and customer-wide usage reports may expose activity
 // from other businesses even when no outside email appears in the arguments.
@@ -48,9 +49,9 @@ export function refusal(violations, clients) {
 /** Wrap the admin-style tools in `registry`. Returns the same registry. */
 export function applyDomainGuard(registry) {
   registry.tools = registry.tools.map((tool) => {
-    if (!TOOL_FAMILY.test(tool.name)) return tool;
+    if (!TOOL_FAMILY.test(tool.name) && !DOMAIN_SCOPED_DRIVE_MEMBERSHIP.has(tool.name)) return tool;
     const props = tool.inputSchema?.properties || {};
-    const aimed = tool.name.startsWith('reports_') || [...EMAIL_ARGS, ...EMAIL_LIST_ARGS, ...DOMAIN_ARGS].some((a) => a in props);
+    const aimed = DOMAIN_SCOPED_DRIVE_MEMBERSHIP.has(tool.name) || tool.name.startsWith('reports_') || [...EMAIL_ARGS, ...EMAIL_LIST_ARGS, ...DOMAIN_ARGS].some((a) => a in props);
     if (!aimed) return tool;
     const inner = registry.handlers[tool.name];
     const wrapper = async (args = {}, clients) => {
@@ -63,7 +64,15 @@ export function applyDomainGuard(registry) {
           return ok(`Refused: scope "all" covers every domain in the Workspace, but this connection acts as ${clients.actingAs}, which is limited to ${clients.allowedDomains.join(', ')}. Nothing was read. Give one of those domains as the scope, or run it again with crossDomain: true (ask the person first).`);
         }
         const bad = outsideDomains(rest, clients.allowedDomains);
+        if (DOMAIN_SCOPED_DRIVE_MEMBERSHIP.has(tool.name) && typeof rest.emailAddress === 'string') {
+          const email = rest.emailAddress.trim().toLowerCase();
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+            return ok('Refused: a shared member must have a valid email address. Nothing was changed.');
+          if (!clients.allowedDomains.map(clean).includes(email.slice(email.lastIndexOf('@')+1)))
+            return ok('Refused: sharing with an outside domain requires independent owner approval, crossDomain: true and confirm: true. Nothing was changed.');
+        }
         if (bad.length) return ok(refusal(bad, clients));
+        if (DOMAIN_SCOPED_DRIVE_MEMBERSHIP.has(tool.name) && rest.type==='domain') return ok('Refused: domain-wide access requires crossDomain: true and independent owner confirmation. Nothing was changed.');
       }
       return inner(rest, crossDomain === true ? Object.create(clients || {}, { crossDomain: { value: true, enumerable: true } }) : clients);
     };
