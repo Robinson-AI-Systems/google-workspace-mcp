@@ -72,6 +72,11 @@ describe('P0-2 reviewed catalog-wide read cases',()=>{
   expect(verifyAdditionalRead('workspace_admin_list_users',{users:[{}]},account)).toBe(false);
   expect(verifyAdditionalRead('workspace_admin_list_users',{},account)).toBe(false);
   expect(verifyAdditionalRead('workspace_chat_list_spaces',[],account)).toBe(true);
+  expect(verifyAdditionalRead('workspace_admin_get_available_privileges',[{privilegeName:'test'}],account)).toBe(true);
+  expect(verifyAdditionalRead('workspace_admin_list_user_aliases',['alias@example.test'],account)).toBe(true);
+  expect(verifyAdditionalRead('workspace_admin_get_alert',{alertId:'alert-1'},account,{alertId:'alert-1'})).toBe(true);
+  expect(verifyAdditionalRead('workspace_admin_get_alert',{alertId:'other-alert'},account,{alertId:'alert-1'})).toBe(false);
+  expect(verifyAdditionalRead('workspace_slides_get_thumbnail',{contentUrl:'https://example.test/image'},account,{pageObjectId:'x'})).toBe(true);
   expect(verifyAdditionalRead('workspace_chat_list_spaces',[{}],account)).toBe(false);
   expect(verifyAdditionalRead('workspace_reports_activity',{application:'login',activities:[]},account)).toBe(true);
   expect(verifyAdditionalRead('workspace_docs_get_text','Hello from an owned test doc',account)).toBe(true);

@@ -405,7 +405,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Independently READY custom Workspace MCP revision, original owner-connected account/TEST pass as applicable, read_only and explicit owner intent for customer-wide/foreign domain. No provider writes, no claiming inherited policy or purchased seats.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-14: source and synthetic guarded-subtool acceptance implemented; no real deployed Google console readback performed, separate original provider evidence pending."
+    "lastEvidence": "2026-10-14: source and synthetic guarded-subtool acceptance implemented; no real deployed Google console readback performed, separate original provider evidence pending. | 2026-10-15 independently READY source 15a547f: custom connection observed four Gmail topics plus drive-storage/dkim/spf-dmarc, but 2sv/recovery/Gmail routing-delegation not_readable; reports/alerts withheld without crossDomain intent. No writes. Full acceptance remains PENDING."
   },
   {
     "id": "P7-8-GUARDED-BULK",
@@ -1937,6 +1937,10 @@ Current owner instruction is **finish existing work and properly merge; do not s
 ### October 15 P0-2 reviewed per-read casebook candidate (not external acceptance)
 
 New protected casebook covers all 123 additional *audited* read-only operation names beyond the existing thirty safe probes and twelve exact-ID fixture operations. Each additional read is **never auto-invoked**: an exact-name case with arguments from protected RTC_REVIEWED_READ_CASES_JSON must satisfy the advertised current schema, hard bounds and profile/area gates before the existing TEST read-only executor runs it. Source-reviewed coarse result classes refuse unrelated HTTP-success envelopes and foreign stable IDs where the provider exposes exact identities; strong existing first-party validators retain precedence. Source shape validation is not a complete real Google provider proof; uncertain/empty provider receipts are investigated individually rather than relabeled passed. Original P0-2 report/known-bug remediation remains pending a genuine short-lived owner-issued read_only TEST pass, verified READY source and actual Google read observations; do not close its acceptance or count an engineering bundle merely from this candidate. Exact-head CI, reviewed diff and merge required.
+
+### October 15 checked-live custom-service acceptance catch-up — additional receipts
+
+This session reverified Vercel **READY** deployment `dpl_GcK89MXXQDuD7cjsj9BxEXuyrU36` and production alias `google-workspace-mcp-five.vercel.app` independently at source `15a547f4f7c24c9739d496bfb6f7d489cc468a8e` (#131). Its source includes all 17 queue minimum revisions, but is behind main #132 and PR #138. Only eligible read-only checks were attempted. Existing custom Robinson Google Cloud adapter `workspace_dev_check_integration` at 2026-10-15T14:01:24Z returned **five ready** Gmail/Drive/Calendar/Tasks/Chat API reads, **two not_readable** People/Postmaster (scope_or_access_denied), changesMade:false. Current scoped `workspace_admin_console_verify` returned four original Gmail narrow-topic observations at 14:03Z, then at 14:30:16Z observed three further narrow topics **drive-storage, dkim, spf-dmarc**, while **2sv, recovery, gmail-default-routing-delegation** returned not_readable (google_evidence_missing_or_malformed). Preflight correctly withheld **reports and alerts** due to customer-wide cross-domain intent. No writes, consent changes or fixture cleanup. This proves only the named custom reads, not a service-issued TEST pass, HTTP denial/revocation, entire provider catalog, effective Admin policy, Hub or Sandbox. Queue rows P8-7-API-SHAPES and P8-8-CONSOLE-READBACK remain PENDING; re-entry is original owner pass/permissions and exact remaining topic checks.
 
 ## Permanent handoff (update with each substantive implementation PR)
 

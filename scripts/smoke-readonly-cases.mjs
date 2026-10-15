@@ -5,7 +5,7 @@ import { READ_ONLY_TOOL_NAMES } from '../src/rtc/read-only-semantics.js';
 
 const GROUPS = Object.freeze({
  array: `
-chat_list_members chat_list_messages chat_list_spaces chrome_list_policy_schemas
+admin_get_available_privileges chat_list_members chat_list_messages chat_list_spaces chrome_list_policy_schemas
 chrome_resolve_policies contacts_list_groups contacts_search directory_search_people
 domain_list_verified docs_list_headings forms_list_responses
 identity_list_group_transitive_membership reports_usage_customer reports_usage_user
@@ -23,7 +23,7 @@ drive_list_permissions drive_list_revisions drive_search_files gmail_list_histor
 gmail_search identity_list_policies licensing_list_assignments
 postmaster_list_domains postmaster_list_traffic_stats`,
  resource: `
-admin_get_2sv_status admin_get_alert admin_get_available_privileges
+admin_get_2sv_status admin_get_alert
 admin_get_building admin_get_calendar_resource admin_get_chrome_device
 admin_get_customer_info admin_get_domain admin_get_group admin_get_group_settings
 admin_get_mobile_device admin_get_orgunit admin_get_role admin_get_schema
@@ -67,6 +67,19 @@ const BOUND_IDS=Object.freeze({
  workspace_chat_get_space:['spaceName','name'],
  workspace_slides_get_slide:['pageObjectId','objectId'],
  workspace_admin_get_user:['userKey','primaryEmail'],
+ workspace_admin_get_2sv_status:['userKey','primaryEmail'],
+ workspace_admin_get_alert:['alertId','alertId'],
+ workspace_admin_get_building:['buildingId','buildingId'],
+ workspace_admin_get_calendar_resource:['resourceId','resourceId'],
+ workspace_admin_get_chrome_device:['deviceId','deviceId'],
+ workspace_admin_get_mobile_device:['resourceId','resourceId'],
+ workspace_admin_get_group_settings:['groupEmail','email'],
+ workspace_admin_get_role:['roleId','roleId'],
+ workspace_admin_get_token:['clientId','clientId'],
+ workspace_admin_get_schema:['schemaKey','schemaName'],
+ workspace_gmail_get_draft:['draftId','id'],
+ workspace_gmail_get_filter:['filterId','id'],
+ workspace_licensing_get_assignment:['userId','userId'],
  workspace_admin_get_group:['groupKey','email'],
  workspace_admin_get_domain:['domainName','domainName'],
  workspace_admin_get_orgunit:['orgUnitPath','orgUnitPath'],
@@ -79,18 +92,25 @@ const malformed=value=>value===null||value===undefined||
  (obj(value)&&(value.isError===true||own(value,'error')||own(value,'ok')||own(value,'result')));
 const limitedRows=value=>Array.isArray(value)&&value.length<=200&&
  value.every(row=>obj(row)&&Object.keys(row).length>0);
+const STRING_ROWS=new Set(['workspace_admin_list_user_aliases',
+ 'workspace_admin_list_group_aliases']);
+const stringRows=value=>Array.isArray(value)&&value.length<=200&&value.every(str);
 const collection=value=>obj(value)&&Object.entries(value).some(([k,v])=>
   !/error|request|status/i.test(k)&&Array.isArray(v)&&v.length<=200&&
   v.every(row=>obj(row)&&Object.keys(row).length>0));
 const fields=value=>obj(value)&&Object.entries(value).some(([key,v])=>
  ['id','name','email','primaryEmail','resourceName','responseId','threadId',
-  'role','usage','enabled','isEnrolledIn2Sv','isEnforcedIn2Sv',
-  'hasMembership','format','range','values','data','size','title',
-  'kind','background','label','snippet','text','html','content',
+  'role','roleId','usage','enabled','isEnrolledIn2Sv','isEnforcedIn2Sv',
+  'hasMembership','format','range','values','valueRanges','spreadsheetId',
+  'data','size','photoData','title','alertId','buildingId','resourceId',
+  'deviceId','clientId','schemaId','schemaName','domainName','objectId',
+  'contentUrl','userId','skuId','productId','responseId',
+  'background','label','snippet','text','html','content',
   'attachmentId','settings','token'].includes(key)&&
  v!==null&&v!==undefined&&typeof v!=='function');
 const report=value=>obj(value)&&Object.keys(value).some(key=>
  ['status','summary','checkedAt','results','checks','findings','activities',
+  'calendars','busy',
   'items','domains','users','changes','records','scanned','application',
   'ready','scope','issues','policies','matches','settings','complete',
   'report','health','warnings','verified','account','connections',
@@ -108,11 +128,16 @@ export function verifyAdditionalRead(name,payload,account,args={}) {
   const bound=BOUND_IDS[name];
   if(bound&&str(args[bound[0]])){
    if(!obj(payload)||String(payload[bound[1]]||'').toLowerCase()!==
-      args[bound[0]].toLowerCase())return false;
+      args[bound[0]].toLowerCase()&&
+      !(['userKey','groupKey','schemaKey'].includes(bound[0])&&
+       String(payload.id||payload.schemaId||'').toLowerCase()===
+       args[bound[0]].toLowerCase()))return false;
   }
   if(kind==='array')return limitedRows(payload)||
+   (STRING_ROWS.has(name)&&stringRows(payload))||
    (obj(payload)&&str(payload.truncated)&&limitedRows(payload.items));
   if(kind==='paged')return collection(payload)||limitedRows(payload)||
+   (STRING_ROWS.has(name)&&stringRows(payload))||
    (obj(payload)&&Number.isInteger(payload.resultSizeEstimate)&&
     payload.resultSizeEstimate===0);
   if(kind==='resource')return fields(payload);
