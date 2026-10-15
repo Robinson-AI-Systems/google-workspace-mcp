@@ -133,6 +133,7 @@ export function coverageResults(entries,outcomes=[]) {
    return {tool:entry.name,status:o.status,...(o.reason?{reason:o.reason}:{})};
   }
   if(entry.kind==='ABSENT')return {tool:entry.name,status:'FAIL',reason:entry.reason};
+  if(entry.kind==='PROTECTED')return {tool:entry.name,status:'SKIPPED',reason:entry.reason};
   return {tool:entry.name,status:'NOT_PROBED',reason:entry.reason};
  });
  const summary={
@@ -167,7 +168,7 @@ export function renderReadOnlyReport({date,revision,coverage,runType='synthetic'
   !['synthetic','authorized_test'].includes(runType)||!isObject(coverage)||
   !Array.isArray(coverage.tools)||!isObject(coverage.summary))
   throw Error('invalid_report_metadata');
- const validStatus=new Set(['PASS','FAIL','NOT_PROBED','NOT_AVAILABLE']);
+ const validStatus=new Set(['PASS','FAIL','NOT_PROBED','NOT_AVAILABLE','SKIPPED']);
  const table=coverage.tools.map(row=>{
   if(!isObject(row)||!IDENT.test(row.tool)||!validStatus.has(row.status)||
      (row.reason&&!REASONS.has(row.reason)))throw Error('unsafe_report_row');
