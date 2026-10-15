@@ -69,6 +69,32 @@ Missing owner input must be asked in the active conversation, never hidden in a
 final handoff. Preserve every safety, CI, scope, activation and cleanup gate.
 
 
+## Bundle target and delivery boundaries — owner alignment 2026-10-15
+
+Follow the governing instructions' **Bundle, card and PR boundaries** rule.
+The current owner's N-bundle target counts coherent completed outcomes, not PRs,
+cards, helpers or repairs. Select related whole approved subsections before coding.
+Card/API/module boundaries and the number of related migrations or risk areas do
+not force separate PRs. Preserve each independent guard, permission, confirmation,
+migration-order and verification requirement. Record a concrete migration,
+dependency, safety or reviewability reason for splitting; count the bundle once
+when its whole intended outcome is implemented, verified and merged.
+
+An incidental repair or green PR is a checkpoint, not completion of the bundle
+or session target. Resume eligible implementation after it. A pending release or
+professional/provider approval gates its actual affected operation, not independent
+engineering. Before claiming no eligible work, inspect the full original acceptance
+against current code/callers/tests and record the exact remaining engineering or
+source/test proof plus external gate. Ask promptly for genuinely missing owner
+choices/authority after checking recorded decisions; continue independent work.
+If the approved scope cannot support N substantial outcomes, explain with that
+evidence while working and obtain the necessary owner scope decision. Never pad,
+recount prior work, silently downgrade the target, invent new scope or bypass gates.
+A real execution limit needs concrete evidence, a recoverable checkpoint and the
+exact resume action; generic context caution is not a routine stopping permission.
+Reuse existing verified evidence until relevant changes invalidate it; do not turn
+this into repeated whole-repo audits, extra gates or full suites after each helper.
+
 ## Count complete predefined batch subsections
 
 The PR workload target is 2–5 whole predefined batch subsections on average,
