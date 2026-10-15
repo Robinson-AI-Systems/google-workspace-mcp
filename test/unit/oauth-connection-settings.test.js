@@ -115,6 +115,26 @@ describe('P8-2 actual OAuth issuance/refresh endpoint integration',()=>{
      expect(holder.created).toHaveLength(0);
    }
  });
+ it('refuses invalid code-grant policy and never mints a default-full token',async()=>{
+   for(const invalid of [
+     {...storedCode,profile:undefined},
+     {...storedCode,listing:null},
+     {...storedCode,areas:['mail','not_an_area']}
+   ]) {
+     holder.record=invalid;
+     const out=await response(code);
+     expect(out.statusCode).toBe(400);
+     expect(out.body.error).toBe('invalid_grant');
+     expect(holder.created).toHaveLength(0);
+   }
+ });
+ it('does not mint from a code when the OAuth client disappeared',async()=>{
+   holder.client=null;
+   const out=await response(code);
+   expect(out.statusCode).toBe(401);
+   expect(out.body.error).toBe('invalid_client');
+   expect(holder.created).toHaveLength(0);
+ });
  it('denies a missing OAuth client and mismatched refresh-client binding',async()=>{
    holder.client=null;
    let out=await response(refresh);
