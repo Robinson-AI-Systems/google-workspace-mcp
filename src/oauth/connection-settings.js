@@ -7,7 +7,7 @@ export const CONNECTION_PROFILES=Object.freeze(['read_only','everyday','full']);
 export const CONNECTION_LISTINGS=Object.freeze(['catalog','compact']);
 export const CONNECTION_AREAS=Object.freeze([
  'mail','files','calendar','tasks','chat','admin','workspace','workflows',
- 'dns','people','business','identity','datatransfer','licensing'
+ 'dns','people','business','identity','datatransfer','licensing','chrome','domain'
 ]);
 const allowedArea=new Set(CONNECTION_AREAS);
 const shape=source=>source&&typeof source==='object'&&!Array.isArray(source);

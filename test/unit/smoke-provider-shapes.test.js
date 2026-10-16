@@ -17,7 +17,7 @@ describe('P0-2 safe catalog provider evidence',()=>{
   const actual=SAFE_READ_PROBES.filter(p=>p.name!=='workspace_whoami').map(p=>p.name);
   expect(new Set(actual).size).toBe(actual.length);
   expect(actual.sort()).toEqual(allNames.sort());
-  expect(INTERNAL_READ_PROOFS).toEqual(new Set(['workspace_recent_changes']));
+  expect(INTERNAL_READ_PROOFS).toEqual(new Set(['workspace_recent_changes','workspace_dev_list_runs','workspace_dev_get_run','workspace_list_accounts','workspace_list_connections','workspace_admin_console_capabilities','workspace_where_is_setting','workspace_delegation_status']));
   expect(SAFE_READ_PROBES.every(p=>p.area&&typeof p.args==='object')).toBe(true);
  });
  it('accepts the native full-detail shape for all 29 safe read workflows',()=>{
@@ -33,6 +33,26 @@ describe('P0-2 safe catalog provider evidence',()=>{
      expect(read(name,bad),name+' rejected '+String(bad)).toBe(false);
    }
   }
+ });
+ it('accepts a native empty thread snippet while preserving identity, cursor and type checks',async()=>{
+  const page={threads:[{id:'test-thread',snippet:'',historyId:'123'}],nextPageToken:'next',resultSizeEstimate:1};
+  const client={gmail:{users:{threads:{list:async args=>{
+   expect(args).toMatchObject({userId:'me',maxResults:1});return {data:page};
+  }}}}};
+  expect(read('workspace_gmail_list_threads',parse(await gmail.gmail_list_threads({maxResults:1},client)))).toBe(true);
+  for(const row of [{snippet:''},{id:''},{id:'x',snippet:null},{id:'x',snippet:3},{id:'x',snippet:{}}])
+   expect(read('workspace_gmail_list_threads',{...page,threads:[row]})).toBe(false);
+  expect(read('workspace_gmail_list_threads',{...page,nextPageToken:3})).toBe(false);
+  expect(read('workspace_gmail_list_threads',{...page,threads:[page.threads[0],page.threads[0]]})).toBe(false);
+ });
+ it('validates service delegation metadata without claiming Google delegation works',()=>{
+  const shape={configured:true,serviceAccountEmail:'robot@example.test',clientId:'123',projectId:'test-project',scopesToAuthorize:['https://www.googleapis.com/auth/fake'],test:'Pass testUser to prove it works'};
+  expect(read('workspace_delegation_status',shape)).toBe(true);
+  expect(read('workspace_delegation_status',{configured:false,scopesToAuthorize:shape.scopesToAuthorize})).toBe(true);
+  for(const invalid of [{},{configured:true},{...shape,configured:'true'},{...shape,scopesToAuthorize:null},{...shape,scopesToAuthorize:[3]},{...shape,clientId:''}])
+   expect(read('workspace_delegation_status',invalid)).toBe(false);
+  expect(verifiedProviderReadResult('workspace_delegation_status',shape,account,{testUser:account})).toBe(false);
+  expect(INTERNAL_READ_PROOFS.has('workspace_delegation_status')).toBe(true);
  });
  it('keeps mailbox identity bound to the current connection rather than only Gmail 200',()=>{
   expect(read('workspace_gmail_get_profile',{emailAddress:'other@example.test'})).toBe(false);

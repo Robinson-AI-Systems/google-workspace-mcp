@@ -31,7 +31,9 @@ const mailboxList = (field, member, limit = 200) =>
   objectList(field, member, limit, value =>
     value.resultSizeEstimate === 0 && optionalString(value.nextPageToken));
 const message = value => id(value) && optionalString(value.threadId);
-const thread = value => id(value) && optionalString(value.snippet);
+// Google can return an empty snippet (for example a bodyless test message).
+// Resource identity and string type remain mandatory when the field is present.
+const thread = value => id(value) && (value.snippet === undefined || typeof value.snippet === 'string');
 const draft = value => id(value) && (!value.message || id(value.message));
 const label = value => named(value) && (value.type === undefined ||
   ['system', 'user'].includes(value.type));
@@ -113,7 +115,10 @@ export const FIXTURE_READ_PROOFS = Object.freeze({
  workspace_forms_get: fixtureId('formId','formId')
 });
 
-export const INTERNAL_READ_PROOFS = new Set(['workspace_recent_changes']);
+export const INTERNAL_READ_PROOFS = new Set(['workspace_recent_changes',
+  'workspace_dev_list_runs','workspace_dev_get_run','workspace_list_accounts',
+  'workspace_list_connections','workspace_admin_console_capabilities',
+  'workspace_where_is_setting','workspace_delegation_status']);
 
 export function verifiedProviderReadResult(name, payload, expectedAccount, args={}) {
   if (payload === null || payload === undefined ||
