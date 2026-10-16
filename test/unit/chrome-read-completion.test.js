@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { handlers, tools } from '../../src/tools/extra-admin-apis.js';
+import { verifyAdditionalRead } from '../../scripts/smoke-readonly-cases.mjs';
 
 const result = response => JSON.parse(response.content[0].text);
 
@@ -92,5 +93,21 @@ describe('Chrome Policy read completeness and contract', () => {
       list: async () => { throw forbidden; }
     } } } };
     await expect(handlers.chrome_list_policy_schemas({}, clients)).rejects.toBe(forbidden);
+  });
+
+  it('accepts verified completed 201-row Chrome reads without relaxing other case limits', () => {
+    const schemas = Array.from({ length: 201 }, (_, i) => ({
+      name: 'customers/C123/policySchemas/chrome.users.Policy' + i
+    }));
+    const policies = Array.from({ length: 201 }, (_, i) => ({
+      targetKey: { targetResource: 'orgunits/abc' },
+      value: { policySchema: 'chrome.users.Policy' + i }
+    }));
+    expect(verifyAdditionalRead('workspace_chrome_list_policy_schemas', schemas)).toBe(true);
+    expect(verifyAdditionalRead('workspace_chrome_resolve_policies', policies)).toBe(true);
+    expect(verifyAdditionalRead('workspace_chrome_list_policy_schemas', [{ name: 'wrong' }])).toBe(false);
+    expect(verifyAdditionalRead('workspace_chrome_resolve_policies', [{ value: { policySchema: 'abc' } }])).toBe(false);
+    expect(verifyAdditionalRead('workspace_chrome_list_policy_schemas', [...schemas, ...schemas, ...schemas, ...schemas, ...schemas])).toBe(false);
+    expect(verifyAdditionalRead('workspace_admin_list_user_aliases', Array.from({ length: 201 }, () => 'alias@example.test'))).toBe(false);
   });
 });
