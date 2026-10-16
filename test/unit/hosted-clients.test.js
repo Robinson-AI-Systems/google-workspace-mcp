@@ -1,10 +1,31 @@
 import { describe, it, expect } from 'vitest';
 import { buildApiClients, getGoogleAuthUrl } from '../../src/auth/google-auth-hosted.js';
+import {handlers as gmailHandlers} from '../../src/tools/gmail.js';
 import { handlers as directoryHandlers } from '../../src/tools/admin-directory.js';
 import {handlers as extraHandlers} from '../../src/tools/extra-admin-apis.js';
 import { handlers as policyHandlers } from '../../src/tools/policy-audit.js';
 
 describe('hosted Google API clients', () => {
+  it('keeps the exact synthetic label and page bound in the real Gmail history request',async()=>{
+    const calls=[];
+    const clients=buildApiClients({request:async options=>{calls.push(options);return {data:{historyId:'123',history:[]}};}});
+    await gmailHandlers.gmail_list_history({startHistoryId:'120',labelId:'Label_synthetic',maxResults:10},clients);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({url:'https://gmail.googleapis.com/gmail/v1/users/me/history',params:{startHistoryId:'120',labelId:'Label_synthetic',maxResults:10}});
+    for(const args of [{maxResults:0},{maxResults:101},{maxResults:'1'},{labelId:''},{labelId:' Label_synthetic'}])
+      await expect(gmailHandlers.gmail_list_history({startHistoryId:'120',...args},clients)).rejects.toThrow('invalid_args');
+    expect(calls).toHaveLength(1);
+  });
+  it('honors the owner-selected transfer read bound through the actual REST adapter',async()=>{
+    const calls=[];
+    const clients=buildApiClients({request:async options=>{calls.push(options);return {data:{dataTransfers:[]}};}});
+    expect(JSON.parse((await extraHandlers.datatransfer_list_transfers({maxResults:1},clients)).content[0].text)).toEqual([]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({url:'https://admin.googleapis.com/admin/datatransfer/v1/transfers',params:{customerId:'my_customer',maxResults:1}});
+    for(const maxResults of [0,101,1.5,'1',null])
+      await expect(extraHandlers.datatransfer_list_transfers({maxResults},clients)).rejects.toThrow('maxResults');
+    expect(calls).toHaveLength(1);
+  });
   it('normalizes the observed omitted membership bool while refusing malformed/provider errors',async()=>{
     const run=async(data,status=200)=>extraHandlers.identity_check_membership({groupEmail:'group@example.test',userEmail:'member@example.test'},
       {cloudidentity:{groups:{lookup:async()=>({data:{name:'groups/fake'}}),memberships:{checkTransitiveMembership:async()=>({data,status})}}}});
@@ -37,6 +58,19 @@ describe('hosted Google API clients', () => {
       expect(url.searchParams.get('scope')).toBe('https://www.googleapis.com/auth/postmaster.readonly');
       expect(url.searchParams.get('include_granted_scopes')).toBe('true');
       expect(url.searchParams.get('state')).toBe('postmaster-state');
+      expect(url.searchParams.get('login_hint')).toBe('ops@example.test');
+      expect(url.searchParams.get('access_type')).toBe('offline');
+    }finally{process.env=before;}
+  });
+  it('isolates specifically approved Site Verification consent from every other scope set',()=>{
+    const before={...process.env};
+    try{
+      process.env.PUBLIC_BASE_URL='https://workspace.example.test';
+      process.env.GOOGLE_OAUTH_CLIENT_ID='fake-client';process.env.GOOGLE_OAUTH_CLIENT_SECRET='fake-secret';
+      const url=new URL(getGoogleAuthUrl('site-state','ops@example.test','siteverification_read'));
+      expect(url.searchParams.get('scope')).toBe('https://www.googleapis.com/auth/siteverification');
+      expect(url.searchParams.get('include_granted_scopes')).toBe('true');
+      expect(url.searchParams.get('state')).toBe('site-state');
       expect(url.searchParams.get('login_hint')).toBe('ops@example.test');
       expect(url.searchParams.get('access_type')).toBe('offline');
     }finally{process.env=before;}

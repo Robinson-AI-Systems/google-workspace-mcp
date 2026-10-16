@@ -114,3 +114,10 @@ export const CATALOG_READ_SCOPES = Object.freeze([
 export const TASKS_READ_SCOPES = Object.freeze([
   'https://www.googleapis.com/auth/tasks.readonly'
 ]);
+
+
+// Owner approved October16,2026 specifically for remaining Site Verification reads.
+// Separate purpose: never silently broaden standard or earlier consent requests.
+export const SITE_VERIFICATION_READ_SCOPES = Object.freeze([
+  'https://www.googleapis.com/auth/siteverification'
+]);

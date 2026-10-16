@@ -29,7 +29,7 @@ export const tools = [
   { name: 'vault_remove_hold', description: 'Remove a legal hold', inputSchema: { type: 'object', properties: { matterId: { type: 'string' }, holdId: { type: 'string' } }, required: ['matterId', 'holdId'] } },
 
   // ---------- Data Transfer (bulk ownership transfer for offboarding) ----------
-  { name: 'datatransfer_list_transfers', description: 'List data transfer requests (bulk Drive/Calendar ownership transfers)', inputSchema: { type: 'object', properties: {} } },
+  { name: 'datatransfer_list_transfers', description: 'List one bounded page of data transfer requests (bulk Drive/Calendar ownership transfers)', inputSchema: { type: 'object', properties: { maxResults: { type: 'integer', minimum: 1, maximum: 100, default: 100 } } } },
   { name: 'datatransfer_start_transfer', description: "Transfer all of a departing user's Drive/Calendar data to another user in bulk", inputSchema: { type: 'object', properties: { fromUserId: { type: 'string' }, toUserId: { type: 'string' }, applications: { type: 'array', items: { type: 'string', enum: ['Drive and Docs', 'Calendar'] } } }, required: ['fromUserId', 'toUserId', 'applications'] } },
   { name: 'datatransfer_get_transfer_status', description: 'Check the status of a bulk data transfer', inputSchema: { type: 'object', properties: { transferId: { type: 'string' } }, required: ['transferId'] } }
 ];
@@ -165,8 +165,11 @@ export const handlers = {
     return ok({ deleted: args.holdId });
   },
 
-  datatransfer_list_transfers: async (_args, { datatransfer }) => {
-    const res = await datatransfer.transfers.list({ customerId: 'my_customer' });
+  datatransfer_list_transfers: async (args, { datatransfer }) => {
+    const maxResults = args.maxResults === undefined ? 100 : args.maxResults;
+    if (!Number.isInteger(maxResults) || maxResults < 1 || maxResults > 100)
+      throw Error('invalid_args: maxResults must be from 1 through 100');
+    const res = await datatransfer.transfers.list({ customerId: 'my_customer', maxResults });
     return ok(res.data.dataTransfers || []);
   },
   datatransfer_start_transfer: async (args, { datatransfer }) => {

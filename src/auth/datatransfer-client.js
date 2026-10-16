@@ -11,8 +11,8 @@ const BASE = 'https://admin.googleapis.com/admin/datatransfer/v1';
 export function buildDataTransferClient(auth) {
   return {
     transfers: {
-      list: async ({ customerId }) => {
-        const res = await auth.request({ url: `${BASE}/transfers`, params: { customerId } });
+      list: async ({ customerId, maxResults }) => {
+        const res = await auth.request({ url: `${BASE}/transfers`, params: { customerId, ...(maxResults === undefined ? {} : {maxResults}) } });
         return res;
       },
       insert: async ({ requestBody }) => {

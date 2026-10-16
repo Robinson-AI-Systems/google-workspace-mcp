@@ -72,4 +72,11 @@ Owner2026-10-16T13:59:34Z explicitly stopped actual Vault connection testing bec
 
 Keep the existing Vault grant and implementation. No unneeded subscription upgrade or positive live Vault pass is required for completion; preserve could-not-verify/owner-excluded evidence and synthetic tests. No additional excluded live probes. Hub integration is mandatory for total project completion, with relay/Sandbox/revocation separately Hub-agent-owned and no Hub change/configuration/release here.
 
-Current source enumerates166 unique names (30 safe,12 exact fixture,124 additional); older165/123 counts are historical. Preserve all166. The133 retained verified handler/service reads are partial; every31 unverified and2 excluded case has an explicit disposition in evidence/2026-10-16-completion-push.json.
+Current source enumerates166 unique names (30 safe,12 exact fixture,124 additional); older165/123 counts are historical. Preserve all166. The143 retained verified handler/service reads are partial; every21 unverified and2 excluded case has an explicit disposition in evidence/2026-10-16-completion-push.json.
+
+
+## Exact completion approvals — October16 17:30:56Z
+
+Owner approved the three proposals recorded in PR183 comment6221011743: the isolated Site Verification scope, a NEW maximum12object/50mutation synthetic cycle, and maximum3 extra bounded transfer/sharing metadata invocations. This is not another manual-release approval. The Site Verification scope can also verify new sites; approved work only lists metadata/obtains an owned-domain token, never changes DNS, submits verification or changes ownership. Existing standard consent scopes remain unchanged.
+
+Current cycle produced9 new verified catalog reads and created9 logical objects. Six are confirmed cleaned; retain only its new Gmail label/two self-inserted messages for exact label-filtered history after the source fix is released. No sending, forwarding, invites, sharing or spending. Browser control timed out twice before any Form/Chat creation; those three approved objects remain uncreated. Do not replay the original cleaned15objects or exhausted group/fixture cycles. Current transfer list cannot honor the approved one-result bound; wait for reviewed source release, then maxResults1 once and at most one returned-ID status. One-file sharing audit already consumed1of3 approved metadata invocations and passed. Every exact case disposition remains in the existing evidence JSON.
