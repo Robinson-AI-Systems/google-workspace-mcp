@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "authorization": "Owner Yes on October16 approves one fresh Rentals TEST cycle: at most8 tagged objects, max12 exact metadata reads, cleanup only new objects and revoke new grants.",
+  "startedAt": "2026-10-16T09:57:29.461Z",
+  "finishedAt": "2026-10-16T10:03:10.070754+00:00",
+  "sourceRevision": "5c23755d15f5f08a02fe052277833a8f060f43f2",
+  "mainAtStart": "3d9e30923582aa31f8a8dcc6721421bfbb32b704",
+  "deployment": {
+    "id": "dpl_Exma1Dvb9Xk5Re4C6R1P6tDQjBer",
+    "state": "READY",
+    "sourceRevision": "5c23755d15f5f08a02fe052277833a8f060f43f2",
+    "independentVercelReadback": true,
+    "canonicalContractMatches": true
+  },
+  "transport": "Actual protected direct RTC HTTPS; supported source runner with local wrapper forwarding fetch to the real origin. No injected provider or database. Wrapper deliberately withholds a completed client response, inspects same-run ledger and returns exact same-run replay to consumer.",
+  "identityBoundaries": {
+    "readMatrix": "Original protected five-area Rentals TEST read_only grant; no writes through this grant.",
+    "creationRecoveryCleanup": "Separate newly owner-issued Rentals TEST full grant workspace/files/calendar/mail; original creator of these new runs only.",
+    "denialGrant": "Separate newly owner-issued mail-only TEST read_only grant.",
+    "ordinaryWorkspaceUsed": false,
+    "hubUsed": false,
+    "dedicatedTestTenant": false
+  },
+  "createdObjects": {
+    "privateCalendar": 1,
+    "calendarEvent": 1,
+    "driveFolder": 1,
+    "document": 1,
+    "spreadsheet": 1,
+    "gmailLabel": 1,
+    "insertedSelfAddressedMessages": 2,
+    "total": 8,
+    "sentMessages": 0,
+    "invitees": 0
+  },
+  "runs": [
+    {
+      "scenario": "files",
+      "created": 3,
+      "sameRunReplayVerified": true,
+      "cleanup": "cleaned"
+    },
+    {
+      "scenario": "calendar",
+      "created": 1,
+      "sameRunReplayVerified": true,
+      "cleanup": "cleaned"
+    },
+    {
+      "scenario": "gmail",
+      "created": 3,
+      "sameRunReplayVerified": true,
+      "cleanup": "cleaned"
+    }
+  ],
+  "recovery": [
+    {
+      "scenario": "files",
+      "immutableIntentMatches": true,
+      "exactCleanedLedger": true,
+      "foreignStatus": 404,
+      "foreignCode": "not_found",
+      "foreignRefused": true,
+      "lostClientResponseRecovery": true
+    },
+    {
+      "scenario": "calendar",
+      "immutableIntentMatches": true,
+      "exactCleanedLedger": true,
+      "foreignStatus": 404,
+      "foreignCode": "not_found",
+      "foreignRefused": true,
+      "lostClientResponseRecovery": true
+    },
+    {
+      "scenario": "gmail",
+      "immutableIntentMatches": true,
+      "exactCleanedLedger": true,
+      "foreignStatus": 404,
+      "foreignCode": "not_found",
+      "foreignRefused": true,
+      "lostClientResponseRecovery": true
+    }
+  ],
+  "recoveryLimit": "Actual lost client-response recovery after provider and durable ledger completion. No provider-to-ledger crash was injected; existing synthetic crash tests remain separate. Immutable stored requests matched original intents; no creation replay after cleanup and no changed-intent mutation was attempted after cleanup.",
+  "denials": {
+    "readOnly": true,
+    "area": true
+  },
+  "exactReads": {
+    "ok": false,
+    "accountVerified": true,
+    "summary": {
+      "requested": 6,
+      "passed": 5,
+      "failed": 1,
+      "unavailable": 0
+    },
+    "tools": [
+      {
+        "tool": "workspace_drive_get_file",
+        "status": "PASS"
+      },
+      {
+        "tool": "workspace_docs_get_document",
+        "status": "PASS"
+      },
+      {
+        "tool": "workspace_sheets_get_spreadsheet",
+        "status": "FAIL",
+        "reason": "provider_read_failed"
+      },
+      {
+        "tool": "workspace_calendar_get_event",
+        "status": "PASS"
+      },
+      {
+        "tool": "workspace_gmail_get_label",
+        "status": "PASS"
+      },
+      {
+        "tool": "workspace_gmail_get_message",
+        "status": "PASS"
+      }
+    ]
+  },
+  "secondMessageExactRead": true,
+  "resourceCallsUsed": 10,
+  "resourceCallsLimit": 12,
+  "providerNegatives": [
+    {
+      "case": "exact_deleted_calendar_event",
+      "status": 404,
+      "code": "not_found",
+      "pass": true
+    },
+    {
+      "case": "missing_drive_id",
+      "status": 404,
+      "code": "not_found",
+      "pass": true
+    }
+  ],
+  "sheetFailure": {
+    "httpStatus": 503,
+    "code": "service_error",
+    "cause": "Google Sheets API disabled for the server Cloud project. Repeated once diagnostically using the same original read-only grant; no provider result credited.",
+    "nextAction": "Enable Google Sheets API in the existing Robinson AI Systems project; then retry only the same recorded trashed Sheet ID through original read-only pass, within remaining2 calls and before its expiry. Do not recreate fixtures or reuse revoked passes."
+  },
+  "cleanup": {
+    "threeRunsFullyCleaned": true,
+    "calendarBaselineAndFinalDigestsMatch": true,
+    "calendarDeleted": true,
+    "absenceVerification": "calendar_not_found; exists:false;listed:false",
+    "calendarConsistency": "First delete returned unconfirmed not_listed_metadata_readable. Rechecked exact ID read-only; confirmed gone. DELETE was not replayed.",
+    "driveAndMessages": "trashed; recoverable, never purged",
+    "oldRunsUntouched": true
+  },
+  "revocations": [
+    {
+      "label": "read",
+      "pass": true,
+      "status": 401,
+      "code": "pass_revoked"
+    },
+    {
+      "label": "write",
+      "pass": true,
+      "status": 401,
+      "code": "pass_revoked"
+    }
+  ],
+  "originalReadPassPreserved": true,
+  "queueDecisions": {
+    "GOOGLE-DIRECT-READ": "PASSED: retained original five-area/29-read and guard/handle proofs plus actual exact Gmail/Drive/Calendar reads, foreign run refusal, missing-provider404 and fresh denial/revocation/cleanup evidence. Sheets-specific matrix is independently pending.",
+    "P8-7-OWNED-RECOVERY": "PASSED: all3 fresh original-creator scenarios, immutable stored intent, lost client-response same-run/no duplicates, foreign connection404 and exact cleaned ledgers.",
+    "P0-2-EXACT-FIXTURE-READ": "PENDING:5/6 initial exact matrix passed; Sheets API disabled. Negative/second-message evidence retained; no failure reclassified."
+  },
+  "otherGates": {
+    "optionalHub": "Fresh separate search authorizedTargets0/scanned0/incomplete:false.",
+    "broadCasebook": "No new customer-wide read authority.",
+    "chatPeople": "No new scopes/access.",
+    "bulk": "No operation-specific bulk authority.",
+    "plaintextRetirement": "November1Denver plus separate owner approval/drain/recovery unchanged.",
+    "fourOptionalProposals": "unselected"
+  },
+  "operatorSourceDigests": {
+    "fresh-cycle-20261016.mjs": "f5ef0f079bd36d16cc33b83781dc6e17044199e2cdc1cf93d8a3a8c0400d4b7e",
+    "fresh-tail-20261016.mjs": "9d4da4d9fcaa25461beaed2d60c28808fd4a124c747e8449eb0bf098b9a11bef"
+  },
+  "productBundlesClaimed": 0,
+  "grantLifetimesBeforeRevocation": [
+    {
+      "label": "original",
+      "expiresAt": "2026-10-16T21:57:21.645Z",
+      "createdAt": "2026-10-15T21:57:21.645Z",
+      "revoked": false
+    },
+    {
+      "label": "write",
+      "expiresAt": "2026-10-16T11:53:54.941Z",
+      "createdAt": "2026-10-16T09:53:54.941Z",
+      "revoked": false
+    },
+    {
+      "label": "read",
+      "expiresAt": "2026-10-16T11:55:17.734Z",
+      "createdAt": "2026-10-16T09:55:17.734Z",
+      "revoked": false
+    }
+  ]
+}
