@@ -5,6 +5,16 @@ import {handlers as extraHandlers} from '../../src/tools/extra-admin-apis.js';
 import { handlers as policyHandlers } from '../../src/tools/policy-audit.js';
 
 describe('hosted Google API clients', () => {
+  it('normalizes the observed omitted membership bool while refusing malformed/provider errors',async()=>{
+    const run=async(data,status=200)=>extraHandlers.identity_check_membership({groupEmail:'group@example.test',userEmail:'member@example.test'},
+      {cloudidentity:{groups:{lookup:async()=>({data:{name:'groups/fake'}}),memberships:{checkTransitiveMembership:async()=>({data,status})}}}});
+    for(const [input,expected] of [[{},false],[{hasMembership:false},false],[{hasMembership:true},true]]){
+      expect(JSON.parse((await run(input)).content[0].text)).toEqual({hasMembership:expected});
+    }
+    for(const value of [null,[],{error:'denied'},{other:true},{hasMembership:'false'},{hasMembership:null}])
+      await expect(run(value)).rejects.toThrow('unverifiable membership');
+    await expect(run({},403)).rejects.toThrow('unverifiable membership');
+  });
   it('recovers Tasks read access without requesting Vault or other new scopes',()=>{
     const before={...process.env};
     try{
