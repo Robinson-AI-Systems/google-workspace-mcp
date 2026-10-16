@@ -1,8 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { buildApiClients } from '../../src/auth/google-auth-hosted.js';
+import { buildApiClients, getGoogleAuthUrl } from '../../src/auth/google-auth-hosted.js';
 import { handlers as policyHandlers } from '../../src/tools/policy-audit.js';
 
 describe('hosted Google API clients', () => {
+  it('requests only incremental policy read consent, retaining the standard enrollment route', () => {
+    const before = {...process.env};
+    try {
+      process.env.PUBLIC_BASE_URL='https://workspace.example.test';
+      process.env.GOOGLE_OAUTH_CLIENT_ID='fake-client';
+      process.env.GOOGLE_OAUTH_CLIENT_SECRET='fake-secret';
+      const url=new URL(getGoogleAuthUrl('fake-state','ops@example.test','policy_read'));
+      expect(url.searchParams.get('scope')).toBe('https://www.googleapis.com/auth/cloud-identity.policies.readonly');
+      expect(url.searchParams.get('include_granted_scopes')).toBe('true');
+      expect(url.searchParams.get('login_hint')).toBe('ops@example.test');
+      expect(url.searchParams.get('state')).toBe('fake-state');
+      expect(new URL(getGoogleAuthUrl('fake-state')).searchParams.get('scope')).toContain('https://www.googleapis.com/auth/gmail.modify');
+      expect(()=>getGoogleAuthUrl('fake-state',undefined,'arbitrary')).toThrow(/purpose/);
+    } finally {process.env=before;}
+  });
   it('runs the policy audit through the real hosted factory and exact read-only REST request', async () => {
     const requests = [];
     const clients = buildApiClients({actingAs:'ops@example.test',request:async options => {

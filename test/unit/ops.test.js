@@ -273,7 +273,7 @@ describe('workflow_search_presence_check', () => {
 describe('P8-8 complete owner Admin console review', () => {
   it('covers each of the reviewed mapped settings exactly once with no stale review categories', () => {
     expect(consoleReviewCoverageErrors()).toEqual([]);
-    expect(CONSOLE_MAP).toHaveLength(138);
+    expect(CONSOLE_MAP).toHaveLength(153);
     expect(Object.keys(CONSOLE_REVIEW_GROUPS)).toEqual(CONSOLE_REVIEW_CATEGORIES);
     expect(new Set(Object.values(CONSOLE_REVIEW_GROUPS).flat()).size).toBe(CONSOLE_MAP.length);
     expect(consoleReviewCoverageErrors([...CONSOLE_MAP,{...CONSOLE_MAP[0]}]))

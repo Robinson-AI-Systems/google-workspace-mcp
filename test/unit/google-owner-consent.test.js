@@ -2,14 +2,14 @@ import {describe,it,expect,vi,beforeEach} from 'vitest';
 import {Readable} from 'node:stream';
 import {createFakeDb} from '../helpers/fake-db.js';
 import {startGoogleSetup,verifyGoogleSetup} from '../../src/oauth/google-setup-state.js';
-const holder=vi.hoisted(()=>({db:null,grants:0,connected:0,account:null}));
+const holder=vi.hoisted(()=>({db:null,grants:0,connected:0,account:null,purpose:null}));
 vi.mock('../../src/db.js',async actual=>{
  const real=await actual();
  return Object.fromEntries(Object.keys(real).map(name=>[name,(...args)=>holder.db[name](...args)]));
 });
 vi.mock('../../src/auth/google-auth-hosted.js',()=>({
- getGoogleAuthUrl:(state,account)=>{
-  holder.grants++;holder.account=account;
+ getGoogleAuthUrl:(state,account,purpose)=>{
+  holder.grants++;holder.account=account;holder.purpose=purpose;
   return 'https://accounts.google.test/consent?state='+encodeURIComponent(state);
  },
  handleGoogleCallback:async()=>{
@@ -42,6 +42,19 @@ beforeEach(()=>{
  process.env.TOKEN_ENCRYPTION_KEY=Buffer.alloc(32,7).toString('base64');
 });
 describe('protected owner-initiated Google setup',()=>{
+ it('offers narrow policy consent only behind the same owner and origin gates',async()=>{
+  const page=response();await authorize({method:'GET',headers:{host:'alias.test'},query:{purpose:'policy_read',account:'ops@example.test'}},page);
+  expect(new URL(page.headers.Location).searchParams.get('purpose')).toBe('policy_read');
+  const canonical=response();await authorize({method:'GET',headers:{host:'workspace.example.test'},query:{purpose:'policy_read'}},canonical);
+  expect(canonical.body).toContain('name="purpose" value="policy_read"');
+  expect(canonical.body).toContain('no additional write permission');
+  expect((await submit({passphrase,purpose:'anything'})).statusCode).toBe(400);
+  expect((await submit({passphrase,purpose:'policy_read'})).statusCode).toBe(400);
+  expect((await submit({passphrase:'wrong',purpose:'policy_read',account:'ops@example.test'})).statusCode).toBe(401);
+  expect(holder.grants).toBe(0);
+  expect((await submit({passphrase,purpose:'policy_read',account:'ops@example.test'})).statusCode).toBe(302);
+  expect(holder.purpose).toBe('policy_read');
+ });
  it('requires owner passphrase before it ever starts Google OAuth',async()=>{
   const page=response();await authorize({method:'GET',headers:{host:'workspace.example.test'},query:{}},page);
   expect(page.statusCode).toBe(200);
