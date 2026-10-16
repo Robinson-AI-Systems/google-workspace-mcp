@@ -27,7 +27,7 @@ function send(res,status,html,{isForm=false}={}){
 function form(account='',label='',purpose='standard'){
  return '<h1>Connect a Google account to Robinson Workspace MCP</h1>'+
  '<p>Only the owner may add or reconnect Google mailboxes. Enter your service owner passphrase first; Google will then ask for consent. This is not a TEST pass or a Toolkit connection.</p>'+
- (purpose==='policy_read'?'<p>Organization policy audit: request only the additional Cloud Identity policies read-only permission. Google keeps existing grants; no additional write permission is requested. Use the existing Super Admin mailbox.</p>':purpose==='acceptance_read'?'<p>Acceptance reads: request read-only access to Tasks, your Google profile/email and Vault. Google keeps existing grants; no additional write permission is requested. Vault permission can view eDiscovery data; approved tests read only matter/hold metadata. Use the existing test mailbox. Google may still require an eligible edition or administrator role.</p>':'')+
+ (purpose==='policy_read'?'<p>Organization policy audit: request only the additional Cloud Identity policies read-only permission. Google keeps existing grants; no additional write permission is requested. Use the existing Super Admin mailbox.</p>':purpose==='acceptance_read'?'<p>Acceptance reads: request read-only access to Tasks, your Google profile/email and Vault. Google keeps existing grants; no additional write permission is requested. Vault permission can view eDiscovery data; approved tests read only matter/hold metadata. Use the existing test mailbox. Google may still require an eligible edition or administrator role.</p>':purpose==='catalog_read'?'<p>Catalog reads: request read-only access to Cloud Identity groups and member emails, Chrome management policies, and Google Chat memberships. Google keeps existing grants; no additional write permission is requested. Use the existing test mailbox. These permissions do not override Google edition or administrator-role requirements.</p>':'')+
  '<form method="POST" action="/api/google/authorize" autocomplete="off">'+
  '<input type="hidden" name="purpose" value="'+purpose+'">'+
  '<p><label>'+(purpose==='standard'?'Mailbox to suggest to Google (optional)':'Existing mailbox (required)')+
@@ -42,7 +42,7 @@ export default async function handler(req,res){
  if(!origin){send(res,503,'<h1>Google connection unavailable</h1><p>Configure the canonical PUBLIC_BASE_URL first.</p>');return;}
  if(req.method==='GET'){
   const purpose=req.query?.purpose??'standard';
-  if(!['standard','policy_read','acceptance_read'].includes(purpose)){send(res,400,'<h1>Unknown Google consent purpose</h1>');return;}
+  if(!['standard','policy_read','acceptance_read','catalog_read'].includes(purpose)){send(res,400,'<h1>Unknown Google consent purpose</h1>');return;}
   const host=req.headers?.host;
   if(typeof host==='string'&&host.trim()&&host.toLowerCase()!==new URL(origin).host.toLowerCase()){
    const u=new URL('/api/google/authorize',origin);
@@ -63,7 +63,7 @@ export default async function handler(req,res){
  catch{send(res,400,'<h1>Invalid form</h1>');return;}
  if(!p||typeof p!=='object'||Array.isArray(p)){send(res,400,'<h1>Invalid form</h1>');return;}
  const purpose=p.purpose??'standard';
- if(!['standard','policy_read','acceptance_read'].includes(purpose)){send(res,400,'<h1>Unknown Google consent purpose</h1>');return;}
+ if(!['standard','policy_read','acceptance_read','catalog_read'].includes(purpose)){send(res,400,'<h1>Unknown Google consent purpose</h1>');return;}
  if(purpose!=='standard'&&(typeof p.account!=='string'||!/^\S+@\S+\.\S+$/.test(p.account.trim()))){send(res,400,'<h1>Existing mailbox required</h1>');return;}
  try{
   await initSchema();

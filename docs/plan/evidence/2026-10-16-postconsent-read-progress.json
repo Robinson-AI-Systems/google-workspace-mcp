@@ -1,0 +1,135 @@
+{
+  "sourceRevision": "75fadc4c76e108b8d5f38b515b0dd9bf11328c0b",
+  "deployment": {
+    "state": "READY",
+    "id": "dpl_6R5BfPSJwPwweEm1Ppj3woMAa4tg",
+    "independentlyChecked": true
+  },
+  "identity": {
+    "exactOriginalReadOnlyTestPassVerified": true,
+    "exactAccountVerified": true,
+    "allowWrites": false,
+    "existingPassUnchanged": true
+  },
+  "approvals": {
+    "eDiscoveryReadGrant": "2026-10-16T13:39:53Z; broader read permission explicitly approved, tests remain matter/hold metadata only",
+    "existingOwnedGroup": "2026-10-16T13:40:29Z; up to six reads on one existing group owned by either business"
+  },
+  "googleConsent": {
+    "callbackConnected": true,
+    "tokenInfoScopeChecks": [
+      {
+        "scope": "tasks.readonly",
+        "status": "ready"
+      },
+      {
+        "scope": "userinfo.profile",
+        "status": "ready"
+      },
+      {
+        "scope": "userinfo.email",
+        "status": "ready"
+      },
+      {
+        "scope": "ediscovery.readonly",
+        "status": "ready"
+      }
+    ],
+    "newWriteScopes": false
+  },
+  "apiReadiness": {
+    "gmail": "ready",
+    "drive": "ready",
+    "calendar": "ready",
+    "tasks": "ready",
+    "chat": "ready",
+    "people": "ready"
+  },
+  "positiveExactResourceChecks": [
+    {
+      "kind": "contact",
+      "exactNativeSelfResourceIdMatched": true,
+      "status": "ready"
+    }
+  ],
+  "directReads": [
+    {
+      "tool": "workspace_tasks_list_tasklists",
+      "http": 200,
+      "nativeArrayCount": 1
+    },
+    {
+      "tool": "workspace_contacts_get",
+      "http": 200,
+      "nativeSelfResource": true
+    },
+    {
+      "tool": "workspace_vault_list_matters",
+      "http": 503,
+      "status": "not_readable",
+      "reason": "provider_access_denied_after_scope_ready",
+      "eligibleLicenseAndRoleNotProven": true
+    }
+  ],
+  "groupChecks": {
+    "maximumApproved": 6,
+    "providerMutations": 0,
+    "positive": [
+      {
+        "tool": "workspace_admin_get_group",
+        "http": 200
+      },
+      {
+        "tool": "workspace_admin_list_group_members",
+        "http": 200
+      },
+      {
+        "tool": "workspace_admin_list_group_aliases",
+        "http": 200
+      },
+      {
+        "tool": "workspace_admin_get_group_settings",
+        "http": 200
+      }
+    ],
+    "denied": [
+      {
+        "tool": "workspace_identity_list_group_transitive_membership",
+        "http": 503,
+        "reason": "insufficient_google_permission",
+        "missingScopeIdentified": "cloud-identity.groups.readonly"
+      }
+    ],
+    "unconfirmed": [
+      {
+        "tool": "workspace_identity_check_membership",
+        "terminalHttp": 503,
+        "durableResponseMissing": true,
+        "status": "UNKNOWN",
+        "blindReplay": false
+      }
+    ],
+    "history": "Earlier auto-review refusal preserved; no result file existed when the separately approved run started. This six-call cycle is exhausted."
+  },
+  "sourceRepairsPrepared": {
+    "catalogReadPurpose": [
+      "cloud-identity.groups.readonly",
+      "chrome.management.policy.readonly",
+      "chat.memberships.readonly"
+    ],
+    "standardAndFourScopeConsentUnchanged": true,
+    "chromePolicySchemasRequiredParameter": "parent, per pinned SDK and official endpoint",
+    "googleConsentNotPerformedForNewPurpose": true
+  },
+  "providerMutations": 0,
+  "fullCatalogAcceptanceClaimed": false,
+  "exactAppAcceptanceClaimed": false,
+  "remaining": [
+    "New read purpose requires checked release and explicit Google scope consent.",
+    "Chrome/domain require a separately authorized missing-area TEST grant; existing pass is not widened.",
+    "Owned positive nonproduction Drive, nonprimary Calendar, Tasks item, Chat-space resources remain unavailable; no recreation or unrelated-resource substitution.",
+    "Vault edition/license/role is separate from granted OAuth scope; no purchase or role change.",
+    "Optional complete Hub relay/Sandbox proof remains Hub-owned.",
+    "Plaintext retirement stays November 1 America/Denver plus independent owner, drain and recovery gates."
+  ]
+}
