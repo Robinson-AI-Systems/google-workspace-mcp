@@ -1,4 +1,4 @@
-import { ok } from './util.js';
+import { ok, googleList } from './util.js';
 
 const CONTACT_FIELDS = 'names,emailAddresses,phoneNumbers,organizations,addresses,birthdays,biographies,urls';
 
@@ -17,7 +17,7 @@ export const tools = [
 export const handlers = {
   contacts_list: async (args, { people }) => {
     const res = await people.people.connections.list({ resourceName: 'people/me', pageSize: args.pageSize || 50, pageToken: args.pageToken, personFields: CONTACT_FIELDS });
-    return ok(res.data);
+    return ok(googleList(res.data, 'connections', ['nextPageToken','nextSyncToken','totalPeople','totalItems']));
   },
   contacts_search: async (args, { people }) => {
     const res = await people.people.searchContacts({ query: args.query, readMask: CONTACT_FIELDS });
@@ -61,6 +61,6 @@ export const handlers = {
   },
   directory_list_people: async (args, { people }) => {
     const res = await people.people.listDirectoryPeople({ pageSize: args.pageSize || 100, pageToken: args.pageToken, readMask: 'names,emailAddresses,phoneNumbers,organizations', sources: ['DIRECTORY_SOURCE_TYPE_DOMAIN_PROFILE'] });
-    return ok(res.data);
+    return ok(googleList(res.data, 'people', ['nextPageToken','nextSyncToken']));
   }
 };

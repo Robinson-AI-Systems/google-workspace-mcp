@@ -507,7 +507,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   "gates": "Read-only, existing authenticated account and permitted areas; no message bodies/sending, fixture creation, admin impersonation, scope widening or consent without owner approval. Independently READY deployed revision and original resource IDs first.",
   "dependsOn": [],
   "status": "PENDING",
-  "lastEvidence": "2026-10-16 fresh owner-approved read-only discovery on original approved24h TEST/full pass at pinnedREADY8ce3d7b. Gmail/Drive/Calendar/Chat list APIs ready; Tasks missing consent, People own profile missing profile/email grant, Contacts grant exists but no positive exact contact identity discovered. No active tagged owned Drive/nonprimary Calendar or test Chat space found. NEW independent read approval used saved original ledger IDs: exact Gmail/send-as ready; trashed Drive/wrong-kind404/deleted Calendar role/freebusy negative evidence retained. No fixture writes or old12-call permission extension. Exact remaining: narrow read consent plus approved active positive fixtures/IDs, bounded denied/insufficient-permission matrix. docs/plan/evidence/2026-10-16-approved-read-progress.json."
+  "lastEvidence": "2026-10-16 approved bounded TEST/full read operations at pinnedREADY8ce3d7b: Gmail/Drive/Calendar/Chat APIs ready; Tasks/profile/email missing consent. Contacts granted but narrow test-contact search empty. No active tagged owned Drive/nonprimary Calendar/test Chat space found. NEW independent read approval used original recorded IDs: exact Gmail/send-as ready; trashed Drive/wrong-kind404/deleted Calendar role/freebusy negative evidence retained. No fixture creation/restoration or extension of exhausted12-call cycle. Securely connect ALREADY CREATED24h all-area read_only pass, do not issue duplicate or borrow Hub grant. Need narrow real Google consent, exact active approved positive fixtures and bounded denied/insufficient-permission matrix. Combined provider fixes await checked release; no new acceptance pass. Evidence: evidence/2026-10-16-approved-read-progress.json and evidence/2026-10-16-provider-contract-audit.json."
 },
   {
     "id": "P8-8-CONSOLE-READBACK",
@@ -545,13 +545,13 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
   "id": "P0-2-FULL-CASEBOOK-REAL-READ",
   "priority": 1,
-  "requiredRevision": "1ff11c8dd7af3cdc1adedc1d0d4de20d14e6c5d0",
+  "requiredRevision": "f85b2de9c93696af400b1e86b7c93856108a85db",
   "task": "Run full source-reviewed P0-2 read-only catalog against approved real Google TEST account; publish sanitized report and fix or ledger each real failure",
   "procedure": "scripts/smoke-readonly-catalog.mjs; docs/plan/GOOGLE-ACCEPTANCE.md; docs/plan/TASKS.md P0-2",
   "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
   "dependsOn": [],
   "status": "PENDING",
-  "lastEvidence": "2026-10-16 owner newly approved bounded organization-wide directory/device/role/security/app-access/audit/usage/Vault metadata and owned nonproduction resource discovery/exact reads; do not ask again. Actual pinned8ce3d7b TEST/full read-only operations: verified6 audit and2 older-date usage native collections plus directory metadata;48 scoped tool observations retained in docs/plan/evidence/2026-10-16-approved-read-progress.json. This is not the required read_only identity/full catalog result. Still need24h read_only grant with approved areas, complete precise reviewed per-case/resource manifest and narrow Google consent for actual missing Tasks/profile/email/Vault grants. Notifications SDK absence repaired/ledgered; exact checked repair release required before consent."
+  "lastEvidence": "2026-10-16 bounded read approval already given;65 tool observations include refusals and TEST/full read operations, not full read_only catalog acceptance. Sanitized genuine observations in evidence/2026-10-16-approved-read-progress.json and evidence/2026-10-16-provider-contract-audit.json. Installed-SDK Forms, Chrome OU-ID/mask, transitive memberships and omitted-empty list repairs plus earlier notifications/consent repair require checked release of reviewed source f85b2de9. Existing all14-area24h TEST/read_only pass ALREADY CREATED, expires2026-10-17T11:44:13.166Z; securely connect that same bearer, do not issue another or borrow Hub grant. Exact remaining reviewed cases/resources and real narrow Google consent still required. No writes or new acceptance pass claimed."
 },
   {
     "id": "P8-4-HTTP-CONTRACT",
@@ -3195,3 +3195,47 @@ narrow Google consent, protected24h read_only grant covering approved read areas
 active test resources and reviewed remaining per-case args. Hub independently needs its
 checked latest fix release and callable target/service grant. No scope approval already
 given here should be requested again. November1 plus separate retirement approval remains.
+
+
+## October16 — owner-requested combined pre-release provider repair
+
+Continue the owner's instruction to exhaust eligible work before another release.
+Main baseline744ff023b7845695d231531c32e122644fedcf31 remains ahead of independently
+READY live8ce3d7b/dpl_6vSCiPzjETwHvWqMfciEPUzMqx4F; no new release has been authorized
+or attempted. The Hub connection remains another agent's work and is not changed here.
+
+A finite offline pinned-SDK scan covered758 references/283 unique method paths;
+manual contract review distinguished local aliases/array calls from provider methods.
+Beyond the already merged notifications and narrow read-consent repair, actual source
+repairs now cover the missing Forms publishing method, documented omitted-empty
+Directory/People lists, Chrome exact OU-ID targets and required named-field mask,
+actual transitive membership endpoint with bounded pagination, and exact-account
+security projection. Same auth, permission/profile/domain guards, preview/confirmation,
+independent readback and audit gates remain. No new feature or Google mutation.
+This small cohesive maintenance repair claims zero product bundles/subsections.
+
+Twenty-three new regression tests capture actual hosted SDK outbound methods/paths,
+bodies, exact IDs, guarded confirmation/readback/logging, read_only nested refusal,
+malformed lists, cursor repetition/caps and provider denials without fallback/replay.
+Local full unit1814/1814 and npm run check pass. Disposable PostgreSQL and RTC gates
+must also pass in exact-head Actions before merge; they are not local proof here.
+Initial test harness import-order issue prevented the fake audit DB binding; fixed by
+loading the hosted adapter after the mock, without weakening success/audit assertions.
+
+Additional newly approved read evidence supplies12 correlated observations and5 final
+bounded attempts: exact full OU and mailbox security plus narrow directory/contact
+empty searches validate; Chrome schemas403outside_scope is NOT provider acceptance.
+No useful pass is revoked or extended. The former12-call fixture cycle is unchanged.
+Sanitized evidence:docs/plan/evidence/2026-10-16-provider-contract-audit.json.
+The earlier48 plus these17 observations total65 tool observations, including refusals;
+not65 provider passes, and not full-casebook/read_only acceptance.
+
+All original29 tasks remain reconciled:25PASSED/4PENDING. Full-casebook still requires
+secure connection of the already-created read_only24h pass and exact reviewed cases;
+exact-app still requires real narrow Google consent and active approved nonproduction
+resources. No duplicate pass creation, grant borrowing or optional feature selection.
+Plaintext retirement remains November1 Denver plus separate approval/drain/recovery.
+When this assembled repair is reviewed/merged with all exact-head and postmerge checks,
+request one concrete checked Workspace release; then verify deployed source, complete
+narrow consent and immediately run newly eligible reads. Scheduled release is an
+alternative. Release alone does not supply test resources or prove Google consent.

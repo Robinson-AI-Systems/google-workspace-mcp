@@ -17,6 +17,7 @@ import {
 import { ALL_SCOPES, SCOPE_GROUPS, ACCEPTANCE_READ_SCOPES } from './scopes.js';
 import { buildDataTransferClient } from './datatransfer-client.js';
 import { buildCloudIdentityPolicyClient } from './cloud-identity-policy-client.js';
+import { withFormsPublishing } from './forms-client.js';
 
 export function getOAuthRedirectUri() {
   const base = process.env.PUBLIC_BASE_URL;
@@ -172,7 +173,7 @@ export function buildApiClients(auth) {
     sheets: () => google.sheets({ version: 'v4', auth }),
     docs: () => google.docs({ version: 'v1', auth }),
     slides: () => google.slides({ version: 'v1', auth }),
-    forms: () => google.forms({ version: 'v1', auth }),
+    forms: () => withFormsPublishing(google.forms({ version: 'v1', auth }), auth),
     tasks: () => google.tasks({ version: 'v1', auth }),
     people: () => google.people({ version: 'v1', auth }),
     chat: () => google.chat({ version: 'v1', auth }),
