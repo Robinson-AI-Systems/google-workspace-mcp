@@ -1803,7 +1803,8 @@
       "chromePagination": "1b83ba92dd5229b320aa6b334de8308f40d524e4",
       "rootOrgunit": "0e049dcd83bbab609463ddb9d68d970423f7b075",
       "postmasterConsent": "91e8368b264c3dd121c9d01b44997f0c04b88094",
-      "siteVerificationConsentTransferBoundHistoryLabel": "108ffb21a16000255d1741cbca0ef89a8bda9163"
+      "siteVerificationConsentTransferBoundHistoryLabel": "108ffb21a16000255d1741cbca0ef89a8bda9163",
+      "combinedConsentRecovery": "49d90d62d72476989e14652bd021e83aa8299b13"
     },
     "buildingFloors": {
       "providerContract": "https://developers.google.com/workspace/admin/directory/reference/rest/v1/resources.buildings",
