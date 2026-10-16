@@ -13,12 +13,13 @@
     "exactScopesReady": 3,
     "status": "NOT_CURRENTLY_READY_TASKS_GRANT_MISSING",
     "vaultProbe": false,
-    "retainedEarlierSixApiFourScopeProof": true
+    "retainedEarlierSixApiFourScopeProof": true,
+    "proof": "Recovered6API/4scope proof retained; after new genuine Site consent actual token-info shows Tasks missing. No more isolated consent looping."
   },
   "credentialReadiness": {
     "encryptedOnly": false,
     "accountsChecked": 2,
-    "ready": "RECHECK_AFTER_FINAL_CONSENT",
+    "ready": true,
     "problems": {
       "missingKey": false,
       "noAccounts": false,
@@ -30,7 +31,7 @@
     "notBefore": "2026-11-01T06:00:00Z",
     "retirementPerformed": false,
     "retainedPriorAllAccountReady": true,
-    "latestStorageMetadata": "Both connected accounts have encrypted copy and prior verified backfill/refresh markers; do not substitute old markers for genuine refresh of newly consented grant."
+    "latestStorageMetadata": "Recovered protected owner refresh succeeded: saved Rentals grant refreshed and mailbox verified; all2accounts ready, all problem counts zero. No scopes or storage mode changed."
   },
   "exactAppAcceptance": {
     "status": "PENDING_CURRENT_TASKS_RESTORATION",
@@ -50,7 +51,7 @@
       "newObjectsThisResume": 0
     },
     "retainedExactResourceProofStillValid": true,
-    "reason": "After owner-reported consent, current saved grant lost Tasks; actual integration check reports Tasks not_readable/scope_or_access_denied and tasks.readonly missing. Restore Tasks-only grant and verify readiness, do not recreate cleaned fixtures."
+    "reason": "Reopened only current readiness: genuine Site consent restored Site and both domain reads passed, but Tasks readonly missing afterward. Combined previously approved three-scope recovery prepared; no fixture replay."
   },
   "hub": {
     "nativeDiscovery": "PASS",
@@ -133,8 +134,8 @@
     "inventory": 166,
     "olderDocumentedInventory": 165,
     "decision": "Preserve all currently enumerated names; no dropping a case to fit older count",
-    "verifiedRetainedHandlerReads": 149,
-    "unverified": 15,
+    "verifiedRetainedHandlerReads": 152,
+    "unverified": 12,
     "ownerExcludedLive": 2,
     "allCatalogPassed": false,
     "countsCaveat": "Includes source-validated service metadata; not every report subcheck or security setting is healthy/readable",
@@ -632,11 +633,14 @@
       },
       {
         "tool": "workspace_domain_list_verified",
-        "status": "UNVERIFIED",
-        "prerequisite": "Isolated scope approved, but saved grant and actual token-info do not contain siteverification. Google Allow is pending; automatic approval review interpreted existing broad permissions as new access. All42 existing grants independently token-info READY; only requested addition is siteverification. No provider call until actual scope readiness.",
+        "status": "VERIFIED_RETAINED",
         "retainedHttpObservations": [
           403
-        ]
+        ],
+        "evidenceKinds": [
+          "current_owner_approved_narrow_read_only_site_recovery"
+        ],
+        "completionCycle": "Exact approved narrow TEST/read_only domain pass; scope preflight ready; strict actual provider200, metadata/token only, no DNS/submission/ownership writes."
       },
       {
         "tool": "workspace_docs_list_headings",
@@ -1089,12 +1093,15 @@
       {
         "tool": "workspace_admin_get_building",
         "status": "UNVERIFIED",
-        "prerequisite": "Approved tagged create returned opaque503; independent exact readonly404 found no created building. No replay. Confirmed source contract gap: floorNames required by Google but omitted by tool. Repair under review; failure cause remains unknown. Combined Admin budget12/12 native reads spent,3/6 mutation requests spent. More testing requires exact budget extension and released repair."
+        "prerequisite": "Reviewed floorNames repair merged PR186 but absent from READY5138204. Prepared one tagged building+cleanup cycle uses remaining8reads/2requests within existing28/7 totals; owner additionally authorizes necessary test-budget increases. No create before released repair and source proof."
       },
       {
         "tool": "workspace_admin_get_calendar_resource",
-        "status": "UNVERIFIED",
-        "prerequisite": "Approved resource never created because full guarded cycle needs8 native reads and combined approved12 were consumed by reconciled failed building4 plus schema8. No additional calls; requires exact read-budget extension with cleanup reserve."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "retained_exact_guarded_resource_cycle"
+        ],
+        "completionCycle": "Owner-approved extended budget: exact synthetic resource200, guarded audited create/delete and independent404. No events or invites."
       },
       {
         "tool": "workspace_admin_get_chrome_device",
@@ -1718,8 +1725,11 @@
       },
       {
         "tool": "workspace_domain_get_verification_token",
-        "status": "UNVERIFIED",
-        "prerequisite": "Same pending isolated Site Verification consent. No DNS/site submission/ownership changes permitted; scope capability disclosed. Need genuine grant then one exact approved owned-domain token read."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "current_owner_approved_narrow_read_only_site_recovery"
+        ],
+        "completionCycle": "Exact approved narrow TEST/read_only domain pass; scope preflight ready; strict actual provider200, metadata/token only, no DNS/submission/ownership writes."
       },
       {
         "tool": "workspace_drive_download_file",
@@ -1793,15 +1803,22 @@
       "chromePagination": "1b83ba92dd5229b320aa6b334de8308f40d524e4",
       "rootOrgunit": "0e049dcd83bbab609463ddb9d68d970423f7b075",
       "postmasterConsent": "91e8368b264c3dd121c9d01b44997f0c04b88094",
-      "siteVerificationConsentTransferBoundHistoryLabel": "108ffb21a16000255d1741cbca0ef89a8bda9163"
+      "siteVerificationConsentTransferBoundHistoryLabel": "108ffb21a16000255d1741cbca0ef89a8bda9163",
+      "combinedConsentRecovery": "49d90d62d72476989e14652bd021e83aa8299b13"
     },
     "buildingFloors": {
       "providerContract": "https://developers.google.com/workspace/admin/directory/reference/rest/v1/resources.buildings",
       "defect": "Create schema and request omit floorNames, documented as requiring at least one entry",
       "repair": "Require nonempty floors, forward through real SDK, validate before any Google call including preview, independently verify ordered floors after write",
       "failureCause": "Opaque live503 not diagnosed as definitely caused by this omission",
-      "liveRetest": "Not performed; native-read cap exhausted and repaired source not yet released",
+      "liveRetest": "Still pending checked release; reviewed merged PR186 exact-head/postmerge CI passed. Reserved8reads/2mutation requests remain.",
       "verification": "All1859unit tests pass locally,105focused SDK/guard tests pass, full check passes. Exact-head hosted db/rtc/required checks and review remain merge gates."
+    },
+    "combinedConsentRecovery": {
+      "trigger": "Reproduced on same READY513: Tasks/Postmaster ready and Site missing beforeSiteconsent; Site/Postmaster ready andTasks missing after.",
+      "repair": "New owner-protected completion_read explicitly requests only the same three already approved scopes together, retaining incremental include_granted_scopes. Existing isolated/standard requests unchanged.",
+      "gates": "Existing canonical-origin, owner passphrase, validmailbox, signedbrowserstate and GoogleAllow. No new permission beyond existing owner approvals. No DNS/verification/ownership writes.",
+      "liveProof": "Pending checked release and genuine combined consent; do not loop isolated flows or claim mocked OAuth URL proof establishes Google grant coexistence."
     }
   },
   "providerMutationsThisResume": 27,
@@ -1840,8 +1857,8 @@
   },
   "completionCycle": {
     "createdLogicalObjects": 12,
-    "mutationBudgetSpent": 24,
-    "cleanupBudgetReserved": 1,
+    "mutationBudgetSpent": 25,
+    "cleanupBudgetReserved": 0,
     "maxLogicalObjects": 12,
     "maxMutationRequests": 50,
     "completedPhases": [
@@ -1864,9 +1881,9 @@
       "verify_form_cleanup",
       "chat_members_read"
     ],
-    "confirmedCleanedLogicalObjects": 11,
-    "retainedLogicalObjects": 1,
-    "retainedReason": "Private actor-only Chat space: final permanent UI deletion needs action-time owner confirmation. One cleanup mutation reserved.",
+    "confirmedCleanedLogicalObjects": 12,
+    "retainedLogicalObjects": 0,
+    "retainedReason": "None; exact disposable Chat UI deletion confirmed and exact service403 retained without inventing404.",
     "uncreated": [],
     "browserBlocker": "Recovered; actual Form/response/Chat created and exact reads passed. Google consent final access grant and permanent Chat deletion have action-time approval gates.",
     "gmail": "Scoped history passed on released code, then original creator-run cleanup done/confirmed/audited. Exact label404 and both self-message TRASH readbacks passed. No sends.",
@@ -1874,7 +1891,7 @@
     "calendar": "Snapshot passed; original DELETE done but initially unconfirmed. Read-only exact verifier later calendar_not_found/existsfalse/listedfalse; no second DELETE.",
     "cleanupRunnerCorrection": "Extra runner assumption that deleted label IDs immediately disappear from message metadata failed. Retained actual label404/messageTRASH proofs and tombstone observation; corrected only the extra assertion, no provider mutation repeated.",
     "form": "One synthetic answer submitted through owner-authorized Form UI; exact readonly response200 one marker/no email, guarded Form deletion and independent404 passed.",
-    "chat": "Private, external-members checkboxfalse; exact1joined HUMAN owner/manager. No messages/invites. Active pending permanent cleanup confirmation."
+    "chat": "Permanent exact private Chat deletion completed under action-time approval; exact API403 confirms no access, no invented404. All12objects cleaned."
   },
   "release184": {
     "ownerApprovedAt": "2026-10-16T18:10:13Z",
@@ -1943,15 +1960,16 @@
   "additionalAdminCycle": {
     "approvedAt": "2026-10-16T18:31:16Z",
     "maxObjects": 3,
-    "maxMutationRequests": 6,
-    "mutationRequestsSpent": 3,
-    "maxNativeReads": 12,
-    "nativeReadsSpent": 12,
+    "maxMutationRequests": 7,
+    "mutationRequestsSpent": 5,
+    "maxNativeReads": 28,
+    "nativeReadsSpent": 20,
     "cleanupReserved": 0,
     "schemaCreatedAndCleaned": true,
     "buildingCreate": "503 unknown outcome, independent exact404 no object observed; not repeated",
-    "calendarResourceCreated": false,
-    "budgetCorrection": "Original proposal undercounted native guarded reads. A complete preview/create/read/preview/delete/absence cycle uses8, not4. Respected cap12. To finish two remaining objects, request combined totals28 native reads and7 conservative mutation requests, including all12/3 already consumed; preserve original failed creation request."
+    "calendarResourceCreated": true,
+    "budgetCorrection": "Owner approved28native reads/7conservative requests including original12/3; resource8reads/2requests completed and independently404. Building8reads/2requests reserved after checked repair release; current owner also authorizes necessary testing budget increases, no paid resources implied.",
+    "calendarResourceCleaned": true
   },
   "additionalMembership": {
     "maxHandlerInvocations": 1,
@@ -1966,12 +1984,28 @@
   "consentContinuation": {
     "ownerReportedBothComplete": true,
     "actualPostmasterScopeReady": true,
-    "actualSiteVerificationScopeReady": false,
+    "actualSiteVerificationScopeReady": true,
     "actualTasksScopeReady": false,
     "existingGrantedScopesProvenReady": 42,
     "proof": "Four bounded token-info batches12/12/12/6; no token or provider body published",
-    "approvalReview": "Rejected Site Verification Allow because broad prior permission list was interpreted as new access; no bypass. Token-info subsequently proved42 existing grants. Permission-only browserAuth request unsupported; final Allow awaits action-time owner confirmation.",
+    "approvalReview": "Owner explicitly approved both current-chat actions. Genuine Site Allow/callbackConnected and actual scope ready; both approved domain reads passed. Postmaster ready, Tasks missing afterward; retain failed combined retention check.",
     "sequentialFlowsRequired": true,
-    "noVaultAdditionRequested": true
+    "noVaultAdditionRequested": true,
+    "finalScopes": "Historical6API4scope ready after prior refresh; current Tasks missing after Site consent, never claim old readiness current."
+  },
+  "recoveredWorkspace": {
+    "repositoryRecovered": true,
+    "protectedRunnerRecovered": true,
+    "priorBrowserTabsRecovered": false,
+    "freshBrowserResponsive": true,
+    "savedGrantRefresh": "SUCCESS mailbox verified all2account readiness true",
+    "providerWritesThisRecovery": 0,
+    "siteScopeAfterRefresh": "Was missing afterrefresh, nowready after specificallyapprovedSiteconsent",
+    "tasksAndPostmasterAfterRefresh": "Were bothready afterrefresh; afterSiteconsent Postmasterready/Tasksmissing",
+    "main": "ddbe38e822184bd0ddad0673e6a7d3eb8245d96f",
+    "live": "5138204fd1777a1a184b95103762958fb2c138e1",
+    "releasePerformed": false,
+    "ownerBudgetInstruction": "Increase budget if needed for remaining approved tests/cleanup; retain counted requests and real scope/security/spending gates.",
+    "currentProof": "Site scopeReady plus2strictDomain200reads; combined3scope current readiness fails onTasks"
   }
 }

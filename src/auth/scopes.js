@@ -121,3 +121,11 @@ export const TASKS_READ_SCOPES = Object.freeze([
 export const SITE_VERIFICATION_READ_SCOPES = Object.freeze([
   'https://www.googleapis.com/auth/siteverification'
 ]);
+
+// Existing owner-approved completion permissions requested together after genuine
+// single-purpose consent replaced another required permission. No standard change.
+export const COMPLETION_READ_SCOPES = Object.freeze([
+  ...TASKS_READ_SCOPES,
+  ...SITE_VERIFICATION_READ_SCOPES,
+  ...SCOPE_GROUPS.postmaster
+]);
