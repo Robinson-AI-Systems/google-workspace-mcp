@@ -47,6 +47,7 @@ describe('protected owner-initiated Google setup',()=>{
   expect(new URL(page.headers.Location).searchParams.get('purpose')).toBe('policy_read');
   const canonical=response();await authorize({method:'GET',headers:{host:'workspace.example.test'},query:{purpose:'policy_read'}},canonical);
   expect(canonical.body).toContain('name="purpose" value="policy_read"');
+  expect(canonical.headers['Referrer-Policy']).toBe('same-origin');
   expect(canonical.body).toContain('no additional write permission');
   expect((await submit({passphrase,purpose:'anything'})).statusCode).toBe(400);
   expect((await submit({passphrase,purpose:'policy_read'})).statusCode).toBe(400);
@@ -59,11 +60,13 @@ describe('protected owner-initiated Google setup',()=>{
   const page=response();await authorize({method:'GET',headers:{host:'workspace.example.test'},query:{}},page);
   expect(page.statusCode).toBe(200);
   expect(page.body).toContain('Service owner passphrase');
+  expect(page.headers['Referrer-Policy']).toBe('same-origin');
   expect(holder.grants).toBe(0);
   const wrong=await submit({passphrase:'incorrect'});
   expect(wrong.statusCode).toBe(401);expect(holder.grants).toBe(0);
   const good=await submit({passphrase,account:'ops@robinsonappliancerentals.com'}, {},true);
   expect(good.statusCode).toBe(302);
+  expect(good.headers['Referrer-Policy']).toBe('no-referrer');
   expect(good.headers['Set-Cookie']).toMatch(/HttpOnly; Secure; SameSite=Lax/);
   expect(holder.account).toBe('ops@robinsonappliancerentals.com');
   expect(holder.grants).toBe(1);
@@ -72,7 +75,11 @@ describe('protected owner-initiated Google setup',()=>{
   const page=response();await authorize({method:'GET',headers:{host:'some-alias.vercel.app'},query:{account:'test@example.test',label:'Company'}},page);
   expect(page.statusCode).toBe(303);
   expect(page.headers.Location).toMatch(/^https:\/\/workspace\.example\.test\/api\/google\/authorize\?/);
-  expect((await submit({passphrase},{origin:'https://some-alias.vercel.app'})).statusCode).toBe(403);
+  for(const supplied of ['https://some-alias.vercel.app','null',undefined]){
+   const refused=await submit({passphrase},{origin:supplied});
+   expect(refused.statusCode).toBe(403);
+   expect(refused.headers['Referrer-Policy']).toBe('no-referrer');
+  }
   expect(holder.grants).toBe(0);
  });
  it('locks repeated owner attempts before any Google connection',async()=>{
