@@ -46,7 +46,7 @@ async function chromeReadAllPages(read, collection, label) {
         (data.nextPageToken !== undefined && typeof data.nextPageToken !== 'string'))
       throw Error('Google Chrome ' + label + ' returned an invalid page.');
     const batch = data[collection] || [];
-    if (batch.some(row => !row || typeof row !== 'object' || Array.isArray(row)))
+    if (batch.length > 100 || batch.some(row => !row || typeof row !== 'object' || Array.isArray(row)))
       throw Error('Google Chrome ' + label + ' returned an invalid row.');
     rows.push(...batch);
     const next = data.nextPageToken;
