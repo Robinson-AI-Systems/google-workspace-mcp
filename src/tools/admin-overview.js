@@ -139,9 +139,13 @@ function healthSection(health,names,{directory=false}={}){
  return {status:'ok',checks:selected};
 }
 
-export async function buildAdminOverview(clients,call,{crossDomain=false}={}){
+export async function buildAdminOverview(clients,call,{crossDomain=false,sections}={}){
+ if(sections!==undefined&&(!Array.isArray(sections)||!sections.length||
+    new Set(sections).size!==sections.length||sections.some(s=>typeof s!=='string'||!Object.hasOwn(SOURCES,s))))
+  throw new Error('sections must be a nonempty unique list of supported owner overview sections. Nothing was read.');
+ const selected=sections===undefined?Object.entries(SOURCES):sections.map(s=>[s,SOURCES[s]]);
  const items={};
- await Promise.all(Object.entries(SOURCES).map(async([section,source])=>{
+ await Promise.all(selected.map(async([section,source])=>{
   if(!allowedTool(source.tool,clients?.rtcPolicy||{})){
    items[section]={status:'not_readable',reason:'Outside the permitted areas or connection profile.'};return;
   }
@@ -155,6 +159,8 @@ export async function buildAdminOverview(clients,call,{crossDomain=false}={}){
    items[section]={...evaluate(section,data,clients),data};
   }catch(e){items[section]={status:'not_readable',reason:errors(e)};}
  }));
+ // A selected report performs only those reads, with no implicit diagnostic fan-out.
+ if(sections!==undefined)return {account:clients?.actingAs||null,checkedAt:new Date().toISOString(),items};
  // Surface Cloud Identity baseline findings alongside observed user/application health.
  // Explicit policy controls and effective user/OU settings are different evidence.
  function policyArea(name){
@@ -193,13 +199,14 @@ export const tools=[{
  name:'workspace_admin_overview',
  description:'Read owner security, email, identity, license and Cloud Identity policy audit evidence; broader customer data requires owner cross-domain permission.',
  inputSchema:{type:'object',properties:{
-  crossDomain:{type:'boolean',description:'True only after explicit owner authorization to read customer-wide security and license information across business domains. Default false.'}
+  crossDomain:{type:'boolean',description:'True only after explicit owner authorization for the selected customer-wide reads across business domains. Default false.'},
+  sections:{type:'array',minItems:1,uniqueItems:true,items:{type:'string',enum:Object.keys(SOURCES)},description:'Optional exact source sections to read. Select policies alone for a policy-only authorization. Omit for the full overview; output fields do not limit reads.'}
  }}
 }];
 export const handlers={
  async workspace_admin_overview(args={},clients){
   const {registry}=await import('./index.js');
   return ok(await buildAdminOverview(clients,(name,childArgs,c)=>callReadForComposition(registry,name,childArgs,c),
-   {crossDomain:args.crossDomain===true}));
+   {crossDomain:args.crossDomain===true,sections:args.sections}));
  }
 };
