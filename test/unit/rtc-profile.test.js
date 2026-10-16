@@ -1,7 +1,30 @@
 import { describe,it,expect } from 'vitest';
 import { registry } from '../../src/tools/index.js';
-import {allowedTool,listedTools,isWrite,toolMetadata} from '../../src/rtc/catalog.js';
+import {allowedTool,listedTools,isWrite,toolMetadata,RTC_AREAS} from '../../src/rtc/catalog.js';
 describe('RTC connection policy',()=>{
+ it('can explicitly issue every area advertised by the real registry',async()=>{
+  const {passOptions}=await import('../../src/rtc/pass-options.js');
+  const {CONNECTION_AREAS,connectionPolicyToDb,verifyPolicyCopy}=await import('../../src/oauth/connection-settings.js');
+  expect(CONNECTION_AREAS).toEqual(RTC_AREAS);
+  for(const t of registry.tools){
+   const area=toolMetadata(t).area;
+   expect(RTC_AREAS,t.name).toContain(area);
+   expect(passOptions({googleAccount:'ops@example.test',areas:[area]}).areas).toEqual([area]);
+   const policy={profile:'read_only',listing:'catalog',areas:[area]};
+   expect(verifyPolicyCopy(policy,connectionPolicyToDb(policy))).toBe(true);
+  }
+ });
+ it('keeps old explicit grants restricted while new named areas retain read-only and area refusals',async()=>{
+  const {normalizeConnectionPolicy}=await import('../../src/oauth/connection-settings.js');
+  const old={profile:'read_only',listing:'catalog',areas:['admin','dns']};
+  expect(normalizeConnectionPolicy(old)).toEqual(old);
+  for(const [area,read,write] of [['chrome','chrome_resolve_policies','chrome_set_policy'],['domain','domain_list_verified','domain_confirm_verification']]){
+   expect(allowedTool(read,old)).toBe(false);
+   expect(allowedTool(read,{profile:'read_only',areas:[area]})).toBe(true);
+   expect(allowedTool(write,{profile:'read_only',areas:[area]})).toBe(false);
+   expect(allowedTool(read,{profile:'full',areas:['mail']})).toBe(false);
+  }
+ });
  it('refuses every known mutation when read only',()=>{for(const t of registry.tools)if(isWrite(t.name)&&t.name!=='workspace_call')expect(allowedTool(t.name,{profile:'read_only'}),t.name).toBe(false);});
  it('classifies the preexisting unguarded changes conservatively',()=>{for(const n of ['workflow_weekly_digest','gmail_untrash_message','sheets_format_cells','domain_confirm_verification','workspace_set_allowed_domains','unknown_do_something'])expect(isWrite(n)).toBe(true);});
  it('narrows by domain area and profile',()=>{expect(allowedTool('gmail_list_messages',{profile:'read_only',areas:['calendar']})).toBe(false);expect(allowedTool('gmail_list_messages',{profile:'read_only',areas:['mail']})).toBe(true);expect(listedTools(registry.tools,{profile:'read_only'}).every(t=>!isWrite(t.name)||t.name==='workspace_call')).toBe(true);});

@@ -130,6 +130,10 @@ const exactRows=(value,key)=>obj(value)&&Array.isArray(value[key])&&
 const optionalCursor=value=>value.nextPageToken===undefined||
  str(value.nextPageToken);
 export const SOURCE_RESULT_PROOFS=Object.freeze({
+ workspace_delegation_status:(v,_account,args)=>obj(v)&&typeof v.configured==='boolean'&&
+   Array.isArray(v.scopesToAuthorize)&&v.scopesToAuthorize.length>0&&v.scopesToAuthorize.every(str)&&
+   (!v.configured||str(v.serviceAccountEmail)&&str(v.clientId)&&str(v.projectId))&&
+   (!args.testUser||obj(v.test)&&v.test.user===args.testUser&&typeof v.test.works==='boolean'),
  workspace_dev_get_run:(v,_account,args)=>obj(v)&&v.runId===args.runId&&v.providerVerified===false&&
    ['legacy_needs_review','cleaned','partially_cleaned','needs_reconciliation','recorded'].includes(v.state)&&
    Array.isArray(v.slots)&&v.slots.every(s=>obj(s)&&s.providerVerified===false)&&obj(v.recovery),

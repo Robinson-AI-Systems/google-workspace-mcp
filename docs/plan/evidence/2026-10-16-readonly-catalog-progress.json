@@ -1,0 +1,844 @@
+{
+  "sourceRevision": "8ce3d7b82eaf0f6faa53004e9acf4af6f50fc07d",
+  "credential": {
+    "mode": "test",
+    "profile": "read_only",
+    "allowWrites": false,
+    "exactAccountMatched": true,
+    "exactExistingPassMatched": true,
+    "expires": "2026-10-17T11:44:13.166Z",
+    "areaCount": 14,
+    "newPassIssued": false
+  },
+  "providerMutations": 0,
+  "fullCasebookAcceptanceClaimed": false,
+  "initialCatalog": {
+    "advertised": 167,
+    "selected": 66,
+    "passed": 65,
+    "failed": 1,
+    "outcomes": [
+      {
+        "tool": "workspace_whoami",
+        "status": "PASS"
+      },
+      {
+        "tool": "workspace_gmail_get_profile",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_gmail_list_labels",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_gmail_list_messages",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_gmail_list_threads",
+        "status": "FAIL",
+        "reason": "invalid_google_read_shape"
+      },
+      {
+        "tool": "workspace_gmail_list_drafts",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_gmail_list_filters",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_gmail_list_send_as",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_gmail_get_imap_settings",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_gmail_get_pop_settings",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_gmail_get_vacation_settings",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_gmail_get_forwarding_settings",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_gmail_list_forwarding_addresses",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_gmail_list_delegates",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_drive_get_about",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_drive_get_start_page_token",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_drive_list_files",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_drive_list_shared_drives",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_drive_list_recent_files",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_drive_list_starred",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_drive_list_trash",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_drive_list_shared_with_me",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_drive_get_storage_quota",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_calendar_get_settings",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_calendar_list_calendars",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_calendar_list_event_colors",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_calendar_list_events",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_recent_changes",
+        "status": "PASS",
+        "proof": "service_shape"
+      },
+      {
+        "tool": "workspace_dev_check_integration",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_users",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_get_customer_info",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_domains",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_domain_aliases",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_orgunits",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_roles",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_role_assignments",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_schemas",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_features",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_buildings",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_calendar_resources",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_chrome_devices",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_mobile_devices",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_tokens",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_asp",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_reports_admin_activity",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_reports_drive_activity",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_reports_groups_activity",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_reports_login_activity",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_reports_mobile_activity",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_reports_oauth_token_activity",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_reports_usage_customer",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_reports_usage_user",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_get_user",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_get_2sv_status",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_list_user_aliases",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_get_role",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_get_mobile_device",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_get_token",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_get_domain",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_get_available_privileges",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_reports_activity",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_contacts_list_groups",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_get_orgunit",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_identity_get_security_settings",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_directory_search_people",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_contacts_search",
+        "status": "PASS",
+        "proof": "provider_shape"
+      }
+    ]
+  },
+  "additionalMetadata": {
+    "selected": 8,
+    "passed": 7,
+    "failed": 1,
+    "outcomes": [
+      {
+        "tool": "workspace_whoami",
+        "status": "PASS"
+      },
+      {
+        "tool": "workspace_dev_list_runs",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_list_accounts",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_list_connections",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_admin_console_capabilities",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_where_is_setting",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_delegation_status",
+        "status": "FAIL",
+        "reason": "invalid_google_read_shape"
+      },
+      {
+        "tool": "workspace_plan_summary",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      {
+        "tool": "workspace_workflow_security_snapshot",
+        "status": "PASS",
+        "proof": "provider_shape"
+      }
+    ]
+  },
+  "retests": [
+    {
+      "tool": "workspace_gmail_list_threads",
+      "initial": "valid native thread had empty string snippet; checker incorrectly required nonempty",
+      "sourceRepair": "Allow string including empty snippet, preserving nonempty ID, cursor, item-count and type checks.",
+      "freshRead": {
+        "tool": "workspace_gmail_list_threads",
+        "status": "PASS",
+        "proof": "provider_shape"
+      },
+      "originalFailurePreserved": true
+    },
+    {
+      "tool": "workspace_delegation_status",
+      "initial": "valid configured/scopes metadata omitted generic report markers",
+      "sourceRepair": "Handler-specific configured/identity/scope proof and service_shape classification; no implication delegation works without actual testUser probe.",
+      "freshRead": {
+        "tool": "workspace_delegation_status",
+        "status": "PASS",
+        "proof": "service_shape"
+      },
+      "originalFailurePreserved": true
+    }
+  ],
+  "licensing": {
+    "listAndExactOwnAssignmentVerified": true,
+    "providerMutations": 0
+  },
+  "combinedSelectedUnique": 76,
+  "combinedVerifiedAfterRecordedRetests": 76,
+  "finalSelectedOutcomes": [
+    {
+      "tool": "workspace_whoami",
+      "status": "PASS",
+      "evidenceKind": "google_identity"
+    },
+    {
+      "tool": "workspace_gmail_get_profile",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_gmail_list_labels",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_gmail_list_messages",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_gmail_list_threads",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_gmail_list_drafts",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_gmail_list_filters",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_gmail_list_send_as",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_gmail_get_imap_settings",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_gmail_get_pop_settings",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_gmail_get_vacation_settings",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_gmail_get_forwarding_settings",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_gmail_list_forwarding_addresses",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_gmail_list_delegates",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_drive_get_about",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_drive_get_start_page_token",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_drive_list_files",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_drive_list_shared_drives",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_drive_list_recent_files",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_drive_list_starred",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_drive_list_trash",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_drive_list_shared_with_me",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_drive_get_storage_quota",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_calendar_get_settings",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_calendar_list_calendars",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_calendar_list_event_colors",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_calendar_list_events",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_recent_changes",
+      "status": "PASS",
+      "evidenceKind": "service_shape"
+    },
+    {
+      "tool": "workspace_dev_check_integration",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_users",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_get_customer_info",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_domains",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_domain_aliases",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_orgunits",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_roles",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_role_assignments",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_schemas",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_features",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_buildings",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_calendar_resources",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_chrome_devices",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_mobile_devices",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_tokens",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_asp",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_reports_admin_activity",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_reports_drive_activity",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_reports_groups_activity",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_reports_login_activity",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_reports_mobile_activity",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_reports_oauth_token_activity",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_reports_usage_customer",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_reports_usage_user",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_get_user",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_get_2sv_status",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_list_user_aliases",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_get_role",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_get_mobile_device",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_get_token",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_get_domain",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_get_available_privileges",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_reports_activity",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_contacts_list_groups",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_admin_get_orgunit",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_identity_get_security_settings",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_directory_search_people",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_contacts_search",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_dev_list_runs",
+      "status": "PASS",
+      "evidenceKind": "service_shape"
+    },
+    {
+      "tool": "workspace_list_accounts",
+      "status": "PASS",
+      "evidenceKind": "service_shape"
+    },
+    {
+      "tool": "workspace_list_connections",
+      "status": "PASS",
+      "evidenceKind": "service_shape"
+    },
+    {
+      "tool": "workspace_admin_console_capabilities",
+      "status": "PASS",
+      "evidenceKind": "service_shape"
+    },
+    {
+      "tool": "workspace_where_is_setting",
+      "status": "PASS",
+      "evidenceKind": "service_shape"
+    },
+    {
+      "tool": "workspace_delegation_status",
+      "status": "PASS",
+      "evidenceKind": "service_shape"
+    },
+    {
+      "tool": "workspace_plan_summary",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_workflow_security_snapshot",
+      "status": "PASS",
+      "evidenceKind": "provider_or_report_shape"
+    },
+    {
+      "tool": "workspace_licensing_list_assignments",
+      "status": "PASS",
+      "evidenceKind": "provider_shape"
+    },
+    {
+      "tool": "workspace_licensing_get_assignment",
+      "status": "PASS",
+      "evidenceKind": "provider_shape"
+    }
+  ],
+  "scopeLimitations": [
+    "This selected subset is not all advertised or all original reviewed reads.",
+    "Known deployment/consent failures were not blindly replayed. Missing exact positive fixtures, consent, remaining per-case authorization and Chrome/domain area grants remain separate.",
+    "Some valid reports contain typed unreadable sections: report shape is not certification that every API or security setting is readable or healthy.",
+    "Only public-safe tool/status/count data retained; exact args, provider bodies and pass credentials stay in the protected original runner.",
+    "No existing pass area, expiry, revocation or Hub credential changed."
+  ],
+  "areaDefect": {
+    "actual": "Chrome schema call refused outside_scope; existing RTC Chrome/domain tool areas absent from both issuance/OAuth enums.",
+    "sourceRepair": "Add those exact named areas to both validators without remapping tools into existing grants. Existing14-area passes remain unchanged.",
+    "realGrantRemaining": "Explicit separate owner-issued24h read_only pass for missing areas after release, only if those checks are selected."
+  },
+  "hub": {
+    "authorizedTargets": 1,
+    "discovered": "workspace_search_tools",
+    "descriptionVerified": true,
+    "routedRead": "upstream_tool_response_invalid",
+    "automaticReplay": false,
+    "ownerAssignedToOtherAgent": true
+  },
+  "acceptance": {
+    "passed": 25,
+    "pending": 4,
+    "total": 29
+  },
+  "references": [
+    "https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.threads/list",
+    "https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.threads"
+  ]
+}

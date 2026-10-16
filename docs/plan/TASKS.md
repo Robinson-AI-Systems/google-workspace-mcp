@@ -362,7 +362,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   "gates": "Separate scoped service authorization and Hub route gates; full production catalog stays independent",
   "dependsOn": [],
   "status": "PENDING",
-  "lastEvidence": "2026-10-16 owner reported Hub target work. Independent native Hub search still0authorizedTargets/0tools; TEST/gateway identity. Hub PR221 merged01acb6b with green CI, while independent Hub productiondpl_83fmN842bW5GJqXtBT8KHQca16pa/live remains4b0a3d4(PR220). New latest fix unreleased; no genuine routed Workspace read from this connection. Need checked latest Hub release and callable target/service grant; no provider pass borrowed and standalone never blocked by optional Hub."
+  "lastEvidence": "2026-10-16 owner reports Hub Workspace namespace update. Native search now1authorizedTarget and exposes workspace_search_tools from google-workspace-mcp; native describe succeeds. Harmless routed search returns upstream_tool_response_invalid with automaticReplay:false; not actual routed Google proof. User assigned Hub troubleshooting to another agent: do not alter Hub source/releases/grants. Re-enter when route can execute; standalone independent."
 },
   {
     "id": "GOOGLE-DIRECT-READ",
@@ -507,7 +507,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   "gates": "Read-only, existing authenticated account and permitted areas; no message bodies/sending, fixture creation, admin impersonation, scope widening or consent without owner approval. Independently READY deployed revision and original resource IDs first.",
   "dependsOn": [],
   "status": "PENDING",
-  "lastEvidence": "2026-10-16 approved bounded TEST/full read operations at pinnedREADY8ce3d7b: Gmail/Drive/Calendar/Chat APIs ready; Tasks/profile/email missing consent. Contacts granted but narrow test-contact search empty. No active tagged owned Drive/nonprimary Calendar/test Chat space found. NEW independent read approval used original recorded IDs: exact Gmail/send-as ready; trashed Drive/wrong-kind404/deleted Calendar role/freebusy negative evidence retained. No fixture creation/restoration or extension of exhausted12-call cycle. Securely connect ALREADY CREATED24h all-area read_only pass, do not issue duplicate or borrow Hub grant. Need narrow real Google consent, exact active approved positive fixtures and bounded denied/insufficient-permission matrix. Combined provider fixes await checked release; no new acceptance pass. Evidence: evidence/2026-10-16-approved-read-progress.json and evidence/2026-10-16-provider-contract-audit.json."
+  "lastEvidence": "2026-10-16 newly approved pinnedREADY8ce TEST reads: Gmail/Drive/Calendar/Chat APIs ready; Tasks/profile/email need narrow Google consent. Exact original Gmail/send-as ready; trashed Drive/wrong-kind404/deleted Calendar role/freebusy negatives retained. No active tagged owned Drive/nonprimary Calendar/test Chat space/contact positive resource discovered. Existing14-area24h TEST/read_only pass now securely connected, expiry unchanged; no duplicate issuance, fixture creation/restoration or exhausted12-call cycle extension. Need actual narrow consent, approved active positive resources and remaining denied/insufficient-permission matrix after checked combined repair release. See both approved-read-progress and readonly-catalog-progress October16 evidence."
 },
   {
     "id": "P8-8-CONSOLE-READBACK",
@@ -545,13 +545,13 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
   "id": "P0-2-FULL-CASEBOOK-REAL-READ",
   "priority": 1,
-  "requiredRevision": "f85b2de9c93696af400b1e86b7c93856108a85db",
+  "requiredRevision": "b199355c2f10936470855726ce7fc8ccb49c1b5f",
   "task": "Run full source-reviewed P0-2 read-only catalog against approved real Google TEST account; publish sanitized report and fix or ledger each real failure",
   "procedure": "scripts/smoke-readonly-catalog.mjs; docs/plan/GOOGLE-ACCEPTANCE.md; docs/plan/TASKS.md P0-2",
   "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
   "dependsOn": [],
   "status": "PENDING",
-  "lastEvidence": "2026-10-16 bounded read approval already given;65 tool observations include refusals and TEST/full read operations, not full read_only catalog acceptance. Sanitized genuine observations in evidence/2026-10-16-approved-read-progress.json and evidence/2026-10-16-provider-contract-audit.json. Installed-SDK Forms, Chrome OU-ID/mask, transitive memberships and omitted-empty list repairs plus earlier notifications/consent repair require checked release of reviewed source f85b2de9. Existing all14-area24h TEST/read_only pass ALREADY CREATED, expires2026-10-17T11:44:13.166Z; securely connect that same bearer, do not issue another or borrow Hub grant. Exact remaining reviewed cases/resources and real narrow Google consent still required. No writes or new acceptance pass claimed."
+  "lastEvidence": "2026-10-16 correct existing14-area24h Rentals TEST/read_only bearer securely connected; exact account/pass/profile/mode verified, writes disabled, expiry unchanged. Genuine selected66 run65initialPASS/1checker failure;8metadata7PASS/1checker failure. Empty thread snippet and delegation service metadata proofs repaired; fresh retests bothPASS. Two actual licensing readsPASS. Combined76distinct selected checks verified, not whole catalog. Original failures and sanitized results: evidence/2026-10-16-readonly-catalog-progress.json. Need combined checked repair release, real narrow Google consent, missing Chrome/domain area grant if selected and precise remaining resources/cases. Existing pass retained; never recreate or widen it automatically."
 },
   {
     "id": "P8-4-HTTP-CONTRACT",
@@ -3239,3 +3239,50 @@ When this assembled repair is reviewed/merged with all exact-head and postmerge 
 request one concrete checked Workspace release; then verify deployed source, complete
 narrow consent and immediately run newly eligible reads. Scheduled release is an
 alternative. Release alone does not supply test resources or prove Google consent.
+
+
+## October16 — actual read_only identity, remaining reads and permission-area defect
+
+The owner securely supplied the correct ALREADY CREATED Rentals TEST/read_only pass
+through the released encrypted existing-pass handoff. Exact pass/account/TEST/profile
+and allow_writes:false verified;14areas and expiry2026-10-17T11:44:13.166Z unchanged.
+No new pass or Hub grant extraction. Continue keeping useful passes until no need/expiry.
+
+At independently READY8ce3d7b, genuine source-reviewed selected catalog run:167 tools
+advertised,66 selected,65 initial passes/1checker failure. Eight additional metadata
+checks gave7initial passes/1checker failure. Actual native thread with empty snippet
+was valid; checker repaired to require ID and optional string type, not nonempty text.
+Actual delegation metadata was valid; specific configured/scopes/identity proof replaces
+an inappropriate generic report marker, classified service_shape. Fresh reads both PASS,
+original failures retained. Actual observed licensing SKU list plus exact own assignment
+both native provider proofs PASS. Combined76distinct selected checks verified after
+these recorded retests, not full catalog acceptance. Internal metadata is service proof;
+security/integration report shape never certifies inaccessible sections as readable.
+Sanitized original outcomes/retests: evidence/2026-10-16-readonly-catalog-progress.json.
+
+The actual Chrome schema403 led to exact permission-catalog diagnosis: Chrome/domain
+areas exist on tools but were absent from issuance and OAuth policy enums. This small
+repair adds both named choices consistently, preserves existing stored grants without
+remapping or widening, and proves whole-registry area coverage plus real protected form
+issuance, refresh copying, old-grant denial and read_only mutation refusal. It is source
+maintenance, zero product bundles; no provider grant automatically created or upgraded.
+Full casebook will separately need those exact missing areas if selected after release.
+
+PR175 mergeded09095e83471f0ed8369ec971c74ed96260cb85: exact-head AND postmerge
+check/unit/db/rtc/test/release-policy all PASS. Actual live remains8ce; no release asked
+while eligible reads/repairs remain. New focus73 regression checks PASS; final full
+suite/check and exact-head SQL/RTC/aggregate/release-policy still required for this PR.
+Earlier area-only full suite1817passed; two later checker regressions included in final CI.
+No Google mutation, fixture recreation, spending, consent, plaintext retirement or Hub
+change. Acceptance remains25PASSED/4PENDING; November1 Denver gate still applies.
+
+Hub read-only recheck after owner announced namespace update: native discovery now
+1authorizedTarget and describes workspace_search_tools from google-workspace-mcp.
+A harmless routed search returned upstream_tool_response_invalid, automaticReplay:false;
+not a successful routed Google read. Leave repairs/releases/grants to its assigned agent.
+When all independent authorized work and final checks are complete, request one exact
+checked Workspace release encompassing PR174/175 and this source repair. Then verify
+READY/canonical source, present real narrow Google consent, run remaining repaired reads
+on the retained existing14-area pass, and handle missing-area/resource approval separately.
+
+Final assembled local proof: npm run check and1819/1819unit tests PASS; source-specific focused73PASS. Checked release remains withheld pending exact-head and postmergeCI/review.

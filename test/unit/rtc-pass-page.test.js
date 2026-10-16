@@ -34,6 +34,17 @@ beforeEach(async()=>{
  process.env.RTC_TEST_ACCOUNT_EMAILS='ops@example.test';
 });
 describe('owner RTC pass setup',()=>{
+ it('issues exact Chrome/domain form selections without broadening another area',async()=>{
+  const page=await get('rtc.example.test');
+  expect(page.body).toContain('name="areas"');
+  for(const area of ['chrome','domain']){
+   const res=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'ops@example.test',hours:'24',areas:area});
+   expect(res.statusCode).toBe(200);
+   const rows=await holder.db.listRtcPasses();
+   expect(rows.at(-1)).toMatchObject({profile:'read_only',allow_writes:false,areas:[area]});
+  }
+ });
+
  it('redirects an alias to the pinned canonical origin before rendering a secret-bearing form',async()=>{
   const alias=await get('rtc-alias.vercel.app');
   expect(alias.statusCode).toBe(303);
