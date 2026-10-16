@@ -1,5 +1,6 @@
 import { recordChange } from '../changelog.js';
 import { ok, googleList } from './util.js';
+import { exactOrgUnit } from './chrome-target.js';
 import { buildSettingsBody, SETTINGS_DESCRIPTION, SETTINGS_SCHEMA_PROPERTIES } from './group-settings.js';
 
 const CUSTOMER = 'my_customer'; // Directory API shorthand for "your own Workspace customer"
@@ -292,8 +293,7 @@ export const handlers = {
     return ok(res.data.organizationUnits || []);
   },
   admin_get_orgunit: async (args, { admin }) => {
-    const res = await admin.orgunits.get({ customerId: CUSTOMER, orgUnitPath: args.orgUnitPath.replace(/^\//, '') });
-    return ok(res.data);
+    return ok(await exactOrgUnit(args.orgUnitPath, {admin}));
   },
   admin_create_orgunit: async (args, { admin }) => {
     const res = await admin.orgunits.insert({ customerId: CUSTOMER, requestBody: { name: args.name, parentOrgUnitPath: args.parentOrgUnitPath || '/', description: args.description } });

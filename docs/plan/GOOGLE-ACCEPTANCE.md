@@ -66,3 +66,10 @@ For all 165 reviewed reads, identity, correct deployment, source/handler output 
 ## Owner scope decision — October16,2026
 
 Owner2026-10-16T13:59:34Z explicitly stopped actual Vault connection testing because the required Workspace subscription upgrade is not needed. Exclude `vault_list_matters` and `vault_list_holds` from active live test manifests; keep the tools, denied historical receipts and source contracts. Do not buy a license, repeat Vault probes, remove other test cases or claim live Vault success. This reviewed owner exclusion is not an unresolved requirement to upgrade the subscription.
+
+
+## Owner clarification — October16 completion push
+
+Keep the existing Vault grant and implementation. No unneeded subscription upgrade or positive live Vault pass is required for completion; preserve could-not-verify/owner-excluded evidence and synthetic tests. No additional excluded live probes. Hub integration is mandatory for total project completion, with relay/Sandbox/revocation separately Hub-agent-owned and no Hub change/configuration/release here.
+
+Current source enumerates166 unique names (30 safe,12 exact fixture,124 additional); older165/123 counts are historical. Preserve all166. The133 retained verified handler/service reads are partial; every31 unverified and2 excluded case has an explicit disposition in evidence/2026-10-16-completion-push.json.

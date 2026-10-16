@@ -1,0 +1,1705 @@
+{
+  "date": "2026-10-16",
+  "sourceRevision": "06cf4953a1d84503228e88ca9e4e7a4ca4e2bff1",
+  "deploymentId": "dpl_EYLjUp4qK3CFT973Z6A96YyjaQvd",
+  "deploymentState": "READY",
+  "ownerDecisions": {
+    "hub": "Mandatory whole-project completion, still separately Hub-agent-owned; no Hub changes here",
+    "vault": "Keep grant/code. No upgrade-dependent live pass required; could-not-verify is neither product failure nor fake PASS. No further excluded live probes."
+  },
+  "finalReadiness": {
+    "original14AreaReadOnlyTestPass": true,
+    "apisReady": 6,
+    "exactScopesReady": 4,
+    "status": "ready",
+    "vaultProbe": false
+  },
+  "credentialReadiness": {
+    "encryptedOnly": false,
+    "accountsChecked": 2,
+    "ready": true,
+    "problems": {
+      "missingKey": false,
+      "noAccounts": false,
+      "missingCopy": 0,
+      "corruptOrStale": 0,
+      "unverifiedBackfill": 0,
+      "refreshNotObserved": 0
+    },
+    "notBefore": "2026-11-01T06:00:00Z",
+    "retirementPerformed": false
+  },
+  "exactAppAcceptance": {
+    "status": "PASSED",
+    "retainedExactIntegrationChecksReady": 25,
+    "fractionalAvailability": "Same original calendar ready on repaired released source before cleanup",
+    "sharedDriveMembership": "Exact actor-only organizer ready; independent native404 cleanup",
+    "negativeEvidence": [
+      "foreign creator ledger404",
+      "wrong resource kind404",
+      "missing Drive/deleted calendar404",
+      "readonly write and area403",
+      "UI-deleted exact Chat permission403 retained, no invented404"
+    ],
+    "fixtureCleanup": {
+      "logicalObjects": 15,
+      "allCleaned": true,
+      "newObjectsThisResume": 0
+    }
+  },
+  "hub": {
+    "nativeDiscovery": "PASS",
+    "foundation": "ready",
+    "federation": "test_read_routing",
+    "mode": "test",
+    "allowWrites": false,
+    "authorizedWorkspaceTargets": 1,
+    "readOnlyGrant": true,
+    "routedProfile": "PASS expected mailbox",
+    "correlationId": "9c803db1-21b9-4bb5-888b-d88980b749a0",
+    "remaining": "Restricted relay, existing Sandbox and whole-route revocation still separately unverified; do not revoke useful passes",
+    "noHubChanges": true
+  },
+  "newReads": [
+    {
+      "tool": "workspace_chrome_list_policy_schemas",
+      "http": 200,
+      "strictShape": true,
+      "note": "Native response retained privately; no writes"
+    },
+    {
+      "tool": "workspace_admin_get_orgunit",
+      "http": 200,
+      "strictShape": false,
+      "note": "Root GET returned collection, source repair needs released regression"
+    },
+    {
+      "tool": "workspace_chrome_resolve_policies",
+      "http": 200,
+      "strictShape": true,
+      "note": "Native response retained privately; no writes"
+    },
+    {
+      "tool": "workspace_admin_get_user_photo",
+      "http": 200,
+      "strictShape": true,
+      "note": "Native response retained privately; no writes"
+    },
+    {
+      "tool": "workspace_drive_search_files",
+      "http": 200,
+      "strictShape": true,
+      "note": "Native response retained privately; no writes"
+    },
+    {
+      "tool": "workspace_workflow_email_health",
+      "http": 200,
+      "strictShape": true,
+      "note": "Native response retained privately; no writes"
+    },
+    {
+      "tool": "workspace_workflow_search_presence_check",
+      "http": 200,
+      "strictShape": true,
+      "note": "Native response retained privately; no writes"
+    },
+    {
+      "tool": "workspace_admin_overview",
+      "http": 200,
+      "strictShape": true,
+      "note": "Native response retained privately; no writes"
+    },
+    {
+      "tool": "workspace_admin_console_verify",
+      "http": 200,
+      "strictShape": true,
+      "note": "Native response retained privately; no writes"
+    }
+  ],
+  "casebook": {
+    "inventory": 166,
+    "olderDocumentedInventory": 165,
+    "decision": "Preserve all currently enumerated names; no dropping a case to fit older count",
+    "verifiedRetainedHandlerReads": 133,
+    "unverified": 31,
+    "ownerExcludedLive": 2,
+    "allCatalogPassed": false,
+    "countsCaveat": "Includes source-validated service metadata; not every report subcheck or security setting is healthy/readable",
+    "rows": [
+      {
+        "tool": "workspace_whoami",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_get_profile",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_list_labels",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_list_messages",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_gmail_list_threads",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_list_drafts",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_list_filters",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_list_send_as",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_get_imap_settings",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_get_pop_settings",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_get_vacation_settings",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_get_forwarding_settings",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_list_forwarding_addresses",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_list_delegates",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_drive_get_about",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_drive_get_start_page_token",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_drive_list_files",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_drive_list_shared_drives",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_drive_list_recent_files",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_drive_list_starred",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_drive_list_trash",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_drive_list_shared_with_me",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_drive_get_storage_quota",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_calendar_get_settings",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_calendar_list_calendars",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_calendar_list_event_colors",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_calendar_list_events",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_tasks_list_tasklists",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_tasks_list_tasks",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_recent_changes",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_get_label",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "retained_original_exact_read"
+        ]
+      },
+      {
+        "tool": "workspace_gmail_get_message",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_original_exact_read"
+        ],
+        "retainedHttpObservations": [
+          200,
+          404
+        ]
+      },
+      {
+        "tool": "workspace_gmail_get_thread",
+        "status": "UNVERIFIED",
+        "prerequisite": "Retained exact app integration proof exists; standalone wrapper still needs exact approved nonproduction target. Do not recreate cleaned objects."
+      },
+      {
+        "tool": "workspace_drive_get_file",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_original_exact_read"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_drive_get_shared_drive",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200,
+          404
+        ]
+      },
+      {
+        "tool": "workspace_calendar_get_event",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_original_exact_read"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_tasks_get_tasklist",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200,
+          404
+        ]
+      },
+      {
+        "tool": "workspace_tasks_get_task",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_docs_get_document",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_original_exact_read"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_sheets_get_spreadsheet",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_slides_get_presentation",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200,
+          404
+        ]
+      },
+      {
+        "tool": "workspace_forms_get",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200,
+          404
+        ]
+      },
+      {
+        "tool": "workspace_admin_get_available_privileges",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_chat_list_members",
+        "status": "UNVERIFIED",
+        "prerequisite": "Retained exact app integration proof exists; standalone wrapper still needs exact approved nonproduction target. Do not recreate cleaned objects."
+      },
+      {
+        "tool": "workspace_chat_list_messages",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_chat_list_spaces",
+        "status": "UNVERIFIED",
+        "prerequisite": "Broad accessible-space discovery was automatically rejected. Do not read its output or retry; need reviewed owned-space restriction/exact alternative."
+      },
+      {
+        "tool": "workspace_chrome_list_policy_schemas",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200,
+          403,
+          503
+        ]
+      },
+      {
+        "tool": "workspace_chrome_resolve_policies",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200,
+          503
+        ]
+      },
+      {
+        "tool": "workspace_contacts_list_groups",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_contacts_search",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_directory_search_people",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_domain_list_verified",
+        "status": "UNVERIFIED",
+        "prerequisite": "Site Verification scope absent from configured consent purposes. webResource.list requires siteverification; original403 alone does not prove the unique cause. Exact owner approval before scope or verification-token generation.",
+        "retainedHttpObservations": [
+          403
+        ]
+      },
+      {
+        "tool": "workspace_docs_list_headings",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_forms_list_responses",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_identity_list_group_transitive_membership",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200,
+          503
+        ]
+      },
+      {
+        "tool": "workspace_reports_usage_customer",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200,
+          503
+        ]
+      },
+      {
+        "tool": "workspace_reports_usage_user",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200,
+          503
+        ]
+      },
+      {
+        "tool": "workspace_vault_list_holds",
+        "status": "OWNER_EXCLUDED_LIVE",
+        "disposition": "Could not verify without unneeded subscription upgrade; positive live pass excluded from completion by owner. Keep code, existing grant and synthetic proof."
+      },
+      {
+        "tool": "workspace_vault_list_matters",
+        "status": "OWNER_EXCLUDED_LIVE",
+        "disposition": "Could not verify without unneeded subscription upgrade; positive live pass excluded from completion by owner. Keep code, existing grant and synthetic proof.",
+        "retainedHttpObservations": [
+          503
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_admin_console_notifications",
+        "status": "UNVERIFIED",
+        "prerequisite": "Installed SDK has no notifications.list. Released source truthfully returns not_readable/provider_method_unavailable; no fake empty-list pass.",
+        "retainedHttpObservations": [
+          503
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_alerts",
+        "status": "UNVERIFIED",
+        "prerequisite": "Alert Center scope apps.alerts intentionally absent; retain actual denial, no blind repeat or automatic consent expansion.",
+        "retainedHttpObservations": [
+          503
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_asp",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_buildings",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_calendar_resources",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_chrome_devices",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_domain_aliases",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_domains",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_features",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_group_aliases",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_group_members",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_groups",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_mobile_devices",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_orgunits",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_role_assignments",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_roles",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_schemas",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_tokens",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_user_aliases",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_list_users",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_calendar_list_acl",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_calendar_list_event_instances",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_contacts_list",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_datatransfer_list_transfers",
+        "status": "UNVERIFIED",
+        "prerequisite": "Requires separately bounded approval for customer transfer metadata and an existing transfer ID; never initiate a transfer."
+      },
+      {
+        "tool": "workspace_directory_list_people",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_drive_list_changes",
+        "status": "UNVERIFIED",
+        "prerequisite": "Requires an exact approved cursor/interval limited to owned nonproduction changes; do not scan unrelated visible-file or mailbox history."
+      },
+      {
+        "tool": "workspace_drive_list_permissions",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_drive_list_revisions",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_drive_search_files",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_gmail_list_history",
+        "status": "UNVERIFIED",
+        "prerequisite": "Requires an exact approved cursor/interval limited to owned nonproduction changes; do not scan unrelated visible-file or mailbox history."
+      },
+      {
+        "tool": "workspace_gmail_search",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_identity_list_policies",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_licensing_list_assignments",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_postmaster_list_domains",
+        "status": "UNVERIFIED",
+        "prerequisite": "Account-specific Postmaster consent/access and verified owned domain required; traffic also needs exact interval and real sending data. No sending or scope expansion to manufacture proof."
+      },
+      {
+        "tool": "workspace_postmaster_list_traffic_stats",
+        "status": "UNVERIFIED",
+        "prerequisite": "Account-specific Postmaster consent/access and verified owned domain required; traffic also needs exact interval and real sending data. No sending or scope expansion to manufacture proof."
+      },
+      {
+        "tool": "workspace_admin_get_2sv_status",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_get_alert",
+        "status": "UNVERIFIED",
+        "prerequisite": "Alert Center scope apps.alerts intentionally absent; retain actual denial, no blind repeat or automatic consent expansion."
+      },
+      {
+        "tool": "workspace_admin_get_building",
+        "status": "UNVERIFIED",
+        "prerequisite": "No existing approved positive target established by retained selection. No new building/resource/device/schema/filter/response creation or purchases."
+      },
+      {
+        "tool": "workspace_admin_get_calendar_resource",
+        "status": "UNVERIFIED",
+        "prerequisite": "No existing approved positive target established by retained selection. No new building/resource/device/schema/filter/response creation or purchases."
+      },
+      {
+        "tool": "workspace_admin_get_chrome_device",
+        "status": "UNVERIFIED",
+        "prerequisite": "No existing approved positive target established by retained selection. No new building/resource/device/schema/filter/response creation or purchases."
+      },
+      {
+        "tool": "workspace_admin_get_customer_info",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_get_domain",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_get_group",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_get_group_settings",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_get_mobile_device",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_get_orgunit",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_get_role",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_get_schema",
+        "status": "UNVERIFIED",
+        "prerequisite": "No existing approved positive target established by retained selection. No new building/resource/device/schema/filter/response creation or purchases."
+      },
+      {
+        "tool": "workspace_admin_get_token",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_get_user",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_admin_get_user_photo",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_chat_get_space",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200,
+          403,
+          503
+        ]
+      },
+      {
+        "tool": "workspace_contacts_get",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200,
+          404
+        ]
+      },
+      {
+        "tool": "workspace_datatransfer_get_transfer_status",
+        "status": "UNVERIFIED",
+        "prerequisite": "Requires separately bounded approval for customer transfer metadata and an existing transfer ID; never initiate a transfer."
+      },
+      {
+        "tool": "workspace_drive_get_revision",
+        "status": "UNVERIFIED",
+        "prerequisite": "Retained exact app integration proof exists; standalone wrapper still needs exact approved nonproduction target. Do not recreate cleaned objects."
+      },
+      {
+        "tool": "workspace_forms_get_response",
+        "status": "UNVERIFIED",
+        "prerequisite": "No existing approved positive target established by retained selection. No new building/resource/device/schema/filter/response creation or purchases."
+      },
+      {
+        "tool": "workspace_gmail_get_attachment",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_gmail_get_draft",
+        "status": "UNVERIFIED",
+        "prerequisite": "Retained exact app integration proof exists; standalone wrapper still needs exact approved nonproduction target. Do not recreate cleaned objects."
+      },
+      {
+        "tool": "workspace_gmail_get_filter",
+        "status": "UNVERIFIED",
+        "prerequisite": "No existing approved positive target established by retained selection. No new building/resource/device/schema/filter/response creation or purchases."
+      },
+      {
+        "tool": "workspace_gmail_get_message_body",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_identity_check_membership",
+        "status": "UNVERIFIED",
+        "prerequisite": "Retained200 omitted protobuf false is repaired in released source with strict regression. All group cycles exhausted; no additional group call.",
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_identity_get_security_settings",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_licensing_get_assignment",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_sheets_batch_get",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_sheets_get_values",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_slides_get_slide",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_slides_get_thumbnail",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_calendar_get_freebusy",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_calendar_dev_snapshot",
+        "status": "UNVERIFIED",
+        "prerequisite": "Retained exact app integration proof exists; standalone wrapper still needs exact approved nonproduction target. Do not recreate cleaned objects."
+      },
+      {
+        "tool": "workspace_calendar_verify_calendar_deletion",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_dns_list_records",
+        "status": "UNVERIFIED",
+        "prerequisite": "Requires owned Vercel-hosted domain and existing separate DNS access; no DNS or credential change."
+      },
+      {
+        "tool": "workspace_gmail_find_unanswered",
+        "status": "UNVERIFIED",
+        "prerequisite": "Requires a separately approved synthetic-only label/window; production inbox content is outside the current resource-scoped approval."
+      },
+      {
+        "tool": "workspace_gmail_inbox_summary",
+        "status": "UNVERIFIED",
+        "prerequisite": "Requires a separately approved synthetic-only label/window; production inbox content is outside the current resource-scoped approval."
+      },
+      {
+        "tool": "workspace_identity_policy_audit",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_reports_activity",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_reports_admin_activity",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_reports_drive_activity",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_reports_groups_activity",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_reports_login_activity",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_reports_mobile_activity",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_reports_oauth_token_activity",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_workflow_audit_external_sharing",
+        "status": "UNVERIFIED",
+        "prerequisite": "Requires precise bounded approval for unrelated visible-file permissions; disposable-owned-resource proofs do not grant it."
+      },
+      {
+        "tool": "workspace_workflow_email_health",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_workflow_health_report",
+        "status": "UNVERIFIED",
+        "prerequisite": "Composes group settings and potentially delegated mailbox reads; exhausted group cycles/no impersonation apply inside workflows too."
+      },
+      {
+        "tool": "workspace_workflow_search_presence_check",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_workflow_security_snapshot",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_admin_overview",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_delegation_status",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_dev_check_integration",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200,
+          503
+        ]
+      },
+      {
+        "tool": "workspace_dev_get_run",
+        "status": "UNVERIFIED",
+        "prerequisite": "Original creator-run inspection and foreign404 proofs retained separately; readonly principal does not own revoked creator ledgers. No old run replay or ownership change."
+      },
+      {
+        "tool": "workspace_dev_list_runs",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_list_accounts",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_list_connections",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_admin_console_capabilities",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_admin_console_verify",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_plan_summary",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_where_is_setting",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "permanent_strict_runner",
+          "retained_strict_runner"
+        ]
+      },
+      {
+        "tool": "workspace_docs_export_as_docx",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_docs_export_as_html",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_docs_export_as_pdf",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_docs_get_text",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_domain_get_verification_token",
+        "status": "UNVERIFIED",
+        "prerequisite": "Site Verification scope absent from configured consent purposes. webResource.list requires siteverification; original403 alone does not prove the unique cause. Exact owner approval before scope or verification-token generation."
+      },
+      {
+        "tool": "workspace_drive_download_file",
+        "status": "UNVERIFIED",
+        "prerequisite": "Retained exact app integration proof exists; standalone wrapper still needs exact approved nonproduction target. Do not recreate cleaned objects."
+      },
+      {
+        "tool": "workspace_drive_export_as_pdf",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_drive_export_file",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_sheets_get_sheet_as_csv",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      },
+      {
+        "tool": "workspace_slides_export_as_pdf",
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
+          "permanent_strict_runner"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
+      }
+    ]
+  },
+  "sourceRepair": {
+    "rootOrgUnit": "Use parent-inclusive list, require one exact root and ID, reject missing/ambiguous/malformed/incomplete response; share admin get/Chrome targeting",
+    "rootLiveRetest": "Pending checked release",
+    "chromeSchemaFilter": "Original schemaName filter invalid caller input. Correct name field passed current live.",
+    "chromeNonrootResolve": "PASS current live; no extra OAuth/role prerequisite observed for approved target",
+    "pr181": "Merged pagination/filter fix unreleased; separate from actual root defect"
+  },
+  "providerMutationsThisResume": 0,
+  "releasePerformed": false,
+  "fullProjectComplete": false,
+  "secretHandling": "No credentials, provider bodies or private resource IDs included"
+}
