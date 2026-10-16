@@ -1,0 +1,537 @@
+{
+  "date": "2026-10-16",
+  "sourceRevision": "8ce3d7b82eaf0f6faa53004e9acf4af6f50fc07d",
+  "deployment": {
+    "id": "dpl_6vSCiPzjETwHvWqMfciEPUzMqx4F",
+    "state": "READY",
+    "sourceIndependentlyVerified": true
+  },
+  "authorization": {
+    "existingOwnerApproved24HourTestPass": true,
+    "profile": "full",
+    "writes": true,
+    "expires": "2026-10-17T10:54:15.575Z",
+    "keptActive": true,
+    "ordinaryAdapterSubstituted": false,
+    "hubSubstituted": false,
+    "noSpendingApproval": true
+  },
+  "existingPassHandoff": {
+    "ownerSecureSignIn": true,
+    "rsaSealedRegisteredRunner": true,
+    "exactPassAndSourcePinned": true,
+    "fingerprintAndTestIdentityVerified": true,
+    "privateCredentialFile": true,
+    "newPassIssued": false,
+    "tokenInChatOrReport": false
+  },
+  "records": [
+    {
+      "at": "2026-10-16T11:26:50.145Z",
+      "operation": "set_signature",
+      "preview": true,
+      "auditPresent": true,
+      "parentDone": false,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "preview",
+      "counts": {
+        "preview": 1,
+        "refused": 0,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "preview",
+          "child": {
+            "tool": "workflow_brand_mailbox",
+            "eligible": true
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:26:50.358Z",
+      "operation": "set_vacation",
+      "preview": true,
+      "auditPresent": true,
+      "parentDone": false,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "preview",
+      "counts": {
+        "preview": 1,
+        "refused": 0,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "preview",
+          "child": {
+            "tool": "workflow_brand_mailbox",
+            "eligible": true
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:26:50.567Z",
+      "operation": "add_group_member",
+      "preview": true,
+      "auditPresent": true,
+      "parentDone": false,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "preview",
+      "counts": {
+        "preview": 1,
+        "refused": 0,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "preview",
+          "child": {
+            "tool": "admin_add_group_member",
+            "eligible": true
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:26:50.914Z",
+      "operation": "remove_group_member",
+      "preview": true,
+      "auditPresent": true,
+      "parentDone": false,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "preview",
+      "counts": {
+        "preview": 1,
+        "refused": 0,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "preview",
+          "child": {
+            "tool": "admin_remove_group_member",
+            "eligible": true
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:26:51.237Z",
+      "operation": "assign_license",
+      "preview": true,
+      "auditPresent": true,
+      "parentDone": false,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "preview",
+      "counts": {
+        "preview": 0,
+        "refused": 1,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "refused",
+          "reason": "independent_spending_approval_required"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:26:51.434Z",
+      "operation": "change_license",
+      "preview": true,
+      "auditPresent": true,
+      "parentDone": false,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "preview",
+      "counts": {
+        "preview": 0,
+        "refused": 1,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "refused",
+          "reason": "independent_spending_approval_required"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:28:25.092Z",
+      "operation": "set_signature",
+      "preview": false,
+      "auditPresent": true,
+      "parentDone": true,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "complete",
+      "counts": {
+        "preview": 0,
+        "refused": 0,
+        "confirmed": 1,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "confirmed",
+          "child": {
+            "tool": "workflow_brand_mailbox",
+            "logged": true,
+            "confirmed": false,
+            "exactReadback": true
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:30:33.641Z",
+      "operation": "set_vacation",
+      "preview": false,
+      "auditPresent": true,
+      "parentDone": true,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "complete",
+      "counts": {
+        "preview": 0,
+        "refused": 0,
+        "confirmed": 1,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "confirmed",
+          "child": {
+            "tool": "workflow_brand_mailbox",
+            "logged": true,
+            "confirmed": false,
+            "exactReadback": true
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:34:52.892Z",
+      "operation": "add_group_member",
+      "preview": true,
+      "auditPresent": true,
+      "parentDone": false,
+      "parentConfirmed": null,
+      "total": 2,
+      "status": "preview",
+      "counts": {
+        "preview": 1,
+        "refused": 1,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "preview",
+          "child": {
+            "tool": "admin_add_group_member",
+            "eligible": true
+          }
+        },
+        {
+          "status": "refused",
+          "reason": "outside_domain"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:34:53.362Z",
+      "operation": "add_group_member",
+      "preview": false,
+      "auditPresent": true,
+      "parentDone": true,
+      "parentConfirmed": null,
+      "total": 2,
+      "status": "incomplete",
+      "counts": {
+        "preview": 0,
+        "refused": 1,
+        "confirmed": 1,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "confirmed",
+          "child": {
+            "tool": "admin_add_group_member",
+            "logged": true,
+            "confirmed": true
+          }
+        },
+        {
+          "status": "refused",
+          "reason": "outside_domain"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:34:56.353Z",
+      "operation": "remove_group_member",
+      "preview": true,
+      "auditPresent": true,
+      "parentDone": false,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "preview",
+      "counts": {
+        "preview": 1,
+        "refused": 0,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "preview",
+          "child": {
+            "tool": "admin_remove_group_member",
+            "eligible": true
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:34:56.966Z",
+      "operation": "remove_group_member",
+      "preview": false,
+      "auditPresent": true,
+      "parentDone": true,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "complete",
+      "counts": {
+        "preview": 0,
+        "refused": 0,
+        "confirmed": 1,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "confirmed",
+          "child": {
+            "tool": "admin_remove_group_member",
+            "logged": true,
+            "confirmed": true
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:38:59.994Z",
+      "operation": "assign_license",
+      "preview": false,
+      "auditPresent": true,
+      "parentDone": true,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "incomplete",
+      "counts": {
+        "preview": 0,
+        "refused": 1,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "refused",
+          "reason": "independent_spending_approval_required"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:39:00.177Z",
+      "operation": "change_license",
+      "preview": false,
+      "auditPresent": true,
+      "parentDone": true,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "incomplete",
+      "counts": {
+        "preview": 0,
+        "refused": 1,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "refused",
+          "reason": "independent_spending_approval_required"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:39:00.697Z",
+      "operation": "remove_license",
+      "preview": true,
+      "auditPresent": true,
+      "parentDone": false,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "preview",
+      "counts": {
+        "preview": 1,
+        "refused": 0,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 0,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "preview",
+          "child": {
+            "tool": "licensing_remove_license",
+            "eligible": true
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:39:01.069Z",
+      "operation": "remove_license",
+      "preview": false,
+      "auditPresent": true,
+      "parentDone": true,
+      "parentConfirmed": null,
+      "total": 1,
+      "status": "incomplete",
+      "counts": {
+        "preview": 0,
+        "refused": 0,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 1,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "unknown",
+          "reason": "child_outcome_unconfirmed"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-16T11:39:01.546Z",
+      "operation": "remove_group_member",
+      "preview": false,
+      "auditPresent": true,
+      "parentDone": true,
+      "parentConfirmed": null,
+      "total": 2,
+      "status": "incomplete",
+      "counts": {
+        "preview": 0,
+        "refused": 1,
+        "confirmed": 0,
+        "unverified": 0,
+        "failed": 0,
+        "unknown": 1,
+        "not_attempted": 0
+      },
+      "results": [
+        {
+          "status": "unknown",
+          "reason": "child_outcome_unconfirmed"
+        },
+        {
+          "status": "refused",
+          "reason": "outside_domain"
+        }
+      ]
+    }
+  ],
+  "independentReadbacks": {
+    "signatureExactlyUnchanged": true,
+    "vacationFieldsExactlyUnchanged": true,
+    "newGroupIdentityAndTagsMatched": true,
+    "membershipAddedExactActorMember": true,
+    "membershipEventuallyEmpty": true,
+    "emptyGroupDeletedAnd404Verified": true,
+    "licensingRemovalTargetIndependently404": true
+  },
+  "interpretation": {
+    "bulkTask": "P7-8-GUARDED-BULK",
+    "status": "PASSED",
+    "scope": "Seven deployed mappings exercised under approved operation-specific authority, including intentional spending refusals and nonexistent-principal licensing error; no successful paid license assignment, upgrade or existing-license removal is claimed.",
+    "partialOutcomes": "Successful group add plus external-domain refusal stayed aggregate incomplete. Deleted disposable group yielded unknown plus refused; no success inferred from HTTP200 or parent done.",
+    "readbackDelay": "Initial creation email lookup404 and member-list lag retained. Exact original provider ID recovered creation; a later list proved the single actor membership and a later empty list proved removal. No group was recreated.",
+    "runnerFailures": "Initial unsupported detail argument caused503 before child dispatch. Initial verifier mistook parent null confirmation for failure, then reconciled the one existing signature receipt without replay. Initial group-list assertions stopped on lag; finally attempted one actor-only removal and deferred deletion until independent empty readback. Raw failures preserved privately.",
+    "noAutomaticRetryOrRollback": true,
+    "countsAndOrderValidated": true,
+    "noNewProductBundle": true
+  },
+  "ledger": {
+    "passed": 25,
+    "pending": 4,
+    "total": 29,
+    "pendingIds": [
+      "P0-2-FULL-CASEBOOK-REAL-READ",
+      "P8-7-EXACT-APP-READS",
+      "P5-2-PLAINTEXT-RETIRE",
+      "GOOGLE-RTC"
+    ]
+  }
+}
