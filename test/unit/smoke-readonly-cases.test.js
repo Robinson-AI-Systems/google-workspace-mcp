@@ -26,6 +26,9 @@ describe('P0-2 reviewed catalog-wide read cases',()=>{
  });
  it('rejects false Google success for actual handler-specific source contracts',()=>{
   const testCases=[
+    ['workspace_identity_check_membership',{},{}],
+    ['workspace_identity_check_membership',{hasMembership:'false'},{}],
+    ['workspace_identity_check_membership',{hasMembership:false,error:'denied'},{}],
     ['workspace_admin_list_users',{users:[{}]},{}],
     ['workspace_reports_activity',{application:'drive',activities:[]},{application:'calendar'}],
     ['workspace_postmaster_list_domains',{domains:[],count:1},{}],
@@ -36,6 +39,7 @@ describe('P0-2 reviewed catalog-wide read cases',()=>{
   ];
   for(const [name,payload,args] of testCases)
    expect(verifyAdditionalRead(name,payload,account,args),name).toBe(false);
+  for(const hasMembership of [false,true])expect(verifyAdditionalRead('workspace_identity_check_membership',{hasMembership},account,{})).toBe(true);
   expect(verifyAdditionalRead('workspace_reports_activity',
     {application:'calendar',activities:[]},account,{application:'calendar'})).toBe(true);
   expect(verifyAdditionalRead('workspace_postmaster_list_domains',

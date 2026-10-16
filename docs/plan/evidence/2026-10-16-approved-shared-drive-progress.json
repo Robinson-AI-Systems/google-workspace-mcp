@@ -123,5 +123,40 @@
     "localUnitTests": 1830,
     "liveProviderProof": false,
     "releaseAuthorized": false
+  },
+  "copyFreeIssuanceRepair": {
+    "trigger": "Owner cannot select/copy token in Cloud Browser",
+    "releaseApproval": "2026-10-16 10:02:19 America/Denver, conditional on completing all feasible pre-release work",
+    "oldPass": "Unchanged, do not recover browser plaintext or revoke prematurely",
+    "newPassPolicy": {
+      "hours": 24,
+      "profile": "read_only",
+      "mode": "test",
+      "allowWrites": false,
+      "forHub": false
+    },
+    "delivery": "Owner verification; RSA2048 OAEP-SHA256 directly to registered runner; ciphertext only; private0600 output; no clipboard",
+    "atomicity": "Pending handoff lock, pass-hash insert and ciphertext update in one PostgreSQL statement; replay refusal and rollback tested with disposable DB in required CI",
+    "realProviderEvidence": false,
+    "runtimeIssuance": "Not executed before reviewed checked release"
+  },
+  "membershipResponseRepair": {
+    "actualOldSourceResponse": "HTTP200 empty native object; retained unchanged",
+    "sourceInterpretation": "Exact successful empty protobuf response normalizes to hasMembership:false; explicit native booleans retained",
+    "rejects": [
+      "non200",
+      "null",
+      "array",
+      "unrelated/error keys",
+      "nonboolean hasMembership"
+    ],
+    "proof": "Typed boolean only, no generic object or HTTP200 acceptance",
+    "newLiveRead": false,
+    "positiveMembershipClaim": false,
+    "approvalCycle": "Two approved rechecks exhausted; no third call",
+    "primaryReferences": [
+      "https://docs.cloud.google.com/identity/docs/reference/rest/v1/groups.memberships/checkTransitiveMembership",
+      "https://protobuf.dev/programming-guides/json/#presence-and-default-values"
+    ]
   }
 }

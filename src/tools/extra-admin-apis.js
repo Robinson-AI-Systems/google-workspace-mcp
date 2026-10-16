@@ -86,7 +86,16 @@ export const handlers = {
   identity_check_membership: async (args, { cloudidentity }) => {
     const lookup = await cloudidentity.groups.lookup({ 'groupKey.id': args.groupEmail });
     const res = await cloudidentity.groups.memberships.checkTransitiveMembership({ parent: lookup.data.name, query: `member_key_id=='${args.userEmail}'` });
-    return ok(res.data);
+    // This protobuf bool may be omitted when false (observed native {}).
+    // Normalize only this exact successful response schema, never an error,
+    // unrelated object, null or a non-boolean into a membership decision.
+    const value=res.data;
+    if(!value||typeof value!=='object'||Array.isArray(value)||
+       (res.status!==undefined&&res.status!==200)||
+       Object.keys(value).some(k=>k!=='hasMembership')||
+       (Object.hasOwn(value,'hasMembership')&&typeof value.hasMembership!=='boolean'))
+      throw Error('Google returned an unverifiable membership response.');
+    return ok({hasMembership:value.hasMembership??false});
   },
 
   domain_get_verification_token: async (args, { siteVerification }) => {
