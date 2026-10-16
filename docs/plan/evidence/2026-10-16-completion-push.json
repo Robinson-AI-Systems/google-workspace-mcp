@@ -134,8 +134,8 @@
     "inventory": 166,
     "olderDocumentedInventory": 165,
     "decision": "Preserve all currently enumerated names; no dropping a case to fit older count",
-    "verifiedRetainedHandlerReads": 154,
-    "unverified": 10,
+    "verifiedRetainedHandlerReads": 155,
+    "unverified": 9,
     "ownerExcludedLive": 2,
     "allCatalogPassed": false,
     "countsCaveat": "Includes source-validated service metadata; not every report subcheck or security setting is healthy/readable",
@@ -1073,8 +1073,11 @@
       },
       {
         "tool": "workspace_postmaster_list_traffic_stats",
-        "status": "UNVERIFIED",
-        "prerequisite": "V2 source/consent and current traffic permission verified before and after genuine refresh. Domain list200 returned zero registered domains visible within the approved TEST scope. No owned accessible VERIFIED domain exists in this TEST connection scoped inventory; no traffic request, domain registration/verification, DNS edit or test sending. Owner-managed verified Postmaster domain required."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "genuine_original_readonly_TEST_v2_exact_owned_VERIFIED_domain"
+        ],
+        "proof": "On independently READY6ec69ce, exact scoped domain list200 confirmsOWNER/VERIFIED; fixed October9-15 inclusive7day traffic query200/native v2 stats[]/no continuation. Missing traffic data is unknown, not healthy delivery."
       },
       {
         "tool": "workspace_admin_get_2sv_status",
@@ -2134,8 +2137,16 @@
       "scopeFiltered": true
     },
     "traffic": {
-      "called": false,
-      "reason": "No registered domain visible within the approved TEST scope. Requires owned accessible VERIFIED Postmaster domain. No claim about unrelated account domains or delivery health."
+      "called": true,
+      "reason": "Owner-approved domain registration/verification and additiveDNS proof complete. OriginalTESTlist confirms exact owned accessible OWNER/VERIFIED domain; bounded native traffic response is empty, not a delivery-health pass.",
+      "http": 200,
+      "apiVersion": "v2",
+      "strictNativeShape": true,
+      "startDate": "2026-10-09",
+      "endDate": "2026-10-15",
+      "pageSize": 7,
+      "statsCount": 0,
+      "hasContinuation": false
     },
     "savedGrantRefresh": {
       "genuineRefresh": true,
@@ -2154,10 +2165,72 @@
     },
     "casebook": {
       "inventory": 166,
-      "verifiedRetained": 154,
-      "unverified": 10,
+      "verifiedRetained": 155,
+      "unverified": 9,
       "ownerExcludedVault": 2
     },
     "limits": "No domain/user writes, registration, verification, DNS edits, sending, paid upgrades, Hub changes or early plaintext retirement. No fixture replay."
+  },
+  "postmasterDomainSetupAccepted": {
+    "ownerRequest": "2026-10-16T22:09:33Z owner asks agent handle setup; exact additive TXT and ownership-verification approval2026-10-16T22:14:38Z",
+    "sourceRevision": "6ec69ce1b6cb8ffb2096774e038987cf6f5a5c4d",
+    "deployment": "dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur independentlyREADY, canonical source verified",
+    "registration": {
+      "correctExistingRentalsGoogleAccount": true,
+      "singleDomainAdded": true,
+      "createRequests": 1,
+      "retainedBusinessConfiguration": true
+    },
+    "dns": {
+      "provider": "Vercel",
+      "ownerConfirmed": true,
+      "dryRunReviewed": true,
+      "additiveTxtWrites": 1,
+      "beforeRecords": 14,
+      "afterRecords": 15,
+      "exactNewRecordCount": 1,
+      "originalRecordsPreserved": true,
+      "independentNativeVercelRecordReadback": true,
+      "publicGoogleDnsExactRecordObserved": true,
+      "retainedForOwnershipVerification": true
+    },
+    "verification": {
+      "submissions": 2,
+      "initialBeforePublicPropagation": "API retainedUNVERIFIED; no traffic call",
+      "secondOnlyAfterPublicDnsProof": "Google Domain verified dialog; subsequent originalTESTlist OWNER/VERIFIED",
+      "noDuplicateDomainOrDnsWrite": true
+    },
+    "reads": {
+      "originalReadOnlyTestIdentityAndAccountVerified": true,
+      "domainList": {
+        "http": 200,
+        "count": 1,
+        "scopeFiltered": true,
+        "exactOwnedDomain": true,
+        "permission": "OWNER",
+        "verificationState": "VERIFIED"
+      },
+      "traffic": {
+        "http": 200,
+        "apiVersion": "v2",
+        "strictShape": true,
+        "startDate": "2026-10-09",
+        "endDate": "2026-10-15",
+        "pageSize": 7,
+        "statsCount": 0,
+        "hasContinuation": false
+      }
+    },
+    "interpretation": "Setup and API read verified. Google reports Not enough data; no sending-volume, reputation or delivery-health claim. No test email sending, user sharing, mail/website record replacement, purchase, new scope or release.",
+    "casebook": {
+      "inventory": 166,
+      "verifiedRetained": 155,
+      "unverified": 9,
+      "ownerExcludedVault": 2
+    },
+    "acceptanceQueue": {
+      "passed": 26,
+      "pending": 3
+    }
   }
 }

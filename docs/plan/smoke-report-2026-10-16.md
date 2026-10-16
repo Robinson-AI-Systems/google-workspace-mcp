@@ -4,7 +4,7 @@ Prepared from retained genuine receipts and the current source casebook. This re
 
 Source independently observed READY live: `6ec69ce1b6cb8ffb2096774e038987cf6f5a5c4d` / `dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur`. Earlier retained reads remain bound to their original receipt revisions.
 
-**154 verified retained handler/service reads; 10 unverified; 2 owner-excluded live Vault cases.** These counts include service metadata, and do not prove every subcheck in composite reports is healthy.
+**155 verified retained handler/service reads; 9 unverified; 2 owner-excluded live Vault cases.** These counts include service metadata, and do not prove every subcheck in composite reports is healthy.
 
 Original P0-2 report criterion permits failures documented in the Known Bugs table. The later explicit full-catalog queue remains open; no requirement is silently removed. See [Known Bugs and provider limitations](ARCHITECTURE.md#known-bugs--genuine-acceptance-follow-up-october162026) and [P0-2](TASKS.md#p0-2--smoke-test-every-read-only-tool-against-a-real-account-m).
 
@@ -103,7 +103,7 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 | `workspace_identity_list_policies` | VERIFIED_RETAINED | retained_strict_runner |
 | `workspace_licensing_list_assignments` | VERIFIED_RETAINED | permanent_strict_runner |
 | `workspace_postmaster_list_domains` | VERIFIED_RETAINED | Genuine original TEST/read_only on READY6ec69ce v2: HTTP200, native domains[]/count0, pageSize20, no continuation; no traffic proof implied. |
-| `workspace_postmaster_list_traffic_stats` | UNVERIFIED | V2 permission verified before/after genuine refresh. Domain list200 returned zero registered domains visible within the approved TEST scope; owner-managed owned accessible VERIFIED Postmaster domain required. No traffic call, registration/verification, DNS change or sending. |
+| `workspace_postmaster_list_traffic_stats` | VERIFIED_RETAINED | Original TEST/read_only on READY6ec69ce: exact owned scoped domain OWNER/VERIFIED after approved additiveTXT/Google verification; October9-15 seven-day query200/native v2 stats[]/no continuation. Missing metrics remain unknown, not healthy delivery. |
 | `workspace_admin_get_2sv_status` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
 | `workspace_admin_get_alert` | UNVERIFIED | Alert Center scope apps.alerts intentionally absent; retain actual denial, no blind repeat or automatic consent expansion. |
 | `workspace_admin_get_building` | VERIFIED_RETAINED | Current READYf96 required-floor exactpositive200, guarded audited create/delete and independent404; allcreatedAdminobjects cleaned. |
@@ -190,3 +190,5 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 Published with the genuine post-release building acceptance evidence. This report does not imply full catalog/provider acceptance.
 
 Current v2 follow-up: owner-approved protected consent and genuine saved-grant refresh complete on READY6ec69ce. All6API/7checked scopes READY both before and after refresh; all2accounts encrypted/backfill/refresh ready, zero problems, storage mode unchanged. Source repair and domain-list read are complete; remaining traffic/other catalog, Hub and November1 gates remain pending.
+
+Subsequent owner-approved setup completed: one Postmaster domain registration, one additive Vercel verificationTXT (14existing records preserved), public DNS proof, Google Domain verified and originalTESTlistOWNER/VERIFIED. Traffic operation now verified200/native v2 empty statistics for the fixed seven-day window; no sending or delivery-health claim. Current155verified/9unverified/2Vault excluded supersedes earlier empty-domain prerequisite. No release needed.
