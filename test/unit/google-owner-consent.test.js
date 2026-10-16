@@ -35,6 +35,9 @@ async function submit(values={},headers={},raw=false){
  if(raw)req.headers['content-type']='application/x-www-form-urlencoded';
  const res=response();await authorize(req,res);return res;
 }
+function continuation(res){
+ return new URL(res.body.match(/href="([^"]+)" rel="noreferrer"/)[1].replaceAll('&amp;','&'));
+}
 beforeEach(()=>{
  holder.db=createFakeDb();holder.grants=0;holder.connected=0;holder.account=null;
  process.env.PUBLIC_BASE_URL=origin;
@@ -53,7 +56,9 @@ describe('protected owner-initiated Google setup',()=>{
   expect((await submit({passphrase,purpose:'policy_read'})).statusCode).toBe(400);
   expect((await submit({passphrase:'wrong',purpose:'policy_read',account:'ops@example.test'})).statusCode).toBe(401);
   expect(holder.grants).toBe(0);
-  expect((await submit({passphrase,purpose:'policy_read',account:'ops@example.test'})).statusCode).toBe(302);
+  const accepted=await submit({passphrase,purpose:'policy_read',account:'ops@example.test'});
+  expect(accepted.statusCode).toBe(200);
+  expect(continuation(accepted).origin).toBe('https://accounts.google.test');
   expect(holder.purpose).toBe('policy_read');
  });
  it('requires owner passphrase before it ever starts Google OAuth',async()=>{
@@ -65,7 +70,13 @@ describe('protected owner-initiated Google setup',()=>{
   const wrong=await submit({passphrase:'incorrect'});
   expect(wrong.statusCode).toBe(401);expect(holder.grants).toBe(0);
   const good=await submit({passphrase,account:'ops@robinsonappliancerentals.com'}, {},true);
-  expect(good.statusCode).toBe(302);
+  expect(good.statusCode).toBe(200);
+  expect(good.headers.Location).toBeUndefined();
+  expect(good.headers['Content-Security-Policy']).toContain("form-action 'self';");
+  expect(good.headers['Content-Security-Policy']).not.toContain('accounts.google');
+  expect(good.body).toContain('No Google permission has been granted yet.');
+  expect(continuation(good).origin).toBe('https://accounts.google.test');
+  expect(good.body).not.toContain(passphrase);
   expect(good.headers['Referrer-Policy']).toBe('no-referrer');
   expect(good.headers['Set-Cookie']).toMatch(/HttpOnly; Secure; SameSite=Lax/);
   expect(holder.account).toBe('ops@robinsonappliancerentals.com');
@@ -91,7 +102,7 @@ describe('protected owner-initiated Google setup',()=>{
  });
  it('requires a fresh nonce cookie on the callback, without provider exchanges on failure',async()=>{
   const auth=await submit({passphrase,account:'ops@robinsonappliancerentals.com',label:'Appliance Rentals'});
-  const u=new URL(auth.headers.Location);
+  const u=continuation(auth);
   const state=u.searchParams.get('state');
   const cookie=auth.headers['Set-Cookie'].split(';')[0];
   expect(verifyGoogleSetup(state,cookie)).toMatchObject({label:'Appliance Rentals'});

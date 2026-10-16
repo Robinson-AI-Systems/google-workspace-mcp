@@ -76,10 +76,12 @@ export default async function handler(req,res){
   const label=typeof p.label==='string'?p.label.trim().slice(0,80):'';
   const {state,cookie}=startGoogleSetup(label);
   const url=getGoogleAuthUrl(state,account||undefined,purpose);
-  res.setHeader('Cache-Control','no-store');
-  res.setHeader('Referrer-Policy','no-referrer');
   res.setHeader('Set-Cookie',cookie);
-  res.writeHead(302,{Location:url});res.end();
+  // Chromium applies the initiating form's self-only CSP to redirects too.
+  // A fresh page and ordinary link keep the passphrase POST on this origin
+  // without broadening form-action to Google or forwarding a form body.
+  send(res,200,'<h1>Owner verified</h1><p>No Google permission has been granted yet.</p>'+
+   '<p><a href="'+escape(url)+'" rel="noreferrer">Continue to Google</a></p>');
  }catch{
   send(res,503,'<h1>Google connection unavailable</h1><p>Check the service OAuth configuration and database, then retry.</p>');
  }
