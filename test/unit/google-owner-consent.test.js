@@ -45,6 +45,21 @@ beforeEach(()=>{
  process.env.TOKEN_ENCRYPTION_KEY=Buffer.alloc(32,7).toString('base64');
 });
 describe('protected owner-initiated Google setup',()=>{
+ it('keeps Tasks-only recovery behind owner, canonical origin, mailbox and signed-state gates',async()=>{
+  const alias=response();await authorize({method:'GET',headers:{host:'alias.test'},query:{purpose:'tasks_read',account:'ops@example.test'}},alias);
+  expect(new URL(alias.headers.Location).searchParams.get('purpose')).toBe('tasks_read');
+  const page=response();await authorize({method:'GET',headers:{host:'workspace.example.test'},query:{purpose:'tasks_read'}},page);
+  expect(page.body).toContain('name="purpose" value="tasks_read"');
+  expect(page.body).toContain('only read-only access to Tasks');
+  expect(page.body).not.toMatch(/Vault|eDiscovery/);
+  expect((await submit({passphrase,purpose:'tasks_read'})).statusCode).toBe(400);
+  expect((await submit({passphrase,purpose:'tasks_read',account:'ops@example.test'},{origin:'https://foreign.test'})).statusCode).toBe(403);
+  expect((await submit({passphrase:'wrong',purpose:'tasks_read',account:'ops@example.test'})).statusCode).toBe(401);
+  expect(holder.grants).toBe(0);
+  const accepted=await submit({passphrase,purpose:'tasks_read',account:'ops@example.test'});
+  expect(accepted.statusCode).toBe(200);expect(holder.purpose).toBe('tasks_read');expect(holder.account).toBe('ops@example.test');
+  expect(verifyGoogleSetup(continuation(accepted).searchParams.get('state'),accepted.headers['Set-Cookie'].split(';')[0])).not.toBeNull();
+ });
  it('keeps catalog-read consent separate, canonical, mailbox-bound and owner-protected',async()=>{
   const alias=response();await authorize({method:'GET',headers:{host:'alias.test'},query:{purpose:'catalog_read',account:'ops@example.test'}},alias);
   expect(new URL(alias.headers.Location).searchParams.get('purpose')).toBe('catalog_read');

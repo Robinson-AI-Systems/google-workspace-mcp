@@ -3286,3 +3286,8 @@ READY/canonical source, present real narrow Google consent, run remaining repair
 on the retained existing14-area pass, and handle missing-area/resource approval separately.
 
 Final assembled local proof: npm run check and1819/1819unit tests PASS; source-specific focused73PASS. Checked release remains withheld pending exact-head and postmergeCI/review.
+
+
+### October 16 approved completion follow-up — current source repair
+
+Owner approved all three bundled requests at 09:17:50 America/Denver. On independently source-pinned READY f1b1200, the fifteenth synthetic fixture (empty shared drive) proved the acting account is its only member with organizer role; exact application membership check ready, audited deletion and independent native GET404 verified. Conservative mutation total36/60. Original secondary Calendar/event alone retained for fractional-window regression. Google catalog_read consent completed; token-info proves all3 new scopes and same pinned group transitive membership returned1 row. Second membership request returned200 with empty native object: no positive boolean claim. Tasks readiness newly denied after consent (causality unproven); other5 APIs ready. Existing recovery flow includes owner-excluded Vault, so automatic review refused it. Add a protected tasks_read purpose requesting only tasks.readonly, leaving earlier contracts unchanged. This source repair needs exact-head checks/review and later owner release, not a new feature bundle. New approved chrome/domain24h read-only pass created, no existing pass changed; secure transfer remains unconfirmed after browser URL-policy block. Never scrape secret or replay issuance. Evidence: evidence/2026-10-16-approved-shared-drive-progress.json. Ledger remains25 PASSED/4 PENDING.

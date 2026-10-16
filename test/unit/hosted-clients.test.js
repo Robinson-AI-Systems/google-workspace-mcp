@@ -5,6 +5,19 @@ import {handlers as extraHandlers} from '../../src/tools/extra-admin-apis.js';
 import { handlers as policyHandlers } from '../../src/tools/policy-audit.js';
 
 describe('hosted Google API clients', () => {
+  it('recovers Tasks read access without requesting Vault or other new scopes',()=>{
+    const before={...process.env};
+    try{
+      process.env.PUBLIC_BASE_URL='https://workspace.example.test';
+      process.env.GOOGLE_OAUTH_CLIENT_ID='fake-client';process.env.GOOGLE_OAUTH_CLIENT_SECRET='fake-secret';
+      const url=new URL(getGoogleAuthUrl('tasks-state','ops@example.test','tasks_read'));
+      expect(url.searchParams.get('scope')).toBe('https://www.googleapis.com/auth/tasks.readonly');
+      expect(url.searchParams.get('include_granted_scopes')).toBe('true');
+      expect(url.searchParams.get('state')).toBe('tasks-state');
+      expect(url.searchParams.get('login_hint')).toBe('ops@example.test');
+      expect(url.searchParams.get('access_type')).toBe('offline');
+    }finally{process.env=before;}
+  });
   it('offers only three incremental catalog read scopes through a separate purpose',()=>{
     const before={...process.env};
     try{

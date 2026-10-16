@@ -1,0 +1,127 @@
+{
+  "date": "2026-10-16",
+  "sourceRevision": "f1b1200e66f328b8ca85871d6aed0ce8abf9a9df",
+  "ownerApproval": "All three requests approved 2026-10-16 09:17:50 America/Denver",
+  "sharedDrive": {
+    "exactCreatedDrive": true,
+    "onlyActorPermission": true,
+    "organizer": true,
+    "integrationReady": true
+  },
+  "cleanup": {
+    "exactIndependentNativeGet": 404,
+    "deleted": true
+  },
+  "bounds": {
+    "maximumLogicalObjects": 15,
+    "actualLogicalObjects": 15,
+    "maximumMutationRequests": 60,
+    "conservativelyReservedMutations": 36,
+    "sentMessages": 0,
+    "invites": 0,
+    "publicShares": 0,
+    "spend": 0
+  },
+  "retainedFixture": "Original secondary calendar and recurring event retained for pending fractional-window regression; no replacement created.",
+  "consent": {
+    "state": "connected_callback_observed",
+    "newGrantCompleted": true,
+    "newScopeChecks": [
+      {
+        "name": "cloud-identity.groups.readonly",
+        "status": "ready"
+      },
+      {
+        "name": "chrome.management.policy.readonly",
+        "status": "ready"
+      },
+      {
+        "name": "chat.memberships.readonly",
+        "status": "ready"
+      }
+    ]
+  },
+  "remaining": [
+    "Complete secure transfer of already-created Chrome/domain pass; do not create duplicate",
+    "Use exact narrow pass for approved Chrome/domain reads",
+    "Review/test/merge Tasks-only recovery and existing checked calendar/status repairs; request one release only after eligible Chrome/domain checks",
+    "Original retained calendar regression and cleanup after repair release",
+    "Restore Tasks-only consent without Vault then recheck all6APIs/scopes; genuine refresh/encryption readiness current grant",
+    "Full casebook precise remaining assets and November1 plaintext gate remain open"
+  ],
+  "vaultLiveTesting": "Excluded by owner; no live call attempted",
+  "ledger": {
+    "passed": 25,
+    "pending": 4
+  },
+  "secretHandling": "No credentials, exact provider identifiers or provider bodies included.",
+  "apiReadiness": [
+    {
+      "api": "gmail",
+      "status": "ready",
+      "reason": null
+    },
+    {
+      "api": "drive",
+      "status": "ready",
+      "reason": null
+    },
+    {
+      "api": "calendar",
+      "status": "ready",
+      "reason": null
+    },
+    {
+      "api": "tasks",
+      "status": "not_readable",
+      "reason": "scope_or_access_denied"
+    },
+    {
+      "api": "chat",
+      "status": "ready",
+      "reason": null
+    },
+    {
+      "api": "people",
+      "status": "ready",
+      "reason": null
+    }
+  ],
+  "groupRechecks": [
+    {
+      "tool": "workspace_identity_list_group_transitive_membership",
+      "http": 200,
+      "transitiveRows": 1
+    },
+    {
+      "tool": "workspace_identity_check_membership",
+      "http": 200,
+      "body": "empty native object; no positive boolean-membership claim"
+    }
+  ],
+  "chromeDomainPass": {
+    "created": true,
+    "areas": [
+      "chrome",
+      "domain"
+    ],
+    "hours": 24,
+    "allowWrites": false,
+    "forHub": false,
+    "encryptedHandoff": "pending; secure request submitted but server still reports awaiting_existing_pass_sign_in; browser confirmation rejected by URL policy; no unsafe recovery attempted",
+    "secretRead": false
+  },
+  "automaticApprovalBlocks": [
+    "Reading all code elements refused; resolved with exact pass-id regex; no secret read",
+    "Acceptance_read route refused because includes excluded Vault; new Tasks-only source repair prepared, no retry of old flow"
+  ],
+  "tasksOnlyRepair": {
+    "purpose": "tasks_read",
+    "exactScope": "https://www.googleapis.com/auth/tasks.readonly",
+    "vaultRequested": false,
+    "localCheck": "PASS",
+    "localUnitTests": 1830,
+    "liveProviderProof": false,
+    "releaseAuthorized": false
+  }
+}

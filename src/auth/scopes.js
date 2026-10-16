@@ -108,3 +108,9 @@ export const CATALOG_READ_SCOPES = Object.freeze([
   'https://www.googleapis.com/auth/chrome.management.policy.readonly',
   'https://www.googleapis.com/auth/chat.memberships.readonly'
 ]);
+
+// Independent Tasks recovery when eDiscovery consent is excluded by the owner.
+// Keep the earlier acceptance and standard enrollment contracts unchanged.
+export const TASKS_READ_SCOPES = Object.freeze([
+  'https://www.googleapis.com/auth/tasks.readonly'
+]);
