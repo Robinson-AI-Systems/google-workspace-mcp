@@ -14,9 +14,11 @@ function canonical(){
    (u.pathname==='/'||u.pathname==='')?u.origin:null;
  }catch{return null;}
 }
-function send(res,status,html){
+function send(res,status,html,{isForm=false}={}){
  res.setHeader('Cache-Control','no-store');
- res.setHeader('Referrer-Policy','no-referrer');
+ // A no-referrer form can produce Origin:null in Chromium. Keep the
+ // canonical same-origin POST verifiable without leaking to Google.
+ res.setHeader('Referrer-Policy',isForm?'same-origin':'no-referrer');
  res.setHeader('X-Frame-Options','DENY');
  res.setHeader('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'");
  res.setHeader('Content-Type','text/html; charset=utf-8');
@@ -49,7 +51,7 @@ export default async function handler(req,res){
    res.writeHead(303,{Location:u.toString()});res.end();return;
   }
   send(res,200,form(typeof req.query?.account==='string'?req.query.account.slice(0,320):'',
-                    typeof req.query?.label==='string'?req.query.label.slice(0,80):'',purpose));
+                    typeof req.query?.label==='string'?req.query.label.slice(0,80):'',purpose),{isForm:true});
   return;
  }
  // The owner passphrase never goes through an attacker-controlled origin.
