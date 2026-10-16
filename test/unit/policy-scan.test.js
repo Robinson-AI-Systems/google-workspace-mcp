@@ -15,6 +15,19 @@ const client = list => ({
 const json = response => JSON.parse(response.content[0].text);
 
 describe('P7-2 complete bounded provider page and evidence contract', () => {
+  it('identifies the failed provider field without disclosing policy data',()=>{
+    const privateRow={...row,name:'policies/private?secret',setting:{...row.setting,value:{private:'sensitive-value'}}};
+    expect(()=>parsePolicyPage({data:{policies:[privateRow]}})).toThrow('invalid policy resource (name format)');
+    try{parsePolicyPage({data:{policies:[privateRow]}})}catch(e){
+      expect(e.message).not.toMatch(/private|secret|sensitive-value/);
+    }
+    for(const [patch,label] of [
+      [{setting:{...row.setting,type:'unsupported-private-type'}},'setting.type format'],
+      [{setting:{type:row.setting.type}},'setting.value object'],
+      [{policyQuery:null},'policyQuery object'],
+      [{type:'private-enum'},'type enum']
+    ])expect(()=>parsePolicyPage({data:{policies:[{...row,...patch}]}})).toThrow('('+label+')');
+  });
   it('constructs a Google-documented customer and application filter without accepting injection', () => {
     expect(policyFilter()).toBe('customer == "customers/my_customer"');
     expect(policyFilter('gmail')).toContain("setting.type.matches('^settings/gmail");
