@@ -538,7 +538,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P0-2-FULL-CASEBOOK-REAL-READ",
     "priority": 1,
-    "requiredRevision": "b199355c2f10936470855726ce7fc8ccb49c1b5f",
+    "requiredRevision": "280df6e672554779da6f3cd9cfbe3879f169eab0",
     "task": "Run full source-reviewed P0-2 read-only catalog against approved real Google TEST account; publish sanitized report and fix or ledger each real failure",
     "procedure": "scripts/smoke-readonly-catalog.mjs; docs/plan/GOOGLE-ACCEPTANCE.md; docs/plan/TASKS.md P0-2",
     "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
@@ -626,7 +626,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P5-2-PLAINTEXT-RETIRE",
     "priority": 5,
-    "requiredRevision": "fc8a922e1fc515c506a22b443fdd5a365bfb2e18",
+    "requiredRevision": "280df6e672554779da6f3cd9cfbe3879f169eab0",
     "task": "Owner-approved readiness-based cutover to encrypted-only Google tokens, then prove each account renewal clears its plaintext tokens column without losing credentials; verify recovery and incompatible-deployment drain.",
     "procedure": "docs/plan/TASKS.md P5-2 controlled future activation",
     "gates": "Owner October16 explicitly replaces calendar delay: all-account encrypted/backfill/genuine-refresh readiness, checked READY encryption-aware release, incompatible deployment drain and reviewed encrypted restore/reconnection plan. Protected authenticated explicit activation; no plaintext-only rollback.",
@@ -3486,3 +3486,7 @@ default apps.alerts path is implemented without widening existing delegation or
 ordinary login. Enabling it still needs exact owner authorization for its
 read-and-write scope. See smoke report and final developer-audit evidence.
 No new product bundle is claimed; this is completion/defect repair.
+
+PR194 source self-review: checked lazy Alert Center refusal inside security-snapshot coverage handling, no widening of existing scopes, exact-origin authenticated retirement action, separate integrity/readiness and activation, durable SQL mode transition, no credentials in reports. Local check and1875unit tests pass; no inline review threads. Automated Codex review unavailable due to recorded usage quota, not a source finding; required exact-head Actions still gate merge. Both source-dependent queue rows now pin PR194 source280df6e before actual post-release execution.
+
+Final retirement review also closes the retained single-account google_auth copy: only after encrypted-only activation and a successful account refresh, clear a legacy credential whose refresh token exactly matches that account’s pre/post renewal token. Unmatched credentials and the table remain intact; no activation-time bulk erase. Sanitized inspection adds legacyPlaintextCopies; real PG tests cover unrelated-account refusal, rotation, next-refresh timing and no resurrection. Actual live counts remain unverified until release.

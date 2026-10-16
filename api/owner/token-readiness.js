@@ -2,7 +2,7 @@
 // Owner-authenticated inspection, existing-grant refresh and explicit retirement.
 import {refreshConnectedAccountForReadiness} from '../../src/auth/google-auth-hosted.js';
 import {parseBody} from '../../src/oauth/helpers.js';
-import {initSchema,inspectGoogleTokenRetirement,activateGoogleTokenRetirement,recordLoginAttempt,
+import {initSchema,inspectGoogleTokenRetirement,activateGoogleTokenRetirement,listGoogleAccounts,recordLoginAttempt,
  countRecentFailedLogins,markLoginAttemptSucceeded} from '../../src/db.js';
 import {evaluateLogin,clientIp,LOCKOUT_WINDOW_MINUTES} from '../../src/oauth/login-guard.js';
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -24,11 +24,11 @@ function sanitized(report){
  const bool=x=>typeof x==='boolean',count=x=>Number.isSafeInteger(x)&&x>=0;
  const numeric=['missingCopy','corruptOrStale','unverifiedBackfill','refreshNotObserved'];
  const flags=['missingKey','noAccounts'];
- if(!report||!bool(report.encryptedOnly)||!count(report.accountsChecked)||!count(report.plaintextAccounts)||report.plaintextAccounts>report.accountsChecked||!bool(report.ready)||
+ if(!report||!bool(report.encryptedOnly)||!count(report.legacyPlaintextCopies)||!count(report.accountsChecked)||!count(report.plaintextAccounts)||report.plaintextAccounts>report.accountsChecked||!bool(report.ready)||
   !report.problems||numeric.some(k=>!count(report.problems[k]))||flags.some(k=>!bool(report.problems[k]))||
   report.notBefore!==null)
   throw Error('Invalid inspection result');
- return {encryptedOnly:report.encryptedOnly,accountsChecked:report.accountsChecked,plaintextAccounts:report.plaintextAccounts,ready:report.ready,
+ return {encryptedOnly:report.encryptedOnly,accountsChecked:report.accountsChecked,legacyPlaintextCopies:report.legacyPlaintextCopies,plaintextAccounts:report.plaintextAccounts,ready:report.ready,
   problems:Object.fromEntries([...flags,...numeric].map(k=>[k,report.problems[k]])),notBefore:report.notBefore};
 }
 export default async function handler(req,res){
@@ -40,7 +40,7 @@ export default async function handler(req,res){
    res.setHeader('Cache-Control','no-store');res.setHeader('Referrer-Policy','no-referrer');
    res.writeHead(303,{Location:origin+'/api/owner/token-readiness'});res.end();return;
   }
-  reply(res,200,'<h1>Inspect token encryption readiness</h1><p>Read-only inspection of all connected accounts. This returns counts and readiness conditions only. It does not refresh accounts or retire plaintext tokens.</p><form method="POST"><label>Admin passphrase <input name="passphrase" type="password" autocomplete="current-password" required></label><p><button type="submit">Inspect readiness</button></p></form><hr><h2>Refresh one existing account</h2><p>Uses only its saved Google grant, verifies the mailbox and saves the refreshed credential. No new scopes or consent.</p><form id="refresh-form" method="POST"><input type="hidden" name="action" value="refresh"><p><label>Connected account email <input name="account" type="email" required></label></p><p><label>Repeat account email <input name="confirm_account" type="email" required></label></p><label>Admin passphrase <input name="passphrase" type="password" autocomplete="current-password" required></label><p><button type="submit">Refresh existing account</button></p></form><hr><h2>Activate encrypted-only storage</h2><p>Run only after the checked encryption-aware release is serving, incompatible deployments have drained, and encrypted recovery or account reconnection has been reviewed. All accounts must pass fresh readiness. Plaintext clears on each account’s next refresh.</p><form id="retire-form" method="POST"><input type="hidden" name="action" value="retire"><p><label><input type="checkbox" name="deployments_drained" value="confirmed" required> Incompatible deployments have drained</label></p><p><label><input type="checkbox" name="recovery_reviewed" value="confirmed" required> Encrypted recovery or reconnection reviewed</label></p><p><label>Type RETIRE PLAINTEXT <input name="confirmation" required></label></p><label>Admin passphrase <input name="passphrase" type="password" autocomplete="current-password" required></label><p><button type="submit">Activate encrypted-only storage</button></p></form>',true);return;
+  reply(res,200,'<h1>Inspect token encryption readiness</h1><p>Read-only inspection of all connected accounts. This returns counts and readiness conditions only. It does not refresh accounts or retire plaintext tokens.</p><form method="POST"><label>Admin passphrase <input name="passphrase" type="password" autocomplete="current-password" required></label><p><button type="submit">Inspect readiness</button></p></form><hr><h2>Refresh one existing account</h2><p>Uses only its saved Google grant, verifies the mailbox and saves the refreshed credential. No new scopes or consent.</p><form id="refresh-form" method="POST"><input type="hidden" name="action" value="refresh"><p><label>Connected account email <input name="account" type="email" required></label></p><p><label>Repeat account email <input name="confirm_account" type="email" required></label></p><label>Admin passphrase <input name="passphrase" type="password" autocomplete="current-password" required></label><p><button type="submit">Refresh existing account</button></p></form><hr><h2>Activate encrypted-only storage</h2><p>Run only after the checked encryption-aware release is serving, incompatible deployments have drained, and encrypted recovery or account reconnection has been reviewed. All accounts must pass fresh readiness. This action then refreshes every connected account using its existing grant and verifies its mailbox, clearing only matched plaintext copies. No new scopes or Google consent.</p><form id="retire-form" method="POST"><input type="hidden" name="action" value="retire"><p><label><input type="checkbox" name="deployments_drained" value="confirmed" required> Incompatible deployments have drained</label></p><p><label><input type="checkbox" name="recovery_reviewed" value="confirmed" required> Encrypted recovery or reconnection reviewed</label></p><p><label>Type RETIRE PLAINTEXT <input name="confirmation" required></label></p><label>Admin passphrase <input name="passphrase" type="password" autocomplete="current-password" required></label><p><button type="submit">Activate and refresh connected accounts</button></p></form>',true);return;
  }
  if(req.headers?.origin!==origin){reply(res,403,'<h1>Wrong website address</h1>');return;}
  if(!process.env.ADMIN_PASSPHRASE){reply(res,503,'<h1>Owner authentication unavailable</h1>');return;}
@@ -67,8 +67,11 @@ export default async function handler(req,res){
    reply(res,verdict.status==='locked'?429:401,'<h1>Unauthorized</h1>');return;
   }
   if(refresh)await refreshConnectedAccountForReadiness(body.account);
-  if(retire)await activateGoogleTokenRetirement({ownerConfirmed:true});
+  if(retire){
+   await activateGoogleTokenRetirement({ownerConfirmed:true});
+   for(const account of await listGoogleAccounts())await refreshConnectedAccountForReadiness(account.email);
+  }
   const report=sanitized(await inspectGoogleTokenRetirement());
-  reply(res,200,'<h1>Token readiness inspection</h1><p>'+(retire?'Encrypted-only storage is active. Plaintext clears on each account’s next refresh.':refresh?'Existing account refreshed and mailbox verified. No scopes or storage mode changed.':'No credentials, settings or storage mode changed.')+'</p><pre>'+escape(JSON.stringify(report,null,2))+'</pre>');
+  reply(res,200,'<h1>Token readiness inspection</h1><p>'+(retire?'Encrypted-only storage is active. Existing connected accounts refreshed and mailboxes verified; inspect remaining plaintext counts below.':refresh?'Existing account refreshed and mailbox verified. No scopes or storage mode changed.':'No credentials, settings or storage mode changed.')+'</p><pre>'+escape(JSON.stringify(report,null,2))+'</pre>');
  }catch{reply(res,503,'<h1>Inspection unavailable</h1><p>No successful result is confirmed. Inspect readiness before retrying.</p>');}
 }

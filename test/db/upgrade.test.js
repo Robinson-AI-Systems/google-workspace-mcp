@@ -317,6 +317,26 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       expect((await db.inspectGoogleTokenRetirement()).plaintextAccounts).toBe(0);
     });
 
+    it('retires only the matched legacy copy on actual next refresh and keeps its table',async()=>{
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY=crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test',tokens,{source:'refresh'});
+      await db.saveGoogleTokensFor('b@example.test',{access_token:'other',refresh_token:'other-refresh'},{source:'refresh'});
+      await rawQuery('INSERT INTO google_auth (id,tokens) VALUES (1,$1::jsonb)',[JSON.stringify(tokens)]);
+      await db.activateGoogleTokenRetirement({ownerConfirmed:true});
+      expect((await db.inspectGoogleTokenRetirement()).legacyPlaintextCopies).toBe(1);
+      await db.saveGoogleTokensFor('b@example.test',{access_token:'other-new'},{source:'refresh'});
+      expect((await db.inspectGoogleTokenRetirement()).legacyPlaintextCopies).toBe(1);
+      await db.saveGoogleTokensFor('a@example.test',{access_token:'updated'});
+      expect((await db.inspectGoogleTokenRetirement()).legacyPlaintextCopies).toBe(1);
+      await db.saveGoogleTokensFor('a@example.test',{access_token:'renewed',refresh_token:'rotated'},{source:'refresh'});
+      expect((await db.inspectGoogleTokenRetirement()).legacyPlaintextCopies).toBe(0);
+      expect((await rawQuery('SELECT tokens FROM google_auth WHERE id=1'))[0].tokens).toEqual({});
+      expect(await db.getGoogleTokensFor('a@example.test')).toMatchObject({refresh_token:'rotated'});
+      await rawQuery('DELETE FROM google_accounts');
+      expect(await db.migrateLegacyGoogleAuth(async()=>{throw Error('cleared credential must not migrate');})).toBeNull();
+    });
+
     it('uses ciphertext as authority after activation, merges partial refreshes, and clears only the updated plaintext row',async()=>{
       await reset();
       process.env.TOKEN_ENCRYPTION_KEY=crypto.randomBytes(32).toString('base64');

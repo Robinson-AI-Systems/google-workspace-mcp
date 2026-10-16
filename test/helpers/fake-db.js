@@ -130,6 +130,8 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
         ? await api.getGoogleTokensFor(e) : (previous?.tokens || {});
       const merged = { ...before, ...tokens };
       const encrypted = key ? encryptJson(merged, key) : null;
+      if (state.encryptedOnlyAt && source === 'refresh' && state.legacyTokens?.refresh_token &&
+        [before.refresh_token,merged.refresh_token].includes(state.legacyTokens.refresh_token)) state.legacyTokens = {};
       if (previous) {
         previous.tokens = state.encryptedOnlyAt ? {} : merged;
         previous.tokens_enc = encrypted;
@@ -160,6 +162,7 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
         }
       }
       return {encryptedOnly:!!state.encryptedOnlyAt,accountsChecked:rows.length,
+        legacyPlaintextCopies:state.legacyTokens && Object.keys(state.legacyTokens).length ? 1 : 0,
         plaintextAccounts:rows.filter(row=>Object.keys(row.tokens||{}).length>0).length,
         ready:rows.length > 0 && !!key && Object.values(problems).every(x=>x===false || x===0),
         problems,notBefore:null};
@@ -182,7 +185,7 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     },
     async migrateLegacyGoogleAuth(resolveEmail) {
       if (state.accounts.size > 0) return null;
-      if (!state.legacyTokens) return null;
+      if (!state.legacyTokens || !Object.keys(state.legacyTokens).length) return null;
       const email = norm(await resolveEmail(state.legacyTokens));
       if (!email) throw new Error('Could not determine which mailbox the existing Google sign-in belongs to.');
       await api.saveGoogleTokensFor(email, state.legacyTokens, { label: 'Migrated from single-account setup' });

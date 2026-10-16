@@ -385,3 +385,5 @@ fails the service conformance step; reference success cannot substitute for it.
   existing owner login/lockout and exact Origin. Fresh readiness reports include
   plaintextAccounts for next-refresh verification. Source tests are not live
   retirement. Hub discovers this service, with its own scoped grant and audit.
+
+Final retirement review also closes the retained single-account google_auth copy: only after encrypted-only activation and a successful account refresh, clear a legacy credential whose refresh token exactly matches that account’s pre/post renewal token. Unmatched credentials and the table remain intact; no activation-time bulk erase. Sanitized inspection adds legacyPlaintextCopies; real PG tests cover unrelated-account refusal, rotation, next-refresh timing and no resurrection. Actual live counts remain unverified until release.

@@ -258,3 +258,7 @@ authentication, lockout and exact same-origin validation. Keep the encryption ke
 recover by a compatible forward fix, encrypted restore or account reconnection,
 never by rolling back to plaintext-only code. Activation changes durable storage
 mode; each account's plaintext clears only on its next successful save/refresh.
+
+Final retirement review also closes the retained single-account google_auth copy: only after encrypted-only activation and a successful account refresh, clear a legacy credential whose refresh token exactly matches that account’s pre/post renewal token. Unmatched credentials and the table remain intact; no activation-time bulk erase. Sanitized inspection adds legacyPlaintextCopies; real PG tests cover unrelated-account refusal, rotation, next-refresh timing and no resurrection. Actual live counts remain unverified until release.
+
+The protected activation form refreshes every existing connected account after mode activation, using only its saved grant and verifying mailbox identity. This combines the approved cutover and required next-renewal checks in one authenticated operator action. On any error, inspect aggregate state before retrying; activation is durable/idempotent and no scopes are added.
