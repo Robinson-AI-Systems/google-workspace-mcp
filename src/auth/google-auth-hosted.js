@@ -17,6 +17,7 @@ import {
 import { ALL_SCOPES, SCOPE_GROUPS, ACCEPTANCE_READ_SCOPES, CATALOG_READ_SCOPES, TASKS_READ_SCOPES, SITE_VERIFICATION_READ_SCOPES, COMPLETION_READ_SCOPES } from './scopes.js';
 import { buildDataTransferClient } from './datatransfer-client.js';
 import { buildCloudIdentityPolicyClient } from './cloud-identity-policy-client.js';
+import { buildPostmasterClient } from './postmaster-client.js';
 import { withFormsPublishing } from './forms-client.js';
 
 export function getOAuthRedirectUri() {
@@ -172,7 +173,7 @@ export function buildApiClients(auth) {
   const clients = { auth, actingAs: auth.actingAs };
   const services = {
     gmail: () => google.gmail({ version: 'v1', auth }),
-    postmaster: () => google.gmailpostmastertools({ version: 'v1', auth }),
+    postmaster: () => buildPostmasterClient(auth),
     drive: () => google.drive({ version: 'v3', auth }),
     calendar: () => google.calendar({ version: 'v3', auth }),
     sheets: () => google.sheets({ version: 'v4', auth }),
