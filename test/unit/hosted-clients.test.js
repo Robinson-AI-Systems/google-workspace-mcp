@@ -1,8 +1,45 @@
 import { describe, it, expect } from 'vitest';
 import { buildApiClients, getGoogleAuthUrl } from '../../src/auth/google-auth-hosted.js';
+import { handlers as directoryHandlers } from '../../src/tools/admin-directory.js';
 import { handlers as policyHandlers } from '../../src/tools/policy-audit.js';
 
 describe('hosted Google API clients', () => {
+  it('requests the exact four incremental acceptance-read scopes without write scopes',()=>{
+    const before={...process.env};
+    try{
+      process.env.PUBLIC_BASE_URL='https://workspace.example.test';
+      process.env.GOOGLE_OAUTH_CLIENT_ID='fake-client';process.env.GOOGLE_OAUTH_CLIENT_SECRET='fake-secret';
+      const url=new URL(getGoogleAuthUrl('fake-state','ops@example.test','acceptance_read'));
+      expect(url.searchParams.get('scope').split(' ')).toEqual([
+        'https://www.googleapis.com/auth/tasks.readonly',
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/ediscovery.readonly'
+      ]);
+      expect(url.searchParams.get('include_granted_scopes')).toBe('true');
+      expect(url.searchParams.get('state')).toBe('fake-state');
+      expect(url.searchParams.get('login_hint')).toBe('ops@example.test');
+      expect(url.searchParams.get('access_type')).toBe('offline');
+    }finally{process.env=before;}
+  });
+  it('reports unavailable notifications through the real hosted SDK without a provider call',async()=>{
+    const requests=[];
+    const clients=buildApiClients({request:async o=>{requests.push(o);throw Error('no provider request expected');}});
+    expect(clients.admin.notifications).toBeUndefined();
+    const result=JSON.parse((await directoryHandlers.admin_list_admin_console_notifications({},clients)).content[0].text);
+    expect(result).toMatchObject({status:'not_readable',reason:'provider_method_unavailable',notificationsRead:false,changesMade:false});
+    expect(result).not.toHaveProperty('items');expect(requests).toEqual([]);
+  });
+  it('preserves supported notification reads and genuine provider denials',async()=>{
+    const args=[];const row={notificationId:'fake-id'};
+    const clients={admin:{notifications:{list:async a=>{args.push(a);return {data:{items:[row]}};}}}};
+    expect(JSON.parse((await directoryHandlers.admin_list_admin_console_notifications({},clients)).content[0].text)).toEqual([row]);
+    expect(args).toEqual([{customer:'my_customer'}]);
+    const denied=Object.assign(new Error('permission denied'),{code:403});
+    clients.admin.notifications.list=async()=>{throw denied;};
+    await expect(directoryHandlers.admin_list_admin_console_notifications({},clients)).rejects.toBe(denied);
+  });
+
   it('requests only incremental policy read consent, retaining the standard enrollment route', () => {
     const before = {...process.env};
     try {

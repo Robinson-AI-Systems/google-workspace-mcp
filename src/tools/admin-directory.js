@@ -536,6 +536,14 @@ export const handlers = {
     return ok({ deleted: args.alertId });
   },
   admin_list_admin_console_notifications: async (_args, { admin }) => {
+    // The installed Directory SDK no longer exposes this legacy resource.
+    // Missing client support is not an empty or successfully read inbox.
+    if (typeof admin?.notifications?.list !== 'function') return ok({
+      status: 'not_readable', reason: 'provider_method_unavailable',
+      changesMade: false, notificationsRead: false,
+      note: 'The installed Google Directory SDK does not expose the notifications list method. Review notifications in Google Admin Console.',
+      manualCheck: {url:'https://admin.google.com/',steps:['Open Google Admin Console for this business.','Review its notifications.']}
+    });
     const res = await admin.notifications.list({ customer: CUSTOMER });
     return ok(res.data.items || []);
   }

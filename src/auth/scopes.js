@@ -91,3 +91,12 @@ export const SCOPE_GROUPS = {
 };
 
 export const ALL_SCOPES = Array.from(new Set(Object.values(SCOPE_GROUPS).flat()));
+
+// Incremental consent for the observed acceptance-read gaps. Keep this outside
+// SCOPE_GROUPS so the standard enrollment contract does not silently expand.
+export const ACCEPTANCE_READ_SCOPES = Object.freeze([
+  'https://www.googleapis.com/auth/tasks.readonly',
+  'https://www.googleapis.com/auth/userinfo.profile',
+  'https://www.googleapis.com/auth/userinfo.email',
+  'https://www.googleapis.com/auth/ediscovery.readonly'
+]);

@@ -224,6 +224,19 @@ Source/local/CI evidence remains separate from deployed or genuine Google accept
 
 RTC profiles, metadata, bounded result handles, guarded HTTPS tool routes and short-lived read-only TEST passes are implemented and locally tested. The authoritative implementation and blocked external acceptance live in `TASKS.md`. Neither pinned Hub reference conformance nor simulated Google proves protected deployed direct/relay/Sandbox and revocation against a real service. Never widen scopes or treat test profile acceptance as production activation.
 
+## Known Bugs — genuine acceptance follow-up, October16,2026
+
+| Check | Actual result and disposition | Re-entry |
+| --- | --- | --- |
+| Admin Console notifications | Deployed8ce3d7b calls absent `admin.notifications.list`; actual Google SDK has no notifications resource. Repair returns explicit `not_readable/provider_method_unavailable` and manual Console guidance, never an empty verified list. No claim that the API itself is definitively discontinued. | Checked repair release; retain provider/API limitation in full casebook. |
+| Tasks / People profile / Vault | Actual TEST metadata and token-info prove missing Tasks/profile/email/Vault grants. Contacts read grant exists; Alert Center remains separately Google-restricted as below. Narrow incremental consent adds only four read scopes after owner authentication and Google consent. | Release repair, complete real consent, retry only failed authorized reads; edition/role may still deny Vault. |
+| Usage report date | October14 not available; existing usage-read grant ready. Older October9 customer and actor reports both returned verified native arrays. Resolved by explicit older date; no code or grant change needed. | Preserve initial failures and successful retest. |
+| Exact app resources | Original cleaned Drive/Calendar fixtures give expected trashed/missing evidence; no active tagged replacements discovered. Chat DMs were not treated as test spaces, contact discovery did not yield an exact positive resource. | Approved active owned test resources plus missing read consent; no automatic fixture creation. |
+
+Sanitized actual receipts: `evidence/2026-10-16-approved-read-progress.json`.
+These observations used the approved TEST/full credential only for read operations;
+they do not satisfy the full-catalog runner's separate read_only credential gate.
+
 ## Known gaps (as of 2026-10-02)
 
 | Where | What | Card |

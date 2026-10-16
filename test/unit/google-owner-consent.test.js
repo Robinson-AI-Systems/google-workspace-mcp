@@ -45,6 +45,24 @@ beforeEach(()=>{
  process.env.TOKEN_ENCRYPTION_KEY=Buffer.alloc(32,7).toString('base64');
 });
 describe('protected owner-initiated Google setup',()=>{
+ it('keeps acceptance-read consent canonical, owner-only and mailbox-specific',async()=>{
+  const alias=response();await authorize({method:'GET',headers:{host:'alias.test'},query:{purpose:'acceptance_read',account:'ops@example.test'}},alias);
+  expect(new URL(alias.headers.Location).searchParams.get('purpose')).toBe('acceptance_read');
+  const page=response();await authorize({method:'GET',headers:{host:'workspace.example.test'},query:{purpose:'acceptance_read'}},page);
+  expect(page.body).toContain('name="purpose" value="acceptance_read"');
+  expect(page.body).toContain('no additional write permission');
+  expect(page.body).toContain('Vault permission can view eDiscovery data');
+  expect((await submit({passphrase,purpose:'acceptance_read'})).statusCode).toBe(400);
+  expect((await submit({passphrase,purpose:'acceptance_read',account:'ops@example.test'},{origin:'https://foreign.test'})).statusCode).toBe(403);
+  expect((await submit({passphrase:'wrong',purpose:'acceptance_read',account:'ops@example.test'})).statusCode).toBe(401);
+  expect(holder.grants).toBe(0);
+  const accepted=await submit({passphrase,purpose:'acceptance_read',account:'ops@example.test'}, {},true);
+  expect(accepted.statusCode).toBe(200);
+  expect(holder.purpose).toBe('acceptance_read');
+  expect(holder.account).toBe('ops@example.test');
+  expect(verifyGoogleSetup(continuation(accepted).searchParams.get('state'),accepted.headers['Set-Cookie'].split(';')[0])).not.toBeNull();
+ });
+
  it('offers narrow policy consent only behind the same owner and origin gates',async()=>{
   const page=response();await authorize({method:'GET',headers:{host:'alias.test'},query:{purpose:'policy_read',account:'ops@example.test'}},page);
   expect(new URL(page.headers.Location).searchParams.get('purpose')).toBe('policy_read');

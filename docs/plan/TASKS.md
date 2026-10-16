@@ -354,16 +354,16 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "lastEvidence": "2026-10-15 actual owner-approved fresh Rentals TEST direct run at READY5417fdb created Drive3/Calendar1/Gmail3, replayed identical IDs, exact cleaned all3, calendar digests unchanged; secondary calendar later exact calendar_not_found. Original run failed only revocation confirmation; preserve failed checkpoint. Reviewed correction READY601f2f2/dpl_5RWTksxFxY5mEGK8rqb7MrgczobY: exact revoked read-pass preview now1row/allrevoked; write-pass self-revoke done/confirmed true with positive durable receipt. Both new passes now401pass_revoked; original24h5area read pass remains200. Read_only write refusal, mail-only area denial, foreign TEST run404 and exact owned cleaned-ledger IDs also proved. No sending, unknown resources, fixture recreation or Hub claim."
   },
   {
-    "id": "GOOGLE-RTC",
-    "priority": 2,
-    "requiredRevision": "e30606d0e52a58d4d0957fd8637b173be47b6ce5",
-    "task": "Finish remaining P8 direct/Hub/relay/Sandbox/revocation acceptance",
-    "procedure": "docs/plan/TASKS.md",
-    "gates": "Separate scoped service authorization and Hub route gates; full production catalog stays independent",
-    "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-16 fresh separate optional Hub search workspace returned tools:[],authorizedTargets:0,scanned:0,incomplete:false. Requires optional Hub target/service grant; no ordinary/TEST evidence substituted and no Hub configuration changed."
-  },
+  "id": "GOOGLE-RTC",
+  "priority": 2,
+  "requiredRevision": "e30606d0e52a58d4d0957fd8637b173be47b6ce5",
+  "task": "Finish remaining P8 direct/Hub/relay/Sandbox/revocation acceptance",
+  "procedure": "docs/plan/TASKS.md",
+  "gates": "Separate scoped service authorization and Hub route gates; full production catalog stays independent",
+  "dependsOn": [],
+  "status": "PENDING",
+  "lastEvidence": "2026-10-16 owner reported Hub target work. Independent native Hub search still0authorizedTargets/0tools; TEST/gateway identity. Hub PR221 merged01acb6b with green CI, while independent Hub productiondpl_83fmN842bW5GJqXtBT8KHQca16pa/live remains4b0a3d4(PR220). New latest fix unreleased; no genuine routed Workspace read from this connection. Need checked latest Hub release and callable target/service grant; no provider pass borrowed and standalone never blocked by optional Hub."
+},
   {
     "id": "GOOGLE-DIRECT-READ",
     "priority": 1,
@@ -499,16 +499,16 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "lastEvidence": "2026-10-16T10:15:26.738Z after owner enabled Google Sheets API in existing server project: actual SAME recorded trashed Sheet ID returned200 and matching spreadsheetId through original protected five-area Rentals TEST read_only grant. Independently READY/canonical5c23755/dpl_Exma1Dvb9Xk5Re4C6R1P6tDQjBer; source unchanged. Completes retained5/6 exact manifest plus Sheet, second-message metadata, missing/deleted-provider404, foreign-ledger404 and readonly/area403 proofs.Final12th approved read used existing Gmail fixture ID as Drive fileId:404not_found, completing explicit wrong-resource-ID refusal.12/12 total approved exact calls used; no creation, untrash, old-run replay, new grant/scope or mutation. All8 fixture objects remain cleaned and both fresh grants remain revoked. Prior503/API-disabled failures retained, never reclassified. Sanitized receipt docs/plan/evidence/2026-10-16-sheet-api-retest.json."
   },
   {
-    "id": "P8-7-EXACT-APP-READS",
-    "priority": 3,
-    "requiredRevision": "c34c9b3a1ad0d52a96aa4eaef75fc11f51215ad6",
-    "task": "Verify custom-service exact Gmail, Drive, Tasks, Chat and People resources plus Calendar minimum roles/freebusy, Drive capabilities/membership and Gmail send-as status on a consented TEST identity; collect denied/wrong-ID and insufficient-permission evidence without disclosing data",
-    "procedure": "src/tools/dev-integration.js; src/tools/dev-integration-resources.js; src/tools/dev-integration-capabilities.js; src/tools/dev-integration-calendar-readiness.js",
-    "gates": "Read-only, existing authenticated account and permitted areas; no message bodies/sending, fixture creation, admin impersonation, scope widening or consent without owner approval. Independently READY deployed revision and original resource IDs first.",
-    "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-15Denver resume reconciliation: Five-area TEST cannot prove Chat/People area reads. Prior actual7API preflight positive5/typeddenied2 remains valid. Exact prerequisite: Exact approved app resources plus existing required provider/area access. Remedy/next action: Approve exact nonproduction resource/identity manifest and any missing read-only access separately; run metadata-only matrix and preserve denied evidence."
-  },
+  "id": "P8-7-EXACT-APP-READS",
+  "priority": 3,
+  "requiredRevision": "c34c9b3a1ad0d52a96aa4eaef75fc11f51215ad6",
+  "task": "Verify custom-service exact Gmail, Drive, Tasks, Chat and People resources plus Calendar minimum roles/freebusy, Drive capabilities/membership and Gmail send-as status on a consented TEST identity; collect denied/wrong-ID and insufficient-permission evidence without disclosing data",
+  "procedure": "src/tools/dev-integration.js; src/tools/dev-integration-resources.js; src/tools/dev-integration-capabilities.js; src/tools/dev-integration-calendar-readiness.js",
+  "gates": "Read-only, existing authenticated account and permitted areas; no message bodies/sending, fixture creation, admin impersonation, scope widening or consent without owner approval. Independently READY deployed revision and original resource IDs first.",
+  "dependsOn": [],
+  "status": "PENDING",
+  "lastEvidence": "2026-10-16 fresh owner-approved read-only discovery on original approved24h TEST/full pass at pinnedREADY8ce3d7b. Gmail/Drive/Calendar/Chat list APIs ready; Tasks missing consent, People own profile missing profile/email grant, Contacts grant exists but no positive exact contact identity discovered. No active tagged owned Drive/nonprimary Calendar or test Chat space found. NEW independent read approval used saved original ledger IDs: exact Gmail/send-as ready; trashed Drive/wrong-kind404/deleted Calendar role/freebusy negative evidence retained. No fixture writes or old12-call permission extension. Exact remaining: narrow read consent plus approved active positive fixtures/IDs, bounded denied/insufficient-permission matrix. docs/plan/evidence/2026-10-16-approved-read-progress.json."
+},
   {
     "id": "P8-8-CONSOLE-READBACK",
     "priority": 3,
@@ -543,16 +543,16 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   "lastEvidence": "2026-10-16 owner-approved24h Rentals TEST/full pass, independently READY8ce3d7b/dpl_6vSCiPzjETwHvWqMfciEPUzMqx4F. Existing-pass secure RSA handoff and exact TEST identity verified. All7 mappings exercised: same-value signature/vacation exact readbacks; new tagged group add with confirmed actor and outside-domain refusal; removal confirmed then independently empty; empty exact group deletion and404. Assign/change refused independent_spending_approval_required; remove-license exercised only independently404 nonexistent test principal/fake SKU, correctly unknown/incomplete (no existing license removed or paid success claimed). Deleted owned group confirms unknown/refused partial report. All row counts/order reconciled; initial runner mistakes/provider propagation delays retained, no blind replay. Sanitized full results docs/plan/evidence/2026-10-16-existing-pass-bulk.json. Useful pass stays active until expiry/finished need."
 },
   {
-    "id": "P0-2-FULL-CASEBOOK-REAL-READ",
-    "priority": 1,
-    "requiredRevision": "1ff11c8dd7af3cdc1adedc1d0d4de20d14e6c5d0",
-    "task": "Run full source-reviewed P0-2 read-only catalog against approved real Google TEST account; publish sanitized report and fix or ledger each real failure",
-    "procedure": "scripts/smoke-readonly-catalog.mjs; docs/plan/GOOGLE-ACCEPTANCE.md; docs/plan/TASKS.md P0-2",
-    "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
-    "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-15Denver resume reconciliation: Prior safe29 reads and denial/handle coverage retained; five-area pass remains distinct, policy-only organization approval does not authorize all Reports/account/export reads. Exact prerequisite: Exact approved fixture IDs, per-case arguments/areas and separately bounded customer-wide cases. Remedy/next action: Supply/approve the bounded full casebook manifest and missing exact test resources, then publish sanitized actual-case report."
-  },
+  "id": "P0-2-FULL-CASEBOOK-REAL-READ",
+  "priority": 1,
+  "requiredRevision": "1ff11c8dd7af3cdc1adedc1d0d4de20d14e6c5d0",
+  "task": "Run full source-reviewed P0-2 read-only catalog against approved real Google TEST account; publish sanitized report and fix or ledger each real failure",
+  "procedure": "scripts/smoke-readonly-catalog.mjs; docs/plan/GOOGLE-ACCEPTANCE.md; docs/plan/TASKS.md P0-2",
+  "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
+  "dependsOn": [],
+  "status": "PENDING",
+  "lastEvidence": "2026-10-16 owner newly approved bounded organization-wide directory/device/role/security/app-access/audit/usage/Vault metadata and owned nonproduction resource discovery/exact reads; do not ask again. Actual pinned8ce3d7b TEST/full read-only operations: verified6 audit and2 older-date usage native collections plus directory metadata;48 scoped tool observations retained in docs/plan/evidence/2026-10-16-approved-read-progress.json. This is not the required read_only identity/full catalog result. Still need24h read_only grant with approved areas, complete precise reviewed per-case/resource manifest and narrow Google consent for actual missing Tasks/profile/email/Vault grants. Notifications SDK absence repaired/ledgered; exact checked repair release required before consent."
+},
   {
     "id": "P8-4-HTTP-CONTRACT",
     "priority": 2,
@@ -3156,3 +3156,42 @@ approved metadata resource/permission matrix; optional Hub needs its target/serv
 grant. November1 plus separate approval/drain/recovery still governs plaintext retirement.
 This evidence-only publication requires normal exact-headCI, review, merge, postmerge
 checks and permanent handoff; no additional service release is needed for these records.
+
+
+## October16 — execute the newly approved bounded organization/app reads
+
+Owner explicitly approved bounded organization-wide directory/device/role/security/app
+authorization/audit/usage/Vault metadata and owned nonproduction discovery/exact reads.
+Genuine direct pinned8ce3d7b TEST/full calls (read operations only) are recorded in
+docs/plan/evidence/2026-10-16-approved-read-progress.json; no ordinary/Hub substitution.
+Six native audit collections passed with5rows maximum, one explicit UTCday and no
+pagination. Initial no-crossDomain calls correctly refused; separately authorized true
+customer intent then read actual reports. Usage-date failure was reporting latency: the
+existing usage scope is ready and both older-date customer/actor reports passed.
+
+Actual Tasks full/readonly, profile/email and Vault full/readonly grants are absent;
+Contacts full already exists. Existing standard setup requests broad write scopes, so
+this repair adds purpose=acceptance_read with exactly four incremental read scopes,
+retaining owner/origin/nonce/lockout gates and include_granted_scopes. It does not grant
+Google permissions or alter existing pass permissions itself. Genuine notifications
+failure identified absent installed SDK resource; explicit unreadable/manual guidance
+replaces TypeError, not a fabricated empty array. Real hosted-SDK and protected form
+regressions added; original scope list unchanged. Actual failures/dispositions also
+recorded in ARCHITECTURE.md Known Bugs. Zero product bundles claimed.
+
+No active tagged owned Drive/nonprimary Calendar fixtures found; two Chat DMs were
+not selected as nonproduction fixtures. Under NEW read approval, original saved ledger
+IDs proved exact Gmail/send-as, wrong-kind Drive missing, trashed Drive ineligible and
+deleted Calendar role/freebusy errors. Old12-call fixture authorization was not extended;
+no fixture recreated/restored or provider write performed. Full-casebook and exact-app
+rows stay PENDING;25PASSED/4PENDING remains truthful. Useful24h full pass stays active.
+
+Owner reported Hub-target work. Independently verified PR221 merged01acb6b with green
+CI, but actual Hub live/READY dpl_83fmN842bW5GJqXtBT8KHQca16pa remains4b0a3d4(PR220).
+Native Hub TEST/gateway connection still exposes0authorizedTargets/0tools, not an active
+Workspace route. No Hub grant was changed or borrowed; optional acceptance remains open.
+Concrete next steps: checked early or scheduled release of this Workspace repair, real
+narrow Google consent, protected24h read_only grant covering approved read areas, exact
+active test resources and reviewed remaining per-case args. Hub independently needs its
+checked latest fix release and callable target/service grant. No scope approval already
+given here should be requested again. November1 plus separate retirement approval remains.
