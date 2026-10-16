@@ -117,6 +117,37 @@ existing operation-specific approval/isolation/spending gates.
 
 ### This repository's purpose and first identity check
 
+### Existing TEST pass recovery — October 16
+
+A TEST pass created in the owner's phone browser is not automatically available
+to the developer runner: only its hash is stored by the service. Never claim
+server-side token recovery, ask for the token in chat, or substitute ordinary
+OAuth access for TEST evidence. The existing-pass handoff uses
+`scripts/connect-existing-test-pass.mjs start|poll` and `/api/developer/test-pass`.
+It authenticates an already-issued, unexpired, non-revoked TEST pass pinned by
+its exact identifier. It cannot issue, extend, widen or revoke credentials.
+The owner signs in using that existing pass on the canonical service page;
+RSA-OAEP ciphertext is stored for the original polling-secret/key-owning runner
+for ten minutes, with strict Origin, input bounds and shared login lockout.
+The runner verifies source, pass fingerprint, TEST mode and exact account before
+writing the token to a new mode-0600 file in a private directory. No automatic
+provider operation, retries of writes or ordinary-credential fallback occurs.
+
+Protected runner environment: `RTC_ORIGIN`, `RTC_EXPECTED_REVISION`,
+`RTC_EXPECTED_ACCOUNT`, `RTC_EXISTING_PASS_ID`, `RTC_HANDOFF_FILE` and, for poll,
+`RTC_PASS_OUTPUT_FILE`. Keep key/poll-secret files private and outside Git/Library.
+Start prints only the non-secret owner authorization link; poll prints only status
+and scope metadata. Existing OAuth handoff rows use a distinct namespace and are
+never accepted here. An expired handoff needs a fresh request, not a new TEST pass.
+
+Owner's October 16 operating decision: use **24-hour** new TEST passes and retain
+useful passes until the project no longer needs them or they expire. Do not revoke
+them merely because a test/session ended. Earlier revoked grants remain revoked.
+This preserves existing fixture cleanup and independent revocation-test evidence;
+it changes no spending, test-resource, provider-scope or plaintext-retirement gate.
+The handoff repair needs green checks/review/merge, a checked release and genuine
+existing-pass sign-in before any live acceptance can be claimed.
+
 Google Workspace mail, calendars, Drive/Docs/Sheets/Slides and authorized administration. Identify the selected account; prefer Appliance Rentals for approved tests; preserve account/domain/fixture boundaries.
 
 Use `workspace_whoami` through this service's own saved `google` grant. The six connections were directly rechecked by the coordinating runner on October 13, 2026; all six authenticated initialize requests succeeded without desktop plugin activation. That transport observation does not complete this repository's provider/write/RTC/Hub acceptance. Current grants were saved after renewal; reverify actual identity, scope and deployed revision on the next run.
