@@ -171,7 +171,7 @@ export function createRtcGateway(){
    // apply their same small-result/connection-owned expiring-handle rule.
    const raw=await registry.handlers.workspace_batch(args,await clientsFor(pass));
    const result=decodeMcp(await shapeReadResult(raw,{toolName:'workspace_batch'},pass.id));
-   return result?.error?fail(res,errorStatus(result.error.code,result.error.httpStatus),result.error.code,result.error.what):success(res,result);
+   return result?.error?fail(res,errorStatus(result.error.code,result.error.httpStatus),result.error.code,result.error.what,'',result.error.code==='rate_limited'?60:undefined):success(res,result);
   }
   const internal=toInternal(name);
   if(!internal)return fail(res,404,'not_found','Unknown RTC tool.');
@@ -191,7 +191,7 @@ export function createRtcGateway(){
   if(req.method!=='POST')return fail(res,405,'invalid_args','Tool invocation requires POST.');
   if(Buffer.byteLength(JSON.stringify(req.body||{}))>65536)return fail(res,413,'invalid_args','Arguments too large.');
   const result=decodeMcp(await registry.handlers[internal](aliasArgs(internal,req.body||{}),await clientsFor(pass)));
-  return result?.error?fail(res,errorStatus(result.error.code,result.error.httpStatus),result.error.code,result.error.what):success(res,result);
+  return result?.error?fail(res,errorStatus(result.error.code,result.error.httpStatus),result.error.code,result.error.what,'',result.error.code==='rate_limited'?60:undefined):success(res,result);
  }
  return fail(res,404,'not_found','Unknown RTC route.');
  } catch(error) {

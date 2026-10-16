@@ -19,6 +19,7 @@ describe('real-provider-shaped missing-resource classification',()=>{
    expect(rendered._meta).toEqual({'robinson/error-code':status===429?'rate_limited':'permission','robinson/provider-status':status});
    m.handler.mockResolvedValue(rendered);const r=await request();expect(r.statusCode).toBe(status);
    expect(r.body.error.code).toBe(status===429?'rate_limited':'permission');
+   if(status===429)expect(r.headers['Retry-After']).toBe('60');
   }
  });
  it('refuses incomplete or contradictory provider status markers',async()=>{
