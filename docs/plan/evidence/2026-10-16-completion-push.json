@@ -1,7 +1,7 @@
 {
   "date": "2026-10-16",
-  "sourceRevision": "06cf4953a1d84503228e88ca9e4e7a4ca4e2bff1",
-  "deploymentId": "dpl_EYLjUp4qK3CFT973Z6A96YyjaQvd",
+  "sourceRevision": "5138204fd1777a1a184b95103762958fb2c138e1",
+  "deploymentId": "dpl_2RgzBXvEiEHd6XMNSvhv5jA9hYZG",
   "deploymentState": "READY",
   "ownerDecisions": {
     "hub": "Mandatory whole-project completion, still separately Hub-agent-owned; no Hub changes here",
@@ -128,8 +128,8 @@
     "inventory": 166,
     "olderDocumentedInventory": 165,
     "decision": "Preserve all currently enumerated names; no dropping a case to fit older count",
-    "verifiedRetainedHandlerReads": 143,
-    "unverified": 21,
+    "verifiedRetainedHandlerReads": 145,
+    "unverified": 19,
     "ownerExcludedLive": 2,
     "allCatalogPassed": false,
     "countsCaveat": "Includes source-validated service metadata; not every report subcheck or security setting is healthy/readable",
@@ -622,7 +622,7 @@
       {
         "tool": "workspace_domain_list_verified",
         "status": "UNVERIFIED",
-        "prerequisite": "Owner approved exact siteverification scope October16 17:30:56Z. Isolated purpose implemented; needs checked release, genuine owner/Google consent and exact current-scope readiness, then metadata list. No verification submission or DNS edit.",
+        "prerequisite": "Specifically owner-approved siteverification scope and isolated purpose are released; live owner form HTTP200/exactpurpose/password gate/capability disclosure/noVault verified. Genuine owner/Google consent still blocked by browser service timeout. Metadata/token only after current-scope readiness; no DNS/ownership/verification submission.",
         "retainedHttpObservations": [
           403
         ]
@@ -959,8 +959,11 @@
       },
       {
         "tool": "workspace_datatransfer_list_transfers",
-        "status": "UNVERIFIED",
-        "prerequisite": "Owner approved at most one result. Current live cannot honor maxResults; source and REST adapter now fixed and tested. After checked release call maxResults1 once only."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "releasedProof": "Genuine original read_only TEST on5138204; exact synthetic label/history with both inserted messages, or maxResults1 transfer list with zero returned transfers."
       },
       {
         "tool": "workspace_directory_list_people",
@@ -1012,8 +1015,11 @@
       },
       {
         "tool": "workspace_gmail_list_history",
-        "status": "UNVERIFIED",
-        "prerequisite": "Fresh synthetic label/two self-inserted messages retained with pre-creation history cursor. Exact labelId/maxResults source fix must be released before one scoped positive read. No unfiltered mailbox history."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "releasedProof": "Genuine original read_only TEST on5138204; exact synthetic label/history with both inserted messages, or maxResults1 transfer list with zero returned transfers."
       },
       {
         "tool": "workspace_gmail_search",
@@ -1045,12 +1051,12 @@
       {
         "tool": "workspace_postmaster_list_domains",
         "status": "UNVERIFIED",
-        "prerequisite": "Account-specific Postmaster consent/access and verified owned domain required; traffic also needs exact interval and real sending data. No sending or scope expansion to manufacture proof."
+        "prerequisite": "Owner-approved postmaster_read purpose released and live protected form contract verified. Genuine owner/Google consent blocked by browser outage. After ready, bounded domain list then only exact owned accessible domain/fixed7day traffic; no sending/domain verification."
       },
       {
         "tool": "workspace_postmaster_list_traffic_stats",
         "status": "UNVERIFIED",
-        "prerequisite": "Account-specific Postmaster consent/access and verified owned domain required; traffic also needs exact interval and real sending data. No sending or scope expansion to manufacture proof."
+        "prerequisite": "Owner-approved postmaster_read purpose released and live protected form contract verified. Genuine owner/Google consent blocked by browser outage. After ready, bounded domain list then only exact owned accessible domain/fixed7day traffic; no sending/domain verification."
       },
       {
         "tool": "workspace_admin_get_2sv_status",
@@ -1231,7 +1237,7 @@
       {
         "tool": "workspace_datatransfer_get_transfer_status",
         "status": "UNVERIFIED",
-        "prerequisite": "At most one exact ID from the one-result approved transfer list after release. Empty list means could-not-verify, never initiate transfer or repeat list."
+        "prerequisite": "Approved one-result transfer list returned zero. No genuine existing transfer ID to read; status invocation not used, no second list or initiation permitted."
       },
       {
         "tool": "workspace_drive_get_revision",
@@ -1687,7 +1693,7 @@
       {
         "tool": "workspace_domain_get_verification_token",
         "status": "UNVERIFIED",
-        "prerequisite": "Same specifically approved Site Verification consent prerequisite; then DNS_TXT token for owned Rentals domain only. No DNS edit, submission or ownership mutation."
+        "prerequisite": "Specifically owner-approved siteverification scope and isolated purpose are released; live owner form HTTP200/exactpurpose/password gate/capability disclosure/noVault verified. Genuine owner/Google consent still blocked by browser service timeout. Metadata/token only after current-scope readiness; no DNS/ownership/verification submission."
       },
       {
         "tool": "workspace_drive_download_file",
@@ -1745,16 +1751,17 @@
   },
   "sourceRepair": {
     "rootOrgUnit": "Use parent-inclusive list, require one exact root and ID, reject missing/ambiguous/malformed/incomplete response; share admin get/Chrome targeting",
-    "rootLiveRetest": "Pending checked release",
+    "rootLiveRetest": "PASS actual exact root with stable orgUnitId and Chrome root resolution on READY5138204",
     "chromeSchemaFilter": "Original schemaName filter invalid caller input. Correct name field passed current live.",
     "chromeNonrootResolve": "PASS current live; no extra OAuth/role prerequisite observed for approved target",
-    "pr181": "Merged pagination/filter fix unreleased; separate from actual root defect",
+    "pr181": "Released; real exact schema/root resolution regressions pass; bounded multipage behavior covered by hosted SDK source tests.",
     "completionBatch": {
       "siteverification": "Separate specifically approved scope/purpose, truthful capability disclosure and existing owner/origin/mailbox/signed-state gates; standard scopes unchanged.",
       "transferBound": "Optional maxResults1..100 enforced before provider and through actual REST adapter; default100 preserves provider default.",
       "historyBound": "Optional exact labelId plus maxResults1..100 forwarded to real Gmail SDK; invalid arguments refuse before provider.",
       "unitTests": "All1854 passed locally; assembled check passed. Genuine released new-source regression remains separate.",
-      "firstCI": "Initial check failed because P0-2 lastEvidence exceeded1200characters; concise ledger summary corrected without relaxing validation. Full evidence retained here."
+      "firstCI": "Initial check failed because P0-2 lastEvidence exceeded1200characters; concise ledger summary corrected without relaxing validation. Full evidence retained here.",
+      "releaseStatus": "Released5138204, genuine transfer maxResults1 and Gmail exact-label history PASS; owner consent form contracts PASS, actual Google grants not obtained."
     },
     "releasePins": {
       "chromePagination": "1b83ba92dd5229b320aa6b334de8308f40d524e4",
@@ -1763,8 +1770,8 @@
       "siteVerificationConsentTransferBoundHistoryLabel": "108ffb21a16000255d1741cbca0ef89a8bda9163"
     }
   },
-  "providerMutationsThisResume": 16,
-  "releasePerformed": false,
+  "providerMutationsThisResume": 19,
+  "releasePerformed": true,
   "fullProjectComplete": false,
   "secretHandling": "No credentials, provider bodies or private resource IDs included",
   "postmasterPrerequisite": {
@@ -1772,8 +1779,8 @@
     "status": "missing",
     "reason": "oauth_consent_missing",
     "approval": "Existing written owner approval October2, retained P7-4 scope decision",
-    "sourceRepair": "Protected existing-account postmaster_read purpose requests only already-approved readonly scope; standard scopes unchanged",
-    "realConsent": "Pending checked release and genuine Google owner consent; no blind provider calls"
+    "sourceRepair": "Released protected postmaster_read purpose; live form contract verified.",
+    "realConsent": "Pending genuine owner/Google consent because browser service unavailable; no blind Postmaster provider calls."
   },
   "retainedNarrowPass": {
     "areas": [
@@ -1792,14 +1799,15 @@
     "approvedAt": "2026-10-16T17:30:56Z",
     "proposal": "https://github.com/Robinson-AI-Systems/google-workspace-mcp/pull/183#issuecomment-6221011743",
     "scope": "Exact Site Verification purpose; separate12object/50mutation disposable cycle; max3 bounded transfer/sharing metadata calls",
-    "metadataInvocationsUsed": 1,
-    "transferInvocationsRemaining": 2,
-    "noManualReleaseApproval": true
+    "metadataInvocationsUsed": 2,
+    "transferInvocationsRemaining": 1,
+    "noManualReleaseApproval": true,
+    "conditionalStatusUnavailable": "No returned transfer ID; unused conditional status allowance is not permission for another list or different operation."
   },
   "completionCycle": {
     "createdLogicalObjects": 9,
-    "mutationBudgetSpent": 16,
-    "cleanupBudgetReserved": 3,
+    "mutationBudgetSpent": 19,
+    "cleanupBudgetReserved": 0,
     "maxLogicalObjects": 12,
     "maxMutationRequests": 50,
     "completedPhases": [
@@ -1812,19 +1820,87 @@
       "gmail_reads",
       "cleanup_files",
       "cleanup_gmail_extras",
-      "verify_calendar_cleanup"
+      "verify_calendar_cleanup",
+      "gmail_history",
+      "cleanup_gmail_run",
+      "verify_gmail_cleanup_reconcile"
     ],
-    "confirmedCleanedLogicalObjects": 6,
-    "retainedLogicalObjects": 3,
-    "retainedReason": "Only new Gmail label and two locally inserted self-messages for release-dependent scoped history; original full grant/creator ledger preserved. Cleanup due before expiry.",
+    "confirmedCleanedLogicalObjects": 9,
+    "retainedLogicalObjects": 0,
+    "retainedReason": "None. Exact label404 and both known tagged self-messages TRASH independently read after guarded cleanup. Drive3/Calendar1/draft/filter already confirmed cleaned.",
     "uncreated": [
       "private actor-only Chat space",
       "Form",
       "synthetic Form response"
     ],
-    "browserBlocker": "Two browser control documentation/reconnect calls timed out at300seconds; no UI fixture action attempted.",
-    "gmail": "Exact thread, summary, unanswered=0, recipient-empty draft and nonforwarding synthetic filter reads passed. Draft/filter cleaned. No sends.",
+    "browserBlocker": "Browser documentation/reconnect/reset previously timed out; fresh inventory check after approval also timed out300seconds. No consent/Form/Chat UI action attempted.",
+    "gmail": "Scoped history passed on released code, then original creator-run cleanup done/confirmed/audited. Exact label404 and both self-message TRASH readbacks passed. No sends.",
     "drive": "Exact synthetic download bytes and exact Doc revision passed; all3 new files guarded permanent-delete confirmed. Independent absence checks transport-cancelled, not claimed.",
-    "calendar": "Snapshot passed; original DELETE done but initially unconfirmed. Read-only exact verifier later calendar_not_found/existsfalse/listedfalse; no second DELETE."
-  }
+    "calendar": "Snapshot passed; original DELETE done but initially unconfirmed. Read-only exact verifier later calendar_not_found/existsfalse/listedfalse; no second DELETE.",
+    "cleanupRunnerCorrection": "Extra runner assumption that deleted label IDs immediately disappear from message metadata failed. Retained actual label404/messageTRASH proofs and tombstone observation; corrected only the extra assertion, no provider mutation repeated."
+  },
+  "release184": {
+    "ownerApprovedAt": "2026-10-16T18:10:13Z",
+    "candidate": "5138204fd1777a1a184b95103762958fb2c138e1",
+    "previousLive": "06cf4953a1d84503228e88ca9e4e7a4ca4e2bff1",
+    "checks": "check/unit/db/rtc/test/release-policy SUCCESS at exact head and merge",
+    "ancestry": "strict ahead16/behind0",
+    "nonForcedExpectedOldUpdate": true,
+    "exceptionReceipt": "release-markers/2026-10-16-owner-completion-184",
+    "priorReceiptsUnchanged": true,
+    "independentVercelReady": true,
+    "canonicalHttp200SourceMatches": true,
+    "anotherReleaseAuthorized": false
+  },
+  "releasedRegressions": [
+    {
+      "tool": "workspace_admin_get_orgunit",
+      "http": 200,
+      "exactRootAndStableId": true
+    },
+    {
+      "tool": "workspace_chrome_list_policy_schemas",
+      "http": 200,
+      "validIdentities": true,
+      "count": 1
+    },
+    {
+      "tool": "workspace_chrome_resolve_policies",
+      "http": 200,
+      "exactRootTarget": "source checked",
+      "count": 0
+    },
+    {
+      "tool": "workspace_gmail_list_history",
+      "http": 200,
+      "exactSyntheticLabel": true,
+      "bothNewSelfMessageIds": true,
+      "bounded": true
+    },
+    {
+      "tool": "workspace_datatransfer_list_transfers",
+      "http": 200,
+      "maxResults": 1,
+      "count": 0,
+      "statusCallPerformed": false
+    }
+  ],
+  "releasedConsentForms": {
+    "postmaster_read": {
+      "http": 200,
+      "exactPurpose": true,
+      "passwordGate": true,
+      "noVault": true
+    },
+    "siteverification_read": {
+      "http": 200,
+      "exactPurpose": true,
+      "passwordGate": true,
+      "scopeCapabilityDisclosed": true,
+      "noVault": true
+    },
+    "googleConsentSubmitted": false
+  },
+  "noFurtherReleaseNeededForKnownWork": "All currently confirmed source fixes released. Remaining consent/UI/resource/authorization/Hub/date gates are independent. This records-only update does not require another manual release.",
+  "retainedEvidenceNote": "sourceRevision/deployment identify the final independently verified observation. Retained earlier proofs remain bound to their original receipt revisions; none is relabelled as executed on5138204."
 }
