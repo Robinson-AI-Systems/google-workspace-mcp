@@ -1,0 +1,1675 @@
+{
+  "checkedAt": "2026-10-16T03:16:21.090Z",
+  "sourceRevision": "5c23755d15f5f08a02fe052277833a8f060f43f2",
+  "requiredSource": "aaedec7b87ded0bf85ea48f6dd5141755198e913",
+  "deploymentId": "dpl_Exma1Dvb9Xk5Re4C6R1P6tDQjBer",
+  "deploymentState": "READY",
+  "canonicalSourceMatched": true,
+  "identityBoundary": "Ordinary Rentals Super Admin connection; both domain selectors read the same Workspace customer. Not original protected TEST or optional Hub, and not proof of separate AI Systems account consent.",
+  "readOnly": true,
+  "changesMade": false,
+  "adapter": {
+    "projectId": "appgprj_6acecb2f86908191a44791158fcedbb2",
+    "sourceRevision": "b543ae0fc14275668ee63298a30e6f13acafa0d2",
+    "versionId": "appgprj_6acecb2f86908191a44791158fcedbb2~appgver_73bac5f27e788191a8de611f7f1283df",
+    "deploymentId": "appgdep_6ad196087e308191a86b3314d5e9a784",
+    "status": "succeeded",
+    "ownerOnlyAccessPreserved": true,
+    "testsPassed": 17,
+    "policyReadTimeoutMs": 90000,
+    "otherTimeoutMs": 20000,
+    "automaticReplay": false
+  },
+  "direct": {
+    "rentals": {
+      "domain": "robinsonappliancerentals.com",
+      "results": [
+        {
+          "area": "gmail",
+          "field": "enabled",
+          "status": "ok",
+          "setting": "Warn before mailing external recipients",
+          "expected": true,
+          "matchingExplicitPolicies": 2,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "gmail",
+          "field": "detect_domain_name_spoofing",
+          "status": "not_readable",
+          "setting": "Detect similarly named spoofed domains",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "gmail",
+          "field": "detect_employee_name_spoofing",
+          "status": "not_readable",
+          "setting": "Detect employee-name spoofing",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "gmail",
+          "field": "detect_domain_spoofing_from_unauthenticated_senders",
+          "status": "not_readable",
+          "setting": "Detect unauthenticated senders spoofing this domain",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "gmail",
+          "field": "enable_attachment_with_scripts_protection",
+          "status": "not_readable",
+          "setting": "Protect against attachments containing untrusted scripts",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "gmail",
+          "field": "enable_anomalous_attachment_protection",
+          "status": "not_readable",
+          "setting": "Protect against anomalous attachment types",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "gmail",
+          "field": "enable_improved_suspicious_content_detection",
+          "status": "not_readable",
+          "setting": "Enable enhanced suspicious-content detection",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "drive_and_docs",
+          "field": "warn_for_external_sharing",
+          "status": "not_readable",
+          "setting": "Warn when files are shared outside the organization",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "drive_and_docs",
+          "field": "allow_non_google_invites",
+          "status": "not_readable",
+          "setting": "Review visitor sharing of Drive files outside the company",
+          "expected": false,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "drive_and_docs",
+          "field": "allow_publishing_files",
+          "status": "not_readable",
+          "setting": "Review allowing public link and web publishing of Drive files",
+          "expected": false,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "calendar",
+          "field": "warn_on_invite",
+          "status": "not_readable",
+          "setting": "Warn when inviting external calendar guests",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "chat",
+          "field": "history_on_by_default",
+          "status": "not_readable",
+          "setting": "Review default Chat history for your retention policy",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "meet",
+          "field": "enable_external_label",
+          "status": "not_readable",
+          "setting": "Label external or unverified meeting participants",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 1,
+          "unavailableExplicitValues": 1,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "meet",
+          "field": "enable_host_management",
+          "status": "not_readable",
+          "setting": "Enable Meet host-management protections by default",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 1,
+          "unavailableExplicitValues": 1,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "devices",
+          "field": "device_encryption_option",
+          "status": "not_readable",
+          "setting": "Require managed device encryption",
+          "expected": "REQUIRED",
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "devices",
+          "field": "compromised_android_devices_blocked",
+          "status": "not_readable",
+          "setting": "Block compromised Android devices",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "devices",
+          "field": "jailbroken_ios_devices_blocked",
+          "status": "not_readable",
+          "setting": "Block jailbroken iOS devices",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "security",
+          "field": "allowReuse",
+          "status": "ok",
+          "setting": "Disallow password reuse",
+          "expected": false,
+          "matchingExplicitPolicies": 2,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "security",
+          "field": "enforceRequirementsAtLogin",
+          "status": "needs_attention",
+          "setting": "Enforce password requirements at login",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 2
+        },
+        {
+          "area": "security",
+          "field": "minimumLength",
+          "status": "needs_attention",
+          "setting": "Review minimum password length (baseline 12)",
+          "expected": 12,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 2
+        },
+        {
+          "area": "security",
+          "field": "allowedStrength",
+          "status": "ok",
+          "setting": "Require strong passwords",
+          "expected": "STRONG",
+          "matchingExplicitPolicies": 2,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "api_controls",
+          "field": "access_level",
+          "status": "not_readable",
+          "setting": "Review unapproved third-party app access",
+          "expected": "BLOCK_ALL",
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "api_controls",
+          "field": "trust_internal_apps",
+          "status": "not_readable",
+          "setting": "Review automatic trust of internal OAuth apps",
+          "expected": false,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "api_controls",
+          "field": "allowed_for_all",
+          "status": "not_readable",
+          "setting": "Allow governed user app approval requests",
+          "expected": "ENABLED",
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "groups_for_business",
+          "field": "collaborationCapability",
+          "status": "not_readable",
+          "setting": "Review broad public access to groups",
+          "expected": "DOMAIN_USERS_ONLY",
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "groups_for_business",
+          "field": "ownersCanAllowExternalMembers",
+          "status": "not_readable",
+          "setting": "Review external group membership",
+          "expected": false,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "groups_for_business",
+          "field": "ownersCanAllowIncomingMailFromPublic",
+          "status": "not_readable",
+          "setting": "Review public email posting into groups",
+          "expected": false,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "groups_for_business",
+          "field": "createGroupsAccessLevel",
+          "status": "not_readable",
+          "setting": "Review who may create groups",
+          "expected": "USERS_IN_DOMAIN",
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "groups_for_business",
+          "field": "viewTopicsDefaultAccessLevel",
+          "status": "not_readable",
+          "setting": "Review default conversation visibility",
+          "expected": "DOMAIN_USERS",
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "workspace_marketplace",
+          "field": "access_level",
+          "status": "not_readable",
+          "setting": "Review unrestricted Marketplace app installs",
+          "expected": "ALLOW_LISTED_APPS",
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "calendar",
+          "field": "max_allowed_external_sharing",
+          "status": "not_readable",
+          "setting": "Review primary calendar external visibility",
+          "expected": "EXTERNAL_FREE_BUSY_ONLY",
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "calendar",
+          "field": "max_allowed_external_sharing",
+          "status": "not_readable",
+          "setting": "Review secondary calendar external visibility",
+          "expected": "EXTERNAL_FREE_BUSY_ONLY",
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "chat",
+          "field": "external_file_sharing",
+          "status": "not_readable",
+          "setting": "Review external Chat file transfers",
+          "expected": "NO_FILES",
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "chat",
+          "field": "allow_external_chat",
+          "status": "not_readable",
+          "setting": "Review communication with external Chat accounts",
+          "expected": false,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 1,
+          "unavailableExplicitValues": 1,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "chat",
+          "field": "access_type",
+          "status": "not_readable",
+          "setting": "Review default visibility of new Chat spaces",
+          "expected": "RESTRICTED",
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "meet",
+          "field": "users_allowed_to_join",
+          "status": "not_readable",
+          "setting": "Review who can join hosted Meet calls",
+          "expected": "LOGGED_IN",
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 1,
+          "unavailableExplicitValues": 1,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "devices",
+          "field": "admin_approval_required",
+          "status": "not_readable",
+          "setting": "Review new managed-device activation approvals",
+          "expected": true,
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        }
+      ],
+      "summary": {
+        "notReadable": 32,
+        "needsAttention": 2,
+        "matchingExplicitPolicies": 3
+      },
+      "complete": true,
+      "effective": false,
+      "pagesRead": 7,
+      "ownerReport": {
+        "title": "Google Workspace policy review (explicit rules only)",
+        "notice": "The API does not compute final inherited/domain-specific settings. Open Admin console before making a compliance decision or any change.",
+        "actions": [
+          {
+            "area": "security",
+            "setting": "Enforce password requirements at login",
+            "consoleUrl": "https://admin.google.com/ac/security/passwordmanagement",
+            "consoleQuery": "password policy",
+            "observedMismatchCount": 2
+          },
+          {
+            "area": "security",
+            "setting": "Review minimum password length (baseline 12)",
+            "consoleUrl": "https://admin.google.com/ac/security/passwordmanagement",
+            "consoleQuery": "password length",
+            "observedMismatchCount": 2
+          }
+        ],
+        "checked": 37,
+        "version": "2026-10-15.1",
+        "advisory": true,
+        "complete": true,
+        "effective": false,
+        "notReadable": 32,
+        "needsAttention": 2
+      },
+      "customerWide": true,
+      "policiesRead": 250,
+      "baselineRules": 37,
+      "baselineStatus": "advisory",
+      "coverageByArea": [
+        {
+          "area": "gmail",
+          "checks": 7,
+          "notReadable": 6,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 1,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "drive_and_docs",
+          "checks": 3,
+          "notReadable": 3,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "calendar",
+          "checks": 3,
+          "notReadable": 3,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "chat",
+          "checks": 4,
+          "notReadable": 4,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "meet",
+          "checks": 3,
+          "notReadable": 3,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "devices",
+          "checks": 4,
+          "notReadable": 4,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "security",
+          "checks": 4,
+          "notReadable": 0,
+          "needsAttention": 2,
+          "matchingExplicitPolicies": 2,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "api_controls",
+          "checks": 3,
+          "notReadable": 3,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "groups_for_business",
+          "checks": 5,
+          "notReadable": 5,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "workspace_marketplace",
+          "checks": 1,
+          "notReadable": 1,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        }
+      ],
+      "baselineVersion": "2026-10-15.1",
+      "baselineRevision": "bb03ca1fefd2dd7b7c6b5ec2eb21d8a68bf1d634a3c97ca7d2c09955c34eabe6",
+      "incompleteReason": null,
+      "customerScopeVerified": true,
+      "policyEvaluationScope": "explicit_policies_not_reduced_settings",
+      "isComplianceCertificate": false
+    },
+    "aiSystems": {
+      "domain": "robinsonaisystems.com",
+      "results": [
+        {
+          "area": "gmail",
+          "field": "enabled",
+          "status": "ok",
+          "setting": "Warn before mailing external recipients",
+          "expected": true,
+          "observations": [
+            {
+              "value": true,
+              "result": "match",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": true,
+              "result": "match",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 2,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "gmail",
+          "field": "detect_domain_name_spoofing",
+          "status": "not_readable",
+          "setting": "Detect similarly named spoofed domains",
+          "expected": true,
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "gmail",
+          "field": "detect_employee_name_spoofing",
+          "status": "not_readable",
+          "setting": "Detect employee-name spoofing",
+          "expected": true,
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "gmail",
+          "field": "detect_domain_spoofing_from_unauthenticated_senders",
+          "status": "not_readable",
+          "setting": "Detect unauthenticated senders spoofing this domain",
+          "expected": true,
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "gmail",
+          "field": "enable_attachment_with_scripts_protection",
+          "status": "not_readable",
+          "setting": "Protect against attachments containing untrusted scripts",
+          "expected": true,
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "gmail",
+          "field": "enable_anomalous_attachment_protection",
+          "status": "not_readable",
+          "setting": "Protect against anomalous attachment types",
+          "expected": true,
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "gmail",
+          "field": "enable_improved_suspicious_content_detection",
+          "status": "not_readable",
+          "setting": "Enable enhanced suspicious-content detection",
+          "expected": true,
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "drive_and_docs",
+          "field": "warn_for_external_sharing",
+          "status": "not_readable",
+          "setting": "Warn when files are shared outside the organization",
+          "expected": true,
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "drive_and_docs",
+          "field": "allow_non_google_invites",
+          "status": "not_readable",
+          "setting": "Review visitor sharing of Drive files outside the company",
+          "expected": false,
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "drive_and_docs",
+          "field": "allow_publishing_files",
+          "status": "not_readable",
+          "setting": "Review allowing public link and web publishing of Drive files",
+          "expected": false,
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "calendar",
+          "field": "warn_on_invite",
+          "status": "not_readable",
+          "setting": "Warn when inviting external calendar guests",
+          "expected": true,
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "chat",
+          "field": "history_on_by_default",
+          "status": "not_readable",
+          "setting": "Review default Chat history for your retention policy",
+          "expected": true,
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "meet",
+          "field": "enable_external_label",
+          "status": "not_readable",
+          "setting": "Label external or unverified meeting participants",
+          "expected": true,
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 1,
+          "unavailableExplicitValues": 1,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "meet",
+          "field": "enable_host_management",
+          "status": "not_readable",
+          "setting": "Enable Meet host-management protections by default",
+          "expected": true,
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 1,
+          "unavailableExplicitValues": 1,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "devices",
+          "field": "device_encryption_option",
+          "status": "not_readable",
+          "setting": "Require managed device encryption",
+          "expected": "REQUIRED",
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "devices",
+          "field": "compromised_android_devices_blocked",
+          "status": "not_readable",
+          "setting": "Block compromised Android devices",
+          "expected": true,
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "devices",
+          "field": "jailbroken_ios_devices_blocked",
+          "status": "not_readable",
+          "setting": "Block jailbroken iOS devices",
+          "expected": true,
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "security",
+          "field": "allowReuse",
+          "status": "ok",
+          "setting": "Disallow password reuse",
+          "expected": false,
+          "observations": [
+            {
+              "value": false,
+              "result": "match",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": false,
+              "result": "match",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 2,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "security",
+          "field": "enforceRequirementsAtLogin",
+          "status": "needs_attention",
+          "setting": "Enforce password requirements at login",
+          "expected": true,
+          "observations": [
+            {
+              "value": false,
+              "result": "mismatch",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": false,
+              "result": "mismatch",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 2
+        },
+        {
+          "area": "security",
+          "field": "minimumLength",
+          "status": "needs_attention",
+          "setting": "Review minimum password length (baseline 12)",
+          "expected": 12,
+          "observations": [
+            {
+              "value": 8,
+              "result": "mismatch",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": 8,
+              "result": "mismatch",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 2
+        },
+        {
+          "area": "security",
+          "field": "allowedStrength",
+          "status": "ok",
+          "setting": "Require strong passwords",
+          "expected": "STRONG",
+          "observations": [
+            {
+              "value": "STRONG",
+              "result": "match",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": "STRONG",
+              "result": "match",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 2,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "api_controls",
+          "field": "access_level",
+          "status": "not_readable",
+          "setting": "Review unapproved third-party app access",
+          "expected": "BLOCK_ALL",
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "api_controls",
+          "field": "trust_internal_apps",
+          "status": "not_readable",
+          "setting": "Review automatic trust of internal OAuth apps",
+          "expected": false,
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "api_controls",
+          "field": "allowed_for_all",
+          "status": "not_readable",
+          "setting": "Allow governed user app approval requests",
+          "expected": "ENABLED",
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "groups_for_business",
+          "field": "collaborationCapability",
+          "status": "not_readable",
+          "setting": "Review broad public access to groups",
+          "expected": "DOMAIN_USERS_ONLY",
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "groups_for_business",
+          "field": "ownersCanAllowExternalMembers",
+          "status": "not_readable",
+          "setting": "Review external group membership",
+          "expected": false,
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "groups_for_business",
+          "field": "ownersCanAllowIncomingMailFromPublic",
+          "status": "not_readable",
+          "setting": "Review public email posting into groups",
+          "expected": false,
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "groups_for_business",
+          "field": "createGroupsAccessLevel",
+          "status": "not_readable",
+          "setting": "Review who may create groups",
+          "expected": "USERS_IN_DOMAIN",
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "groups_for_business",
+          "field": "viewTopicsDefaultAccessLevel",
+          "status": "not_readable",
+          "setting": "Review default conversation visibility",
+          "expected": "DOMAIN_USERS",
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "workspace_marketplace",
+          "field": "access_level",
+          "status": "not_readable",
+          "setting": "Review unrestricted Marketplace app installs",
+          "expected": "ALLOW_LISTED_APPS",
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "calendar",
+          "field": "max_allowed_external_sharing",
+          "status": "not_readable",
+          "setting": "Review primary calendar external visibility",
+          "expected": "EXTERNAL_FREE_BUSY_ONLY",
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "calendar",
+          "field": "max_allowed_external_sharing",
+          "status": "not_readable",
+          "setting": "Review secondary calendar external visibility",
+          "expected": "EXTERNAL_FREE_BUSY_ONLY",
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "chat",
+          "field": "external_file_sharing",
+          "status": "not_readable",
+          "setting": "Review external Chat file transfers",
+          "expected": "NO_FILES",
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            },
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 2,
+          "unavailableExplicitValues": 2,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "chat",
+          "field": "allow_external_chat",
+          "status": "not_readable",
+          "setting": "Review communication with external Chat accounts",
+          "expected": false,
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 1,
+          "unavailableExplicitValues": 1,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "chat",
+          "field": "access_type",
+          "status": "not_readable",
+          "setting": "Review default visibility of new Chat spaces",
+          "expected": "RESTRICTED",
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "meet",
+          "field": "users_allowed_to_join",
+          "status": "not_readable",
+          "setting": "Review who can join hosted Meet calls",
+          "expected": "LOGGED_IN",
+          "observations": [
+            {
+              "value": null,
+              "result": "unknown",
+              "policyType": "SYSTEM"
+            }
+          ],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 1,
+          "unavailableExplicitValues": 1,
+          "mismatchingExplicitPolicies": 0
+        },
+        {
+          "area": "devices",
+          "field": "admin_approval_required",
+          "status": "not_readable",
+          "setting": "Review new managed-device activation approvals",
+          "expected": true,
+          "observations": [],
+          "matchingExplicitPolicies": 0,
+          "observedExplicitPolicies": 0,
+          "unavailableExplicitValues": 0,
+          "mismatchingExplicitPolicies": 0
+        }
+      ],
+      "summary": {
+        "notReadable": 32,
+        "needsAttention": 2,
+        "matchingExplicitPolicies": 3
+      },
+      "complete": true,
+      "effective": false,
+      "pagesRead": 7,
+      "ownerReport": {
+        "title": "Google Workspace policy review (explicit rules only)",
+        "notice": "The API does not compute final inherited/domain-specific settings. Open Admin console before making a compliance decision or any change.",
+        "actions": [
+          {
+            "area": "security",
+            "setting": "Enforce password requirements at login",
+            "consoleUrl": "https://admin.google.com/ac/security/passwordmanagement",
+            "consoleQuery": "password policy",
+            "observedMismatchCount": 2
+          },
+          {
+            "area": "security",
+            "setting": "Review minimum password length (baseline 12)",
+            "consoleUrl": "https://admin.google.com/ac/security/passwordmanagement",
+            "consoleQuery": "password length",
+            "observedMismatchCount": 2
+          }
+        ],
+        "checked": 37,
+        "version": "2026-10-15.1",
+        "advisory": true,
+        "complete": true,
+        "effective": false,
+        "notReadable": 32,
+        "needsAttention": 2
+      },
+      "customerWide": true,
+      "policiesRead": 250,
+      "baselineRules": 37,
+      "baselineStatus": "advisory",
+      "coverageByArea": [
+        {
+          "area": "gmail",
+          "checks": 7,
+          "notReadable": 6,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 1,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "drive_and_docs",
+          "checks": 3,
+          "notReadable": 3,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "calendar",
+          "checks": 3,
+          "notReadable": 3,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "chat",
+          "checks": 4,
+          "notReadable": 4,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "meet",
+          "checks": 3,
+          "notReadable": 3,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "devices",
+          "checks": 4,
+          "notReadable": 4,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "security",
+          "checks": 4,
+          "notReadable": 0,
+          "needsAttention": 2,
+          "matchingExplicitPolicies": 2,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "api_controls",
+          "checks": 3,
+          "notReadable": 3,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "groups_for_business",
+          "checks": 5,
+          "notReadable": 5,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        },
+        {
+          "area": "workspace_marketplace",
+          "checks": 1,
+          "notReadable": 1,
+          "needsAttention": 0,
+          "matchingExplicitPolicies": 0,
+          "effectiveSettingsVerified": 0
+        }
+      ],
+      "baselineVersion": "2026-10-15.1",
+      "baselineRevision": "bb03ca1fefd2dd7b7c6b5ec2eb21d8a68bf1d634a3c97ca7d2c09955c34eabe6",
+      "incompleteReason": null,
+      "customerScopeVerified": true,
+      "policyEvaluationScope": "explicit_policies_not_reduced_settings",
+      "isComplianceCertificate": false
+    }
+  },
+  "ownerOverview": {
+    "account": "ops@robinsonappliancerentals.com",
+    "checkedAt": "2026-10-16T03:15:41.586Z",
+    "items": {
+      "policies": {
+        "status": "needs_attention",
+        "reason": "One or more observed explicit Workspace policies differ from the owner baseline; missing values remain unknown.",
+        "data": {
+          "domain": "robinsonappliancerentals.com",
+          "complete": true,
+          "pagesRead": 7,
+          "policiesRead": 250,
+          "baselineRules": 37,
+          "baselineRevision": "bb03ca1fefd2dd7b7c6b5ec2eb21d8a68bf1d634a3c97ca7d2c09955c34eabe6",
+          "customerScopeVerified": true,
+          "effective": false,
+          "isComplianceCertificate": false,
+          "coverageByArea": [
+            {
+              "area": "gmail",
+              "checks": 7,
+              "matchingExplicitPolicies": 1,
+              "needsAttention": 0,
+              "notReadable": 6,
+              "effectiveSettingsVerified": 0
+            },
+            {
+              "area": "drive_and_docs",
+              "checks": 3,
+              "matchingExplicitPolicies": 0,
+              "needsAttention": 0,
+              "notReadable": 3,
+              "effectiveSettingsVerified": 0
+            },
+            {
+              "area": "calendar",
+              "checks": 3,
+              "matchingExplicitPolicies": 0,
+              "needsAttention": 0,
+              "notReadable": 3,
+              "effectiveSettingsVerified": 0
+            },
+            {
+              "area": "chat",
+              "checks": 4,
+              "matchingExplicitPolicies": 0,
+              "needsAttention": 0,
+              "notReadable": 4,
+              "effectiveSettingsVerified": 0
+            },
+            {
+              "area": "meet",
+              "checks": 3,
+              "matchingExplicitPolicies": 0,
+              "needsAttention": 0,
+              "notReadable": 3,
+              "effectiveSettingsVerified": 0
+            },
+            {
+              "area": "devices",
+              "checks": 4,
+              "matchingExplicitPolicies": 0,
+              "needsAttention": 0,
+              "notReadable": 4,
+              "effectiveSettingsVerified": 0
+            },
+            {
+              "area": "security",
+              "checks": 4,
+              "matchingExplicitPolicies": 2,
+              "needsAttention": 2,
+              "notReadable": 0,
+              "effectiveSettingsVerified": 0
+            },
+            {
+              "area": "api_controls",
+              "checks": 3,
+              "matchingExplicitPolicies": 0,
+              "needsAttention": 0,
+              "notReadable": 3,
+              "effectiveSettingsVerified": 0
+            },
+            {
+              "area": "groups_for_business",
+              "checks": 5,
+              "matchingExplicitPolicies": 0,
+              "needsAttention": 0,
+              "notReadable": 5,
+              "effectiveSettingsVerified": 0
+            },
+            {
+              "area": "workspace_marketplace",
+              "checks": 1,
+              "matchingExplicitPolicies": 0,
+              "needsAttention": 0,
+              "notReadable": 1,
+              "effectiveSettingsVerified": 0
+            }
+          ],
+          "summary": {
+            "needsAttention": 2,
+            "notReadable": 32,
+            "matchingExplicitPolicies": 3
+          },
+          "ownerReport": {
+            "title": "Google Workspace policy review (explicit rules only)",
+            "advisory": true,
+            "version": "2026-10-15.1",
+            "checked": 37,
+            "needsAttention": 2,
+            "notReadable": 32,
+            "complete": true,
+            "effective": false,
+            "actions": [
+              {
+                "area": "security",
+                "setting": "Enforce password requirements at login",
+                "observedMismatchCount": 2,
+                "consoleQuery": "password policy",
+                "consoleUrl": "https://admin.google.com/ac/security/passwordmanagement"
+              },
+              {
+                "area": "security",
+                "setting": "Review minimum password length (baseline 12)",
+                "observedMismatchCount": 2,
+                "consoleQuery": "password length",
+                "consoleUrl": "https://admin.google.com/ac/security/passwordmanagement"
+              }
+            ],
+            "notice": "The API does not compute final inherited/domain-specific settings. Open Admin console before making a compliance decision or any change."
+          },
+          "results": [
+            {
+              "area": "gmail",
+              "setting": "Warn before mailing external recipients",
+              "status": "ok"
+            },
+            {
+              "area": "gmail",
+              "setting": "Detect similarly named spoofed domains",
+              "status": "not_readable"
+            },
+            {
+              "area": "gmail",
+              "setting": "Detect employee-name spoofing",
+              "status": "not_readable"
+            },
+            {
+              "area": "gmail",
+              "setting": "Detect unauthenticated senders spoofing this domain",
+              "status": "not_readable"
+            },
+            {
+              "area": "gmail",
+              "setting": "Protect against attachments containing untrusted scripts",
+              "status": "not_readable"
+            },
+            {
+              "area": "gmail",
+              "setting": "Protect against anomalous attachment types",
+              "status": "not_readable"
+            },
+            {
+              "area": "gmail",
+              "setting": "Enable enhanced suspicious-content detection",
+              "status": "not_readable"
+            },
+            {
+              "area": "drive_and_docs",
+              "setting": "Warn when files are shared outside the organization",
+              "status": "not_readable"
+            },
+            {
+              "area": "drive_and_docs",
+              "setting": "Review visitor sharing of Drive files outside the company",
+              "status": "not_readable"
+            },
+            {
+              "area": "drive_and_docs",
+              "setting": "Review allowing public link and web publishing of Drive files",
+              "status": "not_readable"
+            },
+            {
+              "area": "calendar",
+              "setting": "Warn when inviting external calendar guests",
+              "status": "not_readable"
+            },
+            {
+              "area": "chat",
+              "setting": "Review default Chat history for your retention policy",
+              "status": "not_readable"
+            },
+            {
+              "area": "meet",
+              "setting": "Label external or unverified meeting participants",
+              "status": "not_readable"
+            },
+            {
+              "area": "meet",
+              "setting": "Enable Meet host-management protections by default",
+              "status": "not_readable"
+            },
+            {
+              "area": "devices",
+              "setting": "Require managed device encryption",
+              "status": "not_readable"
+            },
+            {
+              "area": "devices",
+              "setting": "Block compromised Android devices",
+              "status": "not_readable"
+            },
+            {
+              "area": "devices",
+              "setting": "Block jailbroken iOS devices",
+              "status": "not_readable"
+            },
+            {
+              "area": "security",
+              "setting": "Disallow password reuse",
+              "status": "ok"
+            },
+            {
+              "area": "security",
+              "setting": "Enforce password requirements at login",
+              "status": "needs_attention"
+            },
+            {
+              "area": "security",
+              "setting": "Review minimum password length (baseline 12)",
+              "status": "needs_attention"
+            },
+            {
+              "area": "security",
+              "setting": "Require strong passwords",
+              "status": "ok"
+            },
+            {
+              "area": "api_controls",
+              "setting": "Review unapproved third-party app access",
+              "status": "not_readable"
+            },
+            {
+              "area": "api_controls",
+              "setting": "Review automatic trust of internal OAuth apps",
+              "status": "not_readable"
+            },
+            {
+              "area": "api_controls",
+              "setting": "Allow governed user app approval requests",
+              "status": "not_readable"
+            },
+            {
+              "area": "groups_for_business",
+              "setting": "Review broad public access to groups",
+              "status": "not_readable"
+            },
+            {
+              "area": "groups_for_business",
+              "setting": "Review external group membership",
+              "status": "not_readable"
+            },
+            {
+              "area": "groups_for_business",
+              "setting": "Review public email posting into groups",
+              "status": "not_readable"
+            },
+            {
+              "area": "groups_for_business",
+              "setting": "Review who may create groups",
+              "status": "not_readable"
+            },
+            {
+              "area": "groups_for_business",
+              "setting": "Review default conversation visibility",
+              "status": "not_readable"
+            },
+            {
+              "area": "workspace_marketplace",
+              "setting": "Review unrestricted Marketplace app installs",
+              "status": "not_readable"
+            },
+            {
+              "area": "calendar",
+              "setting": "Review primary calendar external visibility",
+              "status": "not_readable"
+            },
+            {
+              "area": "calendar",
+              "setting": "Review secondary calendar external visibility",
+              "status": "not_readable"
+            },
+            {
+              "area": "chat",
+              "setting": "Review external Chat file transfers",
+              "status": "not_readable"
+            },
+            {
+              "area": "chat",
+              "setting": "Review communication with external Chat accounts",
+              "status": "not_readable"
+            },
+            {
+              "area": "chat",
+              "setting": "Review default visibility of new Chat spaces",
+              "status": "not_readable"
+            },
+            {
+              "area": "meet",
+              "setting": "Review who can join hosted Meet calls",
+              "status": "not_readable"
+            },
+            {
+              "area": "devices",
+              "setting": "Review new managed-device activation approvals",
+              "status": "not_readable"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "verification": {
+    "allThreeRuleAndAreaTotalsReconciled": true,
+    "customerScopeVerified": true,
+    "domainIsNotEffectiveFilter": true,
+    "noEffectiveComplianceClaim": true,
+    "ordinaryResultRecovery": {
+      "rentals": {
+        "pages": 4,
+        "bytes": 12721
+      },
+      "aiSystems": {
+        "pages": 4,
+        "bytes": 15263
+      },
+      "allPagesAndUtf8BytesVerified": true
+    }
+  },
+  "consoleComparison": "Prior dated Console walk observed password minimum8; API observations here are SYSTEM explicit entries, not effective OU/user reduction. Never infer inheritance/compliance from these values.",
+  "limitations": [
+    "Baseline remains advisory and ownerAdopted:false; expectations unchanged.",
+    "32 checks are UNKNOWN/not_readable, not compliant or defaulted.",
+    "No effective domain/OU/user settings are computed.",
+    "No policy writes, new OAuth credentials, TEST grants or fixture lifecycle."
+  ]
+}
