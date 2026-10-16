@@ -3090,3 +3090,34 @@ Owner reported Google Sheets API enabled in the existing Robinson AI Systems pro
 P0-2-EXACT-FIXTURE-READ now PASSED, retaining the earlier five positive exact tool reads, second-message metadata, missing/deleted-provider404, foreign-ledger404 and read-only/area403 evidence. Original failed Sheets503s remain in the prior evidence; this is a new successful retest, not a rewrite.Final approved12th read used only the existing Gmail fixture message ID as a Drive fileId and returned404/not_found at2026-10-16T10:20:42.600375Z, explicitly proving wrong-resource-ID refusal.12of12 authorized exact calls are consumed; no further fixture reads are authorized by this cycle; original read_only expiry remains October16 3:57pmDenver. All8 objects stay cleaned, added grants revoked. **24PASSED/5PENDING of29**.
 
 No other API is currently confirmed disabled by provider evidence. Gmail/Drive/Calendar/Docs/Sheets/Tasks/Admin SDK/Groups Settings/Cloud Identity have genuine successful observations in retained checks. Previous People/Postmaster failures are access/scope denials, not confirmed API-disabled failures. A complete enabled-service inventory and unexercised optional APIs are not independently verified; do not tell the owner every API is enabled or ask to enable speculative services. Remaining full-casebook, exact-app, bulk, optional Hub and Nov1-plus-separate-approval retirement gates are unchanged. Four optional proposals stay unselected. Source changes0/0, zero product bundles, no service release needed. Sanitized retest receipt: docs/plan/evidence/2026-10-16-sheet-api-retest.json.
+
+## October 16 — repair the existing TEST-pass developer handoff
+
+Owner approved the24-hour Rentals TEST pass for mailbox settings/group/licensing
+acceptance, and directed that useful passes remain until no longer needed or expiry.
+Actual service metadata confirms a fresh TEST/full write-enabled Rentals pass exists
+for24hours; its one-time value is in the creating browser, not the runner. The stored
+hash cannot reconstruct it. Ordinary adapter identity/access is not TEST evidence.
+Automatic review refused the browser credential-creation prompt because its generic
+Sign in wording misdescribed creating a credential; no automated pass was issued.
+Do not bypass that denied action, manufacture acceptance, or ask for tokens in chat.
+
+This fixes the original P8-7 reusable developer-connection boundary: an owner signs
+in with an ALREADY CREATED, exact-ID-pinned existing TEST pass, which is RSA-OAEP
+sealed to one registered runner's key. Shared expiring handoff storage and login
+lockout are reused; the namespace is separate from native OAuth handoffs. No pass
+creation, scope expansion, lifetime change, revocation, Google consent or provider
+write is exposed by the endpoint. Runner start/poll pins canonical origin/source,
+checks fingerprint/account/TEST identity after decryption, and refuses overwriting
+private credential files. The new actual URL-encoded endpoint, core and paired
+runner tests cover permission/expiry/revocation, cross-origin, wrong request/key,
+plaintext non-disclosure, bounded bodies, lockout and private-file refusal.
+
+Genuine existing-pass sign-in and all original bulk/app/full-casebook results remain
+unverified until checked live source and a supported secure owner authentication.
+No existing29-row acceptance status or source pin is changed:24PASSED/5PENDING.
+No product bundle is claimed, no optional proposal selected, and November1 plus
+independent plaintext-retirement approval/drain/recovery remain. This is a confirmed
+completion-blocking developer handoff repair, not a new feature phase. Required
+final checks, exact-head CI/review/merge, necessary checked release and permanent
+handoff remain separate obligations.

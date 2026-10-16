@@ -49,7 +49,9 @@ export function createHandoff({store,origin,getClient,clientIp=req=>req.socket?.
       if(!token.test(q.state||'')||Object.keys(q).some(k=>!['state','code','error'].includes(k)))return json(400,{error:'invalid_request'});
       if(q.code!==undefined||q.error!==undefined){
         const row=await store.find(q.state);
-        if(!row||new Date(row.expires_at).getTime()<=now())return page(410,'This connection request expired. Ask your agent for a new link.');
+        // TEST-pass transfers share storage but never this OAuth callback.
+        // Reject their prefixed client IDs before either approve OR deny.
+        if(!row||!clientPattern.test(row.client_id||'')||new Date(row.expires_at).getTime()<=now())return page(410,'This connection request expired. Ask your agent for a new link.');
         if(row.status==='authorized')return page(200,'This connection is already authorized. Return to your chat.');
         if(q.error!==undefined){await store.deny(q.state);return page(200,'Connection was not authorized. Return to your chat.');}
         if(typeof q.code!=='string'||!codePattern.test(q.code))return page(400,'The authorization response was invalid. No connection was saved.');
@@ -64,6 +66,8 @@ export function createHandoff({store,origin,getClient,clientIp=req=>req.socket?.
       }
       const secret=/^Bearer ([A-Za-z0-9_-]{43})$/.exec(req.headers?.authorization||'')?.[1];
       if(!secret)return json(401,{error:'unauthorized'});
+      const pending=await store.find(q.state);
+      if(!pending||!clientPattern.test(pending.client_id||''))return json(410,{error:'request_unavailable'});
       const result=await store.poll(q.state,digest(secret));
       if(!result)return json(410,{error:'request_unavailable'});
       if(result.status==='pending')return json(202,{status:'authorization_pending'});
