@@ -275,7 +275,23 @@ const WALKED_SECTIONS = [
 {"id":"studio-flows","title":"Workspace Studio: Flows","reviewCategory":"collaboration","route":"/ac/managedsettings/243976345647","path":["Apps","Google Workspace","Workspace Studio","Flows"]},
 {"id":"agents-access","title":"Agent access management","reviewCategory":"organization","route":"/ac/agents","path":["Agents","Agent access management","Review the agent inventory and Type, Access and Status filters"]},
 {"id":"agents-default-flow-access","title":"Default access for Workspace Studio flows","reviewCategory":"organization","route":"/ac/managedsettings/1097476177575/agentaccesscontrols","path":["Agents","Settings","Select the intended organizational unit, group or user","Default access for Workspace Studio flows"]},
-{"id":"agents-flow-attribution","title":"Studio flow attribution visibility Beta","reviewCategory":"organization","route":"/ac/managedsettings/1097476177575/agentaccesscontrols","path":["Agents","Settings","Select the intended organizational unit, group or user","Studio flow attribution visibility Beta"]}
+{"id":"agents-flow-attribution","title":"Studio flow attribution visibility Beta","reviewCategory":"organization","route":"/ac/managedsettings/1097476177575/agentaccesscontrols","path":["Agents","Settings","Select the intended organizational unit, group or user","Studio flow attribution visibility Beta"]},
+// Additional sections observed in the same authenticated October 15 walk.
+ {"id":"gemini-user-access","title":"Gemini app: User access","reviewCategory":"organization","route":"/ac/managedsettings/47208553126","path":["Generative AI","Gemini app","User access"]},
+ {"id":"gemini-apps","title":"Gemini app: Apps","reviewCategory":"organization","route":"/ac/managedsettings/47208553126","path":["Generative AI","Gemini app","Apps"]},
+ {"id":"gemini-history","title":"Gemini app: Gemini conversation history and management","reviewCategory":"organization","route":"/ac/managedsettings/47208553126","path":["Generative AI","Gemini app","Gemini conversation history and management"]},
+ {"id":"gemini-sharing","title":"Gemini app: Sharing","reviewCategory":"organization","route":"/ac/managedsettings/47208553126","path":["Generative AI","Gemini app","Sharing"]},
+ {"id":"gemini-avatar","title":"Gemini app: Avatar in Gemini","reviewCategory":"organization","route":"/ac/managedsettings/47208553126","path":["Generative AI","Gemini app","Avatar in Gemini"]},
+ {"id":"gemini-enterprise-business-data","title":"Gemini Enterprise: Business edition data access","reviewCategory":"organization","route":"/ac/managedsettings/308858798364","path":["Generative AI","Gemini Enterprise","Business edition"]},
+ {"id":"gemini-enterprise-standard-data","title":"Gemini Enterprise: Standard, Plus, and Frontline editions data access","reviewCategory":"organization","route":"/ac/managedsettings/308858798364","path":["Generative AI","Gemini Enterprise","Standard, Plus, and Frontline editions"]},
+ {"id":"gemini-workspace-sources","title":"Gemini in Workspace: Workspace Intelligence Sources","reviewCategory":"organization","route":"/ac/managedsettings/793154499678","path":["Generative AI","Gemini in Workspace","Workspace Intelligence Sources"]},
+ {"id":"gemini-workspace-beta","title":"Gemini in Workspace: Beta Gemini features","reviewCategory":"organization","route":"/ac/managedsettings/793154499678","path":["Generative AI","Gemini in Workspace","Beta Gemini features"]},
+ {"id":"gemini-workspace-conversations","title":"Gemini in Workspace: Conversation history & deletion","reviewCategory":"organization","route":"/ac/managedsettings/793154499678","path":["Generative AI","Gemini in Workspace","Conversation history & deletion"]},
+ {"id":"gemini-workspace-limits","title":"Gemini in Workspace: Feature limit notifications","reviewCategory":"organization","route":"/ac/managedsettings/793154499678","path":["Generative AI","Gemini in Workspace","Feature limit notifications"]},
+ {"id":"gemini-notebook-sharing","title":"Gemini Notebook: external sharing","reviewCategory":"organization","route":"/ac/managedsettings/692380834322","path":["Generative AI","Gemini Notebook","Sharing"]},
+ {"id":"directory-profile-editing","title":"Directory settings: Profile editing","reviewCategory":"organization","route":"/ac/managedsettings/986128716205","path":["Directory","Directory settings","Profile editing"]},
+ {"id":"directory-resource-types","title":"Directory settings: Workspace resource type visibility","reviewCategory":"organization","route":"/ac/managedsettings/986128716205","path":["Directory","Directory settings","Workspace resource type visibility"]},
+ {"id":"account-personalization","title":"Account personalization","reviewCategory":"organization","route":"/ac/accountsettings","path":["Account","Account settings","Personalization"]}
 
 ];
 CONSOLE_MAP.push(...WALKED_SECTIONS.map(({route,...entry})=>({

@@ -47,7 +47,7 @@ const callFake=(callLog,override={})=>async (tool,args,source)=>{
 describe('P8-8 scoped Admin console readback composition',()=>{
  it('covers exactly the reviewed existing console map, never a guessed mutation',()=>{
   const all=new Set(CONSOLE_MAP.map(x=>x.id));
-  expect(CONSOLE_MAP.length).toBe(138);
+  expect(CONSOLE_MAP.length).toBe(153);
   expect(CONSOLE_LIVE_READBACK_IDS.length).toBe(24);
   expect(new Set(CONSOLE_LIVE_READBACK_IDS).size).toBe(CONSOLE_LIVE_READBACK_IDS.length);
   expect(CONSOLE_LIVE_READBACK_IDS.every(id=>all.has(id)&&CONSOLE_VERIFICATION[id])).toBe(true);
