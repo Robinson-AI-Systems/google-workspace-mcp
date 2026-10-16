@@ -30,7 +30,8 @@ function form(account='',label='',purpose='standard'){
  (purpose==='policy_read'?'<p>Organization policy audit: request only the additional Cloud Identity policies read-only permission. Google keeps existing grants; no additional write permission is requested. Use the existing Super Admin mailbox.</p>':purpose==='acceptance_read'?'<p>Acceptance reads: request read-only access to Tasks, your Google profile/email and Vault. Google keeps existing grants; no additional write permission is requested. Vault permission can view eDiscovery data; approved tests read only matter/hold metadata. Use the existing test mailbox. Google may still require an eligible edition or administrator role.</p>':'')+
  '<form method="POST" action="/api/google/authorize" autocomplete="off">'+
  '<input type="hidden" name="purpose" value="'+purpose+'">'+
- '<p><label>Mailbox to suggest to Google (optional)<input type="email" name="account" value="'+escape(account)+'"></label></p>'+
+ '<p><label>'+(purpose==='standard'?'Mailbox to suggest to Google (optional)':'Existing mailbox (required)')+
+ '<input type="email" name="account" value="'+escape(account)+'"'+(purpose==='standard'?'':' required')+'></label></p>'+
  '<p><label>Friendly account label (optional)<input name="label" maxlength="80" value="'+escape(label)+'"></label></p>'+
  '<p><label>Service owner passphrase<input type="password" name="passphrase" autocomplete="off" required></label></p>'+
  '<button type="submit">Verify owner and continue to Google</button></form>';
