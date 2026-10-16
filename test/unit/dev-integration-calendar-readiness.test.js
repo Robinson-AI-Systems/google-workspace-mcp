@@ -14,7 +14,7 @@ function mock({deny=false,areas=null,wrong=false,busy=[],errors=null}={}){
   calendar:{freebusy:{query:async args=>{
     calls.push(args);
     if(deny){const e=Error('Private calendar status must stay private');e.response={status:403};throw e;}
-    return {data:{kind:'calendar#freeBusy',calendars:{
+    return {data:{kind:'calendar#freeBusy',timeMin:args.requestBody.timeMin,timeMax:args.requestBody.timeMax,calendars:{
       [wrong?'foreign-calendar':'owned-calendar']:{
         ...(errors?{errors}:{}),busy
       }
@@ -66,6 +66,23 @@ describe('P8-7 exact Calendar free/busy availability diagnostics',()=>{
    calendarFreeBusyWindows:[window]}),mock({busy:[{start:'2026-10-20T10:00:00-06:00',
     end:'2026-10-23T10:00:00-06:00'}]}).clients);
   expect(malformed[0]).toMatchObject({status:'not_readable',reason:'unverifiable_availability_shape'});
+ });
+ it('accepts the observed floored boundary second while keeping the echoed exact query',async()=>{
+  const exact={calendarId:'owned-calendar',timeMin:'2026-10-20T09:00:00.493-06:00',timeMax:'2026-10-20T10:00:00.493-06:00'};
+  const request=normalizeCalendarAvailability({calendarFreeBusyWindows:[exact]});
+  const good=mock({busy:[{start:'2026-10-20T09:00:00-06:00',end:'2026-10-20T10:00:00-06:00'}]});
+  expect((await inspectCalendarAvailability(request,good.clients))[0].status).toBe('ready');
+  expect(good.calls[0].requestBody.timeMin).toBe(exact.timeMin);
+  for(const start of ['2026-10-20T08:59:59-06:00','2026-10-20T09:00:00.100-06:00']){
+   const bad=mock({busy:[{start,end:'2026-10-20T10:00:00-06:00'}]});
+   expect((await inspectCalendarAvailability(request,bad.clients))[0]).toMatchObject({status:'not_readable',reason:'unverifiable_availability_shape'});
+  }
+ });
+ it('refuses missing or different echoed query windows',async()=>{
+  for(const echo of [{},{timeMin:'2026-10-21T09:00:00-06:00',timeMax:max}]){
+   const {clients}=mock();clients.calendar.freebusy.query=async()=>({data:{...echo,calendars:{'owned-calendar':{busy:[]}}}});
+   expect((await inspectCalendarAvailability({calendarFreeBusyWindows:[window]},clients))[0]).toMatchObject({status:'not_readable',reason:'unexpected_provider_window'});
+  }
  });
  it('rejects forbidden areas before provider calls and labels real 403 as unreadable',async()=>{
   const scope=mock({areas:['mail']});

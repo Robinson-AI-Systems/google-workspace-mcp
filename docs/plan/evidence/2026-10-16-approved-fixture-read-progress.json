@@ -1,0 +1,652 @@
+{
+  "sourceRevision": "f1b1200e66f328b8ca85871d6aed0ce8abf9a9df",
+  "deployment": {
+    "id": "dpl_GEZiBeR4rZBfnroLWWoCsjb1iPUX",
+    "state": "READY",
+    "canonicalSourceVerifiedBeforeProviderCalls": true,
+    "releaseReceipt": "release-markers/2026-10-16-owner-early-f1b1200"
+  },
+  "approval": "2026-10-16T13:59:34Z; approved exact release and bounded fifteen synthetic fixtures/sixty setup-cleanup mutations",
+  "identity": {
+    "existingFullTestPrincipalOwnsAllApiFixtureMutations": true,
+    "independentExistingReadOnlyTestPrincipalVerified": true,
+    "accountMatchedBoth": true,
+    "newPassesIssued": false,
+    "existingGrantsUnchanged": true
+  },
+  "vault": {
+    "ownerDecisionAt": "2026-10-16T13:59:34Z",
+    "status": "EXCLUDED_OWNER_DECISION",
+    "reason": "Unneeded subscription upgrade; stop actual Vault connection testing",
+    "futureProviderCalls": 0,
+    "successClaimed": false
+  },
+  "bounds": {
+    "maxFixtureObjects": 15,
+    "createdFixtureObjects": 14,
+    "maxMutationRequests": 60,
+    "conservativelyReservedMutationRequests": 34,
+    "includesConservativeTenWriteGmailUiAutosaveAllowance": true,
+    "noSending": true,
+    "noInvites": true,
+    "noPublicSharing": true,
+    "noPaidChanges": true
+  },
+  "runs": [
+    {
+      "phase": "tasks",
+      "status": "complete",
+      "error": null,
+      "calls": [
+        {
+          "tool": "workspace_tasks_list_tasklists",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_tasks_get_tasklist",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_tasks_list_tasks",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_tasks_get_task",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        }
+      ],
+      "proofs": {
+        "tasks": {
+          "exactList": true,
+          "exactTask": true,
+          "syntheticTitleMatched": true
+        }
+      }
+    },
+    {
+      "phase": "files",
+      "status": "complete",
+      "error": null,
+      "calls": [
+        {
+          "tool": "workspace_drive_get_file",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_drive_get_file",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_drive_get_file",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_docs_get_document",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_docs_list_headings",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_docs_get_text",
+          "http": 200,
+          "status": "NEEDS_HANDLER_SPECIFIC_PROOF",
+          "strictProofPassed": false
+        },
+        {
+          "tool": "workspace_sheets_get_spreadsheet",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_sheets_get_values",
+          "http": 200,
+          "status": "NEEDS_HANDLER_SPECIFIC_PROOF",
+          "strictProofPassed": false
+        },
+        {
+          "tool": "workspace_sheets_batch_get",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_drive_list_revisions",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_drive_list_permissions",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        }
+      ],
+      "proofs": {
+        "files": {
+          "exactOwnedUntrashedFiles": 3,
+          "exactDoc": true,
+          "exactSheet": true,
+          "ownPermission": true
+        }
+      }
+    },
+    {
+      "phase": "calendar",
+      "status": "complete",
+      "error": null,
+      "calls": [
+        {
+          "tool": "workspace_calendar_get_event",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_calendar_list_acl",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_calendar_list_event_instances",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_calendar_get_freebusy",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        }
+      ],
+      "proofs": {
+        "calendar": {
+          "secondaryOwner": true,
+          "exactEvent": true,
+          "noInvitees": true,
+          "twoInstances": true
+        }
+      }
+    },
+    {
+      "phase": "extras",
+      "status": "complete",
+      "error": null,
+      "calls": [
+        {
+          "tool": "workspace_slides_get_presentation",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_slides_get_slide",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_slides_get_thumbnail",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_forms_get",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_forms_list_responses",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_contacts_get",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_contacts_search",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_chat_get_space",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_chat_list_messages",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        }
+      ],
+      "proofs": {}
+    },
+    {
+      "phase": "chat_exact",
+      "status": "complete",
+      "error": null,
+      "calls": [
+        {
+          "tool": "workspace_chat_get_space",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        }
+      ],
+      "proofs": {
+        "chat": {
+          "exactUiIdMatched": true,
+          "exactUiTagMatched": true,
+          "spaceType": "SPACE"
+        }
+      }
+    },
+    {
+      "phase": "integration_resources",
+      "status": "blocked",
+      "error": "integration_incomplete",
+      "calls": [
+        {
+          "tool": "workspace_gmail_get_message",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_dev_check_integration",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        }
+      ],
+      "proofs": {
+        "integration": {
+          "status": "not_readable",
+          "checks": [
+            {
+              "kind": "api",
+              "status": "ready"
+            },
+            {
+              "kind": "api",
+              "status": "ready"
+            },
+            {
+              "kind": "api",
+              "status": "ready"
+            },
+            {
+              "kind": "api",
+              "status": "ready"
+            },
+            {
+              "kind": "api",
+              "status": "ready"
+            },
+            {
+              "kind": "api",
+              "status": "ready"
+            },
+            {
+              "kind": "calendar",
+              "status": "ready"
+            },
+            {
+              "kind": "calendar_event",
+              "status": "ready"
+            },
+            {
+              "kind": "document",
+              "status": "ready"
+            },
+            {
+              "kind": "spreadsheet",
+              "status": "ready"
+            },
+            {
+              "kind": "presentation",
+              "status": "ready"
+            },
+            {
+              "kind": "form",
+              "status": "ready"
+            },
+            {
+              "kind": "drive_folder",
+              "status": "ready"
+            },
+            {
+              "kind": "gmail_message",
+              "status": "ready"
+            },
+            {
+              "kind": "gmail_thread",
+              "status": "ready"
+            },
+            {
+              "kind": "drive_file",
+              "status": "ready"
+            },
+            {
+              "kind": "drive_file",
+              "status": "ready"
+            },
+            {
+              "kind": "drive_file",
+              "status": "ready"
+            },
+            {
+              "kind": "task_list",
+              "status": "ready"
+            },
+            {
+              "kind": "chat_space",
+              "status": "ready"
+            },
+            {
+              "kind": "contact",
+              "status": "ready"
+            },
+            {
+              "kind": "task_item",
+              "status": "ready"
+            },
+            {
+              "kind": "calendar_role",
+              "status": "ready"
+            },
+            {
+              "kind": "drive_folder_capability",
+              "status": "ready"
+            },
+            {
+              "kind": "gmail_send_as",
+              "status": "ready"
+            },
+            {
+              "kind": "calendar_availability",
+              "status": "not_readable",
+              "reason": "unverifiable_availability_shape"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "exports_formatted",
+      "status": "complete",
+      "error": null,
+      "calls": [
+        {
+          "tool": "workspace_docs_get_text",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_sheets_get_values",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_docs_export_as_pdf",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_docs_export_as_docx",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_docs_export_as_html",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_drive_export_as_pdf",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_drive_export_file",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_slides_export_as_pdf",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_sheets_get_spreadsheet",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_sheets_get_sheet_as_csv",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        }
+      ],
+      "proofs": {
+        "syntheticOnlyExports": true
+      }
+    },
+    {
+      "phase": "gmail_label_exact",
+      "status": "complete",
+      "error": null,
+      "calls": [
+        {
+          "tool": "workspace_gmail_list_messages",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_gmail_get_message",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_gmail_get_message_body",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_gmail_get_attachment",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        }
+      ],
+      "proofs": {
+        "gmail": {
+          "exactSyntheticSubject": true,
+          "noRecipients": true,
+          "bodyRead": true,
+          "attachmentRead": true
+        }
+      }
+    },
+    {
+      "phase": "availability_whole_second",
+      "status": "complete",
+      "error": null,
+      "calls": [
+        {
+          "tool": "workspace_dev_check_integration",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        }
+      ],
+      "proofs": {
+        "availability": {
+          "exactCalendar": true,
+          "wholeSecondWindow": true,
+          "ready": true,
+          "fractionalFailurePreserved": true
+        }
+      }
+    },
+    {
+      "phase": "cleanup_verify",
+      "status": "blocked",
+      "error": "expected_missing_workspace_chat_get_space",
+      "calls": [
+        {
+          "tool": "workspace_tasks_get_tasklist",
+          "http": 404,
+          "status": "EXPECTED_MISSING",
+          "strictProofPassed": false
+        },
+        {
+          "tool": "workspace_chat_get_space",
+          "http": 503,
+          "status": "FAIL",
+          "strictProofPassed": false
+        }
+      ],
+      "proofs": {}
+    },
+    {
+      "phase": "cleanup_remaining",
+      "status": "complete",
+      "error": null,
+      "calls": [
+        {
+          "tool": "workspace_contacts_get",
+          "http": 404,
+          "status": "EXPECTED_MISSING",
+          "strictProofPassed": false
+        },
+        {
+          "tool": "workspace_forms_get",
+          "http": 404,
+          "status": "EXPECTED_MISSING",
+          "strictProofPassed": false
+        },
+        {
+          "tool": "workspace_slides_get_presentation",
+          "http": 404,
+          "status": "EXPECTED_MISSING",
+          "strictProofPassed": false
+        },
+        {
+          "tool": "workspace_drive_get_file",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_drive_get_file",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_drive_get_file",
+          "http": 200,
+          "status": "PASS",
+          "strictProofPassed": true
+        },
+        {
+          "tool": "workspace_gmail_get_message",
+          "http": 404,
+          "status": "EXPECTED_MISSING",
+          "strictProofPassed": false
+        }
+      ],
+      "proofs": {
+        "cleanup": {
+          "tasksGone": true,
+          "chatUiGoneProviderPermissionDenied": true,
+          "contactGone": true,
+          "formGone": true,
+          "slidesGone": true,
+          "filesTrashed": 3,
+          "draftGone": true,
+          "calendarRetainedForFractionalRegression": true
+        }
+      }
+    }
+  ],
+  "initialFailuresRetained": [
+    "Read runner initially required an unadvertised whoami expires property. Both refused before any provider test; corrected to independently retained approved expiry plus active authenticated identity.",
+    "Initial shared-drive membership spec requested invalid owner role on a My Drive owner permission; validation refused. No owner-role substitution claimed as shared-drive membership.",
+    "Gmail max-one query returned an opaque continuation cursor; uniqueness refused. A separate bounded DRAFT-label synthetic-subject query with max-two returned exactly one item, then exact subject/no-recipient/body/attachment proofs passed.",
+    "Initial synthetic values readback expected numeric1; Google formatted value was string1. Literal expected formatted fixture corrected before exports; no mutation replay.",
+    "Chat API create returned404. UI creation used Private/creator-only settings after UI showed no existing spaces; exact created UI ID get200 and empty message list200. No message sent.",
+    "Automatic review rejected broad Chat space-list discovery. No blocked result consumed or reused. Exact observed created UI ID supplied the safe alternative; native get200 confirmed it.",
+    "Browser synthetic attachment upload timed out. Fresh UI inspection showed the attachment present; no upload replay.",
+    "All 25 non-availability integration checks ready, but fractional-window availability reported unreadable. Actual echoed request kept milliseconds; busy boundaries were floored by493ms. Whole-second query separately ready; original failure retained.",
+    "After exact Chat UI deletion, native read denied permission and appeared as503. Not reclassified as404/deletion proof; UI absence plus API unreadability recorded."
+  ],
+  "repairsPrepared": {
+    "calendarAvailability": "Allow only the exact floored boundary-second start; retain valid positive interval/end bounds and require echoed query identity.",
+    "wrappedProviderStatus": "Preserve numeric Google401/403/429 across errorResult and RTC decode, while unknown/inconsistent markers remain503 and404 mapping unchanged."
+  },
+  "cleanup": {
+    "driveRun": "All three exact tagged files trashed and readback verified",
+    "formSlidesContact": "Exact IDs404 after audited deletion",
+    "tasks": "Only created tagged list/task deleted; default list untouched; exact list404",
+    "gmail": "Only synthetic draft discarded; exact message404; attachment removed with draft",
+    "chat": "Created Private creator-only space deleted in UI; link/pane absent; subsequent API denied access, not404 proof",
+    "retained": "Only original test secondary calendar and recurring event retained for checked repaired-source fractional-window regression, then exact approved cleanup. No duplicate fixture."
+  },
+  "remaining": [
+    "Required checked merge and release before repaired-source provider assertions.",
+    "Explicit three-scope catalog_read consent and separate missing chrome/domain24h read_only TEST grant if selected.",
+    "One specifically authorized disposable shared drive would provide actual organizer membership; My Drive owner is not an acceptable substitute.",
+    "Remaining casebook cases require their actual source-reviewed precise resources/permissions; no full-catalog success inferred.",
+    "Optional Hub relay/Sandbox owned by Hub agent.",
+    "November1Denver plaintext retirement plus independent approval/drain/recovery unchanged."
+  ],
+  "fullCatalogAcceptanceClaimed": false,
+  "wholeExactAppTaskPassed": false
+}

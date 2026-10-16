@@ -42,11 +42,15 @@ const guide={url:'https://calendar.google.com',
  steps:[{n:1,action:'Open',target:'Google Calendar'},
   {n:2,action:'Verify',target:'Confirm the acting mailbox has availability access to the exact calendar and date range.'}],
  expected:'The app should have permission to read availability. No calendar data was changed.'};
-const safeWindow=(window,start,end)=>isObject(window)&&typeof window.start==='string'&&
- typeof window.end==='string'&&parseDate(window.start)!==null&&
- parseDate(window.end)!==null&&
- parseDate(window.start)<parseDate(window.end)&&
- parseDate(window.start)>=start&&parseDate(window.end)<=end;
+// Actual Google free/busy may floor a busy start to whole seconds even
+// when the echoed query boundary retains milliseconds. Accept only that
+// exact boundary-second representation; never an arbitrary earlier slot.
+const safeWindow=(window,start,end)=>{
+ if(!isObject(window))return false;
+ const from=parseDate(window.start),to=parseDate(window.end);
+ return from!==null&&to!==null&&from<to&&to<=end&&
+  (from>=start||(from%1000===0&&from===Math.floor(start/1000)*1000));
+};
 export async function inspectCalendarAvailability(request,clients){
  const checks=[];
  for(const {calendarId,timeMin,timeMax} of request.calendarFreeBusyWindows||[]){
@@ -64,6 +68,10 @@ export async function inspectCalendarAvailability(request,clients){
    if(!isObject(data)||!isObject(data.calendars)||keys.length!==1||
      keys[0]!==calendarId||!isObject(item)){
     checks.push({kind,name,status:'not_readable',reason:'unexpected_provider_calendar',fix:guide});
+    continue;
+   }
+   if(parseDate(data.timeMin)!==Date.parse(timeMin)||parseDate(data.timeMax)!==Date.parse(timeMax)){
+    checks.push({kind,name,status:'not_readable',reason:'unexpected_provider_window',fix:guide});
     continue;
    }
    if(Array.isArray(item.errors)&&item.errors.length>0){
