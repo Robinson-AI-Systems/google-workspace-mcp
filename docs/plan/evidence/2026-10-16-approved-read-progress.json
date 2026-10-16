@@ -1,0 +1,493 @@
+{
+  "date": "2026-10-16",
+  "ownerApproval": "Bounded organization-wide directory/device/role/security/app-access/audit/usage/Vault metadata and owned nonproduction exact-resource discovery/read approval, received12:02:02UTC.",
+  "sourceRevision": "8ce3d7b82eaf0f6faa53004e9acf4af6f50fc07d",
+  "identity": {
+    "existingApprovedTestPass": true,
+    "profile": "full",
+    "accountAndExactPassMatched": true,
+    "allCallsReadOnly": true,
+    "providerMutations": 0,
+    "ordinaryConnectorSubstituted": false,
+    "hubSubstituted": false,
+    "passRevoked": false
+  },
+  "toolCalls": 48,
+  "records": [
+    {
+      "tool": "workspace_dev_check_integration",
+      "http": 200,
+      "shape": "object",
+      "apiChecks": [
+        {
+          "name": "gmail",
+          "status": "ready"
+        },
+        {
+          "name": "drive",
+          "status": "ready"
+        },
+        {
+          "name": "calendar",
+          "status": "ready"
+        },
+        {
+          "name": "tasks",
+          "status": "not_readable",
+          "reason": "scope_or_access_denied"
+        },
+        {
+          "name": "chat",
+          "status": "ready"
+        },
+        {
+          "name": "people",
+          "status": "not_readable",
+          "reason": "scope_or_access_denied"
+        },
+        {
+          "name": "postmaster",
+          "status": "not_readable",
+          "reason": "scope_or_access_denied"
+        }
+      ]
+    },
+    {
+      "tool": "workspace_tasks_list_tasklists",
+      "http": 503,
+      "shape": "none"
+    },
+    {
+      "tool": "workspace_calendar_list_calendars",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_drive_list_files",
+      "http": 200,
+      "shape": "object"
+    },
+    {
+      "tool": "workspace_gmail_list_messages",
+      "http": 200,
+      "shape": "object"
+    },
+    {
+      "tool": "workspace_chat_list_spaces",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_contacts_list",
+      "http": 200,
+      "shape": "object"
+    },
+    {
+      "tool": "workspace_dev_check_integration",
+      "http": 200,
+      "shape": "object"
+    },
+    {
+      "tool": "workspace_contacts_list",
+      "http": 200,
+      "shape": "object"
+    },
+    {
+      "tool": "workspace_admin_list_users",
+      "http": 200,
+      "shape": "object"
+    },
+    {
+      "tool": "workspace_admin_list_groups",
+      "http": 200,
+      "shape": "object"
+    },
+    {
+      "tool": "workspace_admin_get_customer_info",
+      "http": 200,
+      "shape": "object"
+    },
+    {
+      "tool": "workspace_admin_list_domains",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_admin_list_domain_aliases",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_admin_list_orgunits",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_admin_list_roles",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_admin_list_role_assignments",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_admin_list_schemas",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_admin_list_features",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_admin_list_buildings",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_admin_list_calendar_resources",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_admin_list_chrome_devices",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_admin_list_mobile_devices",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_admin_list_alerts",
+      "http": 503,
+      "shape": "none"
+    },
+    {
+      "tool": "workspace_admin_list_admin_console_notifications",
+      "http": 503,
+      "shape": "none"
+    },
+    {
+      "tool": "workspace_admin_list_tokens",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_admin_list_asp",
+      "http": 200,
+      "shape": "array"
+    },
+    {
+      "tool": "workspace_reports_usage_customer",
+      "http": 200,
+      "shape": "string",
+      "guardRefusal": true,
+      "customerWideIntent": false,
+      "date": "2026-10-14",
+      "windowHours": null
+    },
+    {
+      "tool": "workspace_reports_usage_user",
+      "http": 503,
+      "shape": "none",
+      "customerWideIntent": false,
+      "date": "2026-10-14",
+      "windowHours": null
+    },
+    {
+      "tool": "workspace_vault_list_matters",
+      "http": 503,
+      "shape": "none"
+    },
+    {
+      "tool": "workspace_reports_admin_activity",
+      "http": 200,
+      "shape": "string",
+      "guardRefusal": true,
+      "customerWideIntent": false,
+      "date": null,
+      "windowHours": 24
+    },
+    {
+      "tool": "workspace_reports_drive_activity",
+      "http": 200,
+      "shape": "string",
+      "guardRefusal": true,
+      "customerWideIntent": false,
+      "date": null,
+      "windowHours": 24
+    },
+    {
+      "tool": "workspace_reports_groups_activity",
+      "http": 200,
+      "shape": "string",
+      "guardRefusal": true,
+      "customerWideIntent": false,
+      "date": null,
+      "windowHours": 24
+    },
+    {
+      "tool": "workspace_reports_login_activity",
+      "http": 200,
+      "shape": "string",
+      "guardRefusal": true,
+      "customerWideIntent": false,
+      "date": null,
+      "windowHours": 24
+    },
+    {
+      "tool": "workspace_reports_mobile_activity",
+      "http": 200,
+      "shape": "string",
+      "guardRefusal": true,
+      "customerWideIntent": false,
+      "date": null,
+      "windowHours": 24
+    },
+    {
+      "tool": "workspace_reports_oauth_token_activity",
+      "http": 200,
+      "shape": "string",
+      "guardRefusal": true,
+      "customerWideIntent": false,
+      "date": null,
+      "windowHours": 24
+    },
+    {
+      "tool": "workspace_reports_usage_customer",
+      "http": 503,
+      "shape": "none",
+      "customerWideIntent": true,
+      "date": "2026-10-14",
+      "windowHours": null
+    },
+    {
+      "tool": "workspace_reports_admin_activity",
+      "http": 200,
+      "shape": "object",
+      "customerWideIntent": true,
+      "date": null,
+      "windowHours": 24,
+      "providerCollectionVerified": true
+    },
+    {
+      "tool": "workspace_reports_drive_activity",
+      "http": 200,
+      "shape": "object",
+      "customerWideIntent": true,
+      "date": null,
+      "windowHours": 24,
+      "providerCollectionVerified": true
+    },
+    {
+      "tool": "workspace_reports_groups_activity",
+      "http": 200,
+      "shape": "object",
+      "customerWideIntent": true,
+      "date": null,
+      "windowHours": 24,
+      "providerCollectionVerified": true
+    },
+    {
+      "tool": "workspace_reports_login_activity",
+      "http": 200,
+      "shape": "object",
+      "customerWideIntent": true,
+      "date": null,
+      "windowHours": 24,
+      "providerCollectionVerified": true
+    },
+    {
+      "tool": "workspace_reports_mobile_activity",
+      "http": 200,
+      "shape": "object",
+      "customerWideIntent": true,
+      "date": null,
+      "windowHours": 24,
+      "providerCollectionVerified": true
+    },
+    {
+      "tool": "workspace_reports_oauth_token_activity",
+      "http": 200,
+      "shape": "object",
+      "customerWideIntent": true,
+      "date": null,
+      "windowHours": 24,
+      "providerCollectionVerified": true
+    },
+    {
+      "tool": "workspace_dev_check_integration",
+      "http": 200,
+      "shape": "object"
+    },
+    {
+      "tool": "workspace_reports_usage_customer",
+      "http": 200,
+      "shape": "array",
+      "customerWideIntent": true,
+      "date": "2026-10-09",
+      "windowHours": null,
+      "providerCollectionVerified": true
+    },
+    {
+      "tool": "workspace_reports_usage_user",
+      "http": 200,
+      "shape": "array",
+      "customerWideIntent": false,
+      "date": "2026-10-09",
+      "windowHours": null,
+      "providerCollectionVerified": true
+    },
+    {
+      "tool": "workspace_dev_check_integration",
+      "http": 200,
+      "shape": "object"
+    },
+    {
+      "tool": "workspace_contacts_list",
+      "http": 200,
+      "shape": "object"
+    }
+  ],
+  "scopeReadbacks": [
+    {
+      "kind": "oauth_scope",
+      "name": "https://www.googleapis.com/auth/tasks",
+      "status": "missing",
+      "reason": "oauth_consent_missing"
+    },
+    {
+      "kind": "oauth_scope",
+      "name": "https://www.googleapis.com/auth/tasks.readonly",
+      "status": "missing",
+      "reason": "oauth_consent_missing"
+    },
+    {
+      "kind": "oauth_scope",
+      "name": "https://www.googleapis.com/auth/contacts",
+      "status": "ready"
+    },
+    {
+      "kind": "oauth_scope",
+      "name": "https://www.googleapis.com/auth/contacts.readonly",
+      "status": "missing",
+      "reason": "oauth_consent_missing"
+    },
+    {
+      "kind": "oauth_scope",
+      "name": "https://www.googleapis.com/auth/userinfo.profile",
+      "status": "missing",
+      "reason": "oauth_consent_missing"
+    },
+    {
+      "kind": "oauth_scope",
+      "name": "https://www.googleapis.com/auth/admin.directory.user.readonly",
+      "status": "missing",
+      "reason": "oauth_consent_missing"
+    },
+    {
+      "kind": "oauth_scope",
+      "name": "https://www.googleapis.com/auth/admin.reports.audit.readonly",
+      "status": "ready"
+    },
+    {
+      "kind": "oauth_scope",
+      "name": "https://www.googleapis.com/auth/ediscovery.readonly",
+      "status": "missing",
+      "reason": "oauth_consent_missing"
+    },
+    {
+      "kind": "oauth_scope",
+      "name": "https://www.googleapis.com/auth/ediscovery",
+      "status": "missing",
+      "reason": "oauth_consent_missing"
+    },
+    {
+      "kind": "oauth_scope",
+      "name": "https://www.googleapis.com/auth/admin.reports.usage.readonly",
+      "status": "ready"
+    },
+    {
+      "kind": "oauth_scope",
+      "name": "https://www.googleapis.com/auth/userinfo.email",
+      "status": "missing",
+      "reason": "oauth_consent_missing"
+    }
+  ],
+  "exactAppChecks": [
+    {
+      "kind": "gmail_message",
+      "status": "ready"
+    },
+    {
+      "kind": "drive_file",
+      "status": "not_readable",
+      "reason": "google_probe_failed"
+    },
+    {
+      "kind": "drive_file",
+      "status": "missing",
+      "reason": "resource_not_found"
+    },
+    {
+      "kind": "calendar_role",
+      "status": "missing",
+      "reason": "resource_not_found"
+    },
+    {
+      "kind": "drive_folder_capability",
+      "status": "missing",
+      "reason": "required_capability_not_available"
+    },
+    {
+      "kind": "gmail_send_as",
+      "status": "ready"
+    },
+    {
+      "kind": "calendar_availability",
+      "status": "not_readable",
+      "reason": "provider_calendar_error"
+    }
+  ],
+  "findings": {
+    "auditReads": "Six actual customer-wide audit reports verified native application/activities collection, max5rows per application, one UTCday, no continuation requested. Initial calls without explicit crossDomain intent were genuine guard refusals, not successes; owner-approved bounded true-intent retest succeeded.",
+    "usageReads": "Original October14 report date was not yet available. Existing usage-read scope independently ready. October9 bounded customer and actor usage reports both succeeded with native arrays. This is reporting latency, not missing consent or an API-disabled observation.",
+    "consent": "Tasks full/readonly both absent; profile/email absent; Vault full/readonly absent. Contacts full already granted; do not request unnecessary contacts consent. Narrow incremental route requests only tasks.readonly,userinfo.profile,userinfo.email,ediscovery.readonly. Google consent, edition and roles remain separate.",
+    "resources": "No active owned tagged Drive files or nonprimary test calendar found. Chat list succeeded with two DMs but no tagged test space; no business conversation was treated as a test fixture. Contact metadata projection returned no resource identity, not positive contact access proof.",
+    "exactReads": "Used original ledger IDs under new independent read approval, without extending/reusing the exhausted old12-call authorization. Exact old test Gmail message and own send-as ready; trashed Drive object not eligible, wrong-kind Drive IDmissing, deleted Calendar role missing/freebusy provider error. No restore/create/write performed. Search-result subject was not trusted as fixture ownership.",
+    "notifications": "Actual deployed call failed before Google because installed googleapis Directory client has no notifications resource. Source fix returns explicit not_readable/provider_method_unavailable/manual Console steps instead of a TypeError or fabricated empty list.",
+    "alerts": "Actual permission denial; existing source explicitly excludes restricted apps.alerts consent because Google blocks enrollment without project eligibility. No API-disabled claim, added grant or paid upgrade."
+  },
+  "hub": {
+    "currentNativeAuthorizedTargets": 0,
+    "currentNativeTools": 0,
+    "nativeMode": "test",
+    "nativeAreas": [
+      "gateway"
+    ],
+    "readyDeployment": "dpl_83fmN842bW5GJqXtBT8KHQca16pa",
+    "liveSource": "4b0a3d484ff2f68227500130be6cc7f7966292e8",
+    "latestMergedSource": "01acb6b282770d9852d40e3f2334d758d9edd6c9",
+    "latestFixPR": 221,
+    "latestFixLive": false,
+    "genuineRoutedWorkspaceRead": false
+  },
+  "ledger": {
+    "passed": 25,
+    "pending": 4,
+    "fullCatalogAccepted": false,
+    "exactAppAccepted": false,
+    "why": "Full catalog still requires actual read_only identity plus complete exact cases; app still lacks consent and active owned positive resources; Hub target/grant not callable here. November1 plaintext gate unchanged."
+  },
+  "officialReferences": [
+    "https://developers.google.com/workspace/tasks/auth",
+    "https://developers.google.com/workspace/vault/auth",
+    "https://developers.google.com/people/api/rest/v1/people/get",
+    "https://developers.google.com/workspace/admin/reports/auth"
+  ]
+}
