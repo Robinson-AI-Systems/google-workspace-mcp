@@ -545,7 +545,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
   "id": "P0-2-FULL-CASEBOOK-REAL-READ",
   "priority": 1,
-  "requiredRevision": "f85b2de9c93696af400b1e86b7c93856108a85db",
+  "requiredRevision": "b199355c2f10936470855726ce7fc8ccb49c1b5f",
   "task": "Run full source-reviewed P0-2 read-only catalog against approved real Google TEST account; publish sanitized report and fix or ledger each real failure",
   "procedure": "scripts/smoke-readonly-catalog.mjs; docs/plan/GOOGLE-ACCEPTANCE.md; docs/plan/TASKS.md P0-2",
   "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
@@ -3284,3 +3284,5 @@ When all independent authorized work and final checks are complete, request one 
 checked Workspace release encompassing PR174/175 and this source repair. Then verify
 READY/canonical source, present real narrow Google consent, run remaining repaired reads
 on the retained existing14-area pass, and handle missing-area/resource approval separately.
+
+Final assembled local proof: npm run check and1819/1819unit tests PASS; source-specific focused73PASS. Checked release remains withheld pending exact-head and postmergeCI/review.
