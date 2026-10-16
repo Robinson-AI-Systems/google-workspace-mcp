@@ -28,6 +28,19 @@ describe('hosted Google API clients', () => {
       expect(url.searchParams.get('access_type')).toBe('offline');
     }finally{process.env=before;}
   });
+  it('recovers already-approved Postmaster reads without requesting write or unrelated scopes',()=>{
+    const before={...process.env};
+    try{
+      process.env.PUBLIC_BASE_URL='https://workspace.example.test';
+      process.env.GOOGLE_OAUTH_CLIENT_ID='fake-client';process.env.GOOGLE_OAUTH_CLIENT_SECRET='fake-secret';
+      const url=new URL(getGoogleAuthUrl('postmaster-state','ops@example.test','postmaster_read'));
+      expect(url.searchParams.get('scope')).toBe('https://www.googleapis.com/auth/postmaster.readonly');
+      expect(url.searchParams.get('include_granted_scopes')).toBe('true');
+      expect(url.searchParams.get('state')).toBe('postmaster-state');
+      expect(url.searchParams.get('login_hint')).toBe('ops@example.test');
+      expect(url.searchParams.get('access_type')).toBe('offline');
+    }finally{process.env=before;}
+  });
   it('offers only three incremental catalog read scopes through a separate purpose',()=>{
     const before={...process.env};
     try{
