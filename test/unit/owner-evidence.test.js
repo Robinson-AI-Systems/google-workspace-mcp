@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {ok} from '../../src/tools/util.js';
-import {buildAdminOverview} from '../../src/tools/admin-overview.js';
+import {buildAdminOverview,handlers as overviewHandlers} from '../../src/tools/admin-overview.js';
 
 const account='ops@example.test';
 const clients=(extra={})=>({actingAs:account,rtcPolicy:{profile:'full'},...extra});
@@ -160,6 +160,13 @@ describe('P8-8 owner policy review from actual P7-2 evidence',()=>{
 
 
 describe('selected owner overview reads',()=>{
+ it('carries selection through the exported transport handler',async()=>{
+  const r=await overviewHandlers.workspace_admin_overview({crossDomain:true,sections:['policies']},
+   clients({rtcPolicy:{profile:'read_only',areas:['mail']}}));
+  const data=JSON.parse(r.content[0].text);
+  expect(Object.keys(data.items)).toEqual(['policies']);
+  expect(data.items.policies).toMatchObject({status:'not_readable',reason:'Outside the permitted areas or connection profile.'});
+ });
  it('calls only the authorized policy source and forwards scoped intent',async()=>{
   const called=[];
   const r=await buildAdminOverview(clients({allowedDomains:['example.test']}),async(name,args,c)=>{
@@ -181,7 +188,7 @@ describe('selected owner overview reads',()=>{
   expect(called).toEqual([]);
   expect(r.items.policies.status).toBe('not_readable');
  });
- it.each([[],['policies','policies'],['unknown'],['constructor'],'policies',[null]])('rejects invalid selection %j before any read',async sections=>{
+ it.each([[],['policies','policies'],['unknown'],['constructor'],'policies',[null]].map(sections=>({sections})))('rejects invalid selection $sections before any read',async({sections})=>{
   const called=[];
   await expect(buildAdminOverview(clients(),fake({},called),{crossDomain:true,sections})).rejects.toThrow('Nothing was read');
   expect(called).toEqual([]);
