@@ -387,3 +387,16 @@ fails the service conformance step; reference success cannot substitute for it.
   retirement. Hub discovers this service, with its own scoped grant and audit.
 
 Final retirement review also closes the retained single-account google_auth copy: only after encrypted-only activation and a successful account refresh, clear a legacy credential whose refresh token exactly matches that account’s pre/post renewal token. Unmatched credentials and the table remain intact; no activation-time bulk erase. Sanitized inspection adds legacyPlaintextCopies; real PG tests cover unrelated-account refusal, rotation, next-refresh timing and no resurrection. Actual live counts remain unverified until release.
+
+
+Final released acceptance: PR194 source42afbaa independently READY; retired
+notifications404 and AlertCenter503 with explicit DWD configuration reason verified
+through original read-only TEST. Actual protected encrypted-only activation and
+both-account saved-grant renewal/mailbox/persistence verification complete;
+plaintextAccounts0, legacyPlaintextCopies0, allproblems0. Subsequent actual
+Gmail-backed whoami200/matching identity. See encrypted-cutover.json and screenshot.
+Catalog report/developer audit is complete with the documented resource/config
+limits; positive Alert Center still needs separate apps.alerts authorization.
+Native Hub connection is proved, but separately listed broader Hub relay/Sandbox/
+revocation checks remain pending for Hub-agent reconciliation; earlier native-only
+closure wording does not waive or prove them. No reverse discovery is required.

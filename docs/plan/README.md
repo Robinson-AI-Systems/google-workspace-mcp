@@ -5,7 +5,7 @@ selecting new implementation; preserve the existing session:finish workload chec
 
 ## Completion scope — owner October16,2026
 
-Hub integration is mandatory for whole-project completion; older optional wording is historical. Standalone provider evidence remains separate. Do not change/configure/release Hub here. Vault code and existing grant remain; upgrade-dependent live verification is excluded from completion and recorded could-not-verify, never fabricated PASS or product failure. No paid upgrade or repeated excluded live calls. Owner October16 replaces the earlier 30-day/November1 wait with all-account readiness, checked release, deployment drain and reviewed encrypted recovery. Hub discovers Workspace; the proven scoped/audited native path satisfies Workspace integration. Relay/Sandbox/SDK are Hub responsibilities, not reverse Workspace dependencies.
+Hub integration is mandatory for total completion and the native Hub->Workspace discovery/read/audit connection is proved. Broader separately listed Hub relay/Sandbox/revocation acceptance stays pending for Hub-agent reconciliation; no reverse Workspace discovery or duplicate implementation. Do not change/configure/release Hub here. Vault live positives remain owner-excluded with code/grant retained. Owner removed the November1 waiting policy; actual protected encrypted-only cutover is now complete for both accounts, account and legacy plaintext0, all integrity checks clear. Catalog developer audit is complete with explicit live-resource/configuration limits; Alert Center remains separately opt-in pending its read/write Google delegation authorization. Current queue28PASSED/1Hub-ownedPENDING.
 
 ## Session workload comes from the current owner prompt
 
@@ -337,7 +337,7 @@ their specific execution and acceptance gates.
 
 Phases are sequential. P0 came first because there were no tests; there are
 now, and every later card relies on them to prove it did not break something.
-Only P0-2 (the live read-only smoke test), P5-2 and P5-4 are not built (P6-1, full group settings, is an optional extension and is built, awaiting a live check); see the
+Historical implementation-gap summary superseded by October16 closeout: no open Workspace engineering remains; see the
 ledger in `TASKS.md` for the exact state of every card.
 
 ## Rules that never bend

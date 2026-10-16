@@ -1,0 +1,52 @@
+{
+  "source": "42afbaaf138d293d6042acd874c0fd3c32f7ce0e",
+  "deploymentId": "dpl_5Ja6VZyDKyn2nnMVYyhYuzouFRtu",
+  "observation": "Protected owner browser action submitted; fresh rendered result independently observed after submission. Existing connected accounts refreshed and mailboxes/persistence verified by protected runtime.",
+  "encryptedOnly": true,
+  "accountsChecked": 2,
+  "legacyPlaintextCopies": 0,
+  "plaintextAccounts": 0,
+  "ready": true,
+  "problems": {
+    "missingKey": false,
+    "noAccounts": false,
+    "missingCopy": 0,
+    "corruptOrStale": 0,
+    "unverifiedBackfill": 0,
+    "refreshNotObserved": 0
+  },
+  "notBefore": null,
+  "newScopesOrConsent": false,
+  "encryptionKeyChangedOrExtracted": false,
+  "postCutoverProviderRead": {
+    "at": "2026-10-16T23:14:16.710Z",
+    "http": 200,
+    "matchingMailbox": true,
+    "providerMutations": 0
+  },
+  "deployedContract": {
+    "retiredNotificationsHttp": 404,
+    "alertCenterHttp": 503,
+    "alertCenterReturnsConfigurationReason": true,
+    "alertCenterLivePositiveClaimed": false
+  },
+  "release": {
+    "head": "c229a66d6e6e3e416ef6f8aee10f7399b76ecbd2",
+    "headCI": 38978247807,
+    "headPolicy": 38978247814,
+    "mainCI": 38978365522,
+    "mainPolicy": 38978365466,
+    "requiredChecks": "ALL SUCCESS",
+    "marker": "release-markers/2026-10-16-owner-completion-194",
+    "nonforceExpectedOld": "6ec69ce1b6cb8ffb2096774e038987cf6f5a5c4d"
+  },
+  "remainingConfiguration": {
+    "alertCenterScope": "https://www.googleapis.com/auth/apps.alerts",
+    "access": "read_and_write",
+    "ownerAuthorizationForNewScope": false,
+    "existingServiceAccount": "robinson-s-toolkit-mcp@robinsons-toolkit-mcp.iam.gserviceaccount.com",
+    "clientId": "115576530222062805971",
+    "optInEnabled": false
+  },
+  "hubProofSeparation": "Native discovery/provider read/durable audit accepted in Hub PR224. Broader relay/Sandbox/whole-route revocation have no new proof here and remain separately Hub-owned."
+}
