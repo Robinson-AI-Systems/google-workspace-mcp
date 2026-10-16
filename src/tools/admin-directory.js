@@ -1,5 +1,5 @@
 import { recordChange } from '../changelog.js';
-import { ok } from './util.js';
+import { ok, googleList } from './util.js';
 import { buildSettingsBody, SETTINGS_DESCRIPTION, SETTINGS_SCHEMA_PROPERTIES } from './group-settings.js';
 
 const CUSTOMER = 'my_customer'; // Directory API shorthand for "your own Workspace customer"
@@ -126,7 +126,7 @@ export const handlers = {
   // Users
   admin_list_users: async (args, { admin }) => {
     const res = await admin.users.list({ domain: args.domain, customer: args.domain ? undefined : CUSTOMER, query: args.query, maxResults: args.maxResults || 100, pageToken: args.pageToken, showDeleted: args.showDeleted ? 'true' : undefined });
-    return ok(res.data);
+    return ok(googleList(res.data, 'users', ['kind','etag','nextPageToken']));
   },
   admin_get_user: async (args, { admin }) => {
     const res = await admin.users.get({ userKey: args.userKey, projection: 'full' });
@@ -228,7 +228,7 @@ export const handlers = {
   // Groups
   admin_list_groups: async (args, { admin }) => {
     const res = await admin.groups.list({ domain: args.domain, customer: args.domain ? undefined : CUSTOMER, userKey: args.userKey, maxResults: args.maxResults || 100 });
-    return ok(res.data);
+    return ok(googleList(res.data, 'groups', ['kind','etag','nextPageToken']));
   },
   admin_get_group: async (args, { admin }) => {
     const res = await admin.groups.get({ groupKey: args.groupKey });

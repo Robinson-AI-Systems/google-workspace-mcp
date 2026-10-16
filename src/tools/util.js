@@ -3,6 +3,20 @@ import { formatError } from './errors.js';
 
 // ---------- results ----------
 export const MAX_ITEMS = 200;
+
+// Google omits empty repeated fields. Preserve the named collection and cursor
+// at this known SDK boundary, without treating error/unrelated objects as empty.
+export function googleList(data, field, metadata = []) {
+  if (!data || typeof data !== 'object' || Array.isArray(data) || 'error' in data)
+    throw Error('Google returned an unreadable list response.');
+  if (data[field] !== undefined && !Array.isArray(data[field]))
+    throw Error('Google returned an invalid ' + field + ' collection.');
+  if (data[field] === undefined && Object.keys(data).some(k => !metadata.includes(k)))
+    throw Error('Google returned an unrelated list response.');
+  if (data.nextPageToken !== undefined && typeof data.nextPageToken !== 'string')
+    throw Error('Google returned an invalid list cursor.');
+  return {...data, [field]: data[field] || []};
+}
 export const MAX_BASE64_CHARS = 64 * 1024;
 const BASE64_RE = /^[A-Za-z0-9+/_-]+={0,2}$/;
 const DATA_KEY_RE = /base64|data|raw|bytes|content/i; // only fields named like file data are ever swapped for their size

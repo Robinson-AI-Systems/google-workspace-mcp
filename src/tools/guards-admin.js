@@ -258,8 +258,11 @@ export const GUARDS_ADMIN = {
   chrome_set_policy: { destructive: D,
     verify: (a, b, after) => after?.found === true && covers(after.value, a.policyValue),
     describe: (a) => ({ target: `${a.policySchema} on ${a.orgUnitPath}`, summary: `Push the Chrome policy ${a.policySchema} (${Object.keys(isObj(a.policyValue) ? a.policyValue : {}).join(', ') || 'no settings'}) to the org unit ${a.orgUnitPath}: every browser and device in it follows it` }),
-    after: async (a, { chromepolicy }) => {
-      const res = await data(chromepolicy.customers.policies.resolve({ customer: 'customers/my_customer', requestBody: { policySchemaFilter: a.policySchema, policyTargetKey: { targetResource: `orgunits/${a.orgUnitPath}` } } }));
+    after: async (a, clients, details) => {
+      const targetResource = details?.targetResource;
+      if (typeof targetResource !== 'string' || !/^orgunits\/[A-Za-z0-9_-]{1,256}$/.test(targetResource))
+        throw Error('Google policy write did not retain its exact organizational unit target.');
+      const res = await data(clients.chromepolicy.customers.policies.resolve({ customer: 'customers/my_customer', requestBody: { policySchemaFilter: a.policySchema, policyTargetKey: { targetResource } } }));
       const hit = list(res.resolvedPolicies).find((p) => p?.value?.policySchema === a.policySchema);
       return hit ? { found: true, value: hit.value.value } : { found: false, note: 'Google does not list that policy for the org unit.' };
     } },

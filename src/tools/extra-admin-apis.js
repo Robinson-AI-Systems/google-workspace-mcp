@@ -1,4 +1,5 @@
-import { ok } from './util.js';
+import { ok, googleList } from './util.js';
+import { chromeTarget } from './chrome-target.js';
 
 // These cover ground the "official" 192-tool Google Workspace MCP skips entirely:
 // Chrome policy push, Cloud Identity security/groups, domain verification,
@@ -34,19 +35,26 @@ export const tools = [
 ];
 
 export const handlers = {
-  chrome_resolve_policies: async (args, { chromepolicy }) => {
+  chrome_resolve_policies: async (args, clients) => {
+    const {chromepolicy} = clients;
+    const targetResource = await chromeTarget(args.orgUnitPath, clients);
     const res = await chromepolicy.customers.policies.resolve({
       customer: 'customers/my_customer',
-      requestBody: { policySchemaFilter: args.policySchemaFilter || '*', policyTargetKey: { targetResource: `orgunits/${args.orgUnitPath}` } }
+      requestBody: { policySchemaFilter: args.policySchemaFilter || '*', policyTargetKey: { targetResource } }
     });
     return ok(res.data.resolvedPolicies || []);
   },
-  chrome_set_policy: async (args, { chromepolicy }) => {
+  chrome_set_policy: async (args, clients) => {
+    const {chromepolicy} = clients;
+    const value = args.policyValue;
+    if (!value || typeof value !== 'object' || Array.isArray(value) || !Object.keys(value).length || Object.keys(value).some(k => !/^[A-Za-z_][A-Za-z0-9_]*$/.test(k)))
+      throw Error('invalid_args: policyValue must contain named policy fields');
+    const targetResource = await chromeTarget(args.orgUnitPath, clients);
     const res = await chromepolicy.customers.policies.orgunits.batchModify({
       customer: 'customers/my_customer',
-      requestBody: { requests: [{ policyTargetKey: { targetResource: `orgunits/${args.orgUnitPath}` }, policyValue: { policySchema: args.policySchema, value: args.policyValue } }] }
+      requestBody: { requests: [{ policyTargetKey: { targetResource }, policyValue: { policySchema: args.policySchema, value: args.policyValue }, updateMask:Object.keys(value).join(',') }] }
     });
-    return ok(res.data);
+    return ok({...res.data, targetResource});
   },
   chrome_list_policy_schemas: async (args, { chromepolicy }) => {
     const res = await chromepolicy.customers.policySchemas.list({ customer: 'customers/my_customer', filter: args.filter });
@@ -54,13 +62,26 @@ export const handlers = {
   },
 
   identity_get_security_settings: async (args, { admin }) => {
-    const res = await admin.users.get({ userKey: args.userKey, fields: 'isEnrolledIn2Sv,isEnforcedIn2Sv,isMailboxSetup,changePasswordAtNextLogin,ipWhitelisted' });
+    const res = await admin.users.get({ userKey: args.userKey, fields: 'primaryEmail,isEnrolledIn2Sv,isEnforcedIn2Sv,isMailboxSetup,changePasswordAtNextLogin,ipWhitelisted' });
     return ok(res.data);
   },
   identity_list_group_transitive_membership: async (args, { cloudidentity }) => {
     const lookup = await cloudidentity.groups.lookup({ 'groupKey.id': args.groupEmail });
-    const res = await cloudidentity.groups.memberships.list({ parent: lookup.data.name });
-    return ok(res.data.memberships || []);
+    const parent = lookup.data?.name;
+    if (typeof parent !== 'string' || !/^groups\/[A-Za-z0-9_-]+$/.test(parent))
+      throw Error('Google did not return the exact group resource name.');
+    const rows = [], seen = new Set();
+    let pageToken;
+    for (let page = 0; page < 10; page++) {
+      const res = await cloudidentity.groups.memberships.searchTransitiveMemberships({parent,pageSize:200,...(pageToken?{pageToken}:{})});
+      const pageData = googleList(res.data, 'memberships', ['nextPageToken']);
+      rows.push(...pageData.memberships);
+      pageToken = pageData.nextPageToken;
+      if (!pageToken) return ok(rows);
+      if (seen.has(pageToken)) throw Error('Google repeated a transitive membership cursor.');
+      seen.add(pageToken);
+    }
+    throw Error('Transitive membership page limit reached; the complete membership was not read.');
   },
   identity_check_membership: async (args, { cloudidentity }) => {
     const lookup = await cloudidentity.groups.lookup({ 'groupKey.id': args.groupEmail });

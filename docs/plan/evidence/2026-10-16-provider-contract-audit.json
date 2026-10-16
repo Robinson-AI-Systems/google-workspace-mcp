@@ -1,0 +1,126 @@
+{
+  "sourceRevision": "8ce3d7b82eaf0f6faa53004e9acf4af6f50fc07d",
+  "approvalReceivedAt": "2026-10-16T12:02:02Z",
+  "providerMutations": 0,
+  "credentialProfile": "full",
+  "fullCasebookAcceptanceClaimed": false,
+  "notes": [
+    "Only independently approved bounded read operations; the complete casebook still requires read_only identity.",
+    "Private exact identifiers and provider bodies remain in the protected original runner.",
+    "Initial narrow OU projection omitted the verifier-required name; a subsequent exact full OU read verified successfully.",
+    "Directory omitted-empty collection remains an observed source defect until the repaired deployment is tested.",
+    "Chrome schema attempt returned outside_scope before any Google provider proof; no pass was widened."
+  ],
+  "correlatedReads": [
+    {
+      "name": "workspace_admin_get_user",
+      "http": 200,
+      "providerShapeAndExactIdVerified": true
+    },
+    {
+      "name": "workspace_admin_get_2sv_status",
+      "http": 200,
+      "providerShapeAndExactIdVerified": true
+    },
+    {
+      "name": "workspace_admin_list_user_aliases",
+      "http": 200,
+      "providerShapeAndExactIdVerified": true
+    },
+    {
+      "name": "workspace_admin_get_role",
+      "http": 200,
+      "providerShapeAndExactIdVerified": true
+    },
+    {
+      "name": "workspace_admin_get_orgunit",
+      "http": 200,
+      "providerShapeAndExactIdVerified": false
+    },
+    {
+      "name": "workspace_admin_get_mobile_device",
+      "http": 200,
+      "providerShapeAndExactIdVerified": true
+    },
+    {
+      "name": "workspace_admin_get_token",
+      "http": 200,
+      "providerShapeAndExactIdVerified": true
+    },
+    {
+      "name": "workspace_admin_get_domain",
+      "http": 200,
+      "providerShapeAndExactIdVerified": true
+    },
+    {
+      "name": "workspace_admin_get_available_privileges",
+      "http": 200,
+      "providerShapeAndExactIdVerified": true
+    },
+    {
+      "name": "workspace_reports_activity",
+      "http": 200,
+      "providerShapeAndExactIdVerified": true
+    },
+    {
+      "name": "workspace_contacts_list_groups",
+      "http": 200,
+      "providerShapeAndExactIdVerified": true
+    },
+    {
+      "name": "workspace_directory_list_people",
+      "http": 200,
+      "providerShapeAndExactIdVerified": false
+    }
+  ],
+  "additionalReads": [
+    {
+      "name": "workspace_admin_get_orgunit",
+      "http": 200,
+      "providerShapeVerified": true
+    },
+    {
+      "name": "workspace_identity_get_security_settings",
+      "http": 200,
+      "providerShapeVerified": true
+    },
+    {
+      "name": "workspace_chrome_list_policy_schemas",
+      "http": 403,
+      "providerShapeVerified": false,
+      "reason": "outside_scope"
+    },
+    {
+      "name": "workspace_directory_search_people",
+      "http": 200,
+      "providerShapeVerified": true,
+      "count": 0
+    },
+    {
+      "name": "workspace_contacts_search",
+      "http": 200,
+      "providerShapeVerified": true,
+      "count": 0
+    }
+  ],
+  "offlineAudit": {
+    "baseline": "744ff023b7845695d231531c32e122644fedcf31",
+    "referencesScanned": 758,
+    "uniqueMethodPaths": 283,
+    "limitations": "Static method availability scan plus targeted contract review; not proof of all provider arguments, scopes or live execution.",
+    "repairs": [
+      "Missing Forms publishing method adapted to documented REST endpoint with existing auth and guards.",
+      "Directory users/groups and People contacts/directory preserve documented omitted-empty collections with strict malformed-response refusal.",
+      "Chrome target resolves exact Directory OU ID, and updates specify only supplied policy field names.",
+      "Cloud Identity nested membership uses searchTransitiveMemberships with bounded pagination and truthful denial/incomplete failures.",
+      "Security projection includes primaryEmail for exact-account evidence."
+    ]
+  },
+  "references": [
+    "https://developers.google.com/workspace/forms/api/reference/rest/v1/forms/setPublishSettings",
+    "https://developers.google.com/chrome/policy/guides/samples",
+    "https://developers.google.com/chrome/policy/reference/rest/v1/PolicyTargetKey",
+    "https://docs.cloud.google.com/identity/docs/reference/rest/v1/groups.memberships/searchTransitiveMemberships",
+    "https://developers.google.com/workspace/admin/directory/reference/rest/v1/orgunits/get"
+  ]
+}

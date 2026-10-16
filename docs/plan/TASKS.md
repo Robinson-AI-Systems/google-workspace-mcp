@@ -3195,3 +3195,47 @@ narrow Google consent, protected24h read_only grant covering approved read areas
 active test resources and reviewed remaining per-case args. Hub independently needs its
 checked latest fix release and callable target/service grant. No scope approval already
 given here should be requested again. November1 plus separate retirement approval remains.
+
+
+## October16 — owner-requested combined pre-release provider repair
+
+Continue the owner's instruction to exhaust eligible work before another release.
+Main baseline744ff023b7845695d231531c32e122644fedcf31 remains ahead of independently
+READY live8ce3d7b/dpl_6vSCiPzjETwHvWqMfciEPUzMqx4F; no new release has been authorized
+or attempted. The Hub connection remains another agent's work and is not changed here.
+
+A finite offline pinned-SDK scan covered758 references/283 unique method paths;
+manual contract review distinguished local aliases/array calls from provider methods.
+Beyond the already merged notifications and narrow read-consent repair, actual source
+repairs now cover the missing Forms publishing method, documented omitted-empty
+Directory/People lists, Chrome exact OU-ID targets and required named-field mask,
+actual transitive membership endpoint with bounded pagination, and exact-account
+security projection. Same auth, permission/profile/domain guards, preview/confirmation,
+independent readback and audit gates remain. No new feature or Google mutation.
+This small cohesive maintenance repair claims zero product bundles/subsections.
+
+Twenty-three new regression tests capture actual hosted SDK outbound methods/paths,
+bodies, exact IDs, guarded confirmation/readback/logging, read_only nested refusal,
+malformed lists, cursor repetition/caps and provider denials without fallback/replay.
+Local full unit1814/1814 and npm run check pass. Disposable PostgreSQL and RTC gates
+must also pass in exact-head Actions before merge; they are not local proof here.
+Initial test harness import-order issue prevented the fake audit DB binding; fixed by
+loading the hosted adapter after the mock, without weakening success/audit assertions.
+
+Additional newly approved read evidence supplies12 correlated observations and5 final
+bounded attempts: exact full OU and mailbox security plus narrow directory/contact
+empty searches validate; Chrome schemas403outside_scope is NOT provider acceptance.
+No useful pass is revoked or extended. The former12-call fixture cycle is unchanged.
+Sanitized evidence:docs/plan/evidence/2026-10-16-provider-contract-audit.json.
+The earlier48 plus these17 observations total65 tool observations, including refusals;
+not65 provider passes, and not full-casebook/read_only acceptance.
+
+All original29 tasks remain reconciled:25PASSED/4PENDING. Full-casebook still requires
+secure connection of the already-created read_only24h pass and exact reviewed cases;
+exact-app still requires real narrow Google consent and active approved nonproduction
+resources. No duplicate pass creation, grant borrowing or optional feature selection.
+Plaintext retirement remains November1 Denver plus separate approval/drain/recovery.
+When this assembled repair is reviewed/merged with all exact-head and postmerge checks,
+request one concrete checked Workspace release; then verify deployed source, complete
+narrow consent and immediately run newly eligible reads. Scheduled release is an
+alternative. Release alone does not supply test resources or prove Google consent.
