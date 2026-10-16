@@ -544,7 +544,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "Independently READY6ec69ce/dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur, canonical exactsource. Owner-approved v2 consent/GoogleConnected and genuine savedgrantrefresh:6API7checkedscopes allREADY before/after, all2accounts encryptedreadyzeroproblems. V2 Postmaster domain list200/native count0/no continuation, now154verified/10unverified/2ownerexcludedVault. Traffic notcalled: no registered owned accessible VERIFIED domain. Other exactresource/scope/creator, Hub and November1 gates unchanged; allfixtures cleaned; no providerwrites."
+    "lastEvidence": "READY6ec69ce/dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur/canonical verified. All6API7checked scopes before/after genuine refresh and2account encryptedreadinessPASS. Owner-approved Postmaster domain registration, additiveTXT/publicDNS/Googleverification complete; originalTEST exactdomainOWNER/VERIFIED list200 andOct9-15v2traffic200/native stats[]/no continuation. Missing metrics unknown, nothealthy delivery. Casebook155verified/9unverified/2Vault excluded. Remaining exactasset/scope/creator, Hub andNovember1gates unchanged; no sourcechange/newrelease needed."
   },
   {
     "id": "P8-4-HTTP-CONTRACT",
@@ -3441,3 +3441,21 @@ this TEST connection’s scoped inventory. Domain registration/verification, DNS
 remain unperformed. Full166case report now154verified/10unverified/2Vault excluded;
 queue remains26PASSED/3PENDING. No further release needed for evidence publication.
 All other resource/scope/creator, Hub-owned and November1 retirement gates remain.
+
+
+### P7-4 owner domain setup and genuine traffic read — October16,2026
+
+Owner asked agent to handle Postmaster domain setup, then explicitly approved the
+exact additive VercelTXT and Google ownership-verification action at22:14:38Z.
+One existing Rentals domain registered to the correct ops Google account. DNS
+preview/audited add/readback confirms one new verificationTXT, 14existing records
+preserved, total15; independent nativeVercel record/domain config confirmed. Initial
+Google verification preceded public propagation and remainedUNVERIFIED; no blind
+traffic query or duplicate DNS/domain write. After Google's public DNS showed the
+exact token, one justified Verify succeeded with Domain verified. OriginalTEST
+read_only pass/account/source reverified; domain list200 exactOWNER/VERIFIED;
+October9-15 inclusive seven-day traffic query200/native v2 stats[]/no continuation.
+Google Not enough data remains unknown metrics, not healthy delivery. Retain the
+business domain and ownershipTXT; these are approved setup, not disposable fixtures.
+Catalog155verified/9unverified/2Vault excluded; queue26PASSED/3PENDING. No sending,
+sharing, purchase, scope change, source change, plaintext retirement or release.
