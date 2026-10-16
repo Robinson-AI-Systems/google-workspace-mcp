@@ -64,7 +64,7 @@ export const handlers = {
     // Google permits wildcards only at the leaf of a specific namespace.
     // The former default '*' is not a supported resolve filter.
     if (typeof filter !== 'string' || filter.length > 512 ||
-        !/^chrome\\.[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)*\\.(?:[A-Za-z0-9_]+|\\*)$/.test(filter))
+        !/^chrome\.[A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)*\.(?:[A-Za-z0-9_]+|\*)$/.test(filter))
       throw Error("invalid_args: policySchemaFilter must name a Chrome policy or leaf namespace such as 'chrome.users.*'.");
     const {chromepolicy} = clients;
     const targetResource = await chromeTarget(args.orgUnitPath, clients);
