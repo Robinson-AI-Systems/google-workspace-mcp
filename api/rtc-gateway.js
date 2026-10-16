@@ -50,7 +50,7 @@ function decodeMcp(result){
  if(result?.isError){
   const text=result?.content?.find(x=>x.type==='text')?.text||'Tool failed';
   const found=/^(?:Error: )?([a-z_]+):/.exec(text);
-  return {error:{what:text.slice(0,300),code:found?.[1]||'service_error'}};
+  return {error:{what:text.slice(0,300),code:result?._meta?.['robinson/error-code']==='not_found'?'not_found':found?.[1]||'service_error'}};
  }
  const text=result?.content?.find(x=>x.type==='text')?.text;
  if(!text)return result?.structuredContent??null;
@@ -193,6 +193,7 @@ export function createRtcGateway(){
   const code=Number(error?.response?.status||error?.code);
   if(code===401)return fail(res,401,'permission','Google authorization is unavailable.','Check this account connection before retrying.');
   if(code===403)return fail(res,403,'permission','Google refused this operation.','Check the selected account and its existing permissions.');
+  if(code===404)return fail(res,404,'not_found','Google could not find the selected resource.','Check the exact resource ID and account.');
   if(code===429)return fail(res,429,'rate_limited','Provider request limit reached.','Reconcile any possible write before retrying.',60);
   return fail(res,503,'service_error','Operation outcome could not be established.','Read back any possible change before retrying; check service authorization and persistence.');
  }

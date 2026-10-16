@@ -56,7 +56,8 @@ export function ok(value) {
 
 /** Error result for Claude: plain-English explanation first, Google's own message kept at the end. See errors.js. */
 export function errorResult(err) {
-  return { content: [{ type: 'text', text: formatError(err) }], isError: true };
+  return { content: [{ type: 'text', text: formatError(err) }], isError: true,
+    ...(Number(err?.response?.status || err?.code) === 404 ? { _meta: { 'robinson/error-code': 'not_found' } } : {}) };
 }
 
 /** Merge several {tools, handlers} namespace modules into one flat registry. */
