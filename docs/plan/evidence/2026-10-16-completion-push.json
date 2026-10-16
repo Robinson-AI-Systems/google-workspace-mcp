@@ -58,7 +58,8 @@
     "routedProfile": "PASS expected mailbox",
     "correlationId": "9c803db1-21b9-4bb5-888b-d88980b749a0",
     "remaining": "Restricted relay, existing Sandbox and whole-route revocation still separately unverified; do not revoke useful passes",
-    "noHubChanges": true
+    "noHubChanges": true,
+    "currentFollowup": "Native foundation/whoami remain TEST/writesfalse; search for relay/Sandbox/revocation exposes no callable tool. PR224 permanent receipt reconfirmed; native route is passed, broader route evidence remains separate Hub-agent-owned."
   },
   "newReads": [
     {
@@ -127,8 +128,8 @@
     "inventory": 166,
     "olderDocumentedInventory": 165,
     "decision": "Preserve all currently enumerated names; no dropping a case to fit older count",
-    "verifiedRetainedHandlerReads": 134,
-    "unverified": 30,
+    "verifiedRetainedHandlerReads": 143,
+    "unverified": 21,
     "ownerExcludedLive": 2,
     "allCatalogPassed": false,
     "countsCaveat": "Includes source-validated service metadata; not every report subcheck or security setting is healthy/readable",
@@ -145,9 +146,11 @@
         "tool": "workspace_gmail_get_profile",
         "status": "VERIFIED_RETAINED",
         "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
           "permanent_strict_runner",
           "retained_strict_runner"
-        ]
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_gmail_list_labels",
@@ -261,9 +264,11 @@
         "tool": "workspace_drive_get_start_page_token",
         "status": "VERIFIED_RETAINED",
         "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
           "permanent_strict_runner",
           "retained_strict_runner"
-        ]
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_drive_list_files",
@@ -333,9 +338,11 @@
         "tool": "workspace_calendar_list_calendars",
         "status": "VERIFIED_RETAINED",
         "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
           "permanent_strict_runner",
           "retained_strict_runner"
-        ]
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_calendar_list_event_colors",
@@ -387,8 +394,10 @@
         "tool": "workspace_gmail_get_label",
         "status": "VERIFIED_RETAINED",
         "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response",
           "retained_original_exact_read"
-        ]
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_gmail_get_message",
@@ -401,12 +410,16 @@
         "retainedHttpObservations": [
           200,
           404
-        ]
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_gmail_get_thread",
-        "status": "UNVERIFIED",
-        "prerequisite": "Retained exact app integration proof exists; standalone wrapper still needs exact approved nonproduction target. Do not recreate cleaned objects."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_drive_get_file",
@@ -418,7 +431,8 @@
         ],
         "retainedHttpObservations": [
           200
-        ]
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_drive_get_shared_drive",
@@ -528,7 +542,7 @@
       {
         "tool": "workspace_chat_list_members",
         "status": "UNVERIFIED",
-        "prerequisite": "Retained exact app integration proof exists; standalone wrapper still needs exact approved nonproduction target. Do not recreate cleaned objects."
+        "prerequisite": "New cycle authorizes private actor-only space. Not yet created because secure browser control is unavailable and API has no approved cleanup path. Need browser recovery before creation; no invites."
       },
       {
         "tool": "workspace_chat_list_messages",
@@ -544,7 +558,7 @@
       {
         "tool": "workspace_chat_list_spaces",
         "status": "UNVERIFIED",
-        "prerequisite": "Broad accessible-space discovery was automatically rejected. Do not read its output or retry; need reviewed owned-space restriction/exact alternative."
+        "prerequisite": "Prior broad discovery automatically rejected; never replay/consume. New actor-only space approval does not authorize reading other accessible spaces. Exact UI/space alternative remains separate."
       },
       {
         "tool": "workspace_chrome_list_policy_schemas",
@@ -608,7 +622,7 @@
       {
         "tool": "workspace_domain_list_verified",
         "status": "UNVERIFIED",
-        "prerequisite": "Site Verification scope absent from configured consent purposes. webResource.list requires siteverification; original403 alone does not prove the unique cause. Exact owner approval before scope or verification-token generation.",
+        "prerequisite": "Owner approved exact siteverification scope October16 17:30:56Z. Isolated purpose implemented; needs checked release, genuine owner/Google consent and exact current-scope readiness, then metadata list. No verification submission or DNS edit.",
         "retainedHttpObservations": [
           403
         ]
@@ -946,7 +960,7 @@
       {
         "tool": "workspace_datatransfer_list_transfers",
         "status": "UNVERIFIED",
-        "prerequisite": "Requires separately bounded approval for customer transfer metadata and an existing transfer ID; never initiate a transfer."
+        "prerequisite": "Owner approved at most one result. Current live cannot honor maxResults; source and REST adapter now fixed and tested. After checked release call maxResults1 once only."
       },
       {
         "tool": "workspace_directory_list_people",
@@ -983,7 +997,8 @@
         ],
         "retainedHttpObservations": [
           200
-        ]
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_drive_search_files",
@@ -998,7 +1013,7 @@
       {
         "tool": "workspace_gmail_list_history",
         "status": "UNVERIFIED",
-        "prerequisite": "Requires an exact approved cursor/interval limited to owned nonproduction changes; do not scan unrelated visible-file or mailbox history."
+        "prerequisite": "Fresh synthetic label/two self-inserted messages retained with pre-creation history cursor. Exact labelId/maxResults source fix must be released before one scoped positive read. No unfiltered mailbox history."
       },
       {
         "tool": "workspace_gmail_search",
@@ -1216,17 +1231,20 @@
       {
         "tool": "workspace_datatransfer_get_transfer_status",
         "status": "UNVERIFIED",
-        "prerequisite": "Requires separately bounded approval for customer transfer metadata and an existing transfer ID; never initiate a transfer."
+        "prerequisite": "At most one exact ID from the one-result approved transfer list after release. Empty list means could-not-verify, never initiate transfer or repeat list."
       },
       {
         "tool": "workspace_drive_get_revision",
-        "status": "UNVERIFIED",
-        "prerequisite": "Retained exact app integration proof exists; standalone wrapper still needs exact approved nonproduction target. Do not recreate cleaned objects."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_forms_get_response",
         "status": "UNVERIFIED",
-        "prerequisite": "No existing approved positive target established by retained selection. No new building/resource/device/schema/filter/response creation or purchases."
+        "prerequisite": "New separate12object/50mutation approval includes Form and synthetic response. Neither created: browser control twice timed out before fixture work. Resume only after secure browser route recovers, no public sharing/publish expansion."
       },
       {
         "tool": "workspace_gmail_get_attachment",
@@ -1241,13 +1259,19 @@
       },
       {
         "tool": "workspace_gmail_get_draft",
-        "status": "UNVERIFIED",
-        "prerequisite": "Retained exact app integration proof exists; standalone wrapper still needs exact approved nonproduction target. Do not recreate cleaned objects."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_gmail_get_filter",
-        "status": "UNVERIFIED",
-        "prerequisite": "No existing approved positive target established by retained selection. No new building/resource/device/schema/filter/response creation or purchases."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_gmail_get_message_body",
@@ -1347,8 +1371,11 @@
       },
       {
         "tool": "workspace_calendar_dev_snapshot",
-        "status": "UNVERIFIED",
-        "prerequisite": "Retained exact app integration proof exists; standalone wrapper still needs exact approved nonproduction target. Do not recreate cleaned objects."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_calendar_verify_calendar_deletion",
@@ -1358,13 +1385,14 @@
         ],
         "retainedHttpObservations": [
           200
-        ]
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_dns_list_records",
         "status": "VERIFIED_RETAINED",
         "evidenceKinds": [
-          "fresh_source_validated_native_Vercel_DNS_records"
+          "offline_source_proof_of_retained_provider_response"
         ],
         "retainedHttpObservations": [
           200
@@ -1372,13 +1400,19 @@
       },
       {
         "tool": "workspace_gmail_find_unanswered",
-        "status": "UNVERIFIED",
-        "prerequisite": "Requires a separately approved synthetic-only label/window; production inbox content is outside the current resource-scoped approval."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_gmail_inbox_summary",
-        "status": "UNVERIFIED",
-        "prerequisite": "Requires a separately approved synthetic-only label/window; production inbox content is outside the current resource-scoped approval."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_identity_policy_audit",
@@ -1473,8 +1507,11 @@
       },
       {
         "tool": "workspace_workflow_audit_external_sharing",
-        "status": "UNVERIFIED",
-        "prerequisite": "Requires precise bounded approval for unrelated visible-file permissions; disposable-owned-resource proofs do not grant it."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_workflow_email_health",
@@ -1650,12 +1687,15 @@
       {
         "tool": "workspace_domain_get_verification_token",
         "status": "UNVERIFIED",
-        "prerequisite": "Site Verification scope absent from configured consent purposes. webResource.list requires siteverification; original403 alone does not prove the unique cause. Exact owner approval before scope or verification-token generation."
+        "prerequisite": "Same specifically approved Site Verification consent prerequisite; then DNS_TXT token for owned Rentals domain only. No DNS edit, submission or ownership mutation."
       },
       {
         "tool": "workspace_drive_download_file",
-        "status": "UNVERIFIED",
-        "prerequisite": "Retained exact app integration proof exists; standalone wrapper still needs exact approved nonproduction target. Do not recreate cleaned objects."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "offline_source_proof_of_retained_provider_response"
+        ],
+        "completionCycle": "Genuine original read_only TEST on06cf, exact new approved synthetic object or bounded one-file audit; no production inbox scan."
       },
       {
         "tool": "workspace_drive_export_as_pdf",
@@ -1708,9 +1748,15 @@
     "rootLiveRetest": "Pending checked release",
     "chromeSchemaFilter": "Original schemaName filter invalid caller input. Correct name field passed current live.",
     "chromeNonrootResolve": "PASS current live; no extra OAuth/role prerequisite observed for approved target",
-    "pr181": "Merged pagination/filter fix unreleased; separate from actual root defect"
+    "pr181": "Merged pagination/filter fix unreleased; separate from actual root defect",
+    "completionBatch": {
+      "siteverification": "Separate specifically approved scope/purpose, truthful capability disclosure and existing owner/origin/mailbox/signed-state gates; standard scopes unchanged.",
+      "transferBound": "Optional maxResults1..100 enforced before provider and through actual REST adapter; default100 preserves provider default.",
+      "historyBound": "Optional exact labelId plus maxResults1..100 forwarded to real Gmail SDK; invalid arguments refuse before provider.",
+      "unitTests": "All1854 passed locally; assembled check passed. Genuine released new-source regression remains separate."
+    }
   },
-  "providerMutationsThisResume": 0,
+  "providerMutationsThisResume": 16,
   "releasePerformed": false,
   "fullProjectComplete": false,
   "secretHandling": "No credentials, provider bodies or private resource IDs included",
@@ -1734,5 +1780,44 @@
     "createdAt": "2026-10-16T16:23:56.249Z",
     "expiresAt": "2026-10-17T16:23:56.249Z",
     "exactIdentityAndAccountVerified": true
+  },
+  "completionApproval": {
+    "approvedAt": "2026-10-16T17:30:56Z",
+    "proposal": "https://github.com/Robinson-AI-Systems/google-workspace-mcp/pull/183#issuecomment-6221011743",
+    "scope": "Exact Site Verification purpose; separate12object/50mutation disposable cycle; max3 bounded transfer/sharing metadata calls",
+    "metadataInvocationsUsed": 1,
+    "transferInvocationsRemaining": 2,
+    "noManualReleaseApproval": true
+  },
+  "completionCycle": {
+    "createdLogicalObjects": 9,
+    "mutationBudgetSpent": 16,
+    "cleanupBudgetReserved": 3,
+    "maxLogicalObjects": 12,
+    "maxMutationRequests": 50,
+    "completedPhases": [
+      "files",
+      "file_reads",
+      "calendar",
+      "calendar_read",
+      "gmail",
+      "gmail_extras",
+      "gmail_reads",
+      "cleanup_files",
+      "cleanup_gmail_extras",
+      "verify_calendar_cleanup"
+    ],
+    "confirmedCleanedLogicalObjects": 6,
+    "retainedLogicalObjects": 3,
+    "retainedReason": "Only new Gmail label and two locally inserted self-messages for release-dependent scoped history; original full grant/creator ledger preserved. Cleanup due before expiry.",
+    "uncreated": [
+      "private actor-only Chat space",
+      "Form",
+      "synthetic Form response"
+    ],
+    "browserBlocker": "Two browser control documentation/reconnect calls timed out at300seconds; no UI fixture action attempted.",
+    "gmail": "Exact thread, summary, unanswered=0, recipient-empty draft and nonforwarding synthetic filter reads passed. Draft/filter cleaned. No sends.",
+    "drive": "Exact synthetic download bytes and exact Doc revision passed; all3 new files guarded permanent-delete confirmed. Independent absence checks transport-cancelled, not claimed.",
+    "calendar": "Snapshot passed; original DELETE done but initially unconfirmed. Read-only exact verifier later calendar_not_found/existsfalse/listedfalse; no second DELETE."
   }
 }

@@ -91,7 +91,7 @@ export const tools = [
   { name: 'gmail_add_delegate', description: 'Grant another account delegate (assistant) access to this mailbox', inputSchema: { type: 'object', properties: { delegateEmail: { type: 'string' } }, required: ['delegateEmail'] } },
   { name: 'gmail_remove_delegate', description: 'Remove delegate access from this mailbox', inputSchema: { type: 'object', properties: { delegateEmail: { type: 'string' } }, required: ['delegateEmail'] } },
   { name: 'gmail_get_profile', description: "Get this Gmail account's profile (email address, message/thread counts)", inputSchema: { type: 'object', properties: {} } },
-  { name: 'gmail_list_history', description: 'List the change history of the mailbox since a given historyId (for sync)', inputSchema: { type: 'object', properties: { startHistoryId: { type: 'string' } }, required: ['startHistoryId'] } }
+  { name: 'gmail_list_history', description: 'List the change history of the mailbox since a given historyId (for sync)', inputSchema: { type: 'object', properties: { startHistoryId: { type: 'string' }, labelId: { type: 'string', description: 'Only return history for this exact Gmail label.' }, maxResults: { type: 'integer', minimum: 1, maximum: 100, default: 100 } }, required: ['startHistoryId'] } }
 ];
 
 export const handlers = {
@@ -353,7 +353,13 @@ export const handlers = {
     return ok(res.data);
   },
   gmail_list_history: async (args, { gmail }) => {
-    const res = await gmail.users.history.list({ userId: 'me', startHistoryId: args.startHistoryId });
+    const maxResults = args.maxResults === undefined ? 100 : args.maxResults;
+    if (!Number.isInteger(maxResults) || maxResults < 1 || maxResults > 100)
+      throw Error('invalid_args: maxResults must be from 1 through 100');
+    if (args.labelId !== undefined && (typeof args.labelId !== 'string' || !args.labelId.trim() || args.labelId.trim() !== args.labelId))
+      throw Error('invalid_args: exact labelId required');
+    const res = await gmail.users.history.list({ userId: 'me', startHistoryId: args.startHistoryId, maxResults,
+      ...(args.labelId === undefined ? {} : {labelId:args.labelId}) });
     return ok(res.data);
   }
 };
