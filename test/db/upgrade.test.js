@@ -322,7 +322,7 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       process.env.TOKEN_ENCRYPTION_KEY=crypto.randomBytes(32).toString('base64');
       await db.saveGoogleTokensFor('a@example.test',tokens,{source:'refresh'});
       await db.saveGoogleTokensFor('b@example.test',{access_token:'other',refresh_token:'other-refresh'},{source:'refresh'});
-      await rawQuery('INSERT INTO google_auth (id,tokens) VALUES (1,$1::jsonb)',[JSON.stringify(tokens)]);
+      await rawQuery('INSERT INTO google_auth (id,tokens) VALUES (1,$1::jsonb) ON CONFLICT (id) DO UPDATE SET tokens=EXCLUDED.tokens',[JSON.stringify(tokens)]);
       await db.activateGoogleTokenRetirement({ownerConfirmed:true});
       expect((await db.inspectGoogleTokenRetirement()).legacyPlaintextCopies).toBe(1);
       await db.saveGoogleTokensFor('b@example.test',{access_token:'other-new'},{source:'refresh'});
