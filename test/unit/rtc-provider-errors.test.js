@@ -13,6 +13,21 @@ describe('real-provider-shaped missing-resource classification',()=>{
   expect(rendered._meta).toEqual({'robinson/error-code':'not_found'});expect(rendered.isError).toBe(true);
   m.handler.mockResolvedValue(rendered);const r=await request();expect(r.statusCode).toBe(404);expect(r.body.error.code).toBe('not_found');
  });
+ it.each([401,403,429])('preserves wrapped provider%d through both supported error shapes',async status=>{
+  for(const shape of [{code:status},{response:{status}}]){
+   const rendered=errorResult(Object.assign(Error('fake provider denial'),shape));
+   expect(rendered._meta).toEqual({'robinson/error-code':status===429?'rate_limited':'permission','robinson/provider-status':status});
+   m.handler.mockResolvedValue(rendered);const r=await request();expect(r.statusCode).toBe(status);
+   expect(r.body.error.code).toBe(status===429?'rate_limited':'permission');
+  }
+ });
+ it('refuses incomplete or contradictory provider status markers',async()=>{
+  for(const meta of [
+   {'robinson/error-code':'permission'},
+   {'robinson/error-code':'permission','robinson/provider-status':500},
+   {'robinson/error-code':'rate_limited','robinson/provider-status':403}
+  ]){m.handler.mockResolvedValue({isError:true,content:[{type:'text',text:'Unknown provider error'}],_meta:meta});expect((await request()).statusCode).toBe(503);}
+ });
  it('classifies a raw thrown Google404 without exposing provider messages',async()=>{
   m.handler.mockRejectedValue(Object.assign(Error('fake-private-provider-detail'),{response:{status:404}}));const r=await request();
   expect(r.statusCode).toBe(404);expect(r.body.error.code).toBe('not_found');expect(JSON.stringify(r.body)).not.toContain('fake-private-provider-detail');

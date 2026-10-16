@@ -50,7 +50,13 @@ function decodeMcp(result){
  if(result?.isError){
   const text=result?.content?.find(x=>x.type==='text')?.text||'Tool failed';
   const found=/^(?:Error: )?([a-z_]+):/.exec(text);
-  return {error:{what:text.slice(0,300),code:result?._meta?.['robinson/error-code']==='not_found'?'not_found':found?.[1]||'service_error'}};
+  const marked=result?._meta?.['robinson/error-code'];
+  const status=result?._meta?.['robinson/provider-status'];
+  const providerCode=marked==='not_found'?'not_found':
+   marked==='permission'&&[401,403].includes(status)?'permission':
+   marked==='rate_limited'&&status===429?'rate_limited':null;
+  return {error:{what:text.slice(0,300),code:providerCode||found?.[1]||'service_error',
+   ...(providerCode&&status===401?{httpStatus:401}:{})}};
  }
  const text=result?.content?.find(x=>x.type==='text')?.text;
  if(!text)return result?.structuredContent??null;
@@ -65,7 +71,8 @@ const aliasArgs=(name,args)=>{
  }
  return args;
 };
-function errorStatus(code){
+function errorStatus(code,httpStatus){
+ if(code==='permission'&&httpStatus===401)return 401;
  if(['outside_scope','refused_by_guard','permission'].includes(code))return 403;
  if(code==='not_found')return 404;
  if(code==='rate_limited')return 429;
@@ -164,7 +171,7 @@ export function createRtcGateway(){
    // apply their same small-result/connection-owned expiring-handle rule.
    const raw=await registry.handlers.workspace_batch(args,await clientsFor(pass));
    const result=decodeMcp(await shapeReadResult(raw,{toolName:'workspace_batch'},pass.id));
-   return result?.error?fail(res,errorStatus(result.error.code),result.error.code,result.error.what):success(res,result);
+   return result?.error?fail(res,errorStatus(result.error.code,result.error.httpStatus),result.error.code,result.error.what):success(res,result);
   }
   const internal=toInternal(name);
   if(!internal)return fail(res,404,'not_found','Unknown RTC tool.');
@@ -184,7 +191,7 @@ export function createRtcGateway(){
   if(req.method!=='POST')return fail(res,405,'invalid_args','Tool invocation requires POST.');
   if(Buffer.byteLength(JSON.stringify(req.body||{}))>65536)return fail(res,413,'invalid_args','Arguments too large.');
   const result=decodeMcp(await registry.handlers[internal](aliasArgs(internal,req.body||{}),await clientsFor(pass)));
-  return result?.error?fail(res,errorStatus(result.error.code),result.error.code,result.error.what):success(res,result);
+  return result?.error?fail(res,errorStatus(result.error.code,result.error.httpStatus),result.error.code,result.error.what):success(res,result);
  }
  return fail(res,404,'not_found','Unknown RTC route.');
  } catch(error) {

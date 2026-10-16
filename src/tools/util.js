@@ -70,8 +70,11 @@ export function ok(value) {
 
 /** Error result for Claude: plain-English explanation first, Google's own message kept at the end. See errors.js. */
 export function errorResult(err) {
+  const status=Number(err?.response?.status || err?.code);
+  const code=({401:'permission',403:'permission',404:'not_found',429:'rate_limited'})[status];
   return { content: [{ type: 'text', text: formatError(err) }], isError: true,
-    ...(Number(err?.response?.status || err?.code) === 404 ? { _meta: { 'robinson/error-code': 'not_found' } } : {}) };
+    ...(code?{_meta:{'robinson/error-code':code,
+      ...(status===404?{}:{'robinson/provider-status':status})}}:{}) };
 }
 
 /** Merge several {tools, handlers} namespace modules into one flat registry. */
