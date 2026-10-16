@@ -1,7 +1,7 @@
 {
   "date": "2026-10-16",
-  "sourceRevision": "5138204fd1777a1a184b95103762958fb2c138e1",
-  "deploymentId": "dpl_2RgzBXvEiEHd6XMNSvhv5jA9hYZG",
+  "sourceRevision": "f96a369e9cdab0b1c84aec478605d780f33c55a4",
+  "deploymentId": "dpl_5QDmh4dRau9JjRucmZeqqeRadMcu",
   "deploymentState": "READY",
   "ownerDecisions": {
     "hub": "Mandatory whole-project completion, still separately Hub-agent-owned; no Hub changes here",
@@ -31,7 +31,7 @@
     "notBefore": "2026-11-01T06:00:00Z",
     "retirementPerformed": false,
     "retainedPriorAllAccountReady": true,
-    "latestStorageMetadata": "Recovered protected owner refresh succeeded: saved Rentals grant refreshed and mailbox verified; all2accounts ready, all problem counts zero. No scopes or storage mode changed."
+    "latestStorageMetadata": "Protected all2account genuine-refresh/encryption readiness passed before newestSiteconsent. Reinspect afterfinalcombinedconsentandgenuine saved-grantrefresh; do not substitutepriorfreshness for currentgrantproof."
   },
   "exactAppAcceptance": {
     "status": "PENDING_CURRENT_TASKS_RESTORATION",
@@ -134,8 +134,8 @@
     "inventory": 166,
     "olderDocumentedInventory": 165,
     "decision": "Preserve all currently enumerated names; no dropping a case to fit older count",
-    "verifiedRetainedHandlerReads": 152,
-    "unverified": 12,
+    "verifiedRetainedHandlerReads": 153,
+    "unverified": 11,
     "ownerExcludedLive": 2,
     "allCatalogPassed": false,
     "countsCaveat": "Includes source-validated service metadata; not every report subcheck or security setting is healthy/readable",
@@ -1092,8 +1092,11 @@
       },
       {
         "tool": "workspace_admin_get_building",
-        "status": "UNVERIFIED",
-        "prerequisite": "Reviewed floorNames repair merged PR186 but absent from READY5138204. Prepared one tagged building+cleanup cycle uses remaining8reads/2requests within existing28/7 totals; owner additionally authorizes necessary test-budget increases. No create before released repair and source proof."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "released_exact_guarded_building_read_and_cleanup"
+        ],
+        "completionCycle": "READYf96 actual tagged building with requiredfloors: exactpositive200, guarded audited create/delete, independent404. Cumulative Admin28native reads/7conservative requests, no activeobjects."
       },
       {
         "tool": "workspace_admin_get_calendar_resource",
@@ -1811,17 +1814,18 @@
       "defect": "Create schema and request omit floorNames, documented as requiring at least one entry",
       "repair": "Require nonempty floors, forward through real SDK, validate before any Google call including preview, independently verify ordered floors after write",
       "failureCause": "Opaque live503 not diagnosed as definitely caused by this omission",
-      "liveRetest": "Still pending checked release; reviewed merged PR186 exact-head/postmerge CI passed. Reserved8reads/2mutation requests remain.",
+      "liveRetest": "PASS on independentREADYf96: requiredfloor preserved inexactpositive read; guarded create/delete audited andconfirmed; independent404. All3Adminobjects cleaned,28reads/7conservative requests used.",
       "verification": "All1859unit tests pass locally,105focused SDK/guard tests pass, full check passes. Exact-head hosted db/rtc/required checks and review remain merge gates."
     },
     "combinedConsentRecovery": {
       "trigger": "Reproduced on same READY513: Tasks/Postmaster ready and Site missing beforeSiteconsent; Site/Postmaster ready andTasks missing after.",
       "repair": "New owner-protected completion_read explicitly requests only the same three already approved scopes together, retaining incremental include_granted_scopes. Existing isolated/standard requests unchanged.",
       "gates": "Existing canonical-origin, owner passphrase, validmailbox, signedbrowserstate and GoogleAllow. No new permission beyond existing owner approvals. No DNS/verification/ownership writes.",
-      "liveProof": "Pending checked release and genuine combined consent; do not loop isolated flows or claim mocked OAuth URL proof establishes Google grant coexistence."
+      "liveProof": "Protected combined3scope form is actually served on independentlyREADYf96. Secure owner step automatically rejected because current-chat approval did not specifically name all3scopes; no new Googleconsent. Explicit actionapproval required, no bypass. Genuine coexistence/refresh proof remains pending.",
+      "verification": "33focused and1861unit tests; check, requiredexactheadandpostmergecheck/unit/db/rtc/test/release-policySUCCESS; merged187andreleasedf96."
     }
   },
-  "providerMutationsThisResume": 27,
+  "providerMutationsThisResume": 32,
   "releasePerformed": true,
   "fullProjectComplete": false,
   "secretHandling": "No credentials, provider bodies or private resource IDs included",
@@ -1955,21 +1959,22 @@
     },
     "googleConsentSubmitted": false
   },
-  "noFurtherReleaseNeededForKnownWork": "Building contract repair will require checked release for genuine retest, plus exact Admin budget extension. Consent, Postmaster API enablement, cleanup confirmation, Hub and future retirement can progress independently; do not request another manual release yet.",
+  "noFurtherReleaseNeededForKnownWork": "Both confirmedsourcefixesreleasedandbuildinggenuineacceptancepasses. No furtherreleaseisneededforcombinedconsent/currentproviderprerequisites. This evidence-onlyupdateisnotareleasecandidate.",
   "retainedEvidenceNote": "sourceRevision/deployment identify the final independently verified observation. Retained earlier proofs remain bound to their original receipt revisions; none is relabelled as executed on5138204.",
   "additionalAdminCycle": {
     "approvedAt": "2026-10-16T18:31:16Z",
     "maxObjects": 3,
     "maxMutationRequests": 7,
-    "mutationRequestsSpent": 5,
+    "mutationRequestsSpent": 7,
     "maxNativeReads": 28,
-    "nativeReadsSpent": 20,
+    "nativeReadsSpent": 28,
     "cleanupReserved": 0,
     "schemaCreatedAndCleaned": true,
-    "buildingCreate": "503 unknown outcome, independent exact404 no object observed; not repeated",
+    "buildingCreate": "New reviewed-source tagged cycle create/read/delete/404PASS; originalfailed503/recovery404 preserved, no replay.",
     "calendarResourceCreated": true,
-    "budgetCorrection": "Owner approved28native reads/7conservative requests including original12/3; resource8reads/2requests completed and independently404. Building8reads/2requests reserved after checked repair release; current owner also authorizes necessary testing budget increases, no paid resources implied.",
-    "calendarResourceCleaned": true
+    "budgetCorrection": "Extended28reads/7requests total consumed exactly across originalfailedbuilding,unusedschema,calendarresource,andnewreviewedbuilding; allactualcreatedobjects cleaned, noreserve. Owner additionallyauthorizes necessarytestbudget increases; none needed for this completion.",
+    "calendarResourceCleaned": true,
+    "buildingCreatedAndCleaned": true
   },
   "additionalMembership": {
     "maxHandlerInvocations": 1,
@@ -1999,13 +2004,30 @@
     "priorBrowserTabsRecovered": false,
     "freshBrowserResponsive": true,
     "savedGrantRefresh": "SUCCESS mailbox verified all2account readiness true",
-    "providerWritesThisRecovery": 0,
+    "providerWritesThisRecovery": 2,
     "siteScopeAfterRefresh": "Was missing afterrefresh, nowready after specificallyapprovedSiteconsent",
     "tasksAndPostmasterAfterRefresh": "Were bothready afterrefresh; afterSiteconsent Postmasterready/Tasksmissing",
     "main": "ddbe38e822184bd0ddad0673e6a7d3eb8245d96f",
-    "live": "5138204fd1777a1a184b95103762958fb2c138e1",
-    "releasePerformed": false,
+    "live": "f96a369e9cdab0b1c84aec478605d780f33c55a4",
+    "releasePerformed": true,
     "ownerBudgetInstruction": "Increase budget if needed for remaining approved tests/cleanup; retain counted requests and real scope/security/spending gates.",
-    "currentProof": "Site scopeReady plus2strictDomain200reads; combined3scope current readiness fails onTasks"
+    "currentProof": "Site scopeReady plus2strictDomain200reads; combined3scope current readiness fails onTasks",
+    "releaseProof": "Nonforceexpected-old513\u2192f96; newimmutable receipt release-markers/2026-10-16-owner-completion-187; priorreceiptsretained; independentVercelREADYandexactcanonicalsource."
+  },
+  "release187": {
+    "ownerAuthorization": "Current-chat performallfeasibleprereleaseworkthenrelease; satisfied byper-case/source/Hub/prerequisite review and preparedoriginalMarkdownreport",
+    "candidate": "f96a369e9cdab0b1c84aec478605d780f33c55a4",
+    "previousLive": "5138204fd1777a1a184b95103762958fb2c138e1",
+    "exactHeadAndMergedMainChecks": "check/unit/db/rtc/test/release-policySUCCESS",
+    "strictAhead": 17,
+    "nonForcedExpectedOldUpdate": true,
+    "receipt": "release-markers/2026-10-16-owner-completion-187",
+    "priorReceiptsUnchanged": true,
+    "independentVercelReady": true,
+    "canonicalHttp200SourceMatches": true,
+    "deploymentId": "dpl_5QDmh4dRau9JjRucmZeqqeRadMcu",
+    "buildingTest": "PASSandcleaned",
+    "combinedConsent": "Ownerstepautomaticreviewrejected, explicit3scopeapprovalneeded; no bypass",
+    "anotherReleaseAuthorized": false
   }
 }
