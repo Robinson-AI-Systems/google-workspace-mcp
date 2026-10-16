@@ -25,14 +25,28 @@ describe('Chrome Policy provider contracts',()=>{
   expect(calls[1].data.policyTargetKey).toEqual({targetResource:'orgunits/ou123'});
   expect(calls[1].url).toBe('https://chromepolicy.googleapis.com/v1/customers/my_customer/policies:resolve');
  });
- it('keeps root nonempty for the SDK and refuses mismatched or absent IDs',async()=>{
-  const {clients,calls}=hosted(()=>({orgUnitPath:'/',orgUnitId:'id:root123'}));
+ it('selects the exact root from the parent-inclusive collection instead of a root GET',async()=>{
+  const root={orgUnitPath:'/',orgUnitId:'id:root123'};
+  const {clients,calls}=hosted(()=>({organizationUnits:[{orgUnitPath:'/Child',orgUnitId:'id:child'},root]}));
   expect(await chromeTarget('/',clients)).toBe('orgunits/root123');
-  expect(calls[0].url).toMatch(/orgunits\//);
+  expect(calls[0].url).toMatch(/orgunits$/);
+  expect(calls[0].params.type).toBe('all_including_parent');
+  expect(body(await registry.handlers.admin_get_orgunit({orgUnitPath:'/'},clients))).toEqual(root);
+  expect(calls).toHaveLength(2);
   for(const result of [{orgUnitPath:'/Other',orgUnitId:'id:abc'},{orgUnitPath:'/Test'},{}]){
    const bad=hosted(()=>result);
    await expect(handlers.chrome_resolve_policies({policySchemaFilter:'chrome.users.*',orgUnitPath:'/Test'},bad.clients)).rejects.toThrow();
    expect(bad.calls).toHaveLength(1);
+  }
+ });
+ it('refuses absent, ambiguous, malformed or incomplete root collections before policy access',async()=>{
+  const root={orgUnitPath:'/',orgUnitId:'id:root123'};
+  for(const data of [{},{organizationUnits:[]},{organizationUnits:[root,root]},
+   {organizationUnits:[{orgUnitPath:'/Child',orgUnitId:'id:child'}]},
+   {organizationUnits:[{orgUnitPath:'/'}]}, {organizationUnits:[root],nextPageToken:'unread'}]){
+   const {clients,calls}=hosted(()=>data);
+   await expect(handlers.chrome_resolve_policies({policySchemaFilter:'chrome.users.BrowserSignin',orgUnitPath:'/'},clients)).rejects.toThrow();
+   expect(calls).toHaveLength(1);expect(calls[0].method).toBe('GET');
   }
  });
  it('writes only the named value fields and confirms by resolving the same target',async()=>{

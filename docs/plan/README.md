@@ -3,6 +3,10 @@
 Agent entry: [AGENTS.md](../../AGENTS.md). Complete SESSION-START §§0–1 before
 selecting new implementation; preserve the existing session:finish workload check.
 
+## Completion scope — owner October16,2026
+
+Hub integration is mandatory for whole-project completion; older optional wording is historical. Standalone provider evidence remains separate. Do not change/configure/release Hub here. Vault code and existing grant remain; upgrade-dependent live verification is excluded from completion and recorded could-not-verify, never fabricated PASS or product failure. No paid upgrade or repeated excluded live calls. Plaintext retirement keeps November1Denver and independent approval gates.
+
 ## Session workload comes from the current owner prompt
 
 There is no repository-default session PR count, upper quota or PR-number
