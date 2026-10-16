@@ -19,7 +19,7 @@ function hosted(respond){
 describe('Chrome Policy provider contracts',()=>{
  it('resolves an exact Directory path to its provider ID through the hosted SDK',async()=>{
   const {clients,calls}=hosted(o=>o.method==='GET'?{orgUnitPath:'/Test/Nested',orgUnitId:'id:ou123'}:{resolvedPolicies:[]});
-  expect(body(await handlers.chrome_resolve_policies({orgUnitPath:'/Test/Nested'},clients))).toEqual([]);
+  expect(body(await handlers.chrome_resolve_policies({policySchemaFilter:'chrome.users.*',orgUnitPath:'/Test/Nested'},clients))).toEqual([]);
   expect(calls).toHaveLength(2);
   expect(calls[0].url).toMatch(/customer\/my_customer\/orgunits\/Test\/Nested$/);
   expect(calls[1].data.policyTargetKey).toEqual({targetResource:'orgunits/ou123'});
@@ -31,7 +31,7 @@ describe('Chrome Policy provider contracts',()=>{
   expect(calls[0].url).toMatch(/orgunits\//);
   for(const result of [{orgUnitPath:'/Other',orgUnitId:'id:abc'},{orgUnitPath:'/Test'},{}]){
    const bad=hosted(()=>result);
-   await expect(handlers.chrome_resolve_policies({orgUnitPath:'/Test'},bad.clients)).rejects.toThrow();
+   await expect(handlers.chrome_resolve_policies({policySchemaFilter:'chrome.users.*',orgUnitPath:'/Test'},bad.clients)).rejects.toThrow();
    expect(bad.calls).toHaveLength(1);
   }
  });
@@ -63,7 +63,7 @@ describe('Chrome Policy provider contracts',()=>{
   for(const value of [{},{'a,b':true},null,[]])
    await expect(handlers.chrome_set_policy({orgUnitPath:'id:ou123',policyValue:value},clients)).rejects.toThrow(/policyValue/);
   expect(calls).toEqual([]);
-  await expect(handlers.chrome_resolve_policies({orgUnitPath:'id:ou123'},clients)).rejects.toBe(denied);
+  await expect(handlers.chrome_resolve_policies({policySchemaFilter:'chrome.users.*',orgUnitPath:'id:ou123'},clients)).rejects.toBe(denied);
   expect(calls).toHaveLength(1);
  });
 });
