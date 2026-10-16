@@ -62,6 +62,25 @@ describe('hosted Google API clients', () => {
       expect(url.searchParams.get('access_type')).toBe('offline');
     }finally{process.env=before;}
   });
+  it('requests only the approved v2 replacement and retained completion scopes',()=>{
+    const before={...process.env};
+    try{
+      process.env.PUBLIC_BASE_URL='https://workspace.example.test';
+      process.env.GOOGLE_OAUTH_CLIENT_ID='fake-client';process.env.GOOGLE_OAUTH_CLIENT_SECRET='fake-secret';
+      const url=new URL(getGoogleAuthUrl('v2-state','ops@example.test','postmaster_v2_read'));
+      expect(url.searchParams.get('scope').split(' ')).toEqual([
+        'https://www.googleapis.com/auth/tasks.readonly',
+        'https://www.googleapis.com/auth/siteverification',
+        'https://www.googleapis.com/auth/postmaster.domain',
+        'https://www.googleapis.com/auth/postmaster.traffic.readonly'
+      ]);
+      expect(url.searchParams.get('include_granted_scopes')).toBe('true');
+      expect(url.searchParams.get('state')).toBe('v2-state');
+      expect(url.searchParams.get('login_hint')).toBe('ops@example.test');
+      expect(url.searchParams.get('access_type')).toBe('offline');
+      expect(new URL(getGoogleAuthUrl('old','ops@example.test','standard')).searchParams.get('scope')).not.toMatch(/postmaster\.domain|postmaster\.traffic/);
+    }finally{process.env=before;}
+  });
   it('requests the three already approved completion permissions together without changing isolated purposes',()=>{
     const before={...process.env};
     try{

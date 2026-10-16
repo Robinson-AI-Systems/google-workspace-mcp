@@ -129,3 +129,14 @@ export const COMPLETION_READ_SCOPES = Object.freeze([
   ...SITE_VERIFICATION_READ_SCOPES,
   ...SCOPE_GROUPS.postmaster
 ]);
+
+// Owner explicitly approved both replacement v2 permissions on October16,2026.
+// Domain permission also allows management at Google; server tools remain reads.
+// Request existing Tasks/Site grants together to avoid reproduced consent loss.
+// Standard and earlier isolated enrollment contracts remain unchanged.
+export const POSTMASTER_V2_READ_SCOPES = Object.freeze([
+  ...TASKS_READ_SCOPES,
+  ...SITE_VERIFICATION_READ_SCOPES,
+  'https://www.googleapis.com/auth/postmaster.domain',
+  'https://www.googleapis.com/auth/postmaster.traffic.readonly'
+]);
