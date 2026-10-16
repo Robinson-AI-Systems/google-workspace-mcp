@@ -24,6 +24,13 @@ export function explainError(err) {
   const has = (re) => re.test(message) || re.test(reason); // wording Google puts in the message or the reason
   const reasonIs = (re) => re.test(reason);                 // Google's own reason code only
 
+  if (/Postmaster Tools API/i.test(message) && /no longer supported/i.test(message)) {
+    return {
+      what: 'Google no longer supports this version of the Postmaster Tools API.',
+      cause: 'The server is using the retired Postmaster v1 API; this is not a transient request-rate problem.',
+      todo: 'Update the server to Postmaster v2. Its different OAuth permissions need separate owner approval; waiting or repeating the same request will not fix it.'
+    };
+  }
   if (has(/Access restricted to service accounts/i)) {
     return {
       what: 'Google refused because this action has to run through the server\'s robot identity (domain-wide delegation), and that is not set up or not allowed for this user.',

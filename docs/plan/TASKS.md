@@ -544,7 +544,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "READYf96 exactsource;166caseMarkdownreportcommitted,153verified/11unverified/2owner-excludedVault. Buildingread200/guardedauditedcleanup404PASS/allcreatedfixturescleaned. Combined3approvedscope Googleconsent+savedgrantrefresh nowgenuinePASS: actualSite/Postmaster/Tasks allREADYand6API4scope readybeforeandafterrefresh; all2account encryptedready. ThisclosescurrentP8readiness, notfullcatalog. RemainingPostmasterAPIoff/ConsoleUnavailable, exactasset/scope/creatorlimits remainhonest, knownbugrows/reportretainproof. No furtherknownsourcefix/release needed."
+    "lastEvidence": "READYf96;166case report retains153verified/11unverified/2owner-excludedVault. Combined3scope consent/genuine refresh/all2account encrypted readiness PASS; allfixtures cleaned. Owner enabled Postmaster API; one bounded original read_only TEST domain list returned429 explicitly unsupported version, no retry/traffic. V2 repair prepared; separate domain-management-capable postmaster.domain and postmaster.traffic.readonly approval/consent and checked release required. Other exact asset/scope/creator, Hub and November1 gates unchanged."
   },
   {
     "id": "P8-4-HTTP-CONTRACT",
@@ -3384,3 +3384,24 @@ Owner explicitly approved onecombinedTasksread-only/Postmasterread-only/SiteVeri
 Original166caseMarkdownreportretains153verified/11unverified/2owner-excludedVault, notfakefullcatalogsuccess. Remainingexactprovider/assetscopeconstraints, PostmasterAPIoff/ConsoleUnavailable, mandatoryHubrelaySandboxrevocationandNovember1independentplaintextgate remainseparate. No openengineeringidentified, newfeature, providerwrite, DNS/ownershipchange, fixturecreation, plaintextretirementoradditionalrelease. Publishgenuineevidenceonce; no moreisolatedconsentloop.
 
 OriginalP8-7parentledger is nowDONE because everyoriginalfixture/cleanup/integration criterion has source/PG and genuineauthorizedGoogle evidence. Removed only itsstaleEXTERNAL_ONLYengineeringrow; nofullcatalog/Hub/retirementgate changed and nooldimplementation countedagain. This is a truthful milestonecloseout, notnewscopeorbundlecredit.
+
+### P7-4 / P0-2 Postmaster v1 retirement repair — October 16, 2026
+
+The owner enabled the existing project API. A single original read_only TEST domain
+list on independently READY f96 returned HTTP429 with Google's explicit message
+that this Postmaster API version is no longer supported. This is provider retirement,
+not evidence of a transient request burst. No retry or traffic request was made.
+
+Repair plan (maintenance, zero completed bundles): use Google's documented v2 list
+and daily domainStats query through a small read-only REST adapter (the pinned SDK
+has no v2 constructor); preserve existing tool names, domain guards, date/page bounds,
+missing-data semantics and truthful partial summaries. Test exact HTTP requests,
+metrics split across pages, bad/foreign responses and retirement guidance. Do not
+add or request OAuth scopes, domain verification, DNS edits or provider writes.
+The v2 domain-list permission is postmaster.domain (view AND manage domains), and
+traffic reads require postmaster.traffic.readonly. Both need exact owner approval
+and genuine consent before live provider acceptance; October2's postmaster.readonly
+approval does not silently authorize them. Prepare and publish the checked source
+repair first. Source proof does not advance the full-catalog acceptance gate.
+
+Repair implementation: read-only v2 GET domains and POST domainStats:query; daily spam, SPF, DKIM, DMARC and delivery-error ratios retain existing output and pagination. Metrics split across pages merge without hiding duplicate metric/day results. Invalid identities, dates, values or pages fail closed; unavailable reputation remains unknown. Focused42 tests pass, including local HTTP serialization. All OAuth scope arrays and consent purposes unchanged; v2 provider acceptance remains pending exact scope approval/consent and checked release. No provider writes or new bundle credit.

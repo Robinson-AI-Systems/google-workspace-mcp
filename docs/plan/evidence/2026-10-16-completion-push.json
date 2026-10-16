@@ -1066,12 +1066,12 @@
       {
         "tool": "workspace_postmaster_list_domains",
         "status": "UNVERIFIED",
-        "prerequisite": "Postmaster scope actually READY. One bounded list returned403 with explicit Postmaster API switched-off diagnosis. Cloud Console Site Unavailable persisted after one reload. Enable existing project API, then one bounded genuine read; no paid upgrade or domain verification."
+        "prerequisite": "Owner enabled API; one bounded original read_only TEST list on READYf96 returned429 explicitly unsupported Postmaster API version, not transient-rate proof. V2 repair prepared; separately approve postmaster.domain (view AND manage domains), then checked release/consent and real read. No retry, domain write or verification."
       },
       {
         "tool": "workspace_postmaster_list_traffic_stats",
         "status": "UNVERIFIED",
-        "prerequisite": "Postmaster API switched off as established by bounded domain-list error. No blind traffic call. After enablement, bounded list then exact returned owned accessible domain/fixed7day interval only."
+        "prerequisite": "V1 retirement confirmed by bounded domain-list response; no traffic request. V2 repair prepared; postmaster.traffic.readonly approval/consent, checked release and an exact owned accessible returned domain are required for a fixed seven-day query. No sending or domain verification."
       },
       {
         "tool": "workspace_admin_get_2sv_status",
@@ -1835,7 +1835,22 @@
     "reason": "Actual token-info proves postmaster.readonly",
     "approval": "Existing written owner approval October2, retained P7-4 scope decision",
     "sourceRepair": "Released protected postmaster_read purpose; live form contract verified.",
-    "realConsent": "Owner completed; current scope proof ready. API switched off separately blocks provider acceptance."
+    "realConsent": "Legacy postmaster.readonly genuinely ready. Owner enabled API; one bounded read now establishes unsupported v1. No new permission requested.",
+    "v2PermissionsApproval": "PENDING: postmaster.domain (view AND manage registered domains) and postmaster.traffic.readonly (read traffic metrics). No full/user scope or domain write proposed.",
+    "retirementRead": {
+      "sourceRevision": "f96a369e9cdab0b1c84aec478605d780f33c55a4",
+      "deployment": "dpl_5QDmh4dRau9JjRucmZeqqeRadMcu",
+      "independentReady": true,
+      "originalReadOnlyTestIdentityVerified": true,
+      "tool": "workspace_postmaster_list_domains",
+      "pageSize": 20,
+      "http": 429,
+      "providerDiagnosis": "This version of the Postmaster Tools API is no longer supported.",
+      "retryCount": 0,
+      "trafficRequests": 0,
+      "providerMutations": 0
+    },
+    "v2SourceRepair": "Read-only REST adapter because pinned SDK lacks v2; exact daily metrics normalized to existing output; missing reputation unknown; bounded partial pages/summaries retained. Source/tests, not live proof."
   },
   "retainedNarrowPass": {
     "areas": [

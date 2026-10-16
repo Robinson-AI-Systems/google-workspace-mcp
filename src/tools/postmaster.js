@@ -1,7 +1,7 @@
-// Postmaster v1 is explicitly read-only. Google domain verification and access
-// are enforced by the provider, and each domain-specific call also passes the
-// server's existing business-domain guard. Do not add the v2 write scopes.
+// Postmaster exposes only read operations. Provider OAuth scopes are managed
+// separately with explicit owner approval; no domain/user writes are exposed.
 import { ok } from './util.js';
+import { mergePostmasterDays } from '../auth/postmaster-client.js';
 
 function domainName(domain) {
   if (typeof domain !== 'string' || domain.length > 253 || !/^(?:[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?\.)+[a-z]{2,63}$/i.test(domain))
@@ -25,13 +25,13 @@ function page(args) {
 // Absent fields or low-volume days cannot be interpreted as zero spam/errors.
 export function summarizePostmasterDays(stats, {complete=true}={}) {
   if(!Array.isArray(stats))throw new Error('Invalid Postmaster daily statistics.');
-  const observed={spam:[],spf:[],dkim:[],dmarc:[]},reputations=new Map(),errors=new Map(),dates=new Set();
+  const observed={spam:[],spf:[],dkim:[],dmarc:[],delivery:[]},reputations=new Map(),errors=new Map(),dates=new Set();
   for(const daily of stats){
     if(!daily||typeof daily!=='object'||typeof daily.name!=='string'||!/\/trafficStats\/\d{8}$/.test(daily.name))throw new Error('Invalid Postmaster day; no trustworthy summary can be made.');
     const date=daily.name.slice(-8);
     if(dates.has(date))throw new Error('Duplicate Postmaster daily statistics; no trustworthy summary can be made.');
     dates.add(date);
-    for(const [key,field] of [['spam','userReportedSpamRatio'],['spf','spfSuccessRatio'],['dkim','dkimSuccessRatio'],['dmarc','dmarcSuccessRatio']]){
+    for(const [key,field] of [['spam','userReportedSpamRatio'],['spf','spfSuccessRatio'],['dkim','dkimSuccessRatio'],['dmarc','dmarcSuccessRatio'],['delivery','deliveryErrorRatio']]){
       const v=daily[field];
       if(v===undefined||v===null)continue;
       if(typeof v!=='number'||!Number.isFinite(v)||v<0||v>1)throw new Error('Invalid Postmaster metric '+field+'.');
@@ -54,19 +54,19 @@ export function summarizePostmasterDays(stats, {complete=true}={}) {
     worstDomainReputation:worstReputation,reputationDays:Object.fromEntries(reputations),
     maxObservedUserReportedSpamRatio:maxSpamRatio,minObservedSpfSuccessRatio:extrema(observed.spf,'min'),
     minObservedDkimSuccessRatio:extrema(observed.dkim,'min'),minObservedDmarcSuccessRatio:extrema(observed.dmarc,'min'),
-    deliveryErrorDays:Object.fromEntries(errors),
+    deliveryErrorDays:Object.fromEntries(errors),maxObservedDeliveryErrorRatio:extrema(observed.delivery,'max'),
     assessment:worstReputation==='BAD'||worstReputation==='LOW'?'needs_attention':!complete||!stats.length||!worstReputation&&maxSpamRatio===null?'not_readable':'observations_available',
     note:'Only reported Google Postmaster observations; daily ratios are not volume-weighted, and missing fields/days are unknown, not healthy. This is not a guarantee of inbox delivery.'};
 }
 function checkedError(error, domain) {
   if ([403,404].includes(Number(error?.code||error?.response?.status)) && domain)
-    throw new Error('Postmaster statistics for '+domain+' are unavailable. Verify this domain in Gmail Postmaster Tools, confirm your account has access and reconnect with the approved postmaster.readonly permission. Google detail: '+String(error.message||'permission denied'));
+    throw new Error('Postmaster statistics for '+domain+' are unavailable. Verify this domain in Gmail Postmaster Tools, confirm your account has access and that the v2 postmaster.traffic.readonly permission was separately approved and granted. Do not repeat consent for the retired v1 postmaster.readonly permission. Google detail: '+String(error.message||'permission denied'));
   throw error;
 }
 const PAGE = { pageSize: { type:'integer', minimum:1, maximum:200, default:100 },pageToken:{type:'string'} };
 export const tools=[
- { name:'postmaster_list_domains',description:'List domains visible to this signed-in Google Postmaster Tools account (read-only). Missing domains must be verified in Postmaster Tools first; some metrics need enough sending volume.',inputSchema:{type:'object',properties:{...PAGE}} },
- { name:'postmaster_list_traffic_stats',description:'Read Gmail Postmaster spam rates, authentication ratios, domain reputation and delivery errors for a verified domain and date window. Read-only; requires Postmaster account access and the newly approved postmaster.readonly OAuth grant.',inputSchema:{type:'object',properties:{domain:{type:'string',description:'A domain already verified in Gmail Postmaster Tools'},startDate:{type:'string',description:'YYYY-MM-DD, inclusive'},endDate:{type:'string',description:'YYYY-MM-DD, inclusive'},withSummary:{type:'boolean',description:'Opt in to a read-only, owner-readable range summary. Follows up to maxPages; metrics stay labelled as daily observations.'},maxPages:{type:'integer',minimum:1,maximum:10,description:'Limit for the opt-in summary; default five provider pages.'},...PAGE},required:['domain','startDate','endDate']} }
+ { name:'postmaster_list_domains',description:'List domains visible to this signed-in Google Postmaster Tools v2 account (read-only tool). Requires separately approved postmaster.domain OAuth permission, which also permits domain management; this tool never modifies domains. Missing domains must be verified in Postmaster Tools first; some metrics need enough sending volume.',inputSchema:{type:'object',properties:{...PAGE}} },
+ { name:'postmaster_list_traffic_stats',description:'Read Gmail Postmaster v2 spam rates, authentication ratios and delivery-error rates for a verified domain and date window. Read-only; requires Postmaster account access and the separately approved v2 postmaster.traffic.readonly OAuth grant. Domain reputation is unavailable in v2.',inputSchema:{type:'object',properties:{domain:{type:'string',description:'A domain already verified in Gmail Postmaster Tools'},startDate:{type:'string',description:'YYYY-MM-DD, inclusive'},endDate:{type:'string',description:'YYYY-MM-DD, inclusive'},withSummary:{type:'boolean',description:'Opt in to a read-only, owner-readable range summary. Follows up to maxPages; metrics stay labelled as daily observations.'},maxPages:{type:'integer',minimum:1,maximum:10,description:'Limit for the opt-in summary; default five provider pages.'},...PAGE},required:['domain','startDate','endDate']} }
 ];
 export const handlers={
  async postmaster_list_domains(args={},clients){
@@ -101,8 +101,9 @@ export const handlers={
        if(typeof nextPageToken!=='string'||seen.has(nextPageToken)||nextPageToken===token)throw new Error('Google repeated an invalid Postmaster continuation; the report cannot be trusted.');
        seen.add(nextPageToken);token=nextPageToken;
      }
-     const output={domain,stats,...(nextPageToken?{nextPageToken}:{})};
-     if(summarize)output.summary=summarizePostmasterDays(stats,{complete:!nextPageToken});
+     const daily=clients.postmaster.apiVersion==='v2'?mergePostmasterDays(stats):stats;
+     const output={domain,stats:daily,...(nextPageToken?{nextPageToken}:{}),...(clients.postmaster.apiVersion==='v2'?{apiVersion:'v2',note:'Daily v2 metrics normalized into the existing tool shape. Domain/IP reputation is unavailable; missing days or metrics are unknown.'}:{})};
+     if(summarize)output.summary=summarizePostmasterDays(daily,{complete:!nextPageToken});
      return ok(output);
    }catch(e){checkedError(e,domain);}
  }
