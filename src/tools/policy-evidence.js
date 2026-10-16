@@ -4,7 +4,11 @@
 // Pure functions keep the provider, owner baseline and console UI consistent.
 // References: https://docs.cloud.google.com/identity/docs/concepts/overview-policies
 //             https://docs.cloud.google.com/identity/docs/reference/rest/v1/policies
-const SETTING=/^settings\/[a-z_]+\.[A-Za-z0-9_]+$/;
+// Google also documents undotted user_takeout and numbered service namespaces
+// such as search_ads_360.service_status. Types are identifiers, not a closed
+// list of our advisory baseline rules; compare those rules only by exact type.
+const SETTING=/^settings\/[a-z][a-z0-9_]*(?:\.[A-Za-z0-9_]+)*$/;
+export const isPolicySettingType=value=>typeof value==='string'&&value.length<=512&&SETTING.test(value);
 const POLICY_NAME=/^policies\/[A-Za-z0-9_./-]+$/;
 const CUSTOMER_NAME=/^customers\/C[A-Za-z0-9_-]+$/;
 const VERSION=/^\d{4}-\d{2}-\d{2}\.[1-9]\d{0,4}$/;
@@ -26,7 +30,7 @@ export function checkPolicyBaseline(rules,metadata){
  const keys=new Set(),presentAreas=new Set();
  for(const rule of rules) {
   if(!object(rule)||typeof rule.area!=='string'||!AREAS.includes(rule.area)||
-    !SETTING.test(rule.type||'')||!rule.type.startsWith('settings/'+rule.area+'.')||
+    !isPolicySettingType(rule.type)||!rule.type.startsWith('settings/'+rule.area+'.')||
     !/^[A-Za-z][A-Za-z0-9_]*$/.test(rule.field||'')||
     typeof rule.label!=='string'||!rule.label.trim()||rule.label.length>240||
     typeof rule.consoleQuery!=='string'||!rule.consoleQuery.trim()||
@@ -52,7 +56,7 @@ export function checkPolicySnapshot(policies){
  const names=new Set(),customers=new Set();
  for(const p of policies){
   if(!object(p)||!POLICY_NAME.test(p.name||'')||names.has(p.name)||
-    !object(p.setting)||!SETTING.test(p.setting.type||'')||
+    !object(p.setting)||!isPolicySettingType(p.setting.type)||
     !object(p.setting.value)||
     (p.customer!==undefined&&!CUSTOMER_NAME.test(p.customer))||
     (p.type!==undefined&&!['ADMIN','SYSTEM','POLICY_TYPE_UNSPECIFIED'].includes(p.type))||
