@@ -130,8 +130,9 @@ Read TASKS.md's current disposition, not stale historical candidate handoffs.
 Merged candidate branches do not need reimplementation. Reopen reconciled criteria
 only for changed relevant source/provider contracts, a real failure or new evidence.
 Record missing engineering immediately; do not hide it behind a future activation date.
-P5-2's November 1 gate restricts production retirement, not implementing its dormant
-behavior and synthetic database proof now.
+Owner October16 supersedes P5-2's original November1 waiting policy. Production
+retirement requires actual all-account readiness, checked release, incompatible
+deployment drain and reviewed encrypted recovery; source/DB proof alone is insufficient.
 
 P8-8 already authorizes a dated authenticated Admin Console walkthrough, comparison
 with guidance/readbacks, and correcting missing map coverage. It does not require

@@ -95,3 +95,17 @@ export function delegatedClients(userEmail, scopes = []) {
   if (scopes.includes(DRIVE_FILE_SCOPE)) out.drive = google.drive({ version: 'v3', auth });
   return out;
 }
+
+// Alert Center is a distinct opt-in: its sole scope allows both reads and
+// writes. Never widen DELEGATED_SCOPES or silently fall back to user OAuth.
+export const ALERT_CENTER_SCOPE = 'https://www.googleapis.com/auth/apps.alerts';
+export function buildAlertCenterAuth(userEmail) {
+  if (process.env.GOOGLE_ALERT_CENTER_DELEGATION_ENABLED !== 'true') {
+    throw new Error('Alert Center requires separately authorized service-account domain-wide delegation for apps.alerts (read and write). See DEPLOY.md, Alert Center. User OAuth cannot authorize this API.');
+  }
+  const subject = String(userEmail || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(subject)) throw new Error('Alert Center requires the selected connected administrator account.');
+  const key = loadServiceAccount();
+  if (!key) throw new Error('Alert Center service-account credentials are not configured. See DEPLOY.md, Alert Center.');
+  return new google.auth.JWT({email:key.client_email,key:key.private_key,subject,scopes:[ALERT_CENTER_SCOPE]});
+}

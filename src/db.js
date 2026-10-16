@@ -280,7 +280,6 @@ function canonical(value) {
 
 // P5-2: every process uses the durable database state, never a local feature flag.
 // Old deployments must be drained before activation: they know only plaintext.
-const RETIREMENT_NOT_BEFORE = '2026-11-01T06:00:00Z'; // Nov 1, 2026 00:00 America/Denver
 async function encryptedOnlyEnabled(q) {
   const rows = await q`SELECT encrypted_only_at FROM google_token_storage WHERE id = true`;
   if (rows.length !== 1) throw new Error('Google token storage state is unavailable. Nothing was changed.');
@@ -351,6 +350,17 @@ async function saveEncryptedOnly(q, email, tokens, label, key, refreshed) {
     const previous = before ? strictEncryptedTokens(before.tokens_enc, key) : {};
     const merged = { ...previous, ...tokens };
     const enc = encryptJson(merged, key);
+    // The pre-multi-account copy must retire on the SAME successful renewal.
+    // Never clear an unmatched legacy credential or remove the recovery table.
+    const clearMatchingLegacy = async () => {
+      if (!refreshed) return;
+      const oldRefresh = typeof previous.refresh_token === 'string' && previous.refresh_token ? previous.refresh_token : null;
+      const newRefresh = typeof merged.refresh_token === 'string' && merged.refresh_token ? merged.refresh_token : null;
+      if (!oldRefresh && !newRefresh) return;
+      await q`UPDATE google_auth SET tokens = '{}'::jsonb, updated_at = now()
+        WHERE id = 1 AND tokens ->> 'refresh_token' IN (${oldRefresh}, ${newRefresh})
+        AND EXISTS (SELECT 1 FROM google_token_storage WHERE id = true AND encrypted_only_at IS NOT NULL)`;
+    };
     if (before) {
       const result = await q`UPDATE google_accounts SET
         tokens = '{}'::jsonb, tokens_enc = ${enc},
@@ -360,7 +370,7 @@ async function saveEncryptedOnly(q, email, tokens, label, key, refreshed) {
         WHERE email = ${email} AND tokens_enc = ${before.tokens_enc}
           AND EXISTS (SELECT 1 FROM google_token_storage WHERE id = true AND encrypted_only_at IS NOT NULL)
         RETURNING email`;
-      if (result.length) return;
+      if (result.length) { await clearMatchingLegacy(); return; }
     } else {
       const result = await q`INSERT INTO google_accounts
         (email, label, tokens, tokens_enc, tokens_enc_verified_at, tokens_enc_refreshed_at, is_default, updated_at)
@@ -369,7 +379,7 @@ async function saveEncryptedOnly(q, email, tokens, label, key, refreshed) {
           NOT EXISTS (SELECT 1 FROM google_accounts), now()
         WHERE EXISTS (SELECT 1 FROM google_token_storage WHERE id = true AND encrypted_only_at IS NOT NULL)
         ON CONFLICT (email) DO NOTHING RETURNING email`;
-      if (result.length) return;
+      if (result.length) { await clearMatchingLegacy(); return; }
     }
   }
   throw new Error('Concurrent encrypted Google token refresh could not be safely reconciled; retry using the same credentials.');
@@ -377,7 +387,7 @@ async function saveEncryptedOnly(q, email, tokens, label, key, refreshed) {
 
 /**
  * Dual-write until independent approval, verified backfill/refresh for EVERY
- * mailbox, and the November 1 date. This remains compatible with old code.
+ * mailbox, and drained incompatible deployments. This remains compatible with old code.
  * After activation all newly connected accounts also start encrypted-only.
  */
 export async function saveGoogleTokensFor(email, tokens, { label, source } = {}) {
@@ -442,6 +452,7 @@ export async function inspectGoogleTokenRetirement() {
   const active = await encryptedOnlyEnabled(q);
   const rows = await q`SELECT tokens, tokens_enc, tokens_enc_verified_at, tokens_enc_refreshed_at FROM google_accounts`;
   const key = loadKey();
+  const legacy = await q`SELECT count(*)::int AS n FROM google_auth WHERE tokens <> '{}'::jsonb`;
   const problems = { missingKey: !key, noAccounts: rows.length === 0,
     missingCopy: 0, corruptOrStale: 0, unverifiedBackfill: 0, refreshNotObserved: 0 };
   for (const row of rows) {
@@ -457,8 +468,10 @@ export async function inspectGoogleTokenRetirement() {
   }
   const ready = rows.length > 0 && key !== null &&
     Object.values(problems).every(v => v === false || v === 0);
-  return { encryptedOnly: active, accountsChecked: rows.length, ready, problems,
-    notBefore: RETIREMENT_NOT_BEFORE };
+  return { encryptedOnly: active, accountsChecked: rows.length,
+    legacyPlaintextCopies: legacy[0].n,
+    plaintextAccounts: rows.filter(row => objectTokens(row.tokens) && Object.keys(row.tokens).length > 0).length, ready, problems,
+    notBefore: null };
 }
 
 /**
@@ -471,20 +484,17 @@ export async function activateGoogleTokenRetirement({ ownerConfirmed = false } =
   if (ownerConfirmed !== true) throw new Error('Independent owner confirmation required; no tokens retired.');
   const q = db();
   if (await encryptedOnlyEnabled(q)) return { activated: false, alreadyActive: true };
-  if (Date.now() < Date.parse(RETIREMENT_NOT_BEFORE))
-    throw new Error('Plaintext retirement cannot start before November 1, 2026.');
   const readiness = await inspectGoogleTokenRetirement();
   if (!readiness.ready) throw new Error('Every Google account needs an intact encrypted backfill and observed refresh before retirement.');
   const done = await q`UPDATE google_token_storage SET encrypted_only_at = now()
     WHERE id = true AND encrypted_only_at IS NULL
-      AND now() >= '2026-11-01T06:00:00Z'::timestamptz
       AND EXISTS (SELECT 1 FROM google_accounts)
       AND NOT EXISTS (
         SELECT 1 FROM google_accounts
         WHERE tokens_enc IS NULL OR tokens_enc_verified_at IS NULL OR tokens_enc_refreshed_at IS NULL
       )
     RETURNING encrypted_only_at`;
-  if (!done.length) throw new Error('Storage readiness changed or date gate refused activation; no tokens retired.');
+  if (!done.length) throw new Error('Storage readiness changed and refused activation; no tokens retired.');
   return { activated: true, alreadyActive: false };
 }
 
@@ -519,7 +529,7 @@ export async function migrateLegacyGoogleAuth(resolveEmail) {
   const existing = await q`SELECT count(*)::int AS n FROM google_accounts`;
   if (existing[0].n > 0) return null;
   const legacy = await q`SELECT tokens FROM google_auth WHERE id = 1`;
-  if (!legacy[0]) return null;
+  if (!legacy[0] || !objectTokens(legacy[0].tokens) || !Object.keys(legacy[0].tokens).length) return null;
   const email = normalizeEmail(await resolveEmail(legacy[0].tokens));
   if (!email) throw new Error('Could not determine which mailbox the existing Google sign-in belongs to.');
   await saveGoogleTokensFor(email, legacy[0].tokens, { label: 'Migrated from single-account setup' });

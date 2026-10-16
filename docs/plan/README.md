@@ -5,7 +5,7 @@ selecting new implementation; preserve the existing session:finish workload chec
 
 ## Completion scope — owner October16,2026
 
-Hub integration is mandatory for whole-project completion; older optional wording is historical. Standalone provider evidence remains separate. Do not change/configure/release Hub here. Vault code and existing grant remain; upgrade-dependent live verification is excluded from completion and recorded could-not-verify, never fabricated PASS or product failure. No paid upgrade or repeated excluded live calls. Plaintext retirement keeps November1Denver and independent approval gates.
+Hub integration is mandatory for whole-project completion; older optional wording is historical. Standalone provider evidence remains separate. Do not change/configure/release Hub here. Vault code and existing grant remain; upgrade-dependent live verification is excluded from completion and recorded could-not-verify, never fabricated PASS or product failure. No paid upgrade or repeated excluded live calls. Owner October16 replaces the earlier 30-day/November1 wait with all-account readiness, checked release, deployment drain and reviewed encrypted recovery. Hub discovers Workspace; the proven scoped/audited native path satisfies Workspace integration. Relay/Sandbox/SDK are Hub responsibilities, not reverse Workspace dependencies.
 
 ## Session workload comes from the current owner prompt
 

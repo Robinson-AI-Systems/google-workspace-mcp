@@ -11,7 +11,7 @@ domain_list_verified docs_list_headings forms_list_responses
 identity_list_group_transitive_membership reports_usage_customer reports_usage_user
 vault_list_holds vault_list_matters`,
  paged: `
-admin_list_admin_console_notifications admin_list_alerts admin_list_asp
+admin_list_alerts admin_list_asp
 admin_list_buildings admin_list_calendar_resources admin_list_chrome_devices
 admin_list_domain_aliases admin_list_domains admin_list_features
 admin_list_group_aliases admin_list_group_members admin_list_groups
@@ -185,7 +185,7 @@ export const SOURCE_RESULT_PROOFS=Object.freeze({
 // wide reads, even when the account's narrower domain guard would also deny
 // an operation. An operator-selected case is NOT customer-wide approval.
 const CUSTOMER_WIDE=new Set(`
-admin_get_customer_info admin_list_admin_console_notifications
+admin_get_customer_info
 admin_list_alerts admin_list_asp admin_list_buildings
 admin_list_calendar_resources admin_list_chrome_devices admin_list_domain_aliases
 admin_list_domains admin_list_features admin_list_group_aliases

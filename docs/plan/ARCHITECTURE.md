@@ -361,3 +361,29 @@ rate limits, every fixture scenario's lost-response recovery, same-run replay,
 foreign-pass refusal, immutable intent, confirmation, provider readback/audit,
 exact cleanup and cleaned-run non-recreation. Missing local TEST_DATABASE_URL
 fails the service conformance step; reference success cannot substitute for it.
+
+
+### Final provider/developer audit — October16
+
+- Chat spaces, fresh bounded Drive changes and exact-domain health report now
+  have genuine original TEST200/strict-shape proof. Health-report operation
+  success preserves its actual organization FAIL/WARN findings.
+- dev_get_run is connection-owned internal metadata, explicitly not a provider
+  read; retained creator200/foreign404 and PG tests are the appropriate proof.
+- ChromeOS device and transfer status APIs remain supported. Their native
+  inventories are empty here; real SDK/REST request/response/denial contracts
+  are tested. A paid trial or real migration is not a development requirement.
+- Alert Center is available to all Workspace customers but requires service
+  account/DWD. Correct the user-OAuth client mismatch with separately opted-in
+  apps.alerts auth; default remains off. This read-and-write scope is not added
+  to existing delegation or user login. No live positive acceptance is claimed.
+- The historical Directory notifications resource/scope is absent from official
+  discovery20261014 and the SDK. Remove its advertised tool and obsolete scope;
+  retain the historical smoke row as retired, with no invented sunset date.
+- Owner removed the November1 delay. Protected explicit activation now uses
+  runtime all-account integrity/refresh readiness, drain/recovery attestations,
+  existing owner login/lockout and exact Origin. Fresh readiness reports include
+  plaintextAccounts for next-refresh verification. Source tests are not live
+  retirement. Hub discovers this service, with its own scoped grant and audit.
+
+Final retirement review also closes the retained single-account google_auth copy: only after encrypted-only activation and a successful account refresh, clear a legacy credential whose refresh token exactly matches that account’s pre/post renewal token. Unmatched credentials and the table remain intact; no activation-time bulk erase. Sanitized inspection adds legacyPlaintextCopies; real PG tests cover unrelated-account refusal, rotation, next-refresh timing and no resurrection. Actual live counts remain unverified until release.

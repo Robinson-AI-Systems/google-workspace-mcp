@@ -16,6 +16,19 @@ describe('hosted Google API clients', () => {
       await expect(gmailHandlers.gmail_list_history({startHistoryId:'120',...args},clients)).rejects.toThrow('invalid_args');
     expect(calls).toHaveLength(1);
   });
+  it('uses exact real SDK ChromeOS and REST transfer GET contracts without creating resources',async()=>{
+    const calls=[];const auth={request:async o=>{calls.push(o);return {data:{deviceId:'synthetic-device',id:'synthetic-transfer',overallTransferStatusCode:'completed'}};}};
+    const clients=buildApiClients(auth);
+    await directoryHandlers.admin_get_chrome_device({deviceId:'synthetic-device'},clients);
+    await extraHandlers.datatransfer_get_transfer_status({transferId:'synthetic-transfer'},clients);
+    expect(calls.map(x=>x.url)).toEqual([
+      'https://admin.googleapis.com/admin/directory/v1/customer/my_customer/devices/chromeos/synthetic-device',
+      'https://admin.googleapis.com/admin/datatransfer/v1/transfers/synthetic-transfer'
+    ]);
+    const denied=Object.assign(new Error('not found'),{code:404});auth.request=async()=>{throw denied;};
+    await expect(extraHandlers.datatransfer_get_transfer_status({transferId:'synthetic-transfer'},clients)).rejects.toBe(denied);
+    await expect(directoryHandlers.admin_get_chrome_device({deviceId:'synthetic-device'},clients)).rejects.toBe(denied);
+  });
   it('honors the owner-selected transfer read bound through the actual REST adapter',async()=>{
     const calls=[];
     const clients=buildApiClients({request:async options=>{calls.push(options);return {data:{dataTransfers:[]}};}});
@@ -162,24 +175,6 @@ describe('hosted Google API clients', () => {
       expect(url.searchParams.get('access_type')).toBe('offline');
     }finally{process.env=before;}
   });
-  it('reports unavailable notifications through the real hosted SDK without a provider call',async()=>{
-    const requests=[];
-    const clients=buildApiClients({request:async o=>{requests.push(o);throw Error('no provider request expected');}});
-    expect(clients.admin.notifications).toBeUndefined();
-    const result=JSON.parse((await directoryHandlers.admin_list_admin_console_notifications({},clients)).content[0].text);
-    expect(result).toMatchObject({status:'not_readable',reason:'provider_method_unavailable',notificationsRead:false,changesMade:false});
-    expect(result).not.toHaveProperty('items');expect(requests).toEqual([]);
-  });
-  it('preserves supported notification reads and genuine provider denials',async()=>{
-    const args=[];const row={notificationId:'fake-id'};
-    const clients={admin:{notifications:{list:async a=>{args.push(a);return {data:{items:[row]}};}}}};
-    expect(JSON.parse((await directoryHandlers.admin_list_admin_console_notifications({},clients)).content[0].text)).toEqual([row]);
-    expect(args).toEqual([{customer:'my_customer'}]);
-    const denied=Object.assign(new Error('permission denied'),{code:403});
-    clients.admin.notifications.list=async()=>{throw denied;};
-    await expect(directoryHandlers.admin_list_admin_console_notifications({},clients)).rejects.toBe(denied);
-  });
-
   it('requests only incremental policy read consent, retaining the standard enrollment route', () => {
     const before = {...process.env};
     try {

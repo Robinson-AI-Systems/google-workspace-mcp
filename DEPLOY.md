@@ -224,3 +224,41 @@ The owner approved `https://www.googleapis.com/auth/cloud-identity.policies.read
 The owner-only `/api/rtc/passes` page defaults to read-only. It may issue a **TEST-only** write pass only for an account already connected and explicitly listed in `RTC_TEST_ACCOUNT_EMAILS`. In the owner-authenticated form, choose areas, check the TEST writes authorization box, repeat the exact account email, and choose 1–24 hours. For fixture work choose `workspace,files,calendar,mail`; never change unrelated business settings. Keep the one-time secret in a protected agent environment, never chat or a report; record only the non-secret pass identifier and revoke it after acceptance. Tool confirmation, domain restrictions, durable fixture IDs and cleanup still apply. Read-only passes marked for Robinson’s Toolkit can explicitly last up to 365 days; that flag and all permissions are shown in connection metadata. This does not authorize a live release, scope expansion or production access. Use the scheduled checked release to obtain the implementing revision.
 
 Both read-only runners require RTC_EXPECTED_REVISION from independent deployment inspection, never from the public manifest alone. RTC_EXPECTED_ACCOUNT is mandatory for reads. A read pass must include workspace for identity verification; Gmail must report the exact expected mailbox before other provider reads proceed. Revocation-only checks also verify the source revision, without making a Google call. Scheduled promotion provenance remains a separate gate. No response data or secret is printed.
+
+### Alert Center: separate service-account authorization
+
+Google requires a service account and domain-wide delegation for Alert Center;
+ordinary user OAuth cannot authorize it. This API is available to all Workspace
+customers; no Google scope allowlist or paid upgrade is the remedy.
+Official instructions: https://developers.google.com/workspace/admin/alertcenter/guides/auth
+
+Its only scope, `https://www.googleapis.com/auth/apps.alerts`, permits **read and
+write**. Obtain explicit owner authorization before authorizing this scope on the
+existing service-account client ID in Admin Console. Only then set
+`GOOGLE_ALERT_CENTER_DELEGATION_ENABLED=true` in the protected runtime. The existing
+`GOOGLE_SERVICE_ACCOUNT_JSON` supplies the key; the selected connected account
+must be an administrator with Alert Center access. The client requests only this
+one scope for that account. Existing Gmail/Calendar/Drive delegation scope lists
+and ordinary Google login are unchanged. Without this separate opt-in Alert
+Center refuses locally, before a provider request. Workspace TEST read-only and
+write-confirmation guards still apply to its tools. Enabling this option alone
+cannot grant Google privileges; Google must independently authorize delegation.
+
+### Token retirement timing (owner decision, October 16, 2026)
+
+The owner removed the earlier 30-day/November 1 waiting policy. Retirement can
+run as soon as all connected accounts have an intact encrypted copy and observed
+genuine refresh, a checked encryption-aware release is serving, incompatible old
+instances have drained, and the encrypted recovery/reconnection plan is reviewed.
+There is no replacement calendar date (`notBefore` is null). The protected
+operator script still requires explicit confirmation; normal OAuth requests never activate retirement. The protected owner page at
+`/api/owner/token-readiness` now offers a separate explicit activation form with
+exact confirmation and deployment-drain/recovery attestations, reusing owner
+authentication, lockout and exact same-origin validation. Keep the encryption key and encrypted data;
+recover by a compatible forward fix, encrypted restore or account reconnection,
+never by rolling back to plaintext-only code. Activation changes durable storage
+mode; each account's plaintext clears only on its next successful save/refresh.
+
+Final retirement review also closes the retained single-account google_auth copy: only after encrypted-only activation and a successful account refresh, clear a legacy credential whose refresh token exactly matches that account’s pre/post renewal token. Unmatched credentials and the table remain intact; no activation-time bulk erase. Sanitized inspection adds legacyPlaintextCopies; real PG tests cover unrelated-account refusal, rotation, next-refresh timing and no resurrection. Actual live counts remain unverified until release.
+
+The protected activation form refreshes every existing connected account after mode activation, using only its saved grant and verifying mailbox identity. This combines the approved cutover and required next-renewal checks in one authenticated operator action. On any error, inspect aggregate state before retrying; activation is durable/idempotent and no scopes are added.

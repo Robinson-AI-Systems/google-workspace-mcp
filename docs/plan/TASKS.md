@@ -234,10 +234,10 @@ restricts only the named operation. Source completion never proves actual Google
   {
     "id": "P5-2",
     "state": "EXTERNAL_ONLY",
-    "remaining": "Approved P5-2 engineering is implemented: atomic dual plaintext/ciphertext CAS with storage-state read locks; post-activation encrypted-only reads, strict missing/invalid key refusal, optimistic concurrent refresh merge, new-account encrypted-only inserts and per-account plaintext cleared on next save. Real future activation is dormant, explicitly owner-confirmed and date/all-account encrypted-backfill/observed-refresh gated. The deployed-mode and actual provider renewal remain separate production acceptance, not missing code.",
-    "evidence": "Source fc8a922e1fc515c506a22b443fdd5a365bfb2e18: src/db.js durable google_token_storage marker, tokens_enc_verified_at and tokens_enc_refreshed_at, locked dual save/backfill, encrypted-only CAS and inspect/activate; src/auth/google-auth-hosted.js marks actual tokens event; scripts/google-token-retirement.mjs protected operator CLI. Real PostgreSQL test/db/upgrade.test.js checks simultaneous dual and encrypted-only writers, retained refresh token, existing/created accounts, wrong/missing key, stale ciphertext, pre-November date/owner refusal, all-account readiness. 1,697 unit, DB/RTC/check and exact-head Actions 38798504715 PASS at source revision. This is synthetic DB proof, not production token migration.",
-    "next": "After independently verified READY promotion of the source revision, use the protected operator --inspect command to verify sanitized all-account backfill and genuine Google refresh readiness. After 2026-11-01 and independent explicit owner confirmation, old-version drain and approved rollback/recovery plan, use protected --activate and verify each account's subsequent refresh clears plaintext while preserving encrypted tokens. Never initiate early retirement.",
-    "gate": "Not before 2026-11-01 00:00 America/Denver, all connected accounts having verified encrypted backfill AND observed real Google OAuth refresh, checked READY release and drained older plaintext-only instances, independent owner approval and recovery plan. No production activation in PR #147.",
+    "remaining": "Readiness-based activation source implemented under owner October16 policy change; no calendar gate. Preserve encrypted-copy integrity, observed genuine refresh for every account, protected owner activation, drained incompatible deployment and encrypted recovery. Actual production activation and next refresh/readback remain separate.",
+    "evidence": "Source fc8a922e1fc515c506a22b443fdd5a365bfb2e18: src/db.js durable google_token_storage marker, tokens_enc_verified_at and tokens_enc_refreshed_at, locked dual save/backfill, encrypted-only CAS and inspect/activate; src/auth/google-auth-hosted.js marks actual tokens event; scripts/google-token-retirement.mjs protected operator CLI. Real PostgreSQL test/db/upgrade.test.js checks simultaneous dual and encrypted-only writers, retained refresh token, existing/created accounts, wrong/missing key, stale ciphertext, pre-November date/owner refusal, all-account readiness. 1,697 unit, DB/RTC/check and exact-head Actions 38798504715 PASS at source revision. This is synthetic DB proof, not production token migration. October16 source follow-up removes calendar predicate, adds protected exact-confirmation activation, sanitized plaintext-account counts and real-PG readiness-based activation/idempotence/next-refresh assertions. Exact new source CI still required.",
+    "next": "Check/review/merge source; conditionally release after independent work is exhausted; verify actual READY and canonical source, protected readiness and deployment drain, activate and refresh each existing account with its saved grant. Verify encryptedOnlytrue and plaintextAccounts0.",
+    "gate": "Owner-authorized readiness-based retirement; no November1 wait. All-account integrity/refresh, checked READY source, incompatible deployment drain, encrypted recovery/reconnection; no plaintext-only rollback.",
     "reviewedAt": "fc8a922e1fc515c506a22b443fdd5a365bfb2e18"
   },
   {
@@ -350,12 +350,12 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "id": "GOOGLE-RTC",
     "priority": 2,
     "requiredRevision": "e30606d0e52a58d4d0957fd8637b173be47b6ce5",
-    "task": "Mandatory project completion: finish remaining P8 Hub, restricted relay/Sandbox and whole-route revocation acceptance",
+    "task": "Verify Hub discovers the independent Workspace contract and routes a scoped, audited real provider read",
     "procedure": "docs/plan/TASKS.md",
-    "gates": "Separate scoped service authorization and Hub route gates; owner makes Hub mandatory for whole-project completion. No Hub modification/configuration/release here, paid new capacity or premature useful-pass revocation.",
+    "gates": "Hub discovers Workspace, never the reverse. Separate scoped service grant and mandatory Hub audit; no Hub changes/configuration/releases here.",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-16 native Hub TEST discovery/health/whoami/describe and routed Gmail profile PASS expected Rentals mailbox; correlation9c803db1-21b9-4bb5-888b-d88980b749a0. One readOnly Workspace target, writesfalse, foundationready. Restricted relay/Sandbox/whole-route revocation remain Hub-agent-owned; no route inferred from native read. Hub PR224 permanent receipt independently read: native route and durable audit accepted; broader route/revocation separate. Owner now requires this row for total completion."
+    "status": "PASSED",
+    "lastEvidence": "Owner direction clarified October16: Hub discovers Workspace. Hub authoritative RTC1 contract section1 assigns CLI/relay/SDK to Hub, not service servers. Independently read Hub PR224 final receipt6216311463: READYf6f916b, real native Hub TEST describe plus two whoami provider reads, writesfalse, independent scoped upstream and two durable attempt/outcome receipts. Existing Workspace-side routed Gmail profile also passed. Connection accepted; broader D-4 resource/relay/Sandbox/revocation acceptance stays in Hub project and is not misrepresented as tested or a reverse Workspace dependency."
   },
   {
     "id": "GOOGLE-DIRECT-READ",
@@ -538,13 +538,13 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P0-2-FULL-CASEBOOK-REAL-READ",
     "priority": 1,
-    "requiredRevision": "b199355c2f10936470855726ce7fc8ccb49c1b5f",
+    "requiredRevision": "280df6e672554779da6f3cd9cfbe3879f169eab0",
     "task": "Run full source-reviewed P0-2 read-only catalog against approved real Google TEST account; publish sanitized report and fix or ledger each real failure",
     "procedure": "scripts/smoke-readonly-catalog.mjs; docs/plan/GOOGLE-ACCEPTANCE.md; docs/plan/TASKS.md P0-2",
     "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "READY6ec69ce/dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur/canonical verified. All6API7checked scopes before/after genuine refresh and2account encryptedreadinessPASS. Owner-approved Postmaster domain registration, additiveTXT/publicDNS/Googleverification complete; originalTEST exactdomainOWNER/VERIFIED list200 andOct9-15v2traffic200/native stats[]/no continuation. Missing metrics unknown, nothealthy delivery. Casebook155verified/9unverified/2Vault excluded. Remaining exactasset/scope/creator, Hub andNovember1gates unchanged; no sourcechange/newrelease needed."
+    "lastEvidence": "October16 final developer audit: three new original14area read_only TEST genuine reads PASS on READY6ec: Chat spaces2, fresh Drive cursor/one changes page, bounded exact-domain health report13checks. Retained creator-owned dev_get_run200/foreign404 is internal service proof, not Google. Historical166 disposition now159 verified handler/service reads,2 no-resource development-contract cases,2 AlertCenter service-account configuration cases,1 retired unsupported notification surface,2owner-excluded Vault. Source fixes actual AlertCenter user-OAuth mismatch and removes obsolete notifications/scope; exact-head checks and deployed safe refusal still required. No paid trial, transfer/device creation, new delegation or fake provider pass."
   },
   {
     "id": "P8-4-HTTP-CONTRACT",
@@ -626,15 +626,15 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P5-2-PLAINTEXT-RETIRE",
     "priority": 5,
-    "requiredRevision": "fc8a922e1fc515c506a22b443fdd5a365bfb2e18",
-    "task": "After the full 30-day P0-6 interval, independently approved secure cutover to encrypted-only Google tokens, then prove next provider renewal clears each plaintext tokens column without losing credentials; verify recovery and no old code active.",
+    "requiredRevision": "280df6e672554779da6f3cd9cfbe3879f169eab0",
+    "task": "Owner-approved readiness-based cutover to encrypted-only Google tokens, then prove each account renewal clears its plaintext tokens column without losing credentials; verify recovery and incompatible-deployment drain.",
     "procedure": "docs/plan/TASKS.md P5-2 controlled future activation",
-    "gates": "Not before 2026-11-01 00:00 America/Denver, P5-2-ENCRYPTED-READY PASSED, written independent owner approval, all old plaintext-only instances drained, reviewed no-rollback-after-retirement response, protected operator mode; no early activation.",
+    "gates": "Owner October16 explicitly replaces calendar delay: all-account encrypted/backfill/genuine-refresh readiness, checked READY encryption-aware release, incompatible deployment drain and reviewed encrypted restore/reconnection plan. Protected authenticated explicit activation; no plaintext-only rollback.",
     "dependsOn": [
       "P5-2-ENCRYPTED-READY"
     ],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15Denver resume reconciliation: Both-account encrypted/backfill/refresh readiness remains accepted; owner explicitly preserved current date/approval gate. Exact prerequisite: November1Denver, independent owner approval, old-instance drain and reviewed recovery. Remedy/next action: Re-enter only after current gate or separately reviewed owner date change; never activate early."
+    "lastEvidence": "Owner explicitly removed November1 waiting policy and authorizes readiness-based completion. Source removes both JS and SQL calendar gates, preserves owner/all-account checks, exposes explicit protected operator form with drain/recovery attestations and fresh runtime readiness. Current live6ec remains encryptedOnlyfalse; all2accounts readiness previously true. Actual activation and subsequent per-account refresh remain PENDING until repaired source is checked and READY."
   },
   {
     "id": "P8-3-OWNER-TEST-FORM",
@@ -3459,3 +3459,34 @@ Google Not enough data remains unknown metrics, not healthy delivery. Retain the
 business domain and ownershipTXT; these are approved setup, not disposable fixtures.
 Catalog155verified/9unverified/2Vault excluded; queue26PASSED/3PENDING. No sending,
 sharing, purchase, scope change, source change, plaintext retirement or release.
+
+
+### October 16 completion audit and owner policy correction
+
+Owner explicitly removed the arbitrary November1 deadline: the earlier 30-day
+migration policy is superseded by actual readiness. Both date predicates are
+removed; all-account encrypted integrity and genuine-refresh evidence, explicit
+owner activation, old-instance drain and encrypted recovery remain required.
+Protected owner activation is a separate form/action, not inspection or normal
+OAuth startup. This is source work until checked release and real activation.
+
+Hub direction is Hub → Workspace. Hub RTC1 §1 explicitly assigns CLI/relay/SDK
+to Hub. PR224 permanent hosted acceptance proves discovery, real read and durable
+audit through its scoped TEST grant. Workspace needs no Hub discovery, new Hub
+release or duplicate implementation. Broader Hub D-4 paths remain Hub-owned;
+they are not claimed passed by this Workspace record.
+
+The final nine catalog cases were investigated rather than blanket-waived:
+three new live handler reads passed; creator-ledger read is already proven
+internal metadata; ChromeOS/transfer GET contracts are tested without enrolling
+a device or migrating production data; obsolete Directory notifications is
+removed based on current official discovery; Alert Center requires service
+account/DWD, not a paid upgrade or Google allowlist. Its separate disabled-by-
+default apps.alerts path is implemented without widening existing delegation or
+ordinary login. Enabling it still needs exact owner authorization for its
+read-and-write scope. See smoke report and final developer-audit evidence.
+No new product bundle is claimed; this is completion/defect repair.
+
+PR194 source self-review: checked lazy Alert Center refusal inside security-snapshot coverage handling, no widening of existing scopes, exact-origin authenticated retirement action, separate integrity/readiness and activation, durable SQL mode transition, no credentials in reports. Local check and1875unit tests pass; no inline review threads. Automated Codex review unavailable due to recorded usage quota, not a source finding; required exact-head Actions still gate merge. Both source-dependent queue rows now pin PR194 source280df6e before actual post-release execution.
+
+Final retirement review also closes the retained single-account google_auth copy: only after encrypted-only activation and a successful account refresh, clear a legacy credential whose refresh token exactly matches that account’s pre/post renewal token. Unmatched credentials and the table remain intact; no activation-time bulk erase. Sanitized inspection adds legacyPlaintextCopies; real PG tests cover unrelated-account refusal, rotation, next-refresh timing and no resurrection. Actual live counts remain unverified until release.

@@ -280,7 +280,8 @@ export const handlers = {
     return ok({ scanned: (res.data.files || []).length, filesWithExternalOrPublicSharing: risky });
   },
 
-  workflow_security_snapshot: async (_args, { admin, alertcenter }) => {
+  workflow_security_snapshot: async (_args, clients) => {
+    const {admin} = clients;
     // Preserve existing fields while actually walking bounded directory pages.
     // A truncated or unreadable later page cannot certify a healthy tenant.
     const userScan = await boundedRead(
@@ -296,11 +297,11 @@ export const handlers = {
     let alertScan = {items:[],complete:false,pages:0,reason:'alert_center_unavailable'};
     try {
       alertScan = await boundedRead(
-        token => alertcenter.alerts.list({pageSize:10,...(token ? {pageToken:token}:{})}),
+        token => clients.alertcenter.alerts.list({pageSize:10,...(token ? {pageToken:token}:{})}),
         'alerts', MAX_SECURITY_ALERT_PAGES
       );
     } catch {
-      // Edition/scope failures do not mean there are zero security alerts.
+      // Missing delegation or provider failures do not mean zero security alerts.
     }
 
     return ok({
