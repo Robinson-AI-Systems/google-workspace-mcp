@@ -17,6 +17,14 @@ function fixture(){
  return {handler,store,row:()=>row};
 }
 describe('mobile developer OAuth handoff',()=>{
+ it('never denies, approves or delivers an existing TEST-pass transfer through the OAuth route',async()=>{
+  const {handler,row}=fixture();await handler({method:'POST',body:body(),headers:{}},response());
+  row().client_id='rtc-pass:developer_client';
+  for(const query of [{state:row().state,error:'access_denied'},{state:row().state,code},{state:row().state}]){
+   const r=response();await handler({method:'GET',query,headers:{authorization:'Bearer '+secret}},r);
+   expect(r.statusCode).toBe(410);expect(row().status).toBe('pending');expect(row().sealed_code).toBeUndefined();expect(row().delivered).toBeUndefined();
+  }
+ });
  it('preserves owner-selected full development authorization; no production catalog restriction',async()=>{
   const {handler,row}=fixture();const r=response();await handler({method:'POST',body:body(),headers:{}},r);
   expect(r.statusCode).toBe(201);const u=new URL(r.data.authorization_url);
