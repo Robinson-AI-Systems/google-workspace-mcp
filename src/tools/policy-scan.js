@@ -1,3 +1,4 @@
+import { isPolicySettingType } from './policy-evidence.js';
 // Exact Cloud Identity Policy API read contract. The API returns explicit
 // rules, not the reduced setting actually applied to an individual or domain.
 // https://cloud.google.com/identity/docs/reference/rest/v1/policies/list
@@ -28,7 +29,7 @@ export function parsePolicyPage(response) {
     const invalid = !p ? 'resource object' :
       !/^policies\/[A-Za-z0-9_./-]+$/.test(p.name || '') ? 'name format' :
       !p.setting || typeof p.setting !== 'object' ? 'setting object' :
-      !/^settings\/[a-z_]+\.[A-Za-z0-9_]+$/.test(p.setting.type || '') ? 'setting.type format' :
+      !isPolicySettingType(p.setting.type) ? 'setting.type format' :
       !p.setting.value || typeof p.setting.value !== 'object' || Array.isArray(p.setting.value) ? 'setting.value object' :
       p.policyQuery !== undefined && (!p.policyQuery || typeof p.policyQuery !== 'object') ? 'policyQuery object' :
       p.type !== undefined && !['ADMIN', 'SYSTEM', 'POLICY_TYPE_UNSPECIFIED'].includes(p.type) ? 'type enum' : null;

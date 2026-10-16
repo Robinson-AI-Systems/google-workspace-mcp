@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { policyFilter, parsePolicyPage, readPolicyPage, scanPolicyPages } from '../../src/tools/policy-scan.js';
 import { handlers } from '../../src/tools/policy-audit.js';
+import {checkPolicySnapshot} from '../../src/tools/policy-evidence.js';
 
 const policy = (id, type, value) => ({
   name: 'policies/' + id, customer: 'customers/C123',
@@ -15,6 +16,24 @@ const client = list => ({
 const json = response => JSON.parse(response.content[0].text);
 
 describe('P7-2 complete bounded provider page and evidence contract', () => {
+  it('retains documented nonbaseline types through both provider validation layers',async()=>{
+    const rows=['settings/user_takeout','settings/search_ads_360.service_status','settings/campaign_manager.service_status']
+      .map((type,i)=>policy('documented-'+i,type,{enabled:true}));
+    expect(parsePolicyPage({data:{policies:rows}}).policies).toEqual(rows);
+    expect(checkPolicySnapshot(rows)).toMatchObject({resources:3,customerVerified:true});
+    const report=json(await handlers.identity_policy_audit({domain:'example.com'},client(async()=>({data:{policies:rows}}))));
+    expect(report).toMatchObject({complete:true,policiesRead:3,effective:false,isComplianceCertificate:false});
+    expect(report.results).toHaveLength(report.baselineRules);
+    expect(report.results.every(r=>r.status==='not_readable')).toBe(true);
+    expect(report.summary.matchingExplicitPolicies).toBe(0);
+  });
+  it('still rejects missing, oversized or malformed setting identifiers',()=>{
+    for(const type of [null,12,'settings/','settings/user takeout','settings/user_takeout?x','settings/a..b','settings/a/'+ 'b','other/user_takeout','settings/'+ 'a'.repeat(505)]){
+      const rows=[{...row,setting:{...row.setting,type}}];
+      expect(()=>parsePolicyPage({data:{policies:rows}})).toThrow('setting.type format');
+      expect(()=>checkPolicySnapshot(rows)).toThrow();
+    }
+  });
   it('identifies the failed provider field without disclosing policy data',()=>{
     const privateRow={...row,name:'policies/private?secret',setting:{...row.setting,value:{private:'sensitive-value'}}};
     expect(()=>parsePolicyPage({data:{policies:[privateRow]}})).toThrow('invalid policy resource (name format)');
