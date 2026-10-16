@@ -122,3 +122,48 @@ describe('Cloud Identity membership and security contracts',()=>{
   expect(calls[0].params.fields.split(',')).toContain('primaryEmail');
  });
 });
+
+
+describe('Directory building creation contract',()=>{
+ const args={buildingId:'synthetic-building',buildingName:'Synthetic building',floorNames:['L','1'],address:{regionCode:'US',addressLines:['Synthetic test address']}};
+ it('sends required floors through the real hosted SDK and independently verifies them',async()=>{
+  let saved;
+  const {clients,calls}=hosted(o=>{
+   if(o.method==='POST'){saved=structuredClone(o.data);return saved;}
+   if(!saved)throw Object.assign(new Error('not found'),{code:404});
+   return structuredClone(saved);
+  });
+  const result=body(await registry.handlers.admin_create_building(args,clients));
+  expect(result).toMatchObject({done:true,confirmed:true,logged:true,after:{floorNames:['L','1']}});
+  expect(calls.map(o=>o.method)).toEqual(['GET','POST','GET']);
+  expect(calls[1].url).toBe('https://admin.googleapis.com/admin/directory/v1/customer/my_customer/resources/buildings');
+  expect(calls[1].data).toEqual(args);
+  expect(registry.tools.find(t=>t.name==='admin_create_building').inputSchema.required).toContain('floorNames');
+ });
+ it('refuses invalid floors before any provider access, including preview',async()=>{
+  for(const floorNames of [undefined,[],null,'1',[''],['  '],[1]])for(const dryRun of [true,false]){
+   const {clients,calls}=hosted(()=>({}));
+   await expect(registry.handlers.admin_create_building({...args,floorNames,dryRun},clients)).rejects.toThrow(/floorNames/);
+   expect(calls).toEqual([]);
+  }
+ });
+ it('preview and read-only dispatch cannot create a building',async()=>{
+  const preview=hosted(()=>{throw Object.assign(new Error('not found'),{code:404});});
+  expect(body(await registry.handlers.admin_create_building({...args,dryRun:true},preview.clients))).toMatchObject({done:false,dryRun:true});
+  expect(preview.calls.map(o=>o.method)).toEqual(['GET']);
+  const readonly=hosted(()=>({}));readonly.clients.rtcPolicy.profile='read_only';
+  expect((await registry.handlers.workspace_call({name:'admin_create_building',args},readonly.clients)).isError).toBe(true);
+  expect(readonly.calls).toEqual([]);
+ });
+ it('does not confirm creation if the provider loses or reorders floors',async()=>{
+  for(const floorNames of [undefined,['L'],['1','L']]){
+   let created=false;
+   const {clients}=hosted(o=>{
+    if(o.method==='POST'){created=true;return args;}
+    if(!created)throw Object.assign(new Error('not found'),{code:404});
+    return {...args,floorNames};
+   });
+   expect(body(await registry.handlers.admin_create_building(args,clients))).toMatchObject({done:true,confirmed:false});
+  }
+ });
+});

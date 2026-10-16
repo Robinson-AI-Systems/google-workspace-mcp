@@ -10,6 +10,7 @@ import { isNotFound } from './write.js';
 import { CUSTOMER, pick, data, orgPath, D, same, SCALARS } from './guard-helpers.js';
 import { normalizeDomains, domainOfEmail } from '../domains.js';
 import { SETTING_KEYS, buildSettingsBody, validateSettingsTransition } from './group-settings.js';
+import { buildingCreateBody } from './building.js';
 
 const lower = (v) => String(v ?? '').trim().toLowerCase();
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -203,8 +204,8 @@ export const GUARDS_ADMIN = {
     } },
 
   // ---------- Buildings, features, bookable resources ----------
-  admin_create_building: { destructive: false, verify: (a, b, after) => same(after?.buildingName, a.buildingName),
-    describe: (a) => ({ target: a.buildingId, summary: `Create the building ${a.buildingId} ("${a.buildingName}")` }),
+  admin_create_building: { destructive: false, verify: (a, b, after) => same(after?.buildingName, a.buildingName) && JSON.stringify(after?.floorNames) === JSON.stringify(a.floorNames),
+    describe: (a) => { buildingCreateBody(a); return { target: a.buildingId, summary: `Create the building ${a.buildingId} ("${a.buildingName}")` }; },
     before: (a, { admin }) => absent(() => data(admin.resources.buildings.get({ customer: CUSTOMER, buildingId: a.buildingId }))),
     after: (a, { admin }) => data(admin.resources.buildings.get({ customer: CUSTOMER, buildingId: a.buildingId })) },
   admin_update_building: { destructive: false, verify: (a, b, after) => covers(after, a.updates),
