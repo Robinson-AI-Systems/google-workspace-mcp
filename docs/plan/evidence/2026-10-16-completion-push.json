@@ -134,8 +134,8 @@
     "inventory": 166,
     "olderDocumentedInventory": 165,
     "decision": "Preserve all currently enumerated names; no dropping a case to fit older count",
-    "verifiedRetainedHandlerReads": 153,
-    "unverified": 11,
+    "verifiedRetainedHandlerReads": 154,
+    "unverified": 10,
     "ownerExcludedLive": 2,
     "allCatalogPassed": false,
     "countsCaveat": "Includes source-validated service metadata; not every report subcheck or security setting is healthy/readable",
@@ -1065,13 +1065,16 @@
       },
       {
         "tool": "workspace_postmaster_list_domains",
-        "status": "UNVERIFIED",
-        "prerequisite": "Owner enabled API; one bounded original read_only TEST list on READYf96 returned429 explicitly unsupported Postmaster API version, not transient-rate proof. V2 repair prepared; separately approve postmaster.domain (view AND manage domains), then checked release/consent and real read. No retry, domain write or verification."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "genuine_original_readonly_TEST_on_READY6ec69ce_v2"
+        ],
+        "proof": "HTTP200 native domains[]/count0, pageSize20, no continuation; original pass/account/source verified. Empty account domain inventory is valid metadata, not traffic proof."
       },
       {
         "tool": "workspace_postmaster_list_traffic_stats",
         "status": "UNVERIFIED",
-        "prerequisite": "V1 retirement confirmed by bounded domain-list response; no traffic request. V2 repair prepared; postmaster.traffic.readonly approval/consent, checked release and an exact owned accessible returned domain are required for a fixed seven-day query. No sending or domain verification."
+        "prerequisite": "V2 source/consent and current traffic permission verified before and after genuine refresh. Domain list200 returned zero registered domains. No owned accessible VERIFIED domain exists in this account inventory; no traffic request, domain registration/verification, DNS edit or test sending. Owner-managed verified Postmaster domain required."
       },
       {
         "tool": "workspace_admin_get_2sv_status",
@@ -1836,7 +1839,7 @@
     "approval": "Existing written owner approval October2, retained P7-4 scope decision",
     "sourceRepair": "Released protected postmaster_read purpose; live form contract verified.",
     "realConsent": "Legacy postmaster.readonly genuinely ready. Owner enabled API; one bounded read now establishes unsupported v1. No new permission requested.",
-    "v2PermissionsApproval": "PENDING: postmaster.domain (view AND manage registered domains) and postmaster.traffic.readonly (read traffic metrics). No full/user scope or domain write proposed.",
+    "v2PermissionsApproval": "OWNER_APPROVED 2026-10-16T21:52:26Z; genuine Google consent Connected exact Rentals mailbox; both replacement permissions plus retained Tasks/Site actually READY before and after genuine saved-grant refresh.",
     "retirementRead": {
       "sourceRevision": "f96a369e9cdab0b1c84aec478605d780f33c55a4",
       "deployment": "dpl_5QDmh4dRau9JjRucmZeqqeRadMcu",
@@ -1850,7 +1853,7 @@
       "trafficRequests": 0,
       "providerMutations": 0
     },
-    "v2SourceRepair": "Read-only REST adapter because pinned SDK lacks v2; exact daily metrics normalized to existing output; missing reputation unknown; bounded partial pages/summaries retained. Source/tests, not live proof."
+    "v2SourceRepair": "PR190 v2 read-only adapter and PR191 protected consent merged; independently READY6ec69ce/dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur; canonical exact-source verified. Genuine domain list200/count0 verified."
   },
   "retainedNarrowPass": {
     "areas": [
@@ -2060,5 +2063,100 @@
     "noProviderWrites": true,
     "noFixtureRecreation": true,
     "separatePostmasterAPIGateUnchanged": true
+  },
+  "postmasterV2Accepted": {
+    "supersedesHistoricalProviderAndConsentPrerequisites": true,
+    "sourceRevision": "6ec69ce1b6cb8ffb2096774e038987cf6f5a5c4d",
+    "deployment": {
+      "id": "dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur",
+      "state": "READY",
+      "independentlyVerified": true,
+      "canonicalRevisionMatched": true
+    },
+    "repairPRs": [
+      190,
+      191
+    ],
+    "headAndPostmergeChecks": "check/unit/db/rtc/test/release-policy SUCCESS for both PRs",
+    "localValidation": {
+      "unitTests": 1870,
+      "focusedConsentTests": 41,
+      "repositoryChecks": "PASS"
+    },
+    "ownerApproval": "2026-10-16T21:52:26Z exact postmaster.domain(view AND manage) and postmaster.traffic.readonly; reads only, retain existing grants",
+    "release": {
+      "authorization": "existing owner conditional release after independent prerelease work exhausted",
+      "from": "f96a369e9cdab0b1c84aec478605d780f33c55a4",
+      "to": "6ec69ce1b6cb8ffb2096774e038987cf6f5a5c4d",
+      "nonforceExpectedOldVerified": true,
+      "receipt": "release-markers/2026-10-16-owner-postmaster-191",
+      "priorReceiptsPreserved": true
+    },
+    "consent": {
+      "purpose": "postmaster_v2_read",
+      "ownerAuthenticated": true,
+      "googleAllowSubmitted": true,
+      "callbackConnectedExactExpectedMailbox": true,
+      "standardAndPriorPurposesUnchanged": true
+    },
+    "identity": {
+      "originalReadOnlyTestPassVerified": true,
+      "expectedAccountVerified": true,
+      "allowWrites": false
+    },
+    "readiness": {
+      "beforeRefresh": {
+        "allReady": true,
+        "apiCount": 6,
+        "scopeCount": 7
+      },
+      "afterRefresh": {
+        "allReady": true,
+        "apiCount": 6,
+        "scopeCount": 7
+      },
+      "checkedScopes": [
+        "tasks.readonly",
+        "siteverification",
+        "postmaster.domain",
+        "postmaster.traffic.readonly",
+        "cloud-identity.groups.readonly",
+        "chrome.management.policy.readonly",
+        "chat.memberships.readonly"
+      ]
+    },
+    "domains": {
+      "http": 200,
+      "strictNativeShape": true,
+      "pageSize": 20,
+      "count": 0,
+      "hasContinuation": false
+    },
+    "traffic": {
+      "called": false,
+      "reason": "No registered domains returned; needs owned accessible VERIFIED Postmaster domain. Empty inventory is not proof of traffic operation or healthy delivery."
+    },
+    "savedGrantRefresh": {
+      "genuineRefresh": true,
+      "expectedMailboxVerified": true,
+      "accountsChecked": 2,
+      "ready": true,
+      "problemCountsZero": true,
+      "encryptedOnly": false,
+      "storageModeUnchanged": true,
+      "noPlaintextRetirement": true
+    },
+    "providerMutations": 0,
+    "acceptanceQueue": {
+      "passed": 26,
+      "pending": 3
+    },
+    "casebook": {
+      "inventory": 166,
+      "verifiedRetained": 154,
+      "unverified": 10,
+      "ownerExcludedVault": 2
+    },
+    "limits": "No domain/user writes, registration, verification, DNS edits, sending, paid upgrades, Hub changes or early plaintext retirement. No fixture replay."
   }
 }

@@ -544,7 +544,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "READYf96;166case report retains153verified/11unverified/2owner-excludedVault. Combined3scope consent/genuine refresh/all2account encrypted readiness PASS; allfixtures cleaned. Owner enabled Postmaster API; one bounded original read_only TEST domain list returned429 explicitly unsupported version, no retry/traffic. V2 repair prepared; separate domain-management-capable postmaster.domain and postmaster.traffic.readonly approval/consent and checked release required. Other exact asset/scope/creator, Hub and November1 gates unchanged."
+    "lastEvidence": "Independently READY6ec69ce/dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur, canonical exactsource. Owner-approved v2 consent/GoogleConnected and genuine savedgrantrefresh:6API7checkedscopes allREADY before/after, all2accounts encryptedreadyzeroproblems. V2 Postmaster domain list200/native count0/no continuation, now154verified/10unverified/2ownerexcludedVault. Traffic notcalled: no registered owned accessible VERIFIED domain. Other exactresource/scope/creator, Hub and November1 gates unchanged; allfixtures cleaned; no providerwrites."
   },
   {
     "id": "P8-4-HTTP-CONTRACT",
@@ -3423,3 +3423,21 @@ consent, actual four-scope/retained API verification, saved-grant refresh retent
 and one bounded domain list followed only by an owned accessible verified domain
 seven-day query. The owner's earlier conditional release authorization applies;
 source completion alone does not pass full-catalog acceptance or retire plaintext.
+
+
+### P7-4 released v2 genuine acceptance — October16,2026
+
+PR190/191 head and postmerge check/unit/db/rtc/test/release-policy all SUCCESS.
+Owner-conditional release nonforce-advanced live f96 to6ec69ce after prerelease
+review; new receipt release-markers/2026-10-16-owner-postmaster-191 preserves every
+prior receipt. Independent Vercel READY dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur and
+canonical exact6ec69ce verified. Secure owner authentication, Google Allow and
+Connected exact Rentals mailbox observed. Original TEST/read_only current6API7scope
+matrix passes before and after genuine saved-grant refresh; all2account encrypted
+backfill/refresh readiness passes with zero problems, storage mode unchanged.
+V2 domain list genuinely returns200 native domains[]/count0, pageSize20/no cursor.
+No traffic request was made because no owned accessible VERIFIED domain exists in
+this account's inventory. Domain registration/verification, DNS edits and sends
+remain unperformed. Full166case report now154verified/10unverified/2Vault excluded;
+queue remains26PASSED/3PENDING. No further release needed for evidence publication.
+All other resource/scope/creator, Hub-owned and November1 retirement gates remain.
