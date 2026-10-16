@@ -1,9 +1,38 @@
 import { describe, it, expect } from 'vitest';
 import { buildApiClients, getGoogleAuthUrl } from '../../src/auth/google-auth-hosted.js';
 import { handlers as directoryHandlers } from '../../src/tools/admin-directory.js';
+import {handlers as extraHandlers} from '../../src/tools/extra-admin-apis.js';
 import { handlers as policyHandlers } from '../../src/tools/policy-audit.js';
 
 describe('hosted Google API clients', () => {
+  it('offers only three incremental catalog read scopes through a separate purpose',()=>{
+    const before={...process.env};
+    try{
+      process.env.PUBLIC_BASE_URL='https://workspace.example.test';
+      process.env.GOOGLE_OAUTH_CLIENT_ID='fake-client';process.env.GOOGLE_OAUTH_CLIENT_SECRET='fake-secret';
+      const url=new URL(getGoogleAuthUrl('state','ops@example.test','catalog_read'));
+      expect(url.searchParams.get('scope').split(' ')).toEqual([
+        'https://www.googleapis.com/auth/cloud-identity.groups.readonly',
+        'https://www.googleapis.com/auth/chrome.management.policy.readonly',
+        'https://www.googleapis.com/auth/chat.memberships.readonly'
+      ]);
+      expect(url.searchParams.get('include_granted_scopes')).toBe('true');
+      for(const purpose of ['standard','acceptance_read','policy_read']){
+        const scopes=new URL(getGoogleAuthUrl('state','ops@example.test',purpose)).searchParams.get('scope');
+        expect(scopes).not.toMatch(/cloud-identity.groups|chrome.management.policy|chat.memberships/);
+      }
+    }finally{process.env=before;}
+  });
+  it('uses the pinned Chrome SDK required parent in schema-list requests',async()=>{
+    const requests=[];
+    const clients=buildApiClients({request:async options=>{requests.push(options);return {data:{policySchemas:[]}};}});
+    const result=JSON.parse((await extraHandlers.chrome_list_policy_schemas({filter:'schemaName=chrome.users.*'},clients)).content[0].text);
+    expect(result).toEqual([]);expect(requests).toHaveLength(1);
+    expect(requests[0].method).toBe('GET');
+    expect(requests[0].url).toContain('/v1/customers/my_customer/policySchemas');
+    expect(requests[0].params.filter).toBe('schemaName=chrome.users.*');
+  });
+
   it('requests the exact four incremental acceptance-read scopes without write scopes',()=>{
     const before={...process.env};
     try{

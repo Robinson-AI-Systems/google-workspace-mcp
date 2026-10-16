@@ -100,3 +100,11 @@ export const ACCEPTANCE_READ_SCOPES = Object.freeze([
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/ediscovery.readonly'
 ]);
+
+// Optional repair for the remaining catalog reads. Never included in standard
+// enrollment or the already-approved four-scope acceptance request.
+export const CATALOG_READ_SCOPES = Object.freeze([
+  'https://www.googleapis.com/auth/cloud-identity.groups.readonly',
+  'https://www.googleapis.com/auth/chrome.management.policy.readonly',
+  'https://www.googleapis.com/auth/chat.memberships.readonly'
+]);

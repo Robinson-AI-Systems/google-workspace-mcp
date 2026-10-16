@@ -57,7 +57,7 @@ export const handlers = {
     return ok({...res.data, targetResource});
   },
   chrome_list_policy_schemas: async (args, { chromepolicy }) => {
-    const res = await chromepolicy.customers.policySchemas.list({ customer: 'customers/my_customer', filter: args.filter });
+    const res = await chromepolicy.customers.policySchemas.list({ parent: 'customers/my_customer', filter: args.filter });
     return ok(res.data.policySchemas || []);
   },
 

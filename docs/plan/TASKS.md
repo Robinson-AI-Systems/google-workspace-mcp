@@ -362,7 +362,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   "gates": "Separate scoped service authorization and Hub route gates; full production catalog stays independent",
   "dependsOn": [],
   "status": "PENDING",
-  "lastEvidence": "2026-10-16 owner reports Hub Workspace namespace update. Native search now1authorizedTarget and exposes workspace_search_tools from google-workspace-mcp; native describe succeeds. Harmless routed search returns upstream_tool_response_invalid with automaticReplay:false; not actual routed Google proof. User assigned Hub troubleshooting to another agent: do not alter Hub source/releases/grants. Re-enter when route can execute; standalone independent."
+  "lastEvidence": "2026-10-16 native Hub discovery/describe and actual routed Gmail profile succeeded for the expected Rentals account before and after Workspace75fadc4 release; postrelease correlation6a6f9619-c538-46a7-ba78-959b073bb56f. Permanent actual evidence PR176 comments6216441876/6216550859. Native route criterion positive; restricted relay/Vercel Sandbox and whole-route revocation proof remain separate Hub-owned requirements, not inferred from native read. Owner assigned Hub troubleshooting to another agent; no Hub source/release/grant changes here. Standalone independent."
 },
   {
     "id": "GOOGLE-DIRECT-READ",
@@ -507,7 +507,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   "gates": "Read-only, existing authenticated account and permitted areas; no message bodies/sending, fixture creation, admin impersonation, scope widening or consent without owner approval. Independently READY deployed revision and original resource IDs first.",
   "dependsOn": [],
   "status": "PENDING",
-  "lastEvidence": "2026-10-16 newly approved pinnedREADY8ce TEST reads: Gmail/Drive/Calendar/Chat APIs ready; Tasks/profile/email need narrow Google consent. Exact original Gmail/send-as ready; trashed Drive/wrong-kind404/deleted Calendar role/freebusy negatives retained. No active tagged owned Drive/nonprimary Calendar/test Chat space/contact positive resource discovered. Existing14-area24h TEST/read_only pass now securely connected, expiry unchanged; no duplicate issuance, fixture creation/restoration or exhausted12-call cycle extension. Need actual narrow consent, approved active positive resources and remaining denied/insufficient-permission matrix after checked combined repair release. See both approved-read-progress and readonly-catalog-progress October16 evidence."
+  "lastEvidence": "2026-10-16 independently READY75fadc4, exact existing Rentals TEST/read_only identity: owner-approved Google consent completed; Gmail/Drive/Calendar/Tasks/Chat/People APIs and all four incremental scopes now ready. Native Tasks list and exact People self resource read200; exact integration contact check ready. Original Gmail/send-as and negative cleaned Drive/Calendar proofs retained. Need positive active owned nonproduction Drive/nonprimary Calendar/task item/Chat space and declared capabilities; no unrelated-resource substitution or new fixture writes. Sanitized evidence/2026-10-16-postconsent-read-progress.json. No whole-task PASS claimed."
 },
   {
     "id": "P8-8-CONSOLE-READBACK",
@@ -551,7 +551,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
   "dependsOn": [],
   "status": "PENDING",
-  "lastEvidence": "2026-10-16 correct existing14-area24h Rentals TEST/read_only bearer securely connected; exact account/pass/profile/mode verified, writes disabled, expiry unchanged. Genuine selected66 run65initialPASS/1checker failure;8metadata7PASS/1checker failure. Empty thread snippet and delegation service metadata proofs repaired; fresh retests bothPASS. Two actual licensing readsPASS. Combined76distinct selected checks verified, not whole catalog. Original failures and sanitized results: evidence/2026-10-16-readonly-catalog-progress.json. Need combined checked repair release, real narrow Google consent, missing Chrome/domain area grant if selected and precise remaining resources/cases. Existing pass retained; never recreate or widen it automatically."
+  "lastEvidence": "2026-10-16 READY75fadc4 exact existing TEST/read_only pass unchanged: new consent/API/self-People positives; four exact existing-group reads200 after separate six-read approval. Transitive group read503 insufficient scopes; sixth check terminal503/durable receipt missing, UNKNOWN/no replay. Vault denied despite token-info ediscovery.readonly ready. New separate catalog_read purpose repairs missing groups/Chrome/Chat membership read scopes without changing old requests; Chrome schema-list pinned SDK requires parent. Candidate repairs need checked release and explicit scope/missing-area grant. Prior76 selected proofs retained, never full catalog. Evidence/2026-10-16-postconsent-read-progress.json."
 },
   {
     "id": "P8-4-HTTP-CONTRACT",
