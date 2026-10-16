@@ -2,9 +2,9 @@
 
 Prepared from retained genuine receipts and the current source casebook. This report does not rerun cleaned fixtures or relabel blocked cases as passes.
 
-Source independently observed READY live: `f96a369e9cdab0b1c84aec478605d780f33c55a4` / `dpl_5QDmh4dRau9JjRucmZeqqeRadMcu`. Earlier retained reads remain bound to their original receipt revisions.
+Source independently observed READY live: `6ec69ce1b6cb8ffb2096774e038987cf6f5a5c4d` / `dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur`. Earlier retained reads remain bound to their original receipt revisions.
 
-**153 verified retained handler/service reads; 11 unverified; 2 owner-excluded live Vault cases.** These counts include service metadata, and do not prove every subcheck in composite reports is healthy.
+**154 verified retained handler/service reads; 10 unverified; 2 owner-excluded live Vault cases.** These counts include service metadata, and do not prove every subcheck in composite reports is healthy.
 
 Original P0-2 report criterion permits failures documented in the Known Bugs table. The later explicit full-catalog queue remains open; no requirement is silently removed. See [Known Bugs and provider limitations](ARCHITECTURE.md#known-bugs--genuine-acceptance-follow-up-october162026) and [P0-2](TASKS.md#p0-2--smoke-test-every-read-only-tool-against-a-real-account-m).
 
@@ -102,8 +102,8 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 | `workspace_gmail_search` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
 | `workspace_identity_list_policies` | VERIFIED_RETAINED | retained_strict_runner |
 | `workspace_licensing_list_assignments` | VERIFIED_RETAINED | permanent_strict_runner |
-| `workspace_postmaster_list_domains` | UNVERIFIED | Owner enabled API; one bounded original read_only TEST list on READYf96 returned429 explicitly unsupported Postmaster API version, not transient-rate proof. V2 repair prepared; separately approve postmaster.domain (view AND manage domains), then checked release/consent and real read. No retry, domain write or verification. |
-| `workspace_postmaster_list_traffic_stats` | UNVERIFIED | V1 retirement confirmed by bounded domain-list response; no traffic request. V2 repair prepared; postmaster.traffic.readonly approval/consent, checked release and an exact owned accessible returned domain are required for a fixed seven-day query. No sending or domain verification. |
+| `workspace_postmaster_list_domains` | VERIFIED_RETAINED | Genuine original TEST/read_only on READY6ec69ce v2: HTTP200, native domains[]/count0, pageSize20, no continuation; no traffic proof implied. |
+| `workspace_postmaster_list_traffic_stats` | UNVERIFIED | V2 permission verified before/after genuine refresh. Domain list200 returned zero registered domains visible within the approved TEST scope; owner-managed owned accessible VERIFIED Postmaster domain required. No traffic call, registration/verification, DNS change or sending. |
 | `workspace_admin_get_2sv_status` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
 | `workspace_admin_get_alert` | UNVERIFIED | Alert Center scope apps.alerts intentionally absent; retain actual denial, no blind repeat or automatic consent expansion. |
 | `workspace_admin_get_building` | VERIFIED_RETAINED | Current READYf96 required-floor exactpositive200, guarded audited create/delete and independent404; allcreatedAdminobjects cleaned. |
@@ -188,3 +188,5 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 - Plaintext retirement: November 1 Denver plus independent approval, fresh readiness, instance drain and recovery. No early retirement.
 
 Published with the genuine post-release building acceptance evidence. This report does not imply full catalog/provider acceptance.
+
+Current v2 follow-up: owner-approved protected consent and genuine saved-grant refresh complete on READY6ec69ce. All6API/7checked scopes READY both before and after refresh; all2accounts encrypted/backfill/refresh ready, zero problems, storage mode unchanged. Source repair and domain-list read are complete; remaining traffic/other catalog, Hub and November1 gates remain pending.

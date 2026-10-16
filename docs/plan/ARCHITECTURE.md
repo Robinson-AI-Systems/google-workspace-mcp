@@ -230,7 +230,7 @@ RTC profiles, metadata, bounded result handles, guarded HTTPS tool routes and sh
 | --- | --- | --- |
 | Completion consent coexistence | Reproduced isolated-consent replacement; released protected completion_read requests exactly the three already approved scopes together. Genuine owner-approved combined consent succeeded on READYf96. | Resolved: actual Tasks/Postmaster/Site scope checks and six-API/four-scope readiness pass before and after genuine saved-grant refresh; both connected accounts encrypted ready. No broader scope or new release. |
 | Building create floors | Exact approved creation returned opaque503; exact recovery404 found no object. Independent Google contract requires at least one floorNames entry, but tool cannot expose/forward it. Repair requires/forwards floors, refuses invalid input before provider access and checks independent ordered-floor readback. | Resolved required-floor contract: actual READYf96 tagged creation/exact positive read/guarded audited cleanup/independent404 pass; original opaque503 cause still unknown. All created Admin objects cleaned, extended28reads/7requests used exactly. |
-| Postmaster v1 retirement after API enablement | Owner enabled API. One bounded original TEST/read_only list on READYf96 returned429 explicitly unsupported API version; no retry or traffic call. Three existing completion scopes remain verified after refresh. | V2 REST repair prepared and tested; pinned SDK has no v2. Separately approve postmaster.domain (view AND manage domains) and postmaster.traffic.readonly, then checked release/consent and bounded real reads. No domain writes, verification, sending or acceptance pass claimed. |
+| Postmaster v1 retirement after API enablement | Unsupported v1 demonstrated without retry; v2 read adapter and protected owner-approved consent released on independently READY6ec69ce. Domain list now HTTP200/native empty inventory. Six APIs/seven checked scopes READY before and after genuine refresh. | Resolved adapter/permission/domain-list gates. Traffic remains unverified because this TEST scope exposes no registered domain. Owner-managed verified Postmaster domain needed; no domain registration/verification, DNS edit or sending performed. |
 | Root organizational-unit lookup | Actual READY06cf root GET returned organizational-unit collection, not exact root. Chrome correctly refused it; admin_get_orgunit incorrectly returned collection as resource. Shared exact-root lookup selects exactly one parent-inclusive root with ID. | Resolved: actual owner-approved READY5138204 exact-root and Chrome-root regressions pass with original readonly principals; no policy write. |
 | Site Verification and Chrome filter | Retained403; webResource.list requires absent siteverification consent purpose. Correct schema-list filter field is name, not schemaName; corrected schema read and nonroot resolution pass current live. | Exact scope owner-approved17:30:56Z; isolated purpose released5138204 and live form contract verified. Genuine Google consent pending browser recovery; no DNS/verification/ownership write. |
 | Admin Console notifications | Deployed8ce3d7b calls absent `admin.notifications.list`; actual Google SDK has no notifications resource. Repair returns explicit `not_readable/provider_method_unavailable` and manual Console guidance, never an empty verified list. No claim that the API itself is definitively discontinued. | Checked repair release; retain provider/API limitation in full casebook. |
@@ -296,10 +296,11 @@ allowed-domain guards, date limits and pagination remain. Daily v2 spam,
 authentication and delivery-error ratios normalize into the existing output;
 metrics can span pages, and duplicate metric/day observations fail closed. Domain
 and IP reputation are unavailable in v2 and never invented. Missing observations
-remain unknown. Scope approval/consent, checked release and real v2 reads are still
-pending: `postmaster.domain` permits viewing AND managing domains, and
-`postmaster.traffic.readonly` permits traffic reads. No scope array or consent flow
-was widened, and no domain/user mutation is implemented.
+remain unknown. Exact owner approval, consent, checked release and domain-list read are now
+verified on READY6ec69ce; traffic still needs a verified registered domain. V2 requires: `postmaster.domain` permits viewing AND managing domains, and
+`postmaster.traffic.readonly` permits traffic reads. Standard and previous isolated scopes remain unchanged. The owner-approved
+postmaster_v2_read purpose requests the two replacements plus existing Tasks/Site
+grants together. No domain/user mutation is implemented.
 
 Official contracts reviewed October 16, 2026:
 - https://developers.google.com/workspace/gmail/postmaster/reference/rest/v2/domains/list
