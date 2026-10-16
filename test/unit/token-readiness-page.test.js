@@ -1,7 +1,7 @@
 import {describe,it,expect,vi,beforeEach} from 'vitest';
 import {Readable} from 'node:stream';
 const mocks=vi.hoisted(()=>({initSchema:vi.fn(),inspectGoogleTokenRetirement:vi.fn(),
- recordLoginAttempt:vi.fn(),countRecentFailedLogins:vi.fn(),markLoginAttemptSucceeded:vi.fn(),refresh:vi.fn()}));
+ activateGoogleTokenRetirement:vi.fn(),recordLoginAttempt:vi.fn(),countRecentFailedLogins:vi.fn(),markLoginAttemptSucceeded:vi.fn(),refresh:vi.fn()}));
 vi.mock('../../src/db.js',()=>mocks);
 vi.mock('../../src/auth/google-auth-hosted.js',()=>({refreshConnectedAccountForReadiness:mocks.refresh}));
 const {default:handler}=await import('../../api/owner/token-readiness.js');
@@ -9,8 +9,8 @@ function response(){const r={headers:{},statusCode:200,body:''};
  r.setHeader=(k,v)=>r.headers[k]=v;r.status=n=>(r.statusCode=n,r);
  r.send=s=>(r.body=String(s),r);r.writeHead=(n,h)=>(r.statusCode=n,Object.assign(r.headers,h),r);r.end=()=>r;return r;}
 const origin='https://rtc.example.test';
-const sample=()=>({encryptedOnly:false,accountsChecked:2,ready:false,problems:{missingKey:false,noAccounts:false,
- missingCopy:0,corruptOrStale:0,unverifiedBackfill:1,refreshNotObserved:1},notBefore:'2026-11-01T06:00:00Z'});
+const sample=()=>({encryptedOnly:false,accountsChecked:2,plaintextAccounts:2,ready:false,problems:{missingKey:false,noAccounts:false,
+ missingCopy:0,corruptOrStale:0,unverifiedBackfill:1,refreshNotObserved:1},notBefore:null});
 async function request(body={passphrase:'fake-owner-passphrase'},headers={origin},method='POST'){
  const r=response();await handler({method,headers,body},r);return r;
 }
@@ -85,4 +85,24 @@ describe('owner-only token readiness inspection',()=>{
  });
  it('has no other supported method',async()=>{expect((await request(undefined,{origin},'DELETE')).statusCode).toBe(405);
   expect(mocks.inspectGoogleTokenRetirement).not.toHaveBeenCalled();});
+});
+
+describe('protected token retirement',()=>{
+ const action={passphrase:'fake-owner-passphrase',action:'retire',confirmation:'RETIRE PLAINTEXT',deployments_drained:'confirmed',recovery_reviewed:'confirmed'};
+ it('requires exact readiness/recovery attestations and owner authentication',async()=>{
+  for(const field of ['confirmation','deployments_drained','recovery_reviewed']){
+   const body={...action};delete body[field];expect((await request(body)).statusCode).toBe(400);
+  }
+  expect((await request({...action,passphrase:'wrong'})).statusCode).toBe(401);
+  expect((await request(action,{origin:'https://foreign.example.test'})).statusCode).toBe(403);
+  expect(mocks.activateGoogleTokenRetirement).not.toHaveBeenCalled();
+  const result=await request(action);expect(result.statusCode).toBe(200);
+  expect(mocks.activateGoogleTokenRetirement).toHaveBeenCalledExactlyOnceWith({ownerConfirmed:true});
+  expect(mocks.markLoginAttemptSucceeded.mock.invocationCallOrder.at(-1)).toBeLessThan(mocks.activateGoogleTokenRetirement.mock.invocationCallOrder[0]);
+ });
+ it('does not claim activation after refused readiness or expose persistence errors',async()=>{
+  mocks.activateGoogleTokenRetirement.mockRejectedValue(Error('private database credentials'));
+  const result=await request(action);expect(result.statusCode).toBe(503);
+  expect(result.body).not.toContain('private database credentials');expect(result.body).not.toContain('storage is active');
+ });
 });

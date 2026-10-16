@@ -59,8 +59,7 @@ export const SCOPE_GROUPS = {
     'https://www.googleapis.com/auth/admin.directory.device.chromeos',
     'https://www.googleapis.com/auth/admin.directory.resource.calendar',
     'https://www.googleapis.com/auth/admin.directory.userschema',
-    'https://www.googleapis.com/auth/admin.directory.customer',
-    'https://www.googleapis.com/auth/admin.directory.notifications'
+    'https://www.googleapis.com/auth/admin.directory.customer'
   ],
   adminReports: [
     'https://www.googleapis.com/auth/admin.reports.usage.readonly',
@@ -81,13 +80,9 @@ export const SCOPE_GROUPS = {
   dataTransfer: [
     'https://www.googleapis.com/auth/admin.datatransfer'
   ]
-  // alertCenter ('https://www.googleapis.com/auth/apps.alerts') is intentionally
-  // left out of the login request: Alert Center is a limited-availability Google
-  // API and Google's OAuth consent screen won't let this scope be requested/shown
-  // even with the API enabled, which blocks the ENTIRE login. The alertcenter
-  // tools still exist in the code; they just won't be authorized until Google
-  // allowlists this scope for the project (or a future service-account/domain-wide
-  // delegation setup, which doesn't go through this same consent screen).
+  // Alert Center requires a service account with domain-wide delegation.
+  // apps.alerts grants read AND write; never add it to ordinary user login.
+  // See DEPLOY.md for separately opted-in service-account configuration.
 };
 
 export const ALL_SCOPES = Array.from(new Set(Object.values(SCOPE_GROUPS).flat()));

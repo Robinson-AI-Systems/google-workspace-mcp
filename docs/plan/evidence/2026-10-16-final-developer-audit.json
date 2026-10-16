@@ -1,0 +1,111 @@
+{
+  "date": "2026-10-16",
+  "sourceRevision": "6ec69ce1b6cb8ffb2096774e038987cf6f5a5c4d",
+  "deploymentId": "dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur",
+  "providerMutations": 0,
+  "originalReadOnlyTestIdentityVerified": true,
+  "complete": true,
+  "genuineReads": [
+    {
+      "name": "workspace_delegation_status",
+      "at": "2026-10-16T22:38:17.436Z",
+      "http": 200,
+      "strictShape": true
+    },
+    {
+      "name": "workspace_chat_list_spaces",
+      "at": "2026-10-16T22:38:17.620Z",
+      "http": 200,
+      "strictShape": true
+    },
+    {
+      "name": "workspace_drive_get_start_page_token",
+      "at": "2026-10-16T22:38:18.137Z",
+      "http": 200,
+      "strictShape": true
+    },
+    {
+      "name": "workspace_drive_list_changes",
+      "at": "2026-10-16T22:38:18.465Z",
+      "http": 200,
+      "strictShape": true
+    },
+    {
+      "name": "workspace_workflow_health_report",
+      "at": "2026-10-16T22:38:18.861Z",
+      "http": 200,
+      "strictShape": true
+    }
+  ],
+  "healthReport": {
+    "operationPassed": true,
+    "summary": {
+      "pass": 8,
+      "warn": 2,
+      "fail": 1,
+      "info": 2
+    },
+    "tenantHealthyClaimed": false,
+    "businessPolicyChanges": false
+  },
+  "retainedInternalLedger": {
+    "creatorReads": 3,
+    "http": 200,
+    "sameCleanedIds": true,
+    "foreignPrincipalHttp": 404,
+    "providerVerified": false,
+    "replayPermitted": false
+  },
+  "emptyInventories": {
+    "chromeOS": {
+      "http": 200,
+      "count": 0
+    },
+    "dataTransfers": {
+      "http": 200,
+      "count": 0
+    }
+  },
+  "developmentVerification": "Actual generated ChromeOS/AlertCenter SDKs and actual DataTransfer REST adapter are exercised through synthetic authenticated transport. Request URLs, exact resource selection and provider denial propagation verified. No genuine positive Google fixture claimed.",
+  "notifications": {
+    "disposition": "RETIRED_UNSUPPORTED",
+    "facts": "2026-10-16-directory-discovery-audit.json",
+    "sunsetDateKnown": false
+  },
+  "alertCenter": {
+    "rootCause": "User OAuth client used where service-account domain-wide delegation is required",
+    "scope": "https://www.googleapis.com/auth/apps.alerts",
+    "scopeAccess": "read_and_write",
+    "existingDelegationWidened": false,
+    "liveOptInEnabled": false,
+    "livePositiveClaimed": false
+  },
+  "hub": {
+    "direction": "Hub discovers and calls independent Workspace",
+    "runtimeReverseDependencyFound": false,
+    "acceptedReceipt": "https://github.com/Robinson-AI-Systems/robinsons-toolkit-hub/pull/224#issuecomment-6216311463",
+    "broaderHubChecksClaimed": false
+  },
+  "retirement": {
+    "ownerPolicy": "Readiness replaces 30-day/November1 delay",
+    "sourceRemovesBothDatePredicates": true,
+    "productionActivationClaimed": false
+  },
+  "inventory": {
+    "historical": 166,
+    "activeAfterRetirement": 165,
+    "verifiedHandlerOrServiceReads": 159,
+    "developmentTestedNoResource": 2,
+    "developmentTestedDelegationRequired": 2,
+    "retiredUnsupported": 1,
+    "ownerExcludedVault": 2
+  },
+  "officialReferences": [
+    "https://developers.google.com/workspace/admin/alertcenter/guides/auth",
+    "https://developers.google.com/workspace/admin/alertcenter/reference/rest",
+    "https://support.google.com/chrome/a/answer/7679452",
+    "https://developers.google.com/workspace/admin/data-transfer/reference/rest/v1/transfers/get",
+    "https://developers.google.com/workspace/admin/directory/reference/rest/v1/chromeosdevices/get",
+    "https://admin.googleapis.com/$discovery/rest?version=directory_v1"
+  ]
+}

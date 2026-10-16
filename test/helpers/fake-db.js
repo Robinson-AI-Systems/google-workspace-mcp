@@ -160,13 +160,13 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
         }
       }
       return {encryptedOnly:!!state.encryptedOnlyAt,accountsChecked:rows.length,
+        plaintextAccounts:rows.filter(row=>Object.keys(row.tokens||{}).length>0).length,
         ready:rows.length > 0 && !!key && Object.values(problems).every(x=>x===false || x===0),
-        problems,notBefore:'2026-11-01T06:00:00Z'};
+        problems,notBefore:null};
     },
     async activateGoogleTokenRetirement({ownerConfirmed=false}={}) {
       if (!ownerConfirmed) throw Error('Independent owner confirmation required; no tokens retired.');
       if (state.encryptedOnlyAt) return {activated:false,alreadyActive:true};
-      if (clock() < Date.parse('2026-11-01T06:00:00Z')) throw Error('Plaintext retirement cannot start before November 1, 2026.');
       const readiness = await api.inspectGoogleTokenRetirement();
       if (!readiness.ready) throw Error('Every Google account needs an intact encrypted backfill and observed refresh before retirement.');
       state.encryptedOnlyAt = at();

@@ -121,7 +121,6 @@ export const tools = [
   { name: 'admin_list_alerts', description: "List Google's security/health alerts for this Workspace account (suspicious logins, phishing, malware, etc)", inputSchema: { type: 'object', properties: { pageSize: { type: 'number', default: 20 }, filter: { type: 'string' } } } },
   { name: 'admin_get_alert', description: 'Get details of one alert', inputSchema: { type: 'object', properties: { alertId: { type: 'string' } }, required: ['alertId'] } },
   { name: 'admin_delete_alert', description: 'Dismiss/delete an alert', inputSchema: { type: 'object', properties: { alertId: { type: 'string' } }, required: ['alertId'] } },
-  { name: 'admin_list_admin_console_notifications', description: "List Google's own notifications shown in the Admin Console (product news, action items)", inputSchema: { type: 'object', properties: {} } }
 ];
 
 export const handlers = {
@@ -535,17 +534,5 @@ export const handlers = {
   admin_delete_alert: async (args, { alertcenter }) => {
     await alertcenter.alerts.delete({ alertId: args.alertId });
     return ok({ deleted: args.alertId });
-  },
-  admin_list_admin_console_notifications: async (_args, { admin }) => {
-    // The installed Directory SDK no longer exposes this legacy resource.
-    // Missing client support is not an empty or successfully read inbox.
-    if (typeof admin?.notifications?.list !== 'function') return ok({
-      status: 'not_readable', reason: 'provider_method_unavailable',
-      changesMade: false, notificationsRead: false,
-      note: 'The installed Google Directory SDK does not expose the notifications list method. Review notifications in Google Admin Console.',
-      manualCheck: {url:'https://admin.google.com/',steps:['Open Google Admin Console for this business.','Review its notifications.']}
-    });
-    const res = await admin.notifications.list({ customer: CUSTOMER });
-    return ok(res.data.items || []);
   }
 };

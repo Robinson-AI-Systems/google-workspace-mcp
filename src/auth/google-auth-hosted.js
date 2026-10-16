@@ -8,6 +8,7 @@
 // account is chosen once, on the connector login page, and rides along on
 // its bearer token (see api/oauth/authorize.js and api/mcp.js).
 import { google } from 'googleapis';
+import { buildAlertCenterAuth } from './service-account.js';
 import {
   getGoogleTokensFor,
   saveGoogleTokensFor,
@@ -191,7 +192,7 @@ export function buildApiClients(auth) {
     groupssettings: () => google.groupssettings({ version: 'v1', auth, params: { alt: 'json' } }),
     licensing: () => google.licensing({ version: 'v1', auth }),
     datatransfer: () => buildDataTransferClient(auth),
-    alertcenter: () => google.alertcenter({ version: 'v1beta1', auth }),
+    alertcenter: () => google.alertcenter({ version: 'v1beta1', auth: buildAlertCenterAuth(auth.actingAs) }),
     chromepolicy: () => google.chromepolicy({ version: 'v1', auth }),
     cloudidentity: () => {
       const client = google.cloudidentity({ version: 'v1', auth });

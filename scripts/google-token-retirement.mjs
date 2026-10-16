@@ -11,7 +11,7 @@ if (!['--inspect','--activate'].includes(arg) || process.argv.length !== 3) {
     else {
       // This is NOT a substitute for external owner authorization. The operator
       // must independently confirm release ancestry, rollback plan, account
-      // refresh/backfill and the original November 1 date requirement first.
+      // refresh/backfill and drained incompatible deployments first.
       if (process.env.GWS_TOKEN_RETIREMENT_OWNER_CONFIRMED !== 'true')
         throw Error('Owner-confirmed protected maintenance environment required.');
       console.log(JSON.stringify(await activateGoogleTokenRetirement({ ownerConfirmed: true })));

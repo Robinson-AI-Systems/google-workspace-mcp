@@ -4,7 +4,7 @@ Prepared from retained genuine receipts and the current source casebook. This re
 
 Source independently observed READY live: `6ec69ce1b6cb8ffb2096774e038987cf6f5a5c4d` / `dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur`. Earlier retained reads remain bound to their original receipt revisions.
 
-**155 verified retained handler/service reads; 9 unverified; 2 owner-excluded live Vault cases.** These counts include service metadata, and do not prove every subcheck in composite reports is healthy.
+**159 verified retained handler/service reads; 2 development-tested GETs without live resources; 2 Alert Center configuration-limited cases; 1 retired unsupported operation; 2 owner-excluded live Vault cases.** Historical inventory166; active read catalog165 after retirement. These counts include service metadata, and do not prove every subcheck in composite reports is healthy.
 
 Original P0-2 report criterion permits failures documented in the Known Bugs table. The later explicit full-catalog queue remains open; no requirement is silently removed. See [Known Bugs and provider limitations](ARCHITECTURE.md#known-bugs--genuine-acceptance-follow-up-october162026) and [P0-2](TASKS.md#p0-2--smoke-test-every-read-only-tool-against-a-real-account-m).
 
@@ -55,7 +55,7 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 | `workspace_admin_get_available_privileges` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
 | `workspace_chat_list_members` | VERIFIED_RETAINED | genuine_original_readonly_test |
 | `workspace_chat_list_messages` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner |
-| `workspace_chat_list_spaces` | UNVERIFIED | Prior broad discovery automatically rejected; never replay/consume. New actor-only space approval does not authorize reading other accessible spaces. Exact UI/space alternative remains separate. |
+| `workspace_chat_list_spaces` | VERIFIED_RETAINED | New original TEST genuine200, strict native two-space list. One first-page operation, no pagination completeness claim. |
 | `workspace_chrome_list_policy_schemas` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
 | `workspace_chrome_resolve_policies` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
 | `workspace_contacts_list_groups` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
@@ -69,8 +69,8 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 | `workspace_reports_usage_user` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
 | `workspace_vault_list_holds` | OWNER_EXCLUDED_LIVE | Could not verify without unneeded subscription upgrade; positive live pass excluded from completion by owner. Keep code, existing grant and synthetic proof. |
 | `workspace_vault_list_matters` | OWNER_EXCLUDED_LIVE | Could not verify without unneeded subscription upgrade; positive live pass excluded from completion by owner. Keep code, existing grant and synthetic proof. |
-| `workspace_admin_list_admin_console_notifications` | UNVERIFIED | Installed SDK has no notifications.list. Released source truthfully returns not_readable/provider_method_unavailable; no fake empty-list pass. |
-| `workspace_admin_list_alerts` | UNVERIFIED | Alert Center scope apps.alerts intentionally absent; retain actual denial, no blind repeat or automatic consent expansion. |
+| `workspace_admin_list_admin_console_notifications` | RETIRED_UNSUPPORTED | Official Directory discovery revision20261014 has neither notifications resource nor scope; pinned SDK agrees. Remove advertised tool and obsolete login scope; no sunset date invented. |
+| `workspace_admin_list_alerts` | DEVELOPMENT_TESTED_CONFIG_REQUIRED | Correct service-account/DWD apps.alerts path and actual generated-client request tested. Separate opt-in defaults off. Scope permits read/write; no new delegation authorized or live positive claimed. |
 | `workspace_admin_list_asp` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
 | `workspace_admin_list_buildings` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
 | `workspace_admin_list_calendar_resources` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
@@ -94,7 +94,7 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 | `workspace_contacts_list` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
 | `workspace_datatransfer_list_transfers` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
 | `workspace_directory_list_people` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
-| `workspace_drive_list_changes` | UNVERIFIED | Requires an exact approved cursor/interval limited to owned nonproduction changes; do not scan unrelated visible-file or mailbox history. |
+| `workspace_drive_list_changes` | VERIFIED_RETAINED | New original TEST genuine200 with fresh start cursor immediately before one bounded changes request; no historical cursor or writes. |
 | `workspace_drive_list_permissions` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner |
 | `workspace_drive_list_revisions` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner |
 | `workspace_drive_search_files` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
@@ -105,10 +105,10 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 | `workspace_postmaster_list_domains` | VERIFIED_RETAINED | Genuine original TEST/read_only on READY6ec69ce v2: HTTP200, native domains[]/count0, pageSize20, no continuation; no traffic proof implied. |
 | `workspace_postmaster_list_traffic_stats` | VERIFIED_RETAINED | Original TEST/read_only on READY6ec69ce: exact owned scoped domain OWNER/VERIFIED after approved additiveTXT/Google verification; October9-15 seven-day query200/native v2 stats[]/no continuation. Missing metrics remain unknown, not healthy delivery. |
 | `workspace_admin_get_2sv_status` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
-| `workspace_admin_get_alert` | UNVERIFIED | Alert Center scope apps.alerts intentionally absent; retain actual denial, no blind repeat or automatic consent expansion. |
+| `workspace_admin_get_alert` | DEVELOPMENT_TESTED_CONFIG_REQUIRED | Same separately opted-in delegated client; actual generated GET and403 preservation tested. No Google alert invented; no paid upgrade needed. |
 | `workspace_admin_get_building` | VERIFIED_RETAINED | Current READYf96 required-floor exactpositive200, guarded audited create/delete and independent404; allcreatedAdminobjects cleaned. |
 | `workspace_admin_get_calendar_resource` | VERIFIED_RETAINED | retained_exact_guarded_resource_cycle |
-| `workspace_admin_get_chrome_device` | UNVERIFIED | No existing approved positive target established by retained selection. No new building/resource/device/schema/filter/response creation or purchases. |
+| `workspace_admin_get_chrome_device` | DEVELOPMENT_TESTED_NO_RESOURCE | Retained original ChromeOS inventory200/native empty. Actual SDK exact GET contract and404 preservation tested. Google30day50device trial exists but still needs enrolled device and acceptance of terms; no trial/purchase/enrollment needed for development completion. |
 | `workspace_admin_get_customer_info` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
 | `workspace_admin_get_domain` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
 | `workspace_admin_get_group` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
@@ -122,7 +122,7 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 | `workspace_admin_get_user_photo` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
 | `workspace_chat_get_space` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner |
 | `workspace_contacts_get` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner |
-| `workspace_datatransfer_get_transfer_status` | UNVERIFIED | Approved one-result transfer list returned zero. No genuine existing transfer ID to read; status invocation not used, no second list or initiation permitted. |
+| `workspace_datatransfer_get_transfer_status` | DEVELOPMENT_TESTED_NO_RESOURCE | Retained owner-bounded transfer list200/native empty. Exact REST GET and404 preservation tested. Creating a transfer migrates real user data; no migration is justified to manufacture a test resource. |
 | `workspace_drive_get_revision` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
 | `workspace_forms_get_response` | VERIFIED_RETAINED | genuine_original_readonly_test |
 | `workspace_gmail_get_attachment` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner |
@@ -152,13 +152,13 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 | `workspace_reports_oauth_token_activity` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
 | `workspace_workflow_audit_external_sharing` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
 | `workspace_workflow_email_health` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
-| `workspace_workflow_health_report` | UNVERIFIED | Membership-only extra invocation now consumed; it does not authorize group-settings reads inside workflow. Original group cycles exhausted; additional exact workflow allowance still needed. |
+| `workspace_workflow_health_report` | VERIFIED_RETAINED | New original TEST genuine200, exact approved domain,13checks:8PASS/2WARN/1FAIL/2INFO. Operation passes; tenant security health is not certified. |
 | `workspace_workflow_search_presence_check` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
 | `workspace_workflow_security_snapshot` | VERIFIED_RETAINED | permanent_strict_runner, retained_strict_runner |
 | `workspace_admin_overview` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response |
 | `workspace_delegation_status` | VERIFIED_RETAINED | permanent_strict_runner, retained_strict_runner |
 | `workspace_dev_check_integration` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
-| `workspace_dev_get_run` | UNVERIFIED | Original creator-run inspection and foreign404 proofs retained separately; readonly principal does not own revoked creator ledgers. No old run replay or ownership change. |
+| `workspace_dev_get_run` | VERIFIED_SERVICE_METADATA | Retained original creator200 for3 cleaned ledgers with same IDs; foreign principal404. providerVerified:false by design. Real PG ownership tests; never replay cleaned fixtures. |
 | `workspace_dev_list_runs` | VERIFIED_RETAINED | permanent_strict_runner, retained_strict_runner |
 | `workspace_list_accounts` | VERIFIED_RETAINED | permanent_strict_runner, retained_strict_runner |
 | `workspace_list_connections` | VERIFIED_RETAINED | permanent_strict_runner, retained_strict_runner |
@@ -192,3 +192,22 @@ Published with the genuine post-release building acceptance evidence. This repor
 Current v2 follow-up: owner-approved protected consent and genuine saved-grant refresh complete on READY6ec69ce. All6API/7checked scopes READY both before and after refresh; all2accounts encrypted/backfill/refresh ready, zero problems, storage mode unchanged. Source repair and domain-list read are complete; remaining traffic/other catalog, Hub and November1 gates remain pending.
 
 Subsequent owner-approved setup completed: one Postmaster domain registration, one additive Vercel verificationTXT (14existing records preserved), public DNS proof, Google Domain verified and originalTESTlistOWNER/VERIFIED. Traffic operation now verified200/native v2 empty statistics for the fixed seven-day window; no sending or delivery-health claim. Current155verified/9unverified/2Vault excluded supersedes earlier empty-domain prerequisite. No release needed.
+
+
+## Current completion audit — supersedes historical blockers above
+
+All nine formerly unexplained cases now have source/provider-contract dispositions.
+Three new live checks and the retained internal-ledger evidence bring verified
+handler/service reads to159. Four retained tools have development contract tests
+rather than positive live fixtures: ChromeOS device GET, transfer status GET and
+the two Alert Center reads. No generated SDK test is called a genuine Google pass.
+The health report surfaced business-security findings (2-Step enforcement,
+super-admin count and third-party app access); changing those policies is outside
+this completion repair. The report correctly preserves its FAIL/WARN findings.
+
+Hub native discovery/read/audit acceptance is independently documented in Hub
+PR224. The service does not discover Hub. Broader Hub-specific paths stay there.
+The November1 calendar restriction is removed by explicit owner decision; actual
+retirement still needs checked READY source, all-account readiness, drain and
+recovery. Google Developer Preview is not a general sandbox for paid GA features.
+References and exact source-contract facts are in the final audit JSON.

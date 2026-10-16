@@ -7,7 +7,7 @@ export const READ_ONLY_TOOL_NAMES=new Set([
   'admin_get_calendar_resource', 'admin_get_chrome_device', 'admin_get_customer_info', 'admin_get_domain',
   'admin_get_group', 'admin_get_group_settings', 'admin_get_mobile_device', 'admin_get_orgunit',
   'admin_get_role', 'admin_get_schema', 'admin_get_token', 'admin_get_user',
-  'admin_get_user_photo', 'admin_list_admin_console_notifications', 'admin_list_alerts', 'admin_list_asp',
+  'admin_get_user_photo', 'admin_list_alerts', 'admin_list_asp',
   'admin_list_buildings', 'admin_list_calendar_resources', 'admin_list_chrome_devices', 'admin_list_domain_aliases',
   'admin_list_domains', 'admin_list_features', 'admin_list_group_aliases', 'admin_list_group_members',
   'admin_list_groups', 'admin_list_mobile_devices', 'admin_list_orgunits', 'admin_list_role_assignments',

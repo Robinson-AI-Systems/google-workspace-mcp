@@ -1,0 +1,10 @@
+{
+  "retrievedAt": "2026-10-16T22:44:26.104Z",
+  "url": "https://admin.googleapis.com/$discovery/rest?version=directory_v1",
+  "http": 200,
+  "revision": "20261014",
+  "sha256": "c1728e7a18b38e08065a80533e5d01d8938694371d6c5dc076546bf1128a7bb2",
+  "notificationsResourcePresent": false,
+  "notificationsScopePresent": false,
+  "inference": "The historical notifications surface is absent from the current official Directory contract and pinned SDK. No exact retirement date is asserted."
+}

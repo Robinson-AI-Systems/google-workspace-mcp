@@ -270,7 +270,7 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       expect((await db.inspectGoogleTokenRetirement()).ready).toBe(true);
     });
 
-    it('keeps retirement dormant on upgrade and denies early/unauthorized activation', async () => {
+    it('keeps retirement dormant on upgrade and denies unready/unauthorized activation', async () => {
       await reset();
       await db.initSchema();
       const state = await rawQuery('SELECT encrypted_only_at FROM google_token_storage WHERE id = true');
@@ -280,7 +280,7 @@ describe.skipIf(!url)('database (real Postgres)', () => {
         'tokens_enc_verified_at','tokens_enc_refreshed_at'
       ]));
       await expect(db.activateGoogleTokenRetirement()).rejects.toThrow(/owner confirmation/i);
-      await expect(db.activateGoogleTokenRetirement({ownerConfirmed:true})).rejects.toThrow(/November 1/);
+      await expect(db.activateGoogleTokenRetirement({ownerConfirmed:true})).rejects.toThrow(/Every Google account/);
       expect((await rawQuery('SELECT encrypted_only_at FROM google_token_storage WHERE id = true'))[0].encrypted_only_at).toBeNull();
     });
 
@@ -300,6 +300,21 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       await rawQuery("UPDATE google_accounts SET tokens_enc='v1:damaged' WHERE email='b@example.test'");
       expect((await db.inspectGoogleTokenRetirement()).problems.corruptOrStale).toBe(1);
       expect((await db.inspectGoogleTokenRetirement()).ready).toBe(false);
+      await expect(db.activateGoogleTokenRetirement({ownerConfirmed:true})).rejects.toThrow(/intact encrypted backfill/);
+    });
+
+    it('activates on readiness without a calendar delay and remains idempotent',async()=>{
+      await reset();
+      process.env.TOKEN_ENCRYPTION_KEY=crypto.randomBytes(32).toString('base64');
+      await db.saveGoogleTokensFor('a@example.test',tokens);
+      await db.saveGoogleTokensFor('a@example.test',{access_token:'refreshed'},{source:'refresh'});
+      expect((await db.inspectGoogleTokenRetirement()).notBefore).toBeNull();
+      expect(await db.activateGoogleTokenRetirement({ownerConfirmed:true})).toEqual({activated:true,alreadyActive:false});
+      expect(await db.activateGoogleTokenRetirement({ownerConfirmed:true})).toEqual({activated:false,alreadyActive:true});
+      expect(await db.getGoogleTokensFor('a@example.test')).toMatchObject({access_token:'refreshed'});
+      expect((await db.inspectGoogleTokenRetirement()).plaintextAccounts).toBe(1);
+      await db.saveGoogleTokensFor('a@example.test',{access_token:'encrypted-refresh'},{source:'refresh'});
+      expect((await db.inspectGoogleTokenRetirement()).plaintextAccounts).toBe(0);
     });
 
     it('uses ciphertext as authority after activation, merges partial refreshes, and clears only the updated plaintext row',async()=>{
@@ -308,7 +323,7 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       await db.saveGoogleTokensFor('a@example.test',tokens);
       await db.saveGoogleTokensFor('b@example.test',tokens);
       // Synthetic future mode ONLY inside disposable test schema: real activation
-      // still requires owner, November 1 and real refresh evidence.
+      // still requires owner and real refresh evidence.
       await rawQuery("UPDATE google_token_storage SET encrypted_only_at=now() WHERE id=true");
       const prior=await row('a@example.test');
       await rawQuery("UPDATE google_accounts SET tokens='{\"access_token\":\"stale-plaintext\"}'::jsonb WHERE email='a@example.test'");

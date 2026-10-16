@@ -280,7 +280,6 @@ function canonical(value) {
 
 // P5-2: every process uses the durable database state, never a local feature flag.
 // Old deployments must be drained before activation: they know only plaintext.
-const RETIREMENT_NOT_BEFORE = '2026-11-01T06:00:00Z'; // Nov 1, 2026 00:00 America/Denver
 async function encryptedOnlyEnabled(q) {
   const rows = await q`SELECT encrypted_only_at FROM google_token_storage WHERE id = true`;
   if (rows.length !== 1) throw new Error('Google token storage state is unavailable. Nothing was changed.');
@@ -377,7 +376,7 @@ async function saveEncryptedOnly(q, email, tokens, label, key, refreshed) {
 
 /**
  * Dual-write until independent approval, verified backfill/refresh for EVERY
- * mailbox, and the November 1 date. This remains compatible with old code.
+ * mailbox, and drained incompatible deployments. This remains compatible with old code.
  * After activation all newly connected accounts also start encrypted-only.
  */
 export async function saveGoogleTokensFor(email, tokens, { label, source } = {}) {
@@ -457,8 +456,9 @@ export async function inspectGoogleTokenRetirement() {
   }
   const ready = rows.length > 0 && key !== null &&
     Object.values(problems).every(v => v === false || v === 0);
-  return { encryptedOnly: active, accountsChecked: rows.length, ready, problems,
-    notBefore: RETIREMENT_NOT_BEFORE };
+  return { encryptedOnly: active, accountsChecked: rows.length,
+    plaintextAccounts: rows.filter(row => objectTokens(row.tokens) && Object.keys(row.tokens).length > 0).length, ready, problems,
+    notBefore: null };
 }
 
 /**
@@ -471,20 +471,17 @@ export async function activateGoogleTokenRetirement({ ownerConfirmed = false } =
   if (ownerConfirmed !== true) throw new Error('Independent owner confirmation required; no tokens retired.');
   const q = db();
   if (await encryptedOnlyEnabled(q)) return { activated: false, alreadyActive: true };
-  if (Date.now() < Date.parse(RETIREMENT_NOT_BEFORE))
-    throw new Error('Plaintext retirement cannot start before November 1, 2026.');
   const readiness = await inspectGoogleTokenRetirement();
   if (!readiness.ready) throw new Error('Every Google account needs an intact encrypted backfill and observed refresh before retirement.');
   const done = await q`UPDATE google_token_storage SET encrypted_only_at = now()
     WHERE id = true AND encrypted_only_at IS NULL
-      AND now() >= '2026-11-01T06:00:00Z'::timestamptz
       AND EXISTS (SELECT 1 FROM google_accounts)
       AND NOT EXISTS (
         SELECT 1 FROM google_accounts
         WHERE tokens_enc IS NULL OR tokens_enc_verified_at IS NULL OR tokens_enc_refreshed_at IS NULL
       )
     RETURNING encrypted_only_at`;
-  if (!done.length) throw new Error('Storage readiness changed or date gate refused activation; no tokens retired.');
+  if (!done.length) throw new Error('Storage readiness changed and refused activation; no tokens retired.');
   return { activated: true, alreadyActive: false };
 }
 

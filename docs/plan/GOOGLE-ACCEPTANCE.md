@@ -98,3 +98,15 @@ Separate Admin approval18:31:16Z capped12native reads and6mutation requests acro
 Current readiness has regressed: actual Tasks API not_readable/scope_or_access_denied and tasks.readonly missing after owner-reported consent; other5APIs/3original scopes ready. Reopen only current P8-7 readiness and restore genuine tasks_read consent; prior exact receipts remain valid. Actual postmaster.readonly is ready, but one bounded domain list explicitly reports Postmaster API switched off. Console unavailable after one reload; no blind traffic call. SiteVerification grant is still missing. Google Allow review rejected broad displayed prior grants;4bounded token-info batches independently prove all42 are already granted, with only isolated SiteVerification requested. No bypass or new Vault request. Finish sequential genuine consent, verify scopes/API readiness, then owner-protected all-account encryption and genuine saved-grant refresh readiness.
 
 Source correction under review: building create cannot expose/forward Google's required floorNames. The repair validates nonempty floors before provider access, forwards them through the hosted SDK and independently verifies ordered floors. This confirmed contract gap does not establish the opaque503 cause. Genuine retest waits for checked release and exact budget extension. Complete consent, cleanup, API enablement and all other independent work before asking for another manual release. Hub native health/discovery remain ready with one read-only Workspace target; restricted relay/Sandbox/revocation tools are not exposed and remain Hub-agent-owned. November1Denver plaintext gate and separate approval remain binding.
+
+
+## Current owner clarifications — October16 final completion pass
+
+Supersedes historical date and Hub-route statements above: no November1 waiting
+policy remains. Retirement is readiness-based with checked release, all-account
+integrity/genuine refresh, incompatible instance drain and encrypted recovery.
+Hub discovers Workspace's RTC contract; Workspace never discovers Hub. Hub PR224
+proves the working native scoped/audited route. Hub CLI/relay/SDK/Sandbox and
+broader Hub revocation checks belong to Hub rather than blocking this service.
+The final smoke report explicitly distinguishes real reads, internal metadata,
+resource-limited development tests, Alert Center delegation and retired APIs.
