@@ -362,7 +362,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Separate scoped service authorization and Hub route gates; full production catalog stays independent",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-16UTC optional Hub adapter independently connected, whoami profilefull/modeTEST/areasgateway/allowWritesfalse. Actual namespaces returns upstreamEnabled:false,authorizedTargets:0,metadataOnly:true,HubRTC0. No upstream Workspace grant/target exists; this does not block standalone service. Need Hub-owned configured Workspace target plus separate scoped Workspace service pass and original authorized runner; ordinary Workspace identity or original five-area TEST pass is not silently enrolled. No credential transfer or Hub mutation performed."
+    "lastEvidence": "2026-10-15Denver resume reconciliation: Actual Hub metadata: upstreamEnabledfalse,authorizedTargets0,RTC0; no authorized Workspace target. Exact prerequisite: Hub upstream enabled and separately scoped Workspace target/service pass. Remedy/next action: Configure optional Hub target and scoped service grant via owner secure flow, then original Hub runner performs wire checks."
   },
   {
     "id": "GOOGLE-DIRECT-READ",
@@ -373,7 +373,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "No fixture writes; original account and connection identity; source/READY deployment independently verified",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15 production79ac338 actual separate Rentals TEST/read_only identity and29 native Google-shaped harmless reads passed across Gmail, Drive, Calendar and Tasks. Five selected console mailbox reads also observed. Original broad matrix remains PENDING: account/resource isolation, denied/foreign cases and exact fixture readbacks are distinct and were not inferred from these passes. Pass grants only workspace/mail/files/calendar/tasks; no customer-wide or foreign-business approval implied."
+    "lastEvidence": "2026-10-15Denver resume reconciliation: Original five-area TEST identity verified; prior safe29 reads and boundary receipts retained; all earlier fixtures cleaned/passes revoked. Exact prerequisite: Specifically consented exact nonproduction resources and foreign/denied matrix. Remedy/next action: Owner specifies/approves a fresh isolated exact-ID read fixture manifest; never recreate cleaned runs or substitute ordinary identity."
   },
   {
     "id": "P2-7-UNKNOWN",
@@ -400,13 +400,13 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P7-2-POLICY-AUDIT",
     "priority": 4,
-    "requiredRevision": "130bcc1f8275e87c1102bae553b1aefc3b80dd0a",
+    "requiredRevision": "2520c36c243fd0ce1b54ca8a8c2c6554b85df28e",
     "task": "Run the expanded read-only ten-area Cloud Identity Policy baseline against owner-authorized Workspace accounts; verify mismatches, missing-policy UNKNOWN and per-area coverage from actual Google",
     "procedure": "docs/plan/TASKS.md",
     "gates": "Super Admin and per-account optional approved policy-read OAuth consent; crossDomain owner authorization for business-limited connection; never claim effective per-domain settings or mutate policy",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "Owner read-only customer-wide approval recorded. Actual ordinary Rentals preflight2026-10-16T00:46:29Z used Google token-info and positively proved policy-read scope MISSING/oauth_consent_missing (not a TEST claim). Transport repair merged2426ec4. Existing enrollment requests full scope list, so source130bcc1f8275e87c1102bae553b1aefc3b80dd0a adds owner-authenticated policy_read consent purpose requesting ONLY cloud-identity.policies.readonly with include_granted_scopes:true; existing grants retained, no new write scope. Source must reach checked READY, then secure owner/Google consent and actual policy audit on both business domains; owner overview depends on audit."
+    "lastEvidence": "Owner read-only organization-wide approval persists. READY03e88b2 actual ordinary Rentals PolicyAPI now reaches Google and returns insufficient authentication scopes; Google token-info independently proves policy-read consent missing. Secure owner form submission then failed Wrong website address BEFORE owner/Google authorization: GET no-referrer makes Chromium form Origin:null (same proven TEST-form defect). Source2520c36c243fd0ce1b54ca8a8c2c6554b85df28e sets same-origin ONLY on form GET, leaves exact Origin comparison and error/redirect no-referrer intact. No consent granted, credentials printed or policy changed. Re-enter secure policy_read form after checked READY fix; then audit both domain selectors and policies-only overview."
   },
   {
     "id": "P8-7-API-SHAPES",
@@ -422,7 +422,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P8-8-OWNER-POLICIES",
     "priority": 4,
-    "requiredRevision": "130bcc1f8275e87c1102bae553b1aefc3b80dd0a",
+    "requiredRevision": "2520c36c243fd0ce1b54ca8a8c2c6554b85df28e",
     "task": "On future checked deployed revision verify owner overview exposes Cloud Identity policy differences, unknown/inherited settings, scoped opt-in and actual per-area reports without implying effective domain settings",
     "procedure": "docs/plan/TASKS.md",
     "gates": "Read-only P7-2 Google Policy API; optional real Super Admin consent; explicit crossDomain owner approval for limited connections; no Google settings writes",
@@ -430,7 +430,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P7-2-POLICY-AUDIT"
     ],
     "status": "PENDING",
-    "lastEvidence": "Owner read-only customer-wide approval recorded. Actual ordinary Rentals preflight2026-10-16T00:46:29Z used Google token-info and positively proved policy-read scope MISSING/oauth_consent_missing (not a TEST claim). Transport repair merged2426ec4. Existing enrollment requests full scope list, so source130bcc1f8275e87c1102bae553b1aefc3b80dd0a adds owner-authenticated policy_read consent purpose requesting ONLY cloud-identity.policies.readonly with include_granted_scopes:true; existing grants retained, no new write scope. Source must reach checked READY, then secure owner/Google consent and actual policy audit on both business domains; owner overview depends on audit."
+    "lastEvidence": "Owner read-only organization-wide approval persists. READY03e88b2 actual ordinary Rentals PolicyAPI now reaches Google and returns insufficient authentication scopes; Google token-info independently proves policy-read consent missing. Secure owner form submission then failed Wrong website address BEFORE owner/Google authorization: GET no-referrer makes Chromium form Origin:null (same proven TEST-form defect). Source2520c36c243fd0ce1b54ca8a8c2c6554b85df28e sets same-origin ONLY on form GET, leaves exact Origin comparison and error/redirect no-referrer intact. No consent granted, credentials printed or policy changed. Re-enter secure policy_read form after checked READY fix; then audit both domain selectors and policies-only overview."
   },
   {
     "id": "P0-2-RTC-HANDLE",
@@ -496,7 +496,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Original owner-issued read_only TEST pass only; at most twelve specifically consented non-production IDs; nonprimary exact Calendar; no fixture creation, mutations, private objects or tokens in public evidence",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "Partial real-provider proof retained: approved fresh Rentals TEST/full grant ran Drive/Calendar/Gmail fixtures, same-UUID replay returned original seven object IDs, exact cleanup completed and secondary-calendar metadata/ACL/event fingerprints were preserved. Original failed revocation receipt retained; after deployed601f2f2 listConnections-prefix repair, explicit final revocation confirmed and both17:20 grants return401pass_revoked. They are no longer usable for tests; original five-area read_only24h grant remains unchanged. Later separately approved admin fixture grant completed emptygroup/sharedDrive lifecycles and exact cleanup at3ad0250, then was also confirmed revoked. Real deletedcalendar read now404/not_found atREADY14ec4b620d4e71afdb8603c4f9a6efd19a987617. Wider original matrix remains pending; do not take over cleaned runs, recreate fixtures, substitute an ordinary identity, or infer missing coverage from these proofs."
+    "lastEvidence": "2026-10-15Denver resume reconciliation: Original runner present but its old fixture objects are cleaned. No currently approved complete exact-ID manifest. Exact prerequisite: One to twelve specifically consented exact nonproduction IDs and nonprimary calendar. Remedy/next action: Securely approve an exact new fixture manifest and read-only matrix; no IDs or secrets in public records."
   },
   {
     "id": "P8-7-EXACT-APP-READS",
@@ -507,7 +507,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Read-only, existing authenticated account and permitted areas; no message bodies/sending, fixture creation, admin impersonation, scope widening or consent without owner approval. Independently READY deployed revision and original resource IDs first.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "Partial real-provider proof retained: approved fresh Rentals TEST/full grant ran Drive/Calendar/Gmail fixtures, same-UUID replay returned original seven object IDs, exact cleanup completed and secondary-calendar metadata/ACL/event fingerprints were preserved. Original failed revocation receipt retained; after deployed601f2f2 listConnections-prefix repair, explicit final revocation confirmed and both17:20 grants return401pass_revoked. They are no longer usable for tests; original five-area read_only24h grant remains unchanged. Later separately approved admin fixture grant completed emptygroup/sharedDrive lifecycles and exact cleanup at3ad0250, then was also confirmed revoked. Real deletedcalendar read now404/not_found atREADY14ec4b620d4e71afdb8603c4f9a6efd19a987617. Wider original matrix remains pending; do not take over cleaned runs, recreate fixtures, substitute an ordinary identity, or infer missing coverage from these proofs."
+    "lastEvidence": "2026-10-15Denver resume reconciliation: Five-area TEST cannot prove Chat/People area reads. Prior actual7API preflight positive5/typeddenied2 remains valid. Exact prerequisite: Exact approved app resources plus existing required provider/area access. Remedy/next action: Approve exact nonproduction resource/identity manifest and any missing read-only access separately; run metadata-only matrix and preserve denied evidence."
   },
   {
     "id": "P8-8-CONSOLE-READBACK",
@@ -540,7 +540,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Exact READY deployment and authenticated custom MCP connection; owner-approved isolated TEST targets, permission/domain limits, exact fixture IDs and operation-specific approvals; no production bulk writes or autonomous spending",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15 authorized fresh Rentals TEST/full workspace/files/calendar/mail24h grant and mail-only read_only4/min grant issued securely; original5-area24h read pass retained unchanged. Real three-scenario create/replay/exact cleanup and nonprimary calendar preservation passed at5417fdb; new runs owned by new principal, no historical takeover. Low-rate refusal observed. Overall task stays pending for its wider original matrix. Final read-pass revocation actually occurred (401pass_revoked), but confirmed=false exposed listConnections token_prefix:p.id vs aliased connection_id defect; source0531edf repairs with real-Postgres regression. Write pass remains protected for exact calendar deletion readback and repaired final revocation. No uncertain fixture recreation."
+    "lastEvidence": "2026-10-15Denver resume reconciliation: Only original read_only grant remains; every earlier write/low-rate pass revoked. No existing safe bulk target list. Exact prerequisite: Fresh isolated TEST target list and operation-specific write/cleanup authorization. Remedy/next action: Approve finite nonproduction bulk scenarios/targets, dedicated short-lived grant and exact cleanup before execution."
   },
   {
     "id": "P0-2-FULL-CASEBOOK-REAL-READ",
@@ -551,7 +551,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15T22:01:21.423Z independently READY79ac338, actual separate Rentals24h read_only TEST pass. Complete authorized five-area catalog discovery returned94 reads. Executed29 original SAFE_READ_PROBES through original runReadOnlySmoke/provider-shape validators:29PASS,0FAIL. workspace_recent_changes deliberately excluded as service-wide; no fixtures or customer-wide cases supplied. Full catalog coverage isFALSE: remaining named resources, reviewed owner cases, broker/denial/handle and wider scopes remain open. No provider data/IDs/credentials printed; safe per-tool results recorded below. No read-looking unreviewed tool was executed."
+    "lastEvidence": "2026-10-15Denver resume reconciliation: Prior safe29 reads and denial/handle coverage retained; five-area pass remains distinct, policy-only organization approval does not authorize all Reports/account/export reads. Exact prerequisite: Exact approved fixture IDs, per-case arguments/areas and separately bounded customer-wide cases. Remedy/next action: Supply/approve the bounded full casebook manifest and missing exact test resources, then publish sanitized actual-case report."
   },
   {
     "id": "P8-4-HTTP-CONTRACT",
@@ -584,7 +584,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Checked READY deployment containing reviewed source; original approved short-lived Rentals TEST principal, exact owned resources and separate destructive confirmation. No provider scopes/spend, no other-pass cleanup, no uncertain fixture recreation. Preserve direct/Hub/relay/Sandbox boundaries.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "Partial real-provider proof retained: approved fresh Rentals TEST/full grant ran Drive/Calendar/Gmail fixtures, same-UUID replay returned original seven object IDs, exact cleanup completed and secondary-calendar metadata/ACL/event fingerprints were preserved. Original failed revocation receipt retained; after deployed601f2f2 listConnections-prefix repair, explicit final revocation confirmed and both17:20 grants return401pass_revoked. They are no longer usable for tests; original five-area read_only24h grant remains unchanged. Later separately approved admin fixture grant completed emptygroup/sharedDrive lifecycles and exact cleanup at3ad0250, then was also confirmed revoked. Real deletedcalendar read now404/not_found atREADY14ec4b620d4e71afdb8603c4f9a6efd19a987617. Wider original matrix remains pending; do not take over cleaned runs, recreate fixtures, substitute an ordinary identity, or infer missing coverage from these proofs."
+    "lastEvidence": "2026-10-15Denver resume reconciliation: Old fixture runs fully cleaned and creator grants revoked; no ambiguous-write takeover/recreation authorized. Exact prerequisite: Fresh authorized recovery fixture intent and original creator grant; destructive cleanup confirmation. Remedy/next action: Approve a new isolated original-principal recovery/lost-response scenario and cleanup, retaining immutable run ledger."
   },
   {
     "id": "P6-1-GROUP-LIFECYCLE",
@@ -612,12 +612,12 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "id": "P8-8-CONSOLE-WALK",
     "priority": 2,
     "requiredRevision": "130bcc1f8275e87c1102bae553b1aefc3b80dd0a",
-    "status": "PENDING",
+    "status": "PASSED",
     "task": "Complete the already-approved dated authenticated Google Admin Console walkthrough: inventory actual in-scope pages, compare mapped paths/steps/expected results, reconcile permitted API readbacks and correct real missing coverage. Do not add a new observation-storage feature.",
     "procedure": "docs/plan/TASKS.md — P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Authenticated read-only Google Admin Console session for the intended authorized organization/role; observe only approved scope, no policy changes. Record inaccessible/edition-specific pages honestly; an API-generated checklist alone is not the walkthrough.",
     "dependsOn": [],
-    "lastEvidence": "2026-10-15Denver real authenticated Rentals Console walk continued in tab16 across54 stored distinct routes plus initial Calendar/Drive/Meet/Chat/Groups/Gmail/password/2SV pages. Actual visible section inventory compared with map;15 missing Gemini/Directory/account sections repaired at 130bcc1f8275e87c1102bae553b1aefc3b80dd0a. Vault denied; DLP upgrade; CAA absent and prior web-session400 retained, never retried. Both business OUs inspected for password and inherited2SVOff; no save/override clicked. Guidance153topics deployed parity pending checked READY corrected source; API policy audit remains separate, no effective-policy certification."
+    "lastEvidence": "2026-10-15Denver actual dated authenticated Rentals Console inventory across54 stored distinct routes plus initial7service/security pages, both business OUs inspected,15real missing Gemini/Directory/account sections repaired. Checked READY03e88b251b248db62571de469029925b9f65ee73/dpl_BG4rTF51DVDixKGV8GiGsb6B1g1f, original protected read_only TEST runner UTC2026-10-16T00:55:39.833Z verified153orderedunique topics/8boundedpages, complete steps/expected, capabilities parity. Full navigation walk criterion accepted with Vault denied/DLP upgrade/CAA absent/prior websession400 explicit limits; no effective-all-OU policy or PolicyAPI certificate. No Console mutation/fixture recreation."
   },
   {
     "id": "P5-2-ENCRYPTED-READY",
@@ -641,7 +641,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P5-2-ENCRYPTED-READY"
     ],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15 two-account encrypted/refresh readiness remains accepted. Owner clarified migration period may be revised by a reviewed decision, but explicitly did NOT change current November1-plus-separate-approval gate. No activation, early retirement or plaintext clearing occurred. Re-enter after current gate and independent owner approval, runtime drain/recovery proof."
+    "lastEvidence": "2026-10-15Denver resume reconciliation: Both-account encrypted/backfill/refresh readiness remains accepted; owner explicitly preserved current date/approval gate. Exact prerequisite: November1Denver, independent owner approval, old-instance drain and reviewed recovery. Remedy/next action: Re-enter only after current gate or separately reviewed owner date change; never activate early."
   },
   {
     "id": "P8-3-OWNER-TEST-FORM",
@@ -3020,3 +3020,10 @@ Authenticated Rentals Google identity in AI Systems tenant;54 distinct routes re
 |Explicit limits retained|Vault redirects ServiceNotAllowed/noaccess; DLP offers Enterprise upgrade; CAA absent from actual edition navigation. Prior Google-provided web-session URL400 explicitly not retried; Cloud session is separate. Non-Admin Gmail/signature/DNS/provider-fixed limits keep their existing instructions.|
 
 Live ordinary Rentals integration preflight positively confirmed missing policy-read OAuth grant, not merely unknown access. Add narrowly scoped consent option to the existing protected owner enrollment form; preserve canonical Origin, owner lockout/HMAC nonce/cookie, callback and all standard setup behavior. Google URL requests only the extra read-only policy scope plus include_granted_scopes:true. No DELEGATED_SCOPES change; no credential, TEST pass or write grant created. Tests inspect actual OAuth URL and owner/origin/invalid-purpose denial. Focused70tests and full1761unit tests pass; check passes. Initial focused failures were two outdated138count assertions and one incorrect test expectation for existing Gmail scope; corrected to actual153inventory/existinggmail.modify, no assertion removed. Interrupted earlier full run is not claimed as proof. Production33additions/7deletions plus tests; small real acceptance repairs, zero bundles claimed. Required exact-head CI/reviews and checked release remain.
+
+
+### Checked release, completed Console acceptance and real consent-form repair — October15Denver
+
+PR162 merged2426ec4 and PR163 merged03e88b251b248db62571de469029925b9f65ee73 after exact-head test/release-policy/check/unit/db/rtc SUCCESS; postmerge checks also SUCCESS. Automatic review refused account quota, not code findings; no submitted reviews/inline threads, documented final-head source/security self-review completed. Owner's current instruction authorizes necessary checked release: verified main03e88b2/live14ec4b6, expected-old fast-forward force:false, separate receipt release-markers/2026-10-15-owner-early-03e88b2. Independent Vercel productiondpl_BG4rTF51DVDixKGV8GiGsb6B1g1f READY03e88b2; canonical source matched before original protected TEST153topic parity at00:55:39.833Z. P8-8-CONSOLE-WALK now PASSED:19PASSED/10PENDING of29. This closes dated observed navigation/correction criterion, not effective-policy certification. No optional feature selected, no fixture recreated, no revoked pass reused. All11previously outstanding rows individually reconciled; current snapshot accounting checked by session:status.
+
+Actual ordinary Rentals policy audit on READY03e88b2 now reaches Google and reports insufficient authentication scopes, consistent with independent token-info proof. Narrow policy_read setup page visibly rendered correct mailbox/intended additional read-only scope. Secure browserAuth owner submission completed, but rendered Wrong website address before owner-auth logic or Google redirect. Source investigated: this form still emits no-referrer on GET; Chromium's non-CORS form POST can therefore send Origin:null, as in earlier separately fixed TEST-pass form. Primary browser reference verified: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Referrer-Policy#effect_on_the_origin_header. Apply the same narrowly scoped remedy: only actual form GET is Referrer-Policy:same-origin; errors and outgoing Google redirect remain no-referrer. Exact canonical Origin requirement stays unchanged; null/missing/foreign origins remain403 with zero Google grant generation. No credential inspected, printed, stored locally or published; no OAuth consent or Google mutation occurred. Nine focused owner-consent tests PASS; full check/unit and exact-head CI/review/checked release required for source2520c36c243fd0ce1b54ca8a8c2c6554b85df28e. No new acceptance row or bundle invented for this repair. Continue secure consent from tab17 after release, preserving original TEST expiry and identities.
