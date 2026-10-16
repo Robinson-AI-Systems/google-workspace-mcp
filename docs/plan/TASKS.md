@@ -272,7 +272,7 @@ restricts only the named operation. Source completion never proves actual Google
     "state": "EXTERNAL_ONLY",
     "remaining": "Original approved bulk design reconciled: all seven exact mappings, strict top-level/operation schemas and 20 explicit targets; guarded final-registry child preview/confirm/profile/domain enforcement; zero autonomous spending; ordered partial outcomes and exact readback/audit handling; no retry/rollback; owned result paging. #126 and #127 are both merged, not candidates.",
     "evidence": "src/tools/bulk.js normalizeBulkArgs/denial/run/readMailboxExact/workspace_bulk_operation; final registry/wrapped children; test/unit/bulk.test.js all seven mappings, schema parity, denied/no-write preview, mixed outcomes, auth loss/budget, exact mailbox reads, parent audit failure and meta dispatch; original P7-8 design reviewed.",
-    "next": "Perform P7-8-GUARDED-BULK only on explicit approved TEST targets through checked deployment. Preserve each operation guard/spending refusal and exact cleanup; do not rewrite the existing bulk tool or add scope to meet bundle size.",
+    "next": "P7-8-GUARDED-BULK PASSED on READY8ce3d7b using owner-approved24h TEST authority. Seven mapping outcomes, exact mailbox/group readbacks, domain/spending refusal, provider failures and cleanup are recorded in docs/plan/evidence/2026-10-16-existing-pass-bulk.json. Reopen only for changed requirements or a demonstrated defect; spending remains independently gated.",
     "gate": "Independently READY checked source including merged #127; service-issued appropriate TEST authorization, explicit targets and original operation-specific permission; spending actions remain independently gated.",
     "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
   },
@@ -532,16 +532,16 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "lastEvidence": "2026-10-15T20:55:15.023Z genuine custom Workspace MCP on owner-connected Rentals account, production independently READY deployment dpl_45xFRdTSm8fDwhSCVRxn4Xgoin1X / source afbc602285437557ae42ff470721dc834fbad8fd (main=live=source; PR149 contained). workspace_whoami authenticated exact Rentals mailbox (matches=true). Direct google-read gmail_list_delegates returned valid empty array (0 delegates) via source-guarded delegatedGmail. workspace_admin_console_verify 5 selected mailbox topics observed 5/5, including gmail-default-routing-delegation observedCount=0 with narrow_metadata_readback_only; old live returned not_readable. Required no-foreign/missing authenticated identity and no OAuth fallback covered exact-head source regression and CI job 38801699173, PR #149 green and merged; live call supplies positive non-synthetic provider proof, no user email / Google object contents retained. No Google write/new scope, no inherited/organization-wide Admin policy assertion."
   },
   {
-    "id": "P7-8-GUARDED-BULK",
-    "priority": 2,
-    "requiredRevision": "7426e266752c8e97f4b970b6f4b31ab49d81275f",
-    "task": "Verify deployed guarded workspace_bulk_operation with original owner-authorized scoped TEST targets and non-production approval. Prove permitted mappings, exact provider readbacks, safe domain refusal, partial failure and cleanup; no paid license actions without independent spending approval.",
-    "procedure": "docs/plan/TASKS.md \u2014 P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
-    "gates": "Exact READY deployment and authenticated custom MCP connection; owner-approved isolated TEST targets, permission/domain limits, exact fixture IDs and operation-specific approvals; no production bulk writes or autonomous spending",
-    "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-15Denver resume reconciliation: Only original read_only grant remains; every earlier write/low-rate pass revoked. No existing safe bulk target list. Exact prerequisite: Fresh isolated TEST target list and operation-specific write/cleanup authorization. Remedy/next action: Approve finite nonproduction bulk scenarios/targets, dedicated short-lived grant and exact cleanup before execution."
-  },
+  "id": "P7-8-GUARDED-BULK",
+  "priority": 2,
+  "requiredRevision": "7426e266752c8e97f4b970b6f4b31ab49d81275f",
+  "task": "Verify deployed guarded workspace_bulk_operation with original owner-authorized scoped TEST targets and non-production approval. Prove permitted mappings, exact provider readbacks, safe domain refusal, partial failure and cleanup; no paid license actions without independent spending approval.",
+  "procedure": "docs/plan/TASKS.md \u2014 P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
+  "gates": "Exact READY deployment and authenticated custom MCP connection; owner-approved isolated TEST targets, permission/domain limits, exact fixture IDs and operation-specific approvals; no production bulk writes or autonomous spending",
+  "dependsOn": [],
+  "status": "PASSED",
+  "lastEvidence": "2026-10-16 owner-approved24h Rentals TEST/full pass, independently READY8ce3d7b/dpl_6vSCiPzjETwHvWqMfciEPUzMqx4F. Existing-pass secure RSA handoff and exact TEST identity verified. All7 mappings exercised: same-value signature/vacation exact readbacks; new tagged group add with confirmed actor and outside-domain refusal; removal confirmed then independently empty; empty exact group deletion and404. Assign/change refused independent_spending_approval_required; remove-license exercised only independently404 nonexistent test principal/fake SKU, correctly unknown/incomplete (no existing license removed or paid success claimed). Deleted owned group confirms unknown/refused partial report. All row counts/order reconciled; initial runner mistakes/provider propagation delays retained, no blind replay. Sanitized full results docs/plan/evidence/2026-10-16-existing-pass-bulk.json. Useful pass stays active until expiry/finished need."
+},
   {
     "id": "P0-2-FULL-CASEBOOK-REAL-READ",
     "priority": 1,
@@ -1925,7 +1925,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P7-5 | DONE | #61 | All stated unit acceptance passed: reviewed reversible families, irreversible refusals and undo-of-undo. Merged after exact-head test/release-policy. Real Google undo remains separate unverified provider evidence. |
 | P7-6 | SUPERSEDED | | Delivered by P8-2 (read_only profile) — Phase 8 added 2026-10-10 |
 | P7-7 | SUPERSEDED | | Delivered by P8-2 (profiles, area filters, compact listing) — Phase 8 added 2026-10-10 |
-| P7-8 | IN_PROGRESS | #126, #127 merged | All seven mappings and original guarded bulk design reconciled on main. Genuine deployed scoped provider scenarios remain P7-8-GUARDED-BULK; no candidate branch or new scope needed. |
+| P7-8 | DONE | #126, #127 merged | Original guarded bulk implementation plus genuine owner-approved TEST acceptance PASSED at READY8ce3d7b. Exact mailbox/membership readbacks, domain/spending refusals, truthful partial/provider failures and isolated cleanup recorded; no paid license success claimed. |
 | P8-1 | DONE | #31, #34, #41, #44, #55, #57, #63 | Stated automated acceptance passed: all 161 read names bounded with 100-item wrapper fakes, projection, real-DB handle isolation, annotation parity, 13 typed reads and all seven guarded write workflows. Genuine deployed Google/Hub routes remain separate P8-3/4/5 acceptance. |
 | P8-2 | IN_PROGRESS | #30 and mergedf7c1ffe | Full immutable refresh/profile/listing/area contract and real SQL proof implemented. Genuine custom-service refresh/profile and separate Hub proof remain external. |
 | P8-3 | IN_PROGRESS | #32 | Owner-protected hashed, short-lived, scratch-account TEST read-only passes, revocation, limit guards; live issuance acceptance unverified |
@@ -3121,3 +3121,38 @@ independent plaintext-retirement approval/drain/recovery remain. This is a confi
 completion-blocking developer handoff repair, not a new feature phase. Required
 final checks, exact-head CI/review/merge, necessary checked release and permanent
 handoff remain separate obligations.
+
+
+## October 16 — approved early release, existing-pass sign-in and bounded bulk acceptance
+
+Owner explicitly approved early release of merged8ce3d7b82eaf0f6faa53004e9acf4af6f50fc07d.
+After exact source/test/release-policy/review reconciliation, live advanced by expected-old
+fast-forward fromfc9c2b2; immutable receipt release-markers/2026-10-16-owner-early-8ce3d7b
+preserves this decision and the daily receipt remains unchanged. Independent production
+dpl_6vSCiPzjETwHvWqMfciEPUzMqx4F is READY8ce3d7b; canonical contract matched.
+Owner securely signed in with the already-created24h TEST pass through the released
+RSA-sealed registered-runner handoff. Exact pass fingerprint/account/TEST/full/write
+identity matched before private credential storage; no token was requested in chat.
+The pass expires2026-10-17T10:54:15.575Z and remains active per owner instruction.
+
+P7-8-GUARDED-BULK now PASSED. Original approved seven-mapping criteria were reviewed
+without adding a paid-license-success requirement or weakening spending safeguards.
+Same-value signature/vacation had exact independent provider readbacks; one uniquely
+tagged disposable group demonstrated confirmed member add with external-domain refusal,
+actor-only removal, later exact empty readback and empty-group deletion404. Google
+creation/member-list propagation delays and initial runner assertion/request-shape
+failures remain recorded; uncertain writes were reconciled rather than blindly replayed.
+Assignment/upgrade preview and confirmation refused spending; fake-SKU removal on an
+independently404 nonexistent isolated principal returned unknown/incomplete. No existing
+license was removed and no paid assignment/upgrade success is claimed. A deleted owned
+group yielded unknown/refused partial results. All aggregate counts match ordered rows;
+parent done/null-confirmation never substitutes for per-target confirmation.
+
+Sanitized release/handoff/results: docs/plan/evidence/2026-10-16-existing-pass-bulk.json.
+Current acceptance25PASSED/4PENDING of29; no product bundle or new feature selected.
+Remaining full catalog needs its original read_only TEST profile, approved precise
+case/resource manifest and separate bounded customer-wide reads; exact-app needs its
+approved metadata resource/permission matrix; optional Hub needs its target/service
+grant. November1 plus separate approval/drain/recovery still governs plaintext retirement.
+This evidence-only publication requires normal exact-headCI, review, merge, postmerge
+checks and permanent handoff; no additional service release is needed for these records.
