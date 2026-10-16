@@ -114,14 +114,21 @@
       "http": 200,
       "strictShape": true,
       "note": "Native response retained privately; no writes"
+    },
+    {
+      "tool": "workspace_dns_list_records",
+      "http": 200,
+      "strictShape": true,
+      "hostedAtVercel": true,
+      "providerWrites": 0
     }
   ],
   "casebook": {
     "inventory": 166,
     "olderDocumentedInventory": 165,
     "decision": "Preserve all currently enumerated names; no dropping a case to fit older count",
-    "verifiedRetainedHandlerReads": 133,
-    "unverified": 31,
+    "verifiedRetainedHandlerReads": 134,
+    "unverified": 30,
     "ownerExcludedLive": 2,
     "allCatalogPassed": false,
     "countsCaveat": "Includes source-validated service metadata; not every report subcheck or security setting is healthy/readable",
@@ -1355,8 +1362,13 @@
       },
       {
         "tool": "workspace_dns_list_records",
-        "status": "UNVERIFIED",
-        "prerequisite": "Requires owned Vercel-hosted domain and existing separate DNS access; no DNS or credential change."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "fresh_source_validated_native_Vercel_DNS_records"
+        ],
+        "retainedHttpObservations": [
+          200
+        ]
       },
       {
         "tool": "workspace_gmail_find_unanswered",
@@ -1701,5 +1713,26 @@
   "providerMutationsThisResume": 0,
   "releasePerformed": false,
   "fullProjectComplete": false,
-  "secretHandling": "No credentials, provider bodies or private resource IDs included"
+  "secretHandling": "No credentials, provider bodies or private resource IDs included",
+  "postmasterPrerequisite": {
+    "scope": "postmaster.readonly",
+    "status": "missing",
+    "reason": "oauth_consent_missing",
+    "approval": "Existing written owner approval October2, retained P7-4 scope decision",
+    "sourceRepair": "Protected existing-account postmaster_read purpose requests only already-approved readonly scope; standard scopes unchanged",
+    "realConsent": "Pending checked release and genuine Google owner consent; no blind provider calls"
+  },
+  "retainedNarrowPass": {
+    "areas": [
+      "chrome",
+      "domain"
+    ],
+    "mode": "test",
+    "profile": "read_only",
+    "allowWrites": false,
+    "forHub": false,
+    "createdAt": "2026-10-16T16:23:56.249Z",
+    "expiresAt": "2026-10-17T16:23:56.249Z",
+    "exactIdentityAndAccountVerified": true
+  }
 }
