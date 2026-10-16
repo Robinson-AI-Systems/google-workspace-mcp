@@ -9,12 +9,12 @@
   },
   "finalReadiness": {
     "original14AreaReadOnlyTestPass": true,
-    "apisReady": 5,
-    "exactScopesReady": 3,
-    "status": "NOT_CURRENTLY_READY_TASKS_GRANT_MISSING",
+    "apisReady": 6,
+    "exactScopesReady": 4,
+    "status": "ready",
     "vaultProbe": false,
     "retainedEarlierSixApiFourScopeProof": true,
-    "proof": "Recovered6API/4scope proof retained; after new genuine Site consent actual token-info shows Tasks missing. No more isolated consent looping."
+    "proof": "Genuine combined3scope Googleconsent; original14area TEST all6API/4scope ready bothbeforeandafter genuine savedgrantrefresh. ActualSite/Postmaster/Tasks scopeREADY bothbeforeandafterrefresh."
   },
   "credentialReadiness": {
     "encryptedOnly": false,
@@ -31,10 +31,10 @@
     "notBefore": "2026-11-01T06:00:00Z",
     "retirementPerformed": false,
     "retainedPriorAllAccountReady": true,
-    "latestStorageMetadata": "Protected all2account genuine-refresh/encryption readiness passed before newestSiteconsent. Reinspect afterfinalcombinedconsentandgenuine saved-grantrefresh; do not substitutepriorfreshness for currentgrantproof."
+    "latestStorageMetadata": "After finalcombinedconsent protectedgenuine Rentals savedgrantrefresh/mailboxverification succeeded; sanitizedinspection all2accounts ready/zeroallproblemcounts. Actual3scope/6API4scope retained afterrefresh. Storage modeunchanged; no plaintextretirement."
   },
   "exactAppAcceptance": {
-    "status": "PENDING_CURRENT_TASKS_RESTORATION",
+    "status": "PASSED",
     "retainedExactIntegrationChecksReady": 25,
     "fractionalAvailability": "Same original calendar ready on repaired released source before cleanup",
     "sharedDriveMembership": "Exact actor-only organizer ready; independent native404 cleanup",
@@ -51,7 +51,7 @@
       "newObjectsThisResume": 0
     },
     "retainedExactResourceProofStillValid": true,
-    "reason": "Reopened only current readiness: genuine Site consent restored Site and both domain reads passed, but Tasks readonly missing afterward. Combined previously approved three-scope recovery prepared; no fixture replay."
+    "reason": "Releasedcombinedconsent actualGooglecallbackConnected. Originalread_only TEST3requiredscope retention and6API4scope readiness pass beforeandafter genuine savedgrantrefresh; all2account encryptionready. Originalexactresource/denial/cleanup proofretained,no fixture recreation."
   },
   "hub": {
     "nativeDiscovery": "PASS",
@@ -1821,7 +1821,7 @@
       "trigger": "Reproduced on same READY513: Tasks/Postmaster ready and Site missing beforeSiteconsent; Site/Postmaster ready andTasks missing after.",
       "repair": "New owner-protected completion_read explicitly requests only the same three already approved scopes together, retaining incremental include_granted_scopes. Existing isolated/standard requests unchanged.",
       "gates": "Existing canonical-origin, owner passphrase, validmailbox, signedbrowserstate and GoogleAllow. No new permission beyond existing owner approvals. No DNS/verification/ownership writes.",
-      "liveProof": "Protected combined3scope form is actually served on independentlyREADYf96. Secure owner step automatically rejected because current-chat approval did not specifically name all3scopes; no new Googleconsent. Explicit actionapproval required, no bypass. Genuine coexistence/refresh proof remains pending.",
+      "liveProof": "PASS independentREADYf96 genuinecombinedGoogleconsent callbackConnected; originalTESTall3scopes and6API4scope ready. Protected savedgrantrefresh/mailboxverifiedandall2account encryptionready; bothscopematrix/APIreadiness againPASSafterrefresh. No isolatedconsentloop.",
       "verification": "33focused and1861unit tests; check, requiredexactheadandpostmergecheck/unit/db/rtc/test/release-policySUCCESS; merged187andreleasedf96."
     }
   },
@@ -1990,13 +1990,13 @@
     "ownerReportedBothComplete": true,
     "actualPostmasterScopeReady": true,
     "actualSiteVerificationScopeReady": true,
-    "actualTasksScopeReady": false,
+    "actualTasksScopeReady": true,
     "existingGrantedScopesProvenReady": 42,
     "proof": "Four bounded token-info batches12/12/12/6; no token or provider body published",
-    "approvalReview": "Owner explicitly approved both current-chat actions. Genuine Site Allow/callbackConnected and actual scope ready; both approved domain reads passed. Postmaster ready, Tasks missing afterward; retain failed combined retention check.",
+    "approvalReview": "OwnerexplicitlyapprovedcombinedTasksreadonly/Postmasterreadonly/SiteVerificationandrecoveryrefresh. GenuineGoogleAllow/callbackandcurrent3scope+6API4scope provedbeforeandafter actualsavedgrantrefresh. Earlierreviewrejections retainedashistory, no bypass.",
     "sequentialFlowsRequired": true,
     "noVaultAdditionRequested": true,
-    "finalScopes": "Historical6API4scope ready after prior refresh; current Tasks missing after Site consent, never claim old readiness current."
+    "finalScopes": "OriginalTESTall6APIs4scopesREADYbeforeandafterfreshcombinedgrantrefresh; SitePostmasterTasksallREADY."
   },
   "recoveredWorkspace": {
     "repositoryRecovered": true,
@@ -2005,13 +2005,13 @@
     "freshBrowserResponsive": true,
     "savedGrantRefresh": "SUCCESS mailbox verified all2account readiness true",
     "providerWritesThisRecovery": 2,
-    "siteScopeAfterRefresh": "Was missing afterrefresh, nowready after specificallyapprovedSiteconsent",
-    "tasksAndPostmasterAfterRefresh": "Were bothready afterrefresh; afterSiteconsent Postmasterready/Tasksmissing",
+    "siteScopeAfterRefresh": "READYretainedaftercombinedrefresh",
+    "tasksAndPostmasterAfterRefresh": "Tasks/Postmaster/Site allREADY afterfinalcombinedconsentandgenuinerefresh",
     "main": "ddbe38e822184bd0ddad0673e6a7d3eb8245d96f",
     "live": "f96a369e9cdab0b1c84aec478605d780f33c55a4",
     "releasePerformed": true,
     "ownerBudgetInstruction": "Increase budget if needed for remaining approved tests/cleanup; retain counted requests and real scope/security/spending gates.",
-    "currentProof": "Site scopeReady plus2strictDomain200reads; combined3scope current readiness fails onTasks",
+    "currentProof": "Combinedconsentandactualsavedgrantrefresh; all3scopes+6APIs4scopes pass beforeandafter. All2accounts encryptedready.",
     "releaseProof": "Nonforceexpected-old513\u2192f96; newimmutable receipt release-markers/2026-10-16-owner-completion-187; priorreceiptsretained; independentVercelREADYandexactcanonicalsource."
   },
   "release187": {
@@ -2027,7 +2027,23 @@
     "canonicalHttp200SourceMatches": true,
     "deploymentId": "dpl_5QDmh4dRau9JjRucmZeqqeRadMcu",
     "buildingTest": "PASSandcleaned",
-    "combinedConsent": "Ownerstepautomaticreviewrejected, explicit3scopeapprovalneeded; no bypass",
+    "combinedConsent": "PASSafterexplicitcombined3scopeapproval; actualGooglegrant, scope/APIreadybeforeandaftergenuinerefresh. No newrelease.",
     "anotherReleaseAuthorized": false
+  },
+  "combinedConsentAccepted": {
+    "releasedSource": "f96a369e9cdab0b1c84aec478605d780f33c55a4",
+    "ownerApprovedExactThreeScopes": true,
+    "googleCallbackConnected": true,
+    "actualScopesBeforeRefresh": 3,
+    "actualScopesAfterRefresh": 3,
+    "apiChecksReadyBeforeAndAfterRefresh": 6,
+    "originalScopeChecksReadyBeforeAndAfterRefresh": 4,
+    "allConnectedAccountsEncryptionReady": 2,
+    "encryptionProblems": 0,
+    "genuineSavedGrantRefreshAndMailboxVerified": true,
+    "noPlaintextRetirement": true,
+    "noProviderWrites": true,
+    "noFixtureRecreation": true,
+    "separatePostmasterAPIGateUnchanged": true
   }
 }
