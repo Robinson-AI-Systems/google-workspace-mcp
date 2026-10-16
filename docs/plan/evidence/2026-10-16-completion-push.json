@@ -1069,12 +1069,12 @@
         "evidenceKinds": [
           "genuine_original_readonly_TEST_on_READY6ec69ce_v2"
         ],
-        "proof": "HTTP200 native domains[]/count0, pageSize20, no continuation; original pass/account/source verified. Empty account domain inventory is valid metadata, not traffic proof."
+        "proof": "HTTP200 native domains[]/count0, pageSize20, no continuation; original pass/account/source verified. Empty scoped domain inventory is valid metadata, not traffic proof."
       },
       {
         "tool": "workspace_postmaster_list_traffic_stats",
         "status": "UNVERIFIED",
-        "prerequisite": "V2 source/consent and current traffic permission verified before and after genuine refresh. Domain list200 returned zero registered domains. No owned accessible VERIFIED domain exists in this account inventory; no traffic request, domain registration/verification, DNS edit or test sending. Owner-managed verified Postmaster domain required."
+        "prerequisite": "V2 source/consent and current traffic permission verified before and after genuine refresh. Domain list200 returned zero registered domains visible within the approved TEST scope. No owned accessible VERIFIED domain exists in this TEST connection scoped inventory; no traffic request, domain registration/verification, DNS edit or test sending. Owner-managed verified Postmaster domain required."
       },
       {
         "tool": "workspace_admin_get_2sv_status",
@@ -2130,11 +2130,12 @@
       "strictNativeShape": true,
       "pageSize": 20,
       "count": 0,
-      "hasContinuation": false
+      "hasContinuation": false,
+      "scopeFiltered": true
     },
     "traffic": {
       "called": false,
-      "reason": "No registered domains returned; needs owned accessible VERIFIED Postmaster domain. Empty inventory is not proof of traffic operation or healthy delivery."
+      "reason": "No registered domain visible within the approved TEST scope. Requires owned accessible VERIFIED Postmaster domain. No claim about unrelated account domains or delivery health."
     },
     "savedGrantRefresh": {
       "genuineRefresh": true,

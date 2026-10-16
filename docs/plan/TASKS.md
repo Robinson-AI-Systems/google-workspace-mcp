@@ -3437,7 +3437,7 @@ matrix passes before and after genuine saved-grant refresh; all2account encrypte
 backfill/refresh readiness passes with zero problems, storage mode unchanged.
 V2 domain list genuinely returns200 native domains[]/count0, pageSize20/no cursor.
 No traffic request was made because no owned accessible VERIFIED domain exists in
-this account's inventory. Domain registration/verification, DNS edits and sends
+this TEST connection’s scoped inventory. Domain registration/verification, DNS edits and sends
 remain unperformed. Full166case report now154verified/10unverified/2Vault excluded;
 queue remains26PASSED/3PENDING. No further release needed for evidence publication.
 All other resource/scope/creator, Hub-owned and November1 retirement gates remain.

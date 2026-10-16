@@ -103,7 +103,7 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 | `workspace_identity_list_policies` | VERIFIED_RETAINED | retained_strict_runner |
 | `workspace_licensing_list_assignments` | VERIFIED_RETAINED | permanent_strict_runner |
 | `workspace_postmaster_list_domains` | VERIFIED_RETAINED | Genuine original TEST/read_only on READY6ec69ce v2: HTTP200, native domains[]/count0, pageSize20, no continuation; no traffic proof implied. |
-| `workspace_postmaster_list_traffic_stats` | UNVERIFIED | V2 permission verified before/after genuine refresh. Domain list200 returned zero registered domains; owner-managed owned accessible VERIFIED Postmaster domain required. No traffic call, registration/verification, DNS change or sending. |
+| `workspace_postmaster_list_traffic_stats` | UNVERIFIED | V2 permission verified before/after genuine refresh. Domain list200 returned zero registered domains visible within the approved TEST scope; owner-managed owned accessible VERIFIED Postmaster domain required. No traffic call, registration/verification, DNS change or sending. |
 | `workspace_admin_get_2sv_status` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
 | `workspace_admin_get_alert` | UNVERIFIED | Alert Center scope apps.alerts intentionally absent; retain actual denial, no blind repeat or automatic consent expansion. |
 | `workspace_admin_get_building` | VERIFIED_RETAINED | Current READYf96 required-floor exactpositive200, guarded audited create/delete and independent404; allcreatedAdminobjects cleaned. |
