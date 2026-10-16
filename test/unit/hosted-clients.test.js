@@ -62,6 +62,28 @@ describe('hosted Google API clients', () => {
       expect(url.searchParams.get('access_type')).toBe('offline');
     }finally{process.env=before;}
   });
+  it('requests the three already approved completion permissions together without changing isolated purposes',()=>{
+    const before={...process.env};
+    try{
+      process.env.PUBLIC_BASE_URL='https://workspace.example.test';
+      process.env.GOOGLE_OAUTH_CLIENT_ID='fake-client';process.env.GOOGLE_OAUTH_CLIENT_SECRET='fake-secret';
+      const url=new URL(getGoogleAuthUrl('completion-state','ops@example.test','completion_read'));
+      expect(url.searchParams.get('scope').split(' ')).toEqual([
+        'https://www.googleapis.com/auth/tasks.readonly',
+        'https://www.googleapis.com/auth/siteverification',
+        'https://www.googleapis.com/auth/postmaster.readonly'
+      ]);
+      expect(url.searchParams.get('include_granted_scopes')).toBe('true');
+      expect(url.searchParams.get('state')).toBe('completion-state');
+      expect(url.searchParams.get('login_hint')).toBe('ops@example.test');
+      expect(url.searchParams.get('access_type')).toBe('offline');
+      expect(url.searchParams.get('scope')).not.toMatch(/ediscovery|tasks\s|gmail\.modify|drive/);
+      expect(new URL(getGoogleAuthUrl('old','ops@example.test','tasks_read')).searchParams.get('scope')).toBe('https://www.googleapis.com/auth/tasks.readonly');
+      expect(new URL(getGoogleAuthUrl('old','ops@example.test','siteverification_read')).searchParams.get('scope')).toBe('https://www.googleapis.com/auth/siteverification');
+      expect(new URL(getGoogleAuthUrl('old','ops@example.test','postmaster_read')).searchParams.get('scope')).toBe('https://www.googleapis.com/auth/postmaster.readonly');
+      expect(new URL(getGoogleAuthUrl('old','ops@example.test','standard')).searchParams.get('scope')).not.toContain('siteverification');
+    }finally{process.env=before;}
+  });
   it('isolates specifically approved Site Verification consent from every other scope set',()=>{
     const before={...process.env};
     try{
