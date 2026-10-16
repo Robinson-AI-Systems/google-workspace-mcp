@@ -130,6 +130,13 @@ const exactRows=(value,key)=>obj(value)&&Array.isArray(value[key])&&
 const optionalCursor=value=>value.nextPageToken===undefined||
  str(value.nextPageToken);
 export const SOURCE_RESULT_PROOFS=Object.freeze({
+ // These completed reads may span up to ten checked 100-row Google pages.
+ // Preserve schema/policy identities rather than relaxing the generic 200-row cap.
+ workspace_chrome_list_policy_schemas:(v)=>Array.isArray(v)&&v.length<=1000&&
+   v.every(row=>obj(row)&&str(row.name)&&/^customers\/[^/]+\/policySchemas\//.test(row.name)),
+ workspace_chrome_resolve_policies:(v)=>Array.isArray(v)&&v.length<=1000&&
+   v.every(row=>obj(row)&&obj(row.targetKey)&&str(row.targetKey.targetResource)&&
+     obj(row.value)&&str(row.value.policySchema)),
  workspace_identity_check_membership:(v)=>obj(v)&&Object.keys(v).length===1&&typeof v.hasMembership==='boolean',
  workspace_delegation_status:(v,_account,args)=>obj(v)&&typeof v.configured==='boolean'&&
    Array.isArray(v.scopesToAuthorize)&&v.scopesToAuthorize.length>0&&v.scopesToAuthorize.every(str)&&
