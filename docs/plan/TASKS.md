@@ -362,7 +362,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Separate scoped service authorization and Hub route gates; full production catalog stays independent",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "Investigated 2026-10-15: native custom issuer connected/reachable; actual workspace_dev_list_runs refused outside_scope requiring trusted TEST. Owner /api/rtc/passes form fetched and authenticated issuance fields verified. Private runner storage and TEST pass/developer vault configuration absent. Shared rotating checkpoint has one serialized owner; no transfer authorized, so no takeover attempted. Needed: explicit original-runner ownership transfer or original runner execution with exact pass/run/resource IDs and cleanup confirmation. Separate new TEST grants cannot clean old foreign-pass fixtures. Scoped Hub grant separately required for federation. No fixture recreation, copied secrets or scope changes."
+    "lastEvidence": "2026-10-16UTC optional Hub adapter independently connected, whoami profilefull/modeTEST/areasgateway/allowWritesfalse. Actual namespaces returns upstreamEnabled:false,authorizedTargets:0,metadataOnly:true,HubRTC0. No upstream Workspace grant/target exists; this does not block standalone service. Need Hub-owned configured Workspace target plus separate scoped Workspace service pass and original authorized runner; ordinary Workspace identity or original five-area TEST pass is not silently enrolled. No credential transfer or Hub mutation performed."
   },
   {
     "id": "GOOGLE-DIRECT-READ",
@@ -400,13 +400,13 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P7-2-POLICY-AUDIT",
     "priority": 4,
-    "requiredRevision": "7cd9727a466e1adccff2260a3339939434926d23",
+    "requiredRevision": "130bcc1f8275e87c1102bae553b1aefc3b80dd0a",
     "task": "Run the expanded read-only ten-area Cloud Identity Policy baseline against owner-authorized Workspace accounts; verify mismatches, missing-policy UNKNOWN and per-area coverage from actual Google",
     "procedure": "docs/plan/TASKS.md",
     "gates": "Super Admin and per-account optional approved policy-read OAuth consent; crossDomain owner authorization for business-limited connection; never claim effective per-domain settings or mutate policy",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15Denver owner explicitly approved read-only customer-wide policy audit for both businesses and secure additional consent only. Ordinary Rentals custom-service identity independently matches Gmail. Actual identity_policy_audit crossDomain:true failed before Google: pinned googleapis144 has no cloudidentity.policies. Reopened engineering and repaired hosted factory with fixed GET v1/policies through same account OAuth client; preserves other Cloud Identity resources and scopes. Real-factory transport/permission regression passes; deployed provider audit remains pending checked READY fix, then actual Super Admin scope/access verification. TEST five-area grant is distinct and not expanded."
+    "lastEvidence": "Owner read-only customer-wide approval recorded. Actual ordinary Rentals preflight2026-10-16T00:46:29Z used Google token-info and positively proved policy-read scope MISSING/oauth_consent_missing (not a TEST claim). Transport repair merged2426ec4. Existing enrollment requests full scope list, so source130bcc1f8275e87c1102bae553b1aefc3b80dd0a adds owner-authenticated policy_read consent purpose requesting ONLY cloud-identity.policies.readonly with include_granted_scopes:true; existing grants retained, no new write scope. Source must reach checked READY, then secure owner/Google consent and actual policy audit on both business domains; owner overview depends on audit."
   },
   {
     "id": "P8-7-API-SHAPES",
@@ -422,7 +422,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P8-8-OWNER-POLICIES",
     "priority": 4,
-    "requiredRevision": "7cd9727a466e1adccff2260a3339939434926d23",
+    "requiredRevision": "130bcc1f8275e87c1102bae553b1aefc3b80dd0a",
     "task": "On future checked deployed revision verify owner overview exposes Cloud Identity policy differences, unknown/inherited settings, scoped opt-in and actual per-area reports without implying effective domain settings",
     "procedure": "docs/plan/TASKS.md",
     "gates": "Read-only P7-2 Google Policy API; optional real Super Admin consent; explicit crossDomain owner approval for limited connections; no Google settings writes",
@@ -430,7 +430,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P7-2-POLICY-AUDIT"
     ],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15Denver owner explicitly approved read-only customer-wide policy audit for both businesses and secure additional consent only. Ordinary Rentals custom-service identity independently matches Gmail. Actual identity_policy_audit crossDomain:true failed before Google: pinned googleapis144 has no cloudidentity.policies. Reopened engineering and repaired hosted factory with fixed GET v1/policies through same account OAuth client; preserves other Cloud Identity resources and scopes. Real-factory transport/permission regression passes; deployed provider audit remains pending checked READY fix, then actual Super Admin scope/access verification. TEST five-area grant is distinct and not expanded."
+    "lastEvidence": "Owner read-only customer-wide approval recorded. Actual ordinary Rentals preflight2026-10-16T00:46:29Z used Google token-info and positively proved policy-read scope MISSING/oauth_consent_missing (not a TEST claim). Transport repair merged2426ec4. Existing enrollment requests full scope list, so source130bcc1f8275e87c1102bae553b1aefc3b80dd0a adds owner-authenticated policy_read consent purpose requesting ONLY cloud-identity.policies.readonly with include_granted_scopes:true; existing grants retained, no new write scope. Source must reach checked READY, then secure owner/Google consent and actual policy audit on both business domains; owner overview depends on audit."
   },
   {
     "id": "P0-2-RTC-HANDLE",
@@ -611,13 +611,13 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P8-8-CONSOLE-WALK",
     "priority": 2,
-    "requiredRevision": "28e648611cf1e4a634490630201c517dfc501d7c",
+    "requiredRevision": "130bcc1f8275e87c1102bae553b1aefc3b80dd0a",
     "status": "PENDING",
     "task": "Complete the already-approved dated authenticated Google Admin Console walkthrough: inventory actual in-scope pages, compare mapped paths/steps/expected results, reconcile permitted API readbacks and correct real missing coverage. Do not add a new observation-storage feature.",
     "procedure": "docs/plan/TASKS.md — P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Authenticated read-only Google Admin Console session for the intended authorized organization/role; observe only approved scope, no policy changes. Record inaccessible/edition-specific pages honestly; an API-generated checklist alone is not the walkthrough.",
     "dependsOn": [],
-    "lastEvidence": "2026-10-15 actual signed-in Rentals Admin inventory retained; Google secure reauthentication restored Groups UI. Observed original newemptygroup with zero members, no Adminroles, owner-only posting/member-only topics/no external members; no Console mutation. Earlier Agent inventory/defaultflow/access+attribution observations added3manualguides now138. Deployed3ad0250 actual protected originalread-only runner verified138unique topics/7boundedpages and capabilities parity; this is guide proof, not allsettings/OUeffectivepolicy. Google Console requested verification again on laterreload; preserve that exact UI state and secure browserAuth route, never claim browserinaccessible or full breadth passed."
+    "lastEvidence": "2026-10-15Denver real authenticated Rentals Console walk continued in tab16 across54 stored distinct routes plus initial Calendar/Drive/Meet/Chat/Groups/Gmail/password/2SV pages. Actual visible section inventory compared with map;15 missing Gemini/Directory/account sections repaired at 130bcc1f8275e87c1102bae553b1aefc3b80dd0a. Vault denied; DLP upgrade; CAA absent and prior web-session400 retained, never retried. Both business OUs inspected for password and inherited2SVOff; no save/override clicked. Guidance153topics deployed parity pending checked READY corrected source; API policy audit remains separate, no effective-policy certification."
   },
   {
     "id": "P5-2-ENCRYPTED-READY",
@@ -641,7 +641,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P5-2-ENCRYPTED-READY"
     ],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15 source proof only. November 1 date and every-account verification are not satisfied by code/CI. Protected operator --activate is never called by normal production runtime. Do not mark PASSED until exact real refresh/readback of every account after approved activation."
+    "lastEvidence": "2026-10-15 two-account encrypted/refresh readiness remains accepted. Owner clarified migration period may be revised by a reviewed decision, but explicitly did NOT change current November1-plus-separate-approval gate. No activation, early retirement or plaintext clearing occurred. Re-enter after current gate and independent owner approval, runtime drain/recovery proof."
   },
   {
     "id": "P8-3-OWNER-TEST-FORM",
@@ -2999,3 +2999,24 @@ Reconciled main37115f9, live14ec4b6 and independent Vercel productiondpl_5QSjXwU
 Owner now explicitly authorizes read-only organization-wide policy inspection across Rentals and AI Systems, plus presentation of needed read-only consent. The ordinary connected identity is deliberately separate from TEST. Actual audit revealed missing SDK method before Google invocation; source7cd9727 adds only documented GET https://cloudidentity.googleapis.com/v1/policies, same OAuth client, explicit query whitelist, no mutation methods or scope change. Official method reference verified2026-10-16UTC: https://docs.cloud.google.com/identity/docs/reference/rest/v1/policies/list. Hosted-factory regression exercises the actual provider transport and paginated handler, retaining UNKNOWN for missing policy and original403 failure. Small defect repair, zero bundles claimed;40production/test additions before records, production measured separately at closeout. Initial focused regression found the generated SDK object is sealed; fixed by composing its enumerable resources without mutating it, then5hosted-client tests passed. Full prepublication checks and exact-headCI/reviews remain required.
 
 New genuine Console observations: root2SV allows enrollment but enforcementOff; password page has strong passwords checked, min8/max100, reuseOff, expirationNever. Both business OUs inspected: Rentals local password policy and AI Systems inherited policy showed these values. These are dated observations at selected OUs, not customer-wide effective-policy certification. No Google settings changed; full Console breadth remains pending until remaining pages reconciled.
+
+
+### Completed dated Console inventory and narrow consent repair — October15Denver
+
+Authenticated Rentals Google identity in AI Systems tenant;54 distinct routes retained during this resume, in addition to the initial Calendar, Drive, Meet, Chat, Groups, Gmail, password and2SV observations. The actual visible settings sections were compared with existing138guides. Fifteen omissions were repaired (153total): Gemini app user access/apps/history/sharing/avatar; Enterprise business and standard data access; Workspace Intelligence sources/beta/conversation/limit notifications; Notebook sharing; Directory profile/resource visibility; account personalization. All are manual guidance only, no new API readback or inferred policy values. Existing24readbacks remain unchanged. This finishes the observed inventory/correction portion; fullwalk acceptance awaits deployed153topic parity at source130bcc1f8275e87c1102bae553b1aefc3b80dd0a. No optional feature proposal selected.
+
+|Actual Console area|Observed navigation/results|
+|---|---|
+|Gmail|DKIM, routing, compliance, user/end-user access; parent hosts/default routing/quarantine/safety/setup/spam sections match. No key copied, routing edited or mail sent.|
+|Calendar|Sharing, general, resources, room insights, event/secondary management, advanced, interop present. Primary external sharing free/busy; secondary external sharing all details without outsiders changing calendars at observed parent.|
+|Drive|Sharing, approvals, Forms/Vids/Pics/AppsScript, migration/shared drives/ownership/features/templates/dashboard/eSignatures/desktop/restoration/malware navigation present.|
+|Meet and Chat|All mapped video/safety/Gemini/eCDN/interop/quality and Chat histories/external/apps/sharing/restriction/group sections present.|
+|Groups|Business sharing/preferences/other-apps navigation present. Parent summary private groups and external members off; not a substitute for per-group proof.|
+|Security|2SV/password/recovery/advanced protection/challenges/passwordless/SAML/thirdpartySSO/MPA and API/DWD/app-access/classification/labels/data protection/external sharing/CSE observed. MPA requests completed; classification no default labels and label manager no labels.|
+|Both business OUs|2SV inherited, enrollment allowed/enforcementOff. Strong password/min8/max100/reuseOff/never expires; Rentals local password setting and AI Systems inherited. No Save/Override clicked.|
+|Directory/account|Domains, OUs, roles, guests, audiences, external directories, directory sharing/profile/visibility/resource types, Takeout, storage, account sections observed.|
+|AI/Studio/Agents|Gemini app/Enterprise/Workspace/Notebook, AppSheet/Sites, all9mapped Studio sections and Agents inventory/access/attribution observed. Only15missing navigation topics added.|
+|Operations|Billing subscriptions/users/reporting/security-investigation/alerts/email-log/device overview/Chrome/networks/import/export routes observed. No exports, imports, support case, license or plan purchase initiated. Support icon available; assistant pane present, no fixed support PIN claimed.|
+|Explicit limits retained|Vault redirects ServiceNotAllowed/noaccess; DLP offers Enterprise upgrade; CAA absent from actual edition navigation. Prior Google-provided web-session URL400 explicitly not retried; Cloud session is separate. Non-Admin Gmail/signature/DNS/provider-fixed limits keep their existing instructions.|
+
+Live ordinary Rentals integration preflight positively confirmed missing policy-read OAuth grant, not merely unknown access. Add narrowly scoped consent option to the existing protected owner enrollment form; preserve canonical Origin, owner lockout/HMAC nonce/cookie, callback and all standard setup behavior. Google URL requests only the extra read-only policy scope plus include_granted_scopes:true. No DELEGATED_SCOPES change; no credential, TEST pass or write grant created. Tests inspect actual OAuth URL and owner/origin/invalid-purpose denial. Focused70tests and full1761unit tests pass; check passes. Initial focused failures were two outdated138count assertions and one incorrect test expectation for existing Gmail scope; corrected to actual153inventory/existinggmail.modify, no assertion removed. Interrupted earlier full run is not claimed as proof. Production33additions/7deletions plus tests; small real acceptance repairs, zero bundles claimed. Required exact-head CI/reviews and checked release remain.
