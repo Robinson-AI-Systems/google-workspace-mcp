@@ -180,7 +180,7 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 ## Remaining-work review before the approved conditional release
 
 - Building: released required-floor tagged cycle and cleanup passed, cumulative28reads/7requests exactlyused.
-- Current Tasks/Site coexistence: demonstrated consent replacement has a merged three-approved-scope recovery; repair is released; secure owner step needs explicit combined3scope approval after automatic review rejection.
+- Tasks/Site coexistence: resolved on READYf96 after explicit owner approval. Genuine combined consent, all three scope checks and six-API/four-scope readiness pass before and after genuine saved-grant refresh; both connected accounts encrypted ready.
 - Postmaster: scope ready, API disabled; Cloud Console remains unavailable in the authorized browser. No blind retry, alternate cloud credential, paid change, sending, or domain verification.
 - Notifications: actual pinned SDK has no notifications resource. Current provider reference does not establish a supported replacement for the legacy Admin notification list; explicit not-readable/manual guidance is retained. This is distinct from Directory push channels.
 - Other unverified cases retain exact account/scope/asset/creator constraints above. Extra test budget does not grant unrelated data access or permission to recreate exhausted fixtures.
