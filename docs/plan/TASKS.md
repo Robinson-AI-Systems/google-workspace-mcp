@@ -400,13 +400,13 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P7-2-POLICY-AUDIT",
     "priority": 4,
-    "requiredRevision": "be64af0828b8f0e4a95d41200d7988cad95194fa",
+    "requiredRevision": "aaedec7b87ded0bf85ea48f6dd5141755198e913",
     "task": "Run the expanded read-only ten-area Cloud Identity Policy baseline against owner-authorized Workspace accounts; verify mismatches, missing-policy UNKNOWN and per-area coverage from actual Google",
     "procedure": "docs/plan/TASKS.md",
     "gates": "Super Admin and per-account optional approved policy-read OAuth consent; crossDomain owner authorization for business-limited connection; never claim effective per-domain settings or mutate policy",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-16 after owner found project under Robinson AI Systems and enabled API: actual ordinary Rentals full policy scan now reaches provider but fails closed invalid policy resource; API-disabled gate resolved. Narrow Gmail and unfiltered first-policy reads succeed with valid SYSTEM resources. Exact rejected field is hidden by existing generic parser error; field-only diagnostic repair retains strict validation and emits no private IDs/values/CEL. Policy acceptance and dependent selected overview remain pending corrected full provider scan, checked source/release and genuine both-domain evidence. Original policy-read consent remains ready; no new credentials, policy writes, fixtures or retirement."
+    "lastEvidence": "2026-10-16 actual enabled Google API full scan at independently READY721ce94/dpl_GBScwGyeho2MzWbBCgC31R8VgiQj fails specifically setting.type format. Narrow first Gmail/unfiltered SYSTEM reads succeed, paginated; not absence evidence. Google documents standalone user_takeout and numbered service namespace search_ads_360, rejected by both old validators. Sourceaaedec7b87ded0bf85ea48f6dd5141755198e913 shares a bounded settings identifier validator across page/snapshot; exact advisory baseline comparisons, customer guards, malformed identifier refusal and missing-policy UNKNOWN remain. Await exact checks/review/merge/necessary checked release, actual complete both-domain audits and selected policies-only overview. No policy writes/new credentials/fixtures/retirement;19passed/10pending."
   },
   {
     "id": "P8-7-API-SHAPES",
@@ -422,7 +422,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P8-8-OWNER-POLICIES",
     "priority": 4,
-    "requiredRevision": "65ef4c370f97152cece85cb5cd9ed3986e78431b",
+    "requiredRevision": "aaedec7b87ded0bf85ea48f6dd5141755198e913",
     "task": "On future checked deployed revision verify owner overview exposes Cloud Identity policy differences, unknown/inherited settings, scoped opt-in and actual per-area reports without implying effective domain settings",
     "procedure": "docs/plan/TASKS.md",
     "gates": "Read-only P7-2 Google Policy API; optional real Super Admin consent; explicit crossDomain owner approval for limited connections; no Google settings writes",
@@ -430,7 +430,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P7-2-POLICY-AUDIT"
     ],
     "status": "PENDING",
-    "lastEvidence": "2026-10-16 after owner found project under Robinson AI Systems and enabled API: actual ordinary Rentals full policy scan now reaches provider but fails closed invalid policy resource; API-disabled gate resolved. Narrow Gmail and unfiltered first-policy reads succeed with valid SYSTEM resources. Exact rejected field is hidden by existing generic parser error; field-only diagnostic repair retains strict validation and emits no private IDs/values/CEL. Policy acceptance and dependent selected overview remain pending corrected full provider scan, checked source/release and genuine both-domain evidence. Original policy-read consent remains ready; no new credentials, policy writes, fixtures or retirement."
+    "lastEvidence": "2026-10-16 actual enabled Google API full scan at independently READY721ce94/dpl_GBScwGyeho2MzWbBCgC31R8VgiQj fails specifically setting.type format. Narrow first Gmail/unfiltered SYSTEM reads succeed, paginated; not absence evidence. Google documents standalone user_takeout and numbered service namespace search_ads_360, rejected by both old validators. Sourceaaedec7b87ded0bf85ea48f6dd5141755198e913 shares a bounded settings identifier validator across page/snapshot; exact advisory baseline comparisons, customer guards, malformed identifier refusal and missing-policy UNKNOWN remain. Await exact checks/review/merge/necessary checked release, actual complete both-domain audits and selected policies-only overview. No policy writes/new credentials/fixtures/retirement;19passed/10pending."
   },
   {
     "id": "P0-2-RTC-HANDLE",
@@ -3046,3 +3046,12 @@ Focused37 tests pass after final test review corrected array-valued invalid-case
 ### October 15 Denver — actual API enabled / provider schema investigation
 
 Owner located the existing Google project under Robinson AI Systems and enabled Cloud Identity API. Actual ordinary Rentals policy scan now returns invalid policy resource rather than accessNotConfigured; this resolves enablement, not the audit. Bounded first Gmail and unfiltered policy reads return valid SYSTEM resources, while full page100 scan fails. Existing generic error does not identify rejected field; no raw provider request tool or authorized shared native-token takeover is available. Add only fixed field-category labels to this existing fail-closed error, no IDs, values, CEL, arbitrary provider strings or bypass. This is a demonstrated provider integration diagnostic necessary to repair the original P7-2 acceptance, not a feature proposal or completed bundle. Focused30 scan/evidence/audit/real-registry tests pass; final checks/review/merge/necessary checked diagnostic release and actual re-entry still required. Current main/live/READY16cb619 unchanged before publication;19passed/10pending.
+
+
+### October 15 Denver — live diagnostic identifies setting identifier contract defect
+
+PR167 merged721ce9488879b9b40b503abc1865b5a58d5085f4 after exact-head/postmerge test,release-policy,check,unit,db,rtc SUCCESS and automated final-head no-major-issues review/no unresolved threads. Owner-authorized necessary diagnostic release used old-live16cb619 lease, force:false and independently verified separate receipt release-markers/2026-10-15-owner-early-721ce94; independent Vercel productiondpl_GBScwGyeho2MzWbBCgC31R8VgiQj READY721ce94. Actual full audit now identifies setting.type format as rejected field; no policy IDs/values disclosed by diagnostic.
+
+Google's public supported-settings/concepts list includes numbered service namespace search_ads_360 and standalone user_takeout. Existing page and snapshot validators incorrectly insist on letters/underscores-only app names and exactly one dot. Correct both with one bounded string identifier validator: settings/ prefix, lowercase app identifier with digits/underscores, optional dotted alphanumeric setting components, maximum512 characters. Other policy fields/typed value/customer uniqueness validation, exact baseline type equality, read-only scopes, complete/partial pagination and UNKNOWN/no-effective-certification semantics unchanged. Unknown nonbaseline types remain in the provider snapshot but cannot satisfy any baseline rule. No baseline expected value or policy is changed. Focused40 tests cover both validation layers and actual audit composition, unrelated types cannot make baseline green, malformed/missing/oversized identifiers remain refused. Required final checks/review/merge/checked release and genuine full Google acceptance remain separate. Both acceptance source pins advance to aaedec7b87ded0bf85ea48f6dd5141755198e913; previous failures are retained as transition evidence. Zero product bundles claimed.
+
+Primary provider references: https://docs.cloud.google.com/identity/docs/reference/rest/v1/policies ; https://docs.cloud.google.com/identity/docs/concepts/supported-policy-api-settings ; https://docs.cloud.google.com/identity/docs/concepts/policy-api-concepts .
