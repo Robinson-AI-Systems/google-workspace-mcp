@@ -110,3 +110,16 @@ proves the working native scoped/audited route. Hub CLI/relay/SDK/Sandbox and
 broader Hub revocation checks belong to Hub rather than blocking this service.
 The final smoke report explicitly distinguishes real reads, internal metadata,
 resource-limited development tests, Alert Center delegation and retired APIs.
+
+
+Final released acceptance: PR194 source42afbaa independently READY; retired
+notifications404 and AlertCenter503 with explicit DWD configuration reason verified
+through original read-only TEST. Actual protected encrypted-only activation and
+both-account saved-grant renewal/mailbox/persistence verification complete;
+plaintextAccounts0, legacyPlaintextCopies0, allproblems0. Subsequent actual
+Gmail-backed whoami200/matching identity. See encrypted-cutover.json and screenshot.
+Catalog report/developer audit is complete with the documented resource/config
+limits; positive Alert Center still needs separate apps.alerts authorization.
+Native Hub connection is proved, but separately listed broader Hub relay/Sandbox/
+revocation checks remain pending for Hub-agent reconciliation; earlier native-only
+closure wording does not waive or prove them. No reverse discovery is required.

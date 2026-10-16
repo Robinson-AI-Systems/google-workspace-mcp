@@ -211,3 +211,16 @@ The November1 calendar restriction is removed by explicit owner decision; actual
 retirement still needs checked READY source, all-account readiness, drain and
 recovery. Google Developer Preview is not a general sandbox for paid GA features.
 References and exact source-contract facts are in the final audit JSON.
+
+
+Final released acceptance: PR194 source42afbaa independently READY; retired
+notifications404 and AlertCenter503 with explicit DWD configuration reason verified
+through original read-only TEST. Actual protected encrypted-only activation and
+both-account saved-grant renewal/mailbox/persistence verification complete;
+plaintextAccounts0, legacyPlaintextCopies0, allproblems0. Subsequent actual
+Gmail-backed whoami200/matching identity. See encrypted-cutover.json and screenshot.
+Catalog report/developer audit is complete with the documented resource/config
+limits; positive Alert Center still needs separate apps.alerts authorization.
+Native Hub connection is proved, but separately listed broader Hub relay/Sandbox/
+revocation checks remain pending for Hub-agent reconciliation; earlier native-only
+closure wording does not waive or prove them. No reverse discovery is required.

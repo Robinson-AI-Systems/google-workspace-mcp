@@ -1,5 +1,7 @@
 ## October 15 — genuine deployed P8-8 delegated-mailbox acceptance
 
+Current October16 closeout: source42afbaa READY; encrypted-only retirement complete for2accounts with account/legacy plaintext0; catalog developer audit complete with explicit limits.28/29 acceptance tasks passed. Only broader Hub-owned route acceptance reconciliation remains pending; native Hub->Workspace discovery/read/audit is already proved. Alert Center activation is an explicit Google read/write delegation configuration choice, default off. See final released record and encrypted-cutover evidence below.
+
 Independently checked `main`, GitHub `live` and Vercel production READY all serve `afbc602285437557ae42ff470721dc834fbad8fd` (deployment `dpl_45xFRdTSm8fDwhSCVRxn4Xgoin1X`), which includes source repair `91325ca774c1be52955f394930831b20a65b43a0`. Actual connected service `workspace_whoami` confirmed the existing approved Rentals mailbox, then real `gmail_list_delegates` returned a valid **empty** result under the now-correct scoped delegated-robot authentication. The live `workspace_admin_console_verify` result at `2026-10-15T20:55:15.023Z` reported **5 of 5 observed** exact mailbox topics, including previous broken delegation (empty count 0); none were `not_readable`. No actual Google mutation, customer-wide read, TEST-fixture takeover, consent widening or secret was involved. Authentication-subject/boundary/negative identity/denial cases passed in the source regression and exact-head CI for merged PR149, while the live observation supplies genuine Google proof. Marked precise queue task **P8-8-DELEGATED-MAILBOX PASSED** with immutable original source pin and full sanitized evidence. This is a newly verified narrow original P8-8 acceptance result, **not** a full substantial completion bundle or whole-P8-8 acceptance.
 
 Independently reran `workspace_dev_check_integration` on deployed code at `2026-10-15T20:56:24.216Z`: Gmail/Drive/Calendar/Tasks/Chat **5 ready**, People/Postmaster **2 `not_readable`** (scope/access denied), changesMade `false`. Original P8-7-API-SHAPES stays PENDING. Read-only connected mailbox metadata list probes for Gmail labels, bounded Drive files (five objects, real paged/handle result), Calendar list and Tasks task-lists succeeded, but the complete original TEST-pass isolation, exact fixtures, negative cases and recovery/cleanup were not run; do not upgrade `GOOGLE-DIRECT-READ` or any source-ready fixture task without their independent criteria. Owner-granted customer-wide/Admin Console and protected operator P5-2 readiness remain separately outstanding. Source promotion alone never passed other queue tasks.
@@ -215,108 +217,12 @@ restricts only the named operation. Source completion never proves actual Google
 ```json
 [
   {
-    "id": "P0-2",
-    "state": "EXTERNAL_ONLY",
-    "remaining": "Engineering reconciliation of original P0-2 now complete in PR #138 and this source proof/owner-scope follow-up: every one of the 165 audited names has a protected explicit case or reviewed safe/fixture case; full catalog inventory, bounded exact args, per-case source handler-specific result validation where available, externally maintained false/unknown gates, TEST pass identity, synthetic handle/page replay, pacing and sanitized per-operation report/failure and skipped states are implemented. Actual provider smoke of every approved operation, committed genuine provider report, fixes or Known Bugs for any real failures and owner approval for customer-wide/export/fixture IDs remain OPEN EXTERNAL acceptance and must not be inferred from fakes. If a live provider receipt reveals a source defect reopen engineering.",
-    "evidence": "scripts/smoke-readonly-catalog.mjs, smoke-readonly-plan.mjs, smoke-readonly-cases.mjs, smoke-provider-shapes.mjs, smoke-readonly-fixtures.mjs, smoke-readonly-rate.mjs, smoke-readonly.mjs; test/unit/smoke-readonly-{cases,source-contract,plan,catalog,rate,fixtures,provider-shapes}.test.js; original P0-2 card; PR #138 and source follow-up exact-head unit/PG/RTC/Hub CI+release-policy, review and main merge needed. Synthetic checks prove engineering behavior, not real provider/API-wide proof.",
-    "next": "At independently READY checked live containing both P0-2 PRs and original owner-approved read_only TEST pass, run all permitted catalog cases/precise owned fixtures with customer-wide approval separately where needed; record failure/denial and sanitized provider smoke report, fix each real bug or file a Known Bugs card in ARCHITECTURE.md. Deployed/Hub/Sandbox acceptance remain separate and P0-2 milestone must not close until original provider report/known bugs.",
-    "gate": "Actual independently source-verified checked READY deployment; existing owner-authorized service-issued read_only TEST pass for ops@robinsonappliancerentals.com, exact approved fixture IDs and independent owner intent for cross-domain/customer-wide reads, no write/foreign data, original real Google provider report committed and all failures resolved or mapped in Known Bugs table."
-  },
-  {
-    "id": "P2-7",
-    "state": "EXTERNAL_ONLY",
-    "remaining": "Search-presence code is reconciled: account-specific root/www coverage, Search Console/Business Profile instructions and typed permission-denied UNKNOWN are implemented. Existing deployed WARN evidence is retained; it is not positive website verification. No new feature or broader OAuth permission is needed to produce the original honest report.",
-    "evidence": "src/tools/ops.js checkVerification/searchPresence; src/rtc/structured.js; test/unit/ops.test.js search-presence positive/partial/negative/missing-scope cases and rtc-structured.test.js; original P2-7 Build plus manual-report criterion; recorded P2-7-UNKNOWN evidence.",
-    "next": "Reuse original deployed UNKNOWN report at its verified revision. A positive Site Verification observation is optional account-specific follow-up only after separately approved OAuth consent; never change DNS based on UNKNOWN.",
-    "gate": "Optional positive Site Verification requires account-specific approved scope/consent; UNKNOWN remains a valid honest report, not proof of domain verification.",
-    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
-  },
-  {
-    "id": "P5-2",
-    "state": "EXTERNAL_ONLY",
-    "remaining": "Readiness-based activation source implemented under owner October16 policy change; no calendar gate. Preserve encrypted-copy integrity, observed genuine refresh for every account, protected owner activation, drained incompatible deployment and encrypted recovery. Actual production activation and next refresh/readback remain separate.",
-    "evidence": "Source fc8a922e1fc515c506a22b443fdd5a365bfb2e18: src/db.js durable google_token_storage marker, tokens_enc_verified_at and tokens_enc_refreshed_at, locked dual save/backfill, encrypted-only CAS and inspect/activate; src/auth/google-auth-hosted.js marks actual tokens event; scripts/google-token-retirement.mjs protected operator CLI. Real PostgreSQL test/db/upgrade.test.js checks simultaneous dual and encrypted-only writers, retained refresh token, existing/created accounts, wrong/missing key, stale ciphertext, pre-November date/owner refusal, all-account readiness. 1,697 unit, DB/RTC/check and exact-head Actions 38798504715 PASS at source revision. This is synthetic DB proof, not production token migration. October16 source follow-up removes calendar predicate, adds protected exact-confirmation activation, sanitized plaintext-account counts and real-PG readiness-based activation/idempotence/next-refresh assertions. Exact new source CI still required.",
-    "next": "Check/review/merge source; conditionally release after independent work is exhausted; verify actual READY and canonical source, protected readiness and deployment drain, activate and refresh each existing account with its saved grant. Verify encryptedOnlytrue and plaintextAccounts0.",
-    "gate": "Owner-authorized readiness-based retirement; no November1 wait. All-account integrity/refresh, checked READY source, incompatible deployment drain, encrypted recovery/reconnection; no plaintext-only rollback.",
-    "reviewedAt": "fc8a922e1fc515c506a22b443fdd5a365bfb2e18"
-  },
-  {
-    "id": "P6-1",
-    "state": "EXTERNAL_ONLY",
-    "remaining": "Merged implementation reconciled: one existing update tool, original six and 16 supported added fields, allowed-value refusal, transition dependency checks, full preview/readback, outsider/moderation confirmation and domain guards. Deprecated showInGroupDirectory intentionally omitted. Old candidate branch is not new work.",
-    "evidence": "src/tools/group-settings.js SETTING_KEYS/buildSettingsBody/validateSettingsTransition; admin-directory.js group handler; guards-admin.js settingsView/confirmWhen; test/unit/group-settings.test.js covers fields, enums, dependencies, preview, risk and readback; README/OWNER-GUIDE shared-inbox guidance. Main includes 80c0870.",
-    "next": "Perform original authorized disposable-group preview/edit/readback/cleanup through the deployed custom service when its exact fixture and scoped permission are available. Record P6-1-GROUP-LIFECYCLE; do not reimplement the merged branch.",
-    "gate": "Checked independently READY source containing 80c0870; original approved group fixture, scoped Google permission and operation-specific edit/cleanup authorization.",
-    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
-  },
-  {
-    "id": "P7-1",
-    "state": "EXTERNAL_ONLY",
-    "remaining": "Merged shared-drive engineering reconciled: list/get/create/update/hide/delete, existing membership callers, supportsAllDrives on file operations, stable requestId, restriction PATCH after create, theme/color and partial-failure recovery. Source tests do not prove the real lifecycle.",
-    "evidence": "src/tools/shared-drives.js; drive.js/guards.js callers; test/unit/shared-drives.test.js covers each tool, member role/confirmation, exact API calls, flags, UUID replay, two-stage failure and partial update. Main includes 9bf62d6 and 81264c1.",
-    "next": "Run original authorized create/member/read/delete lifecycle and exact cleanup on a disposable shared drive; first verify original source pin is deployed. Preserve no-delete-files and membership/domain guards. Track P7-1-DRIVE-LIFECYCLE.",
-    "gate": "Independently READY checked source including 81264c1; explicit disposable-drive/member fixture permission and eligible Google role/edition. No paid account or production file changes.",
-    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
-  },
-  {
-    "id": "P7-2",
-    "state": "EXTERNAL_ONLY",
-    "remaining": "Merged source reconciled: read-only explicit-policy listing and bounded pagination; editable 37-rule ten-area advisory baseline, typed mismatch/unknown handling, exact customer/OU provenance and console links. Google returns explicit policies, not computed effective per-domain policy; that limitation remains visible rather than a false compliance claim.",
-    "evidence": "src/tools/policy-audit.js, policy-scan.js, policy-evidence.js; src/data/policy-baseline*.json; test/unit/policy-{audit,scan,baseline,evidence}.test.js positive/mismatch/missing/malformed/provenance/scope/partial-page cases. Main includes 0da2200/f7e3f19. Original P7-2 Build/Acceptance reviewed. Actual P7-2-POLICY-AUDIT PASSED at READY5c23755; docs/plan/evidence/2026-10-15-policy-audit.json contains sanitized both-domain37rule/10area evidence. Provider setting identifier repair aaedec7 is in deployed ancestry.",
-    "next": "Original both-domain manual audit is complete. Preserve advisory/system/unknown/effective limitations; reopen source only for a new demonstrated provider or requirement failure.",
-    "gate": "Current original acceptance closed by owner-authorized ordinary Rentals Super Admin read across both domain selectors; no separate AI Systems account consent, policy adoption or write authority is inferred.",
-    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
-  },
-  {
-    "id": "P7-8",
-    "state": "EXTERNAL_ONLY",
-    "remaining": "Original approved bulk design reconciled: all seven exact mappings, strict top-level/operation schemas and 20 explicit targets; guarded final-registry child preview/confirm/profile/domain enforcement; zero autonomous spending; ordered partial outcomes and exact readback/audit handling; no retry/rollback; owned result paging. #126 and #127 are both merged, not candidates.",
-    "evidence": "src/tools/bulk.js normalizeBulkArgs/denial/run/readMailboxExact/workspace_bulk_operation; final registry/wrapped children; test/unit/bulk.test.js all seven mappings, schema parity, denied/no-write preview, mixed outcomes, auth loss/budget, exact mailbox reads, parent audit failure and meta dispatch; original P7-8 design reviewed.",
-    "next": "P7-8-GUARDED-BULK PASSED on READY8ce3d7b using owner-approved24h TEST authority. Seven mapping outcomes, exact mailbox/group readbacks, domain/spending refusal, provider failures and cleanup are recorded in docs/plan/evidence/2026-10-16-existing-pass-bulk.json. Reopen only for changed requirements or a demonstrated defect; spending remains independently gated.",
-    "gate": "Independently READY checked source including merged #127; service-issued appropriate TEST authorization, explicit targets and original operation-specific permission; spending actions remain independently gated.",
-    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
-  },
-  {
-    "id": "P8-2",
-    "state": "EXTERNAL_ONLY",
-    "remaining": "Merged per-connection engineering reconciled: read_only/everyday/full, catalog/compact, area filters and same final guarded dispatcher. Authorization code and refresh copy every policy field via one immutable helper; malformed refresh never defaults to full. Database tests assert column/copy parity and account continuity.",
-    "evidence": "src/oauth/connection-settings.js; api/oauth/token.js; src/db.js token settings; src/rtc/catalog.js; test/unit/oauth-connection-settings.test.js, rtc-profile.test.js; test/db/upgrade.test.js connection-settings cases; check-rtc-budget.mjs. Main includes f7c1ffe; original P8-2 criteria reconciled.",
-    "next": "Execute genuine deployed custom-MCP refresh/profile/listing/area denial with scoped grants, then separate direct/Hub/relay/Sandbox routes. Reuse source/SQL proof; old candidate branch cannot count again.",
-    "gate": "Independently READY checked source including f7c1ffe; scoped custom-service connection/pass, safe refresh identity and separate Hub routing grants; synthetic SQL/RTC proof is not provider acceptance.",
-    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
-  },
-  {
-    "id": "P8-3",
-    "state": "EXTERNAL_ONLY",
-    "remaining": "P8-3 engineering is implemented: owner passphrase and canonical-origin protected one-time TEST pass page; only token hash persisted; bounded lifespan/areas, read_only default, explicit separately confirmed TEST write option, revoke/expiry, rate limit and scope checks; runtime withdrawal of RTC_TEST_ACCOUNT_EMAILS authorization stops already-issued TEST passes immediately at the HTTPS door. Owner-authorized genuine deployed TEST pass issuance, exact read/write refusals, revocation and expiry are NOT claimed until separately observed.",
-    "evidence": "api/rtc/passes.js; src/rtc/pass-options.js; src/db.js getRtcPass/rtcPassFailureCode; api/rtc-gateway.js; test/unit/rtc-pass-page.test.js, rtc-https.test.js, rtc-route-http.test.js, rtc-pass-withdrawal.test.js; test/db/upgrade.test.js. PR #132 candidate requires exact-head checks, review and merge.",
-    "next": "After an independently verified READY checked release includes PR #132, use the existing owner-approved TEST mailbox and service-issued pass to prove protected HTTP identity, read-only and domain denial, revocation/expiry and session isolation. No TEST enrollment widening or production activation.",
-    "gate": "Independently verified production READY source containing PR #132, existing owner-approved RTC_TEST_ACCOUNT_EMAILS enrollment, service-issued short-lived TEST pass and native /api/tools custom-MCP authorization/denial evidence; no broader consent, spending, or production writes."
-  },
-  {
-    "id": "P8-4",
-    "state": "EXTERNAL_ONLY",
-    "remaining": "Completed engineering contribution PR142, merged 997518507ad1e7a914bd31d71b54129292016168, retained ONCE in the original workload. Full HTTP contract, bounded OpenAPI, pass/guard/result ownership, shared atomic configured PostgreSQL counter and obsolete-window pruning proved at exact head and merged main. Genuine deployed TEST/provider/Hub acceptance remains external.",
-    "evidence": "api/rtc-gateway.js createRtcGateway/default handler and src/rtc/openapi.js; test/unit/rtc-openapi.test.js; rtc-route-http.test.js exact Node HTTP rewrite, final MCP registry, broker and HTTP-broker label lifecycle, connector/no-token refusals, full catalog/counts, private paging and error tests; rtc-https.test.js; test/db/rtc-http.test.js two independent handlers / 12 concurrent actual PG sessions, 150 requests => 120 successes and 30 HTTP 429, per-pass limit 5, window reset, atomic same-pass obsolete-window pruning and cross-pass isolation/revocation. Database execution requires exact-head Actions; original P8-4 criteria all mapped.",
-    "next": "Retain original completion proof and acceptance queue P8-4-HTTP-CONTRACT; execute only after scheduled checked READY source includes it and protected scoped TEST authorization is available. No extra release.",
-    "gate": "Checked READY live containing 4ca6af37551809c2e0c9f93e250966d15d3d9fbf; original short-lived service-issued TEST pass and approved mailbox; genuine rtool/wire identity, denial and permitted provider behavior, with direct/Hub/relay/Sandbox evidence separated. No new credentials, production write or spend authority."
-  },
-  {
     "id": "P8-5",
     "state": "EXTERNAL_ONLY",
-    "remaining": "Full original P8-5 engineering criterion passed at d8415e34637cf7c0a7e13bd6e83fa92d49d0cd15 in Actions 38779326658: reviewed pinned Hub conformance runs against actual Workspace modules and checked route table, strict stateful fake Google, two independent processes and shared disposable PostgreSQL. All fourteen named probes pass with NO skips. Local actual DB was unavailable; exact-head Actions supplies genuine local-process/SQL proof. Deployed Google and Hub routing are separate external acceptance.",
+    "remaining": "Workspace RTC1 implementation, actual two-process shared-PG14probe conformance and deployed direct HTTP/provider acceptance are complete. Native Hub->Workspace discovery/read/durable audit accepted. No reverse discovery or Workspace engineering remains. Broader original Hub relay/Sandbox/revocation acceptance must be reconciled in Hub project.",
     "evidence": "Hub #213/#215 immutable package f173a0aeb070f1ca52188e9acab5bcccf53d81c7; scripts/rtc-conformance-ci.mjs and rtc-workspace-conformance.mjs; test/conformance actual server/provider/SQL adapters. Actions 38779326658/job116575122533: manifest, OpenAPI, full catalog, meta, projected/oversized isolated reads, guarded audited writes, missing/read-only/expired/revoked passes, safety, budget, real OAuth refresh settings, two-instance shared counter all PASS; 1697 unit +59 actual PG +28 RTC tests pass. release-policy run38779326675 PASS. PR144 final docs head must retain green checks and review before merge.",
-    "next": "Require final exact-head CI/review and merge PR144; then retain P8-5-WIRE-RECEIPTS and GOOGLE-RTC for genuine deployed direct/Hub/relay/Sandbox acceptance with original scoped grants.",
-    "gate": "Scheduled checked READY source including d8415e3; separately protected short-lived TEST service grant and scoped Hub routing authorization. Synthetic provider proof is not live Google or Hub acceptance."
-  },
-  {
-    "id": "P8-8",
-    "state": "EXTERNAL_ONLY",
-    "remaining": "Original implementation and required acceptance completed: dated authenticated Console walk,153mapped topics,24reviewed readbacks, honest owner states, audience search and actual selected policies-only report with full guarded child evidence. No observation-storage or new feature phase.",
-    "evidence": "src/tools/admin-overview.js and ops.js owner overview/settings; src/tools/admin-console-verify.js; src/data/console-{map,review}.js; src/rtc/catalog.js audienceFor; test/unit/rtc-owner,owner-evidence,owner-coverage,admin-console-{discovery,verify,expectations}.test.js. Original P8-8 Build/Acceptance reconciled at main28e6486. P8-8-CONSOLE-WALK and P8-8-OWNER-POLICIES PASSED; actual owner report03:15:41.586Z at READY5c23755 reconciles37rules/10areas with both domain audits; sanitized evidence file records limits.",
-    "next": "Preserve accepted source/proof, unknown/inherited/effective limitations and edition/access observations. Reopen only on changed relevant source or new actual console/provider failure.",
-    "gate": "Original current acceptance closed. Future organization diagnostics outside policies still require their own owner scope approval; no permission expansion or policy mutation follows.",
-    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
+    "next": "Give Hub agent the existing PR224 receipt and original D-4 criteria; reuse valid proof, finish applicable route-specific acceptance or establish contract-based nonapplicability. Do not rebuild working connection or change Workspace.",
+    "gate": "Hub-agent-owned acceptance reconciliation only. Native connection is already proved; broader routes are not inferred from it."
   }
 ]
 ```
@@ -350,12 +256,12 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "id": "GOOGLE-RTC",
     "priority": 2,
     "requiredRevision": "e30606d0e52a58d4d0957fd8637b173be47b6ce5",
-    "task": "Verify Hub discovers the independent Workspace contract and routes a scoped, audited real provider read",
+    "task": "Reconcile and complete separately required Hub restricted relay/Sandbox and whole-route revocation acceptance; retain accepted native Hub-to-Workspace connection",
     "procedure": "docs/plan/TASKS.md",
-    "gates": "Hub discovers Workspace, never the reverse. Separate scoped service grant and mandatory Hub audit; no Hub changes/configuration/releases here.",
+    "gates": "Hub discovers Workspace; no reverse discovery dependency. Native scoped/audited route accepted. Broader route-specific obligations remain Hub-agent-owned; reuse existing evidence, finish applicable original criteria or document contract-based nonapplicability. No Hub changes here.",
     "dependsOn": [],
-    "status": "PASSED",
-    "lastEvidence": "Owner direction clarified October16: Hub discovers Workspace. Hub authoritative RTC1 contract section1 assigns CLI/relay/SDK to Hub, not service servers. Independently read Hub PR224 final receipt6216311463: READYf6f916b, real native Hub TEST describe plus two whoami provider reads, writesfalse, independent scoped upstream and two durable attempt/outcome receipts. Existing Workspace-side routed Gmail profile also passed. Connection accepted; broader D-4 resource/relay/Sandbox/revocation acceptance stays in Hub project and is not misrepresented as tested or a reverse Workspace dependency."
+    "status": "PENDING",
+    "lastEvidence": "Clarification: PR194 correctly proves native Hub connection but must not imply that native reads pass separately listed relay/Sandbox/revocation requirements. Hub PR224 final hosted receipt6216311463 proves actual TEST discovery/providerread and2 durable attempt/outcome events. Hub RTC1 section1 assigns CLI/relay/SDK doors to Hub, not service servers. No Workspace runtime Hub-discovery code exists or is needed. Broader Hub acceptance has no new proof here; preserve as PENDING for Hub-agent reconciliation, with no duplicate connection implementation or Workspace release required."
   },
   {
     "id": "GOOGLE-DIRECT-READ",
@@ -538,13 +444,13 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P0-2-FULL-CASEBOOK-REAL-READ",
     "priority": 1,
-    "requiredRevision": "280df6e672554779da6f3cd9cfbe3879f169eab0",
+    "requiredRevision": "c229a66d6e6e3e416ef6f8aee10f7399b76ecbd2",
     "task": "Run full source-reviewed P0-2 read-only catalog against approved real Google TEST account; publish sanitized report and fix or ledger each real failure",
     "procedure": "scripts/smoke-readonly-catalog.mjs; docs/plan/GOOGLE-ACCEPTANCE.md; docs/plan/TASKS.md P0-2",
     "gates": "Actual independently READY checked merged source, service-issued short-lived read_only TEST pass, precise approved nonprimary owner fixtures, scoped separate customer-wide approvals; no provider writes, credentials or fixture IDs in reports",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "October16 final developer audit: three new original14area read_only TEST genuine reads PASS on READY6ec: Chat spaces2, fresh Drive cursor/one changes page, bounded exact-domain health report13checks. Retained creator-owned dev_get_run200/foreign404 is internal service proof, not Google. Historical166 disposition now159 verified handler/service reads,2 no-resource development-contract cases,2 AlertCenter service-account configuration cases,1 retired unsupported notification surface,2owner-excluded Vault. Source fixes actual AlertCenter user-OAuth mismatch and removes obsolete notifications/scope; exact-head checks and deployed safe refusal still required. No paid trial, transfer/device creation, new delegation or fake provider pass."
+    "status": "PASSED",
+    "lastEvidence": "Original smoke-report/fix-or-ledger criterion completed with explicit owner developer-testing guidance. Historical166 audited:159 verified handler/service reads (includes3newgenuine Chat/Drivechanges/domainhealth and retained internalcreatorledger),2 empty-resource development-tested GETs,2 AlertCenter configuration cases,1 retiredunsupported,2 ownerexcludedVault. No claim166positiveGooglecalls. Real source defects fixed/tested/released READY42afbaa: obsolete notificationtool404; AlertCenter503 explicitly identifies requiredserviceaccount/DWD ratherthan falseempty. ActualSDK/REST contracts/denials tested; no deviceenrollment, productiontransfer, paidtrial or newdelegation. Report+KnownBugs+final-developer-audit.json and encrypted-cutover.json preserve exact limits. Positive AlertCenter activation remains an explicit read/write scope configuration decision."
   },
   {
     "id": "P8-4-HTTP-CONTRACT",
@@ -626,15 +532,15 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P5-2-PLAINTEXT-RETIRE",
     "priority": 5,
-    "requiredRevision": "280df6e672554779da6f3cd9cfbe3879f169eab0",
+    "requiredRevision": "c229a66d6e6e3e416ef6f8aee10f7399b76ecbd2",
     "task": "Owner-approved readiness-based cutover to encrypted-only Google tokens, then prove each account renewal clears its plaintext tokens column without losing credentials; verify recovery and incompatible-deployment drain.",
     "procedure": "docs/plan/TASKS.md P5-2 controlled future activation",
     "gates": "Owner October16 explicitly replaces calendar delay: all-account encrypted/backfill/genuine-refresh readiness, checked READY encryption-aware release, incompatible deployment drain and reviewed encrypted restore/reconnection plan. Protected authenticated explicit activation; no plaintext-only rollback.",
     "dependsOn": [
       "P5-2-ENCRYPTED-READY"
     ],
-    "status": "PENDING",
-    "lastEvidence": "Owner explicitly removed November1 waiting policy and authorizes readiness-based completion. Source removes both JS and SQL calendar gates, preserves owner/all-account checks, exposes explicit protected operator form with drain/recovery attestations and fresh runtime readiness. Current live6ec remains encryptedOnlyfalse; all2accounts readiness previously true. Actual activation and subsequent per-account refresh remain PENDING until repaired source is checked and READY."
+    "status": "PASSED",
+    "lastEvidence": "Actual checked READY42afbaa/dpl_5Ja6VZyDKyn2nnMVYyhYuzouFRtu; protected owner activation submitted and fresh rendered result observed: encryptedOnlytrue,2accounts refreshed/mailbox+encryptedpersistenceverified, plaintextAccounts0, legacyPlaintextCopies0, readytrue, everyproblem0, notBeforenull. Only matching legacy copy cleared on genuine renewal; key unchanged/unextracted, encryptedcopies/tables retained. Subsequent originalTEST actual Gmail-backed whoami200/matchingidentity aftercutover. Screenshot and sanitized evidence docs/plan/evidence/2026-10-16-encrypted-cutover.json. No replay needed."
   },
   {
     "id": "P8-3-OWNER-TEST-FORM",
@@ -1878,7 +1784,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | Card | Status | PR | Notes |
 | --- | --- | --- | --- |
 | P0-1 | MERGED | #6 | Tests, fakes, DB tests, CI added (on `main`; 993 unit tests pass in the 2026-10-02 audit). CI runs DB tests on a throwaway Postgres on every PR (no secret needed). Not yet proven: red-on-failure demo (do once on the PR) |
-| P0-2 | IN_PROGRESS | #39, #98, #114, #120, #151–153 | Actual separately issued24h Rentals TEST/read_only pass and deployed79ac338 five-area smoke passed;29 selected harmless provider-shaped reads also passed. Authorized catalog enumerated94 reads. Full catalog/exact-fixture/denial/handle coverage remains open; do not promote partial probe coverage to full acceptance. |
+| P0-2 | DONE | retained checked merges / #194 | Full historical166case developer/provider audit published;159 verified handler/service reads,2 noresource development contracts,2 delegation config,1 unsupported retired,2Vault ownerexcluded. Original report/fix-or-ledger criterion accepted; no166positiveGoogleclaim. PR194 and final cutover evidence. |
 | P0-3 | MERGED | #6 | Fix + unit test done. Manual Drive upload check needs Chris's go-ahead (writes to his Drive) |
 | P0-4 | MERGED | #7 | Tool + unit tests done (token host check, size/redirect/timeout/private-address limits). Manual copy of the brand PDF needs Chris's go-ahead (writes to his Drive) |
 | P0-5 | MERGED | #6 | Lockout + constant-time compare + tests. Manual 5-wrong-tries check on the preview still to do |
@@ -1895,7 +1801,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P2-4 | MERGED | #14 | `workspace_where_is_setting`, 47 settings (card said ~60). Deviation: a .js file, not .json, so the serverless bundle always includes it. Direct links are from memory of Google's URL patterns: spot-check of 10 by Chris still to do; entries without a link give click paths only |
 | P2-5 | MERGED | #14 | `workflow_health_report`: scoring rules unit tested. Deviation: "unused licences" means licences held by suspended or 90-day-inactive accounts, because the API cannot show purchased seats. Deep checks (apps, forwarding) cover the first 100 active users. Manual runs and committed examples still to do |
 | P2-6 | MERGED | #14 | Real customer ID in `licensing_list_assignments`; switched-off-API errors now name the API to enable; `workspace_plan_summary` added. Manual run on both domains still to do |
-| P2-7 | IN_PROGRESS | #14, #100, #105 candidate | Search presence read-only verification remains account-specific. Actual native custom Google provider run for the rentals domain returned Google Site Verification insufficient authentication scopes; #100 makes that case explicitly UNKNOWN instead of incorrectly reporting unverified, with safe manual Search Console and Business Profile steps. #105 candidate fixes a reproducible typed-result validator disagreement: the declared schema permits null unknown root/www but runtime refused it, causing the new deployed #100 fallback to fail in the custom MCP. Provider success after optional owner OAuth consent and next checked deployment remain open. |
+| P2-7 | DONE | retained checked merges / #194 | Original typed UNKNOWN/manual guidance accepted P2-7-UNKNOWN; genuine Tasks/Site/Postmaster permission coexistence and owner domain verification later passed. No positive effective-policy or search-ranking claim. |
 | P2-8 | MERGED | #14 | `workflow_weekly_digest`: emailing needs confirm:true. Manual run and committed sample still to do |
 | P3-1 | MERGED | #17, #18 | `workflow_add_staff_member`: roles map to calendar/Drive levels (driver/technician: edit calendar, no Drive access (Chris, 2026-10-01); office/admin: manage calendar, edit folder). Safe to run twice. Deviations: Chris said drivers/technicians need no Drive access; the nine standard folders were read from the live Drive; emailing needs `confirm` (login to an address, or welcome to `personalEmail`); 2-step: Google's API cannot require it for one person (the field is read-only), so the tool reports enrolment status and points to the org-unit policy (Admin console > Security). Hardening #18 also: a failed step is no longer "confirmed", a driver who already has Drive access is flagged (never silently removed), owners are never downgraded, mailbox branding is skipped when already applied, sharing lists are read to the end, and offboarding now verifies the shares are gone and respects the domain limit. `ai-systems` has no calendar/folder listed so those steps are skipped. Manual run against a disposable test user (Chris deletes it) still to do: it creates a real account |
 | P3-2 | MERGED | #15, #18 | Offboarding already had dryRun/confirm/read-back/logging from P1-3. Added: removes send-as aliases and sets the out-of-office reply (the old description promised the reply but the code never did it) before suspending, via delegation; each is skipped with a reason when delegation is off. Also removes the calendar/Drive shares granted by P3-1. #18 hardened failed-step/read-back behavior. Left as the guard wrapper rather than direct `defineWrite` (same safety behavior). |
@@ -1908,11 +1814,11 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P4-3 | MERGED | #20 | `workspace_business_calendar`, `workspace_business_folders` + `business_resources` table (contract-tested on the in-memory fake and on a real Postgres 16, 44 DB tests passing). Acts as the connection's own account, so it needs no delegation. Idempotent; a remembered ID that no longer exists is not trusted; the main folder is searched across all of Drive and two matches stop it rather than guess; the preview and the read-back look at Drive itself. Manual check still to do: returns the existing `c_dd214eeb…` calendar and `13yNQodb…` folder tree |
 | P4-4 | MERGED | #21 | DEPLOY.md Part 5 updated and Part 8 added (the app's own service account, its four scopes, the Vercel variables, how it finds the IDs). Cross-linked to APPLIANCE-DESK-INTEGRATION.md. Chris can follow it in about 15 minutes |
 | P5-1 | DONE (automated safety acceptance) | #45, #49 | All eleven missing mutators guarded (#45); #49's exhaustive assembled-registry contract reviews 156 exact read-only tools and proves 209 handler-provenance-guarded writes; unknown name effects fail closed regardless of `dryRun`. Private WeakSet provenance is not forgeable with a public Symbol. Exact-head `test`+`release-policy` and automated fake-Google/Postgres/RTC tests passed; actual provider/Hub routes remain separate P0-2/P8 acceptance and are NOT claimed. |
-| P5-2 | IN_PROGRESS | #147 | Encrypted-only source and real disposable PostgreSQL tests complete; activation not before November 1 and only after protected all-account readiness, checked release, old-instance drain, independent owner confirmation and recovery plan. Queue P5-2-ENCRYPTED-READY / P5-2-PLAINTEXT-RETIRE remains PENDING. |
+| P5-2 | DONE | retained checked merges / #194 | PR194 checked READY42afbaa, actual owner-protected activation and both-account genuine refresh/mailbox/persistence verification complete. Accountplaintext0/legacyplaintext0, encryptedOnlytrue, allproblems0. Owner removed calendar delay; key/ciphertext/tables retained. |
 | P5-3 | DONE | | Chris decided to retire local mode (2026-10-02). Local files, scripts and README sections removed; hosted only. README, DEPLOY and ARCHITECTURE checked against the code in the 2026-10-02 audit and match. |
 | P5-4 | DONE (automated) | #50 | Generated 370-name catalog, clean-regeneration and drift tests, version 2.0.0 and changelog; exact-head `test` + `release-policy` passed then #50 merged. No production/Google provider deployment acceptance asserted. |
-| P6-1 | IN_PROGRESS | #25 and merged80c0870 | Original field/schema/guard/preview/readback engineering reconciled on main; no candidate remains to implement. Actual scoped disposable-group lifecycle remains P6-1-GROUP-LIFECYCLE. |
-| P7-1 | IN_PROGRESS | merged9bf62d6/81264c1 | Full shared-drive/membership/flags/recovery engineering reconciled on main. Original provider lifecycle remains P7-1-DRIVE-LIFECYCLE; no repeat implementation. |
+| P6-1 | DONE | retained checked merges / #194 | Original P6-1-GROUP-LIFECYCLE PASSED with real scoped disposable group field updates/readbacks and exact cleanup; retained queue receipt is authoritative. No fixture replay. |
+| P7-1 | DONE | retained checked merges / #194 | Original P7-1-DRIVE-LIFECYCLE PASSED, exact shared-drive/member semantics, recovery and independent404cleanup retained; no source work or recreated fixture. |
 | P7-2 | DONE | #53–54, #90, #108, #162, #167–168 | Both approved domain selectors completed actual250-policy/7page,37rule/10area audit on checked READY5c23755. Two advisory SYSTEM differences,3matches,32UNKNOWN; customer/effective limits explicit. Source and genuine acceptance complete; no policy adoption or change. |
 | P7-3 | DONE (automated) | #51 | Read-only, allowlisted Reports activities, capped queries, paging and date validation; exact-head required checks green and #51 merged. Actual provider/plan authorization not yet proved. |
 | P7-4 | DONE (automated) | #52 | Postmaster v1 read-only domain and delivery metrics with scope isolation; exact-head `test` and `release-policy` successful and #52 merged. Owner-authorized per-account re-consent, Postmaster domain verification and live readback remain unverified. |
@@ -1921,10 +1827,10 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P7-7 | SUPERSEDED | | Delivered by P8-2 (profiles, area filters, compact listing) — Phase 8 added 2026-10-10 |
 | P7-8 | DONE | #126, #127 merged | Original guarded bulk implementation plus genuine owner-approved TEST acceptance PASSED at READY8ce3d7b. Exact mailbox/membership readbacks, domain/spending refusals, truthful partial/provider failures and isolated cleanup recorded; no paid license success claimed. |
 | P8-1 | DONE | #31, #34, #41, #44, #55, #57, #63 | Stated automated acceptance passed: all 161 read names bounded with 100-item wrapper fakes, projection, real-DB handle isolation, annotation parity, 13 typed reads and all seven guarded write workflows. Genuine deployed Google/Hub routes remain separate P8-3/4/5 acceptance. |
-| P8-2 | IN_PROGRESS | #30 and mergedf7c1ffe | Full immutable refresh/profile/listing/area contract and real SQL proof implemented. Genuine custom-service refresh/profile and separate Hub proof remain external. |
-| P8-3 | IN_PROGRESS | #32 | Owner-protected hashed, short-lived, scratch-account TEST read-only passes, revocation, limit guards; live issuance acceptance unverified |
-| P8-4 | IN_PROGRESS | #32–#34, #142 | Engineering complete and exact-head/main checked at merged9975185; retained once in combined owner workload. Real deployed TEST/provider/Hub acceptance remains open. |
-| P8-5 | IN_PROGRESS | #34, #144 | Actual local Workspace/fake Google/two-process shared-PG conformance all14 probes passed at d8415e3; full engineering evidence above. Genuine deployed D-4 remains separate. |
+| P8-2 | DONE | retained checked merges / #194 | Original immutable connection/refresh/profile/listing/area proof and genuine deployed HTTP/pass identity/denials accepted in queue. Native scoped/audited Hub route also proved; no Hub-to-service permission shortcut. |
+| P8-3 | DONE | retained checked merges / #194 | Actual owner-form TEST pass issuance/ownership/readonly/area/refusal/revocation accepted in original queue, including runtime TEST withdrawal proof. Useful unrelated grant preserved until expiry. |
+| P8-4 | DONE | retained checked merges / #194 | Original P8-4-HTTP-CONTRACT and wire receipts PASSED: real deployed contract, independent pass identity, guard/result ownership, actual rate limits and source-specific provider read proofs. Broader Hub-only paths stay separately tracked. |
+| P8-5 | IN_PROGRESS | #34, #144, #194 | Workspace conformance14/14 and native Hub discovery/provider-read/durable-audit accepted. Broader original relay/Sandbox/whole-route revocation needs Hub-agent reconciliation; no Workspace engineering or reverse Hub discovery remains. |
 | P8-6 | WAITING (optional reuse) | | Published immutable core and export-specific original-service parity; does not block P8-5, RTC routing or real Hub acceptance |
 | P8-7 | DONE | #40–#48, #101–#103, #109, #144, #187 | Original fixture/cleanup/integration criteria accepted: exact-ID record/ownership/foreign-object/trash-only/preview/confirm/readback/audit source and PG proof; actual authorized Drive/Calendar/Gmail create/replay/cleanup and recovery/denial receipts PASSED. Current exact app readiness restored on READYf96 by genuine combined consent; actual three-scope and six-API/four-scope readiness remain ready after genuine saved-grant refresh, all2accounts encrypted ready. All fixtures cleaned; no recreated objects or repeat credit for inherited code. Full catalog, separate Hub route acceptance and future plaintext cutover remain open in their own cards. |
 | P8-8 | DONE | #36, #56, #58–60, #99, #110, #123, #163–166, #168 | Dated actual Console walk and153-topic correction accepted; readbacks/audience proofs retained. New actual policies-only owner overview at READY5c23755 reconciles250policies/37rules/10areas with direct both-domain audits, honest needs_attention/UNKNOWN/effective:false; original queue criteria passed. |
@@ -3490,3 +3396,139 @@ No new product bundle is claimed; this is completion/defect repair.
 PR194 source self-review: checked lazy Alert Center refusal inside security-snapshot coverage handling, no widening of existing scopes, exact-origin authenticated retirement action, separate integrity/readiness and activation, durable SQL mode transition, no credentials in reports. Local check and1875unit tests pass; no inline review threads. Automated Codex review unavailable due to recorded usage quota, not a source finding; required exact-head Actions still gate merge. Both source-dependent queue rows now pin PR194 source280df6e before actual post-release execution.
 
 Final retirement review also closes the retained single-account google_auth copy: only after encrypted-only activation and a successful account refresh, clear a legacy credential whose refresh token exactly matches that account’s pre/post renewal token. Unmatched credentials and the table remain intact; no activation-time bulk erase. Sanitized inspection adds legacyPlaintextCopies; real PG tests cover unrelated-account refusal, rotation, next-refresh timing and no resurrection. Actual live counts remain unverified until release.
+
+
+## October16 final released completion record — authoritative current state
+
+Checked source42afbaa is serving READY dpl_5Ja6VZyDKyn2nnMVYyhYuzouFRtu;
+main/live matched at release. PR194 final-head and post-merge main CI+policy all
+required jobs passed. Owner-approved nonforce expected-old promotion preserved
+all previous receipt branches and added owner-completion-194. Actual protected
+retirement completed: both accounts refreshed, mailbox and encrypted persistence
+verified, account plaintext0, legacy plaintext0, all integrity problems0.
+Original TEST Gmail-backed whoami remains200 with matching account after cutover.
+No further token refresh/retirement execution is required for this acceptance.
+
+Catalog smoke/fix-or-ledger audit is complete under the owner developer-testing
+direction, preserving every limitation and actual failure. Alert Center code is
+fixed and contract tested; activation is a separate Google read/write apps.alerts
+delegation choice, default off. Google Admin currently requires reauthentication
+before inspecting/changing that entry. The client ID and scope are in sanitized
+evidence; no new delegation has been requested or enabled.
+
+Queue:28PASSED/1PENDING. The remaining row preserves broader Hub acceptance
+reconciliation; the native connection works. PR194 native proof is not evidence
+of relay/Sandbox/revocation. Those doors belong to Hub; no reverse discovery or
+additional Workspace release is required. Do not silently waive those checks or
+rebuild the connection. Give Hub agent its original criteria and PR224 receipt.
+
+Eight stale IN_PROGRESS roadmap rows now DONE with their real retained
+queue evidence. P8-5 retains the separate Hub-owned reconciliation. No new
+phase, feature, product bundle or blanket positive-provider claim is introduced.
+
+### Completed engineering dispositions (archived proof, not active backlog)
+
+The following exact prior dispositions are retained for provenance. Their
+acceptance tasks are now passed; current roadmap/queue above supersede their
+historical next-action text.
+
+```json
+[
+  {
+    "id": "P0-2",
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Engineering reconciliation of original P0-2 now complete in PR #138 and this source proof/owner-scope follow-up: every one of the 165 audited names has a protected explicit case or reviewed safe/fixture case; full catalog inventory, bounded exact args, per-case source handler-specific result validation where available, externally maintained false/unknown gates, TEST pass identity, synthetic handle/page replay, pacing and sanitized per-operation report/failure and skipped states are implemented. Actual provider smoke of every approved operation, committed genuine provider report, fixes or Known Bugs for any real failures and owner approval for customer-wide/export/fixture IDs remain OPEN EXTERNAL acceptance and must not be inferred from fakes. If a live provider receipt reveals a source defect reopen engineering.",
+    "evidence": "scripts/smoke-readonly-catalog.mjs, smoke-readonly-plan.mjs, smoke-readonly-cases.mjs, smoke-provider-shapes.mjs, smoke-readonly-fixtures.mjs, smoke-readonly-rate.mjs, smoke-readonly.mjs; test/unit/smoke-readonly-{cases,source-contract,plan,catalog,rate,fixtures,provider-shapes}.test.js; original P0-2 card; PR #138 and source follow-up exact-head unit/PG/RTC/Hub CI+release-policy, review and main merge needed. Synthetic checks prove engineering behavior, not real provider/API-wide proof.",
+    "next": "At independently READY checked live containing both P0-2 PRs and original owner-approved read_only TEST pass, run all permitted catalog cases/precise owned fixtures with customer-wide approval separately where needed; record failure/denial and sanitized provider smoke report, fix each real bug or file a Known Bugs card in ARCHITECTURE.md. Deployed/Hub/Sandbox acceptance remain separate and P0-2 milestone must not close until original provider report/known bugs.",
+    "gate": "Actual independently source-verified checked READY deployment; existing owner-authorized service-issued read_only TEST pass for ops@robinsonappliancerentals.com, exact approved fixture IDs and independent owner intent for cross-domain/customer-wide reads, no write/foreign data, original real Google provider report committed and all failures resolved or mapped in Known Bugs table."
+  },
+  {
+    "id": "P2-7",
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Search-presence code is reconciled: account-specific root/www coverage, Search Console/Business Profile instructions and typed permission-denied UNKNOWN are implemented. Existing deployed WARN evidence is retained; it is not positive website verification. No new feature or broader OAuth permission is needed to produce the original honest report.",
+    "evidence": "src/tools/ops.js checkVerification/searchPresence; src/rtc/structured.js; test/unit/ops.test.js search-presence positive/partial/negative/missing-scope cases and rtc-structured.test.js; original P2-7 Build plus manual-report criterion; recorded P2-7-UNKNOWN evidence.",
+    "next": "Reuse original deployed UNKNOWN report at its verified revision. A positive Site Verification observation is optional account-specific follow-up only after separately approved OAuth consent; never change DNS based on UNKNOWN.",
+    "gate": "Optional positive Site Verification requires account-specific approved scope/consent; UNKNOWN remains a valid honest report, not proof of domain verification.",
+    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
+  },
+  {
+    "id": "P5-2",
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Readiness-based activation source implemented under owner October16 policy change; no calendar gate. Preserve encrypted-copy integrity, observed genuine refresh for every account, protected owner activation, drained incompatible deployment and encrypted recovery. Actual production activation and next refresh/readback remain separate.",
+    "evidence": "Source fc8a922e1fc515c506a22b443fdd5a365bfb2e18: src/db.js durable google_token_storage marker, tokens_enc_verified_at and tokens_enc_refreshed_at, locked dual save/backfill, encrypted-only CAS and inspect/activate; src/auth/google-auth-hosted.js marks actual tokens event; scripts/google-token-retirement.mjs protected operator CLI. Real PostgreSQL test/db/upgrade.test.js checks simultaneous dual and encrypted-only writers, retained refresh token, existing/created accounts, wrong/missing key, stale ciphertext, pre-November date/owner refusal, all-account readiness. 1,697 unit, DB/RTC/check and exact-head Actions 38798504715 PASS at source revision. This is synthetic DB proof, not production token migration. October16 source follow-up removes calendar predicate, adds protected exact-confirmation activation, sanitized plaintext-account counts and real-PG readiness-based activation/idempotence/next-refresh assertions. Exact new source CI still required.",
+    "next": "Check/review/merge source; conditionally release after independent work is exhausted; verify actual READY and canonical source, protected readiness and deployment drain, activate and refresh each existing account with its saved grant. Verify encryptedOnlytrue and plaintextAccounts0.",
+    "gate": "Owner-authorized readiness-based retirement; no November1 wait. All-account integrity/refresh, checked READY source, incompatible deployment drain, encrypted recovery/reconnection; no plaintext-only rollback.",
+    "reviewedAt": "fc8a922e1fc515c506a22b443fdd5a365bfb2e18"
+  },
+  {
+    "id": "P6-1",
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Merged implementation reconciled: one existing update tool, original six and 16 supported added fields, allowed-value refusal, transition dependency checks, full preview/readback, outsider/moderation confirmation and domain guards. Deprecated showInGroupDirectory intentionally omitted. Old candidate branch is not new work.",
+    "evidence": "src/tools/group-settings.js SETTING_KEYS/buildSettingsBody/validateSettingsTransition; admin-directory.js group handler; guards-admin.js settingsView/confirmWhen; test/unit/group-settings.test.js covers fields, enums, dependencies, preview, risk and readback; README/OWNER-GUIDE shared-inbox guidance. Main includes 80c0870.",
+    "next": "Perform original authorized disposable-group preview/edit/readback/cleanup through the deployed custom service when its exact fixture and scoped permission are available. Record P6-1-GROUP-LIFECYCLE; do not reimplement the merged branch.",
+    "gate": "Checked independently READY source containing 80c0870; original approved group fixture, scoped Google permission and operation-specific edit/cleanup authorization.",
+    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
+  },
+  {
+    "id": "P7-1",
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Merged shared-drive engineering reconciled: list/get/create/update/hide/delete, existing membership callers, supportsAllDrives on file operations, stable requestId, restriction PATCH after create, theme/color and partial-failure recovery. Source tests do not prove the real lifecycle.",
+    "evidence": "src/tools/shared-drives.js; drive.js/guards.js callers; test/unit/shared-drives.test.js covers each tool, member role/confirmation, exact API calls, flags, UUID replay, two-stage failure and partial update. Main includes 9bf62d6 and 81264c1.",
+    "next": "Run original authorized create/member/read/delete lifecycle and exact cleanup on a disposable shared drive; first verify original source pin is deployed. Preserve no-delete-files and membership/domain guards. Track P7-1-DRIVE-LIFECYCLE.",
+    "gate": "Independently READY checked source including 81264c1; explicit disposable-drive/member fixture permission and eligible Google role/edition. No paid account or production file changes.",
+    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
+  },
+  {
+    "id": "P7-2",
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Merged source reconciled: read-only explicit-policy listing and bounded pagination; editable 37-rule ten-area advisory baseline, typed mismatch/unknown handling, exact customer/OU provenance and console links. Google returns explicit policies, not computed effective per-domain policy; that limitation remains visible rather than a false compliance claim.",
+    "evidence": "src/tools/policy-audit.js, policy-scan.js, policy-evidence.js; src/data/policy-baseline*.json; test/unit/policy-{audit,scan,baseline,evidence}.test.js positive/mismatch/missing/malformed/provenance/scope/partial-page cases. Main includes 0da2200/f7e3f19. Original P7-2 Build/Acceptance reviewed. Actual P7-2-POLICY-AUDIT PASSED at READY5c23755; docs/plan/evidence/2026-10-15-policy-audit.json contains sanitized both-domain37rule/10area evidence. Provider setting identifier repair aaedec7 is in deployed ancestry.",
+    "next": "Original both-domain manual audit is complete. Preserve advisory/system/unknown/effective limitations; reopen source only for a new demonstrated provider or requirement failure.",
+    "gate": "Current original acceptance closed by owner-authorized ordinary Rentals Super Admin read across both domain selectors; no separate AI Systems account consent, policy adoption or write authority is inferred.",
+    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
+  },
+  {
+    "id": "P7-8",
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Original approved bulk design reconciled: all seven exact mappings, strict top-level/operation schemas and 20 explicit targets; guarded final-registry child preview/confirm/profile/domain enforcement; zero autonomous spending; ordered partial outcomes and exact readback/audit handling; no retry/rollback; owned result paging. #126 and #127 are both merged, not candidates.",
+    "evidence": "src/tools/bulk.js normalizeBulkArgs/denial/run/readMailboxExact/workspace_bulk_operation; final registry/wrapped children; test/unit/bulk.test.js all seven mappings, schema parity, denied/no-write preview, mixed outcomes, auth loss/budget, exact mailbox reads, parent audit failure and meta dispatch; original P7-8 design reviewed.",
+    "next": "P7-8-GUARDED-BULK PASSED on READY8ce3d7b using owner-approved24h TEST authority. Seven mapping outcomes, exact mailbox/group readbacks, domain/spending refusal, provider failures and cleanup are recorded in docs/plan/evidence/2026-10-16-existing-pass-bulk.json. Reopen only for changed requirements or a demonstrated defect; spending remains independently gated.",
+    "gate": "Independently READY checked source including merged #127; service-issued appropriate TEST authorization, explicit targets and original operation-specific permission; spending actions remain independently gated.",
+    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
+  },
+  {
+    "id": "P8-2",
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Merged per-connection engineering reconciled: read_only/everyday/full, catalog/compact, area filters and same final guarded dispatcher. Authorization code and refresh copy every policy field via one immutable helper; malformed refresh never defaults to full. Database tests assert column/copy parity and account continuity.",
+    "evidence": "src/oauth/connection-settings.js; api/oauth/token.js; src/db.js token settings; src/rtc/catalog.js; test/unit/oauth-connection-settings.test.js, rtc-profile.test.js; test/db/upgrade.test.js connection-settings cases; check-rtc-budget.mjs. Main includes f7c1ffe; original P8-2 criteria reconciled.",
+    "next": "Execute genuine deployed custom-MCP refresh/profile/listing/area denial with scoped grants, then separate direct/Hub/relay/Sandbox routes. Reuse source/SQL proof; old candidate branch cannot count again.",
+    "gate": "Independently READY checked source including f7c1ffe; scoped custom-service connection/pass, safe refresh identity and separate Hub routing grants; synthetic SQL/RTC proof is not provider acceptance.",
+    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
+  },
+  {
+    "id": "P8-3",
+    "state": "EXTERNAL_ONLY",
+    "remaining": "P8-3 engineering is implemented: owner passphrase and canonical-origin protected one-time TEST pass page; only token hash persisted; bounded lifespan/areas, read_only default, explicit separately confirmed TEST write option, revoke/expiry, rate limit and scope checks; runtime withdrawal of RTC_TEST_ACCOUNT_EMAILS authorization stops already-issued TEST passes immediately at the HTTPS door. Owner-authorized genuine deployed TEST pass issuance, exact read/write refusals, revocation and expiry are NOT claimed until separately observed.",
+    "evidence": "api/rtc/passes.js; src/rtc/pass-options.js; src/db.js getRtcPass/rtcPassFailureCode; api/rtc-gateway.js; test/unit/rtc-pass-page.test.js, rtc-https.test.js, rtc-route-http.test.js, rtc-pass-withdrawal.test.js; test/db/upgrade.test.js. PR #132 candidate requires exact-head checks, review and merge.",
+    "next": "After an independently verified READY checked release includes PR #132, use the existing owner-approved TEST mailbox and service-issued pass to prove protected HTTP identity, read-only and domain denial, revocation/expiry and session isolation. No TEST enrollment widening or production activation.",
+    "gate": "Independently verified production READY source containing PR #132, existing owner-approved RTC_TEST_ACCOUNT_EMAILS enrollment, service-issued short-lived TEST pass and native /api/tools custom-MCP authorization/denial evidence; no broader consent, spending, or production writes."
+  },
+  {
+    "id": "P8-4",
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Completed engineering contribution PR142, merged 997518507ad1e7a914bd31d71b54129292016168, retained ONCE in the original workload. Full HTTP contract, bounded OpenAPI, pass/guard/result ownership, shared atomic configured PostgreSQL counter and obsolete-window pruning proved at exact head and merged main. Genuine deployed TEST/provider/Hub acceptance remains external.",
+    "evidence": "api/rtc-gateway.js createRtcGateway/default handler and src/rtc/openapi.js; test/unit/rtc-openapi.test.js; rtc-route-http.test.js exact Node HTTP rewrite, final MCP registry, broker and HTTP-broker label lifecycle, connector/no-token refusals, full catalog/counts, private paging and error tests; rtc-https.test.js; test/db/rtc-http.test.js two independent handlers / 12 concurrent actual PG sessions, 150 requests => 120 successes and 30 HTTP 429, per-pass limit 5, window reset, atomic same-pass obsolete-window pruning and cross-pass isolation/revocation. Database execution requires exact-head Actions; original P8-4 criteria all mapped.",
+    "next": "Retain original completion proof and acceptance queue P8-4-HTTP-CONTRACT; execute only after scheduled checked READY source includes it and protected scoped TEST authorization is available. No extra release.",
+    "gate": "Checked READY live containing 4ca6af37551809c2e0c9f93e250966d15d3d9fbf; original short-lived service-issued TEST pass and approved mailbox; genuine rtool/wire identity, denial and permitted provider behavior, with direct/Hub/relay/Sandbox evidence separated. No new credentials, production write or spend authority."
+  },
+  {
+    "id": "P8-8",
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Original implementation and required acceptance completed: dated authenticated Console walk,153mapped topics,24reviewed readbacks, honest owner states, audience search and actual selected policies-only report with full guarded child evidence. No observation-storage or new feature phase.",
+    "evidence": "src/tools/admin-overview.js and ops.js owner overview/settings; src/tools/admin-console-verify.js; src/data/console-{map,review}.js; src/rtc/catalog.js audienceFor; test/unit/rtc-owner,owner-evidence,owner-coverage,admin-console-{discovery,verify,expectations}.test.js. Original P8-8 Build/Acceptance reconciled at main28e6486. P8-8-CONSOLE-WALK and P8-8-OWNER-POLICIES PASSED; actual owner report03:15:41.586Z at READY5c23755 reconciles37rules/10areas with both domain audits; sanitized evidence file records limits.",
+    "next": "Preserve accepted source/proof, unknown/inherited/effective limitations and edition/access observations. Reopen only on changed relevant source or new actual console/provider failure.",
+    "gate": "Original current acceptance closed. Future organization diagnostics outside policies still require their own owner scope approval; no permission expansion or policy mutation follows.",
+    "reviewedAt": "28e648611cf1e4a634490630201c517dfc501d7c"
+  }
+]
+```
