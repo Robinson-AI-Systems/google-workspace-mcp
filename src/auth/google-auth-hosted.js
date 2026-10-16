@@ -16,6 +16,7 @@ import {
 } from '../db.js';
 import { ALL_SCOPES } from './scopes.js';
 import { buildDataTransferClient } from './datatransfer-client.js';
+import { buildCloudIdentityPolicyClient } from './cloud-identity-policy-client.js';
 
 export function getOAuthRedirectUri() {
   const base = process.env.PUBLIC_BASE_URL;
@@ -181,7 +182,10 @@ export function buildApiClients(auth) {
     datatransfer: () => buildDataTransferClient(auth),
     alertcenter: () => google.alertcenter({ version: 'v1beta1', auth }),
     chromepolicy: () => google.chromepolicy({ version: 'v1', auth }),
-    cloudidentity: () => google.cloudidentity({ version: 'v1', auth }),
+    cloudidentity: () => {
+      const client = google.cloudidentity({ version: 'v1', auth });
+      return {...client, policies: buildCloudIdentityPolicyClient(auth)};
+    },
     siteVerification: () => google.siteVerification({ version: 'v1', auth }),
     vault: () => google.vault({ version: 'v1', auth })
   };

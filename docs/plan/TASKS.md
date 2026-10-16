@@ -400,13 +400,13 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P7-2-POLICY-AUDIT",
     "priority": 4,
-    "requiredRevision": "05520408e58c8e5f350076e026ec16e782ae212a",
+    "requiredRevision": "7cd9727a466e1adccff2260a3339939434926d23",
     "task": "Run the expanded read-only ten-area Cloud Identity Policy baseline against owner-authorized Workspace accounts; verify mismatches, missing-policy UNKNOWN and per-area coverage from actual Google",
     "procedure": "docs/plan/TASKS.md",
     "gates": "Super Admin and per-account optional approved policy-read OAuth consent; crossDomain owner authorization for business-limited connection; never claim effective per-domain settings or mutate policy",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Explicit customer-wide owner intent and optional Super Admin policy consent, plus policy dependency where applicable. Remedy: Confirmed current business-limited connection refuses customer-wide domains without crossDomain; no approval inferred from connection. Read original owner card and preserved scope boundary. Next: Authorized coordinator obtains exact policy read intent/account consent, then executes policy audit before dependent overview."
+    "lastEvidence": "2026-10-15Denver owner explicitly approved read-only customer-wide policy audit for both businesses and secure additional consent only. Ordinary Rentals custom-service identity independently matches Gmail. Actual identity_policy_audit crossDomain:true failed before Google: pinned googleapis144 has no cloudidentity.policies. Reopened engineering and repaired hosted factory with fixed GET v1/policies through same account OAuth client; preserves other Cloud Identity resources and scopes. Real-factory transport/permission regression passes; deployed provider audit remains pending checked READY fix, then actual Super Admin scope/access verification. TEST five-area grant is distinct and not expanded."
   },
   {
     "id": "P8-7-API-SHAPES",
@@ -422,7 +422,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P8-8-OWNER-POLICIES",
     "priority": 4,
-    "requiredRevision": "5e17f876a7f9873fae49e7ace9f4804b86020cc3",
+    "requiredRevision": "7cd9727a466e1adccff2260a3339939434926d23",
     "task": "On future checked deployed revision verify owner overview exposes Cloud Identity policy differences, unknown/inherited settings, scoped opt-in and actual per-area reports without implying effective domain settings",
     "procedure": "docs/plan/TASKS.md",
     "gates": "Read-only P7-2 Google Policy API; optional real Super Admin consent; explicit crossDomain owner approval for limited connections; no Google settings writes",
@@ -430,7 +430,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P7-2-POLICY-AUDIT"
     ],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15: Explicit customer-wide owner intent and optional Super Admin policy consent, plus policy dependency where applicable. Remedy: Confirmed current business-limited connection refuses customer-wide domains without crossDomain; no approval inferred from connection. Read original owner card and preserved scope boundary. Next: Authorized coordinator obtains exact policy read intent/account consent, then executes policy audit before dependent overview."
+    "lastEvidence": "2026-10-15Denver owner explicitly approved read-only customer-wide policy audit for both businesses and secure additional consent only. Ordinary Rentals custom-service identity independently matches Gmail. Actual identity_policy_audit crossDomain:true failed before Google: pinned googleapis144 has no cloudidentity.policies. Reopened engineering and repaired hosted factory with fixed GET v1/policies through same account OAuth client; preserves other Cloud Identity resources and scopes. Real-factory transport/permission regression passes; deployed provider audit remains pending checked READY fix, then actual Super Admin scope/access verification. TEST five-area grant is distinct and not expanded."
   },
   {
     "id": "P0-2-RTC-HANDLE",
@@ -2990,3 +2990,12 @@ The original protected Rentals TEST `read_only` pass queried its exact already-d
 This PR changes acceptance records only, so no additional application release is required. Full Console breadth, complete exact-resource/isolation and recovery matrices, guarded bulk, optional protected Hub runner, and consent-dependent customer-wide policy reads remain pending under their original gates. Plaintext retirement remains prohibited until November 1 at 00:00 Denver plus separate written approval and the existing drain/recovery/readiness gates. No new optional feature, OAuth scope, spending or plaintext retirement was performed. Permanent provider/release receipt: PR #160 conversation.
 
 Pending exact-resource and recovery rows also reconcile the completed revocations above; their earlier failed-receipt history is preserved, but no write pass is mistakenly described as still usable.
+
+
+### Owner-approved organization policy audit — October 15 resume
+
+Reconciled main37115f9, live14ec4b6 and independent Vercel productiondpl_5QSjXwUet7uHpvEMz8YXNz79zfMh READY at14ec4b6; no open PRs. Protected original Rentals TEST runner remains present, actual whoami200 exact original principal/read_only/modeTEST/allow_writesfalse. Private checkpoint original expiry2026-10-16T21:57:21.645Z remains in future; do not renew/reuse revoked grants. Console tab14 did not survive, but fresh tab16 reused existing authenticated Google session and positively showed Rentals identity and AI Systems tenant. No credential requested.
+
+Owner now explicitly authorizes read-only organization-wide policy inspection across Rentals and AI Systems, plus presentation of needed read-only consent. The ordinary connected identity is deliberately separate from TEST. Actual audit revealed missing SDK method before Google invocation; source7cd9727 adds only documented GET https://cloudidentity.googleapis.com/v1/policies, same OAuth client, explicit query whitelist, no mutation methods or scope change. Official method reference verified2026-10-16UTC: https://docs.cloud.google.com/identity/docs/reference/rest/v1/policies/list. Hosted-factory regression exercises the actual provider transport and paginated handler, retaining UNKNOWN for missing policy and original403 failure. Small defect repair, zero bundles claimed;40production/test additions before records, production measured separately at closeout. Initial focused regression found the generated SDK object is sealed; fixed by composing its enumerable resources without mutating it, then5hosted-client tests passed. Full prepublication checks and exact-headCI/reviews remain required.
+
+New genuine Console observations: root2SV allows enrollment but enforcementOff; password page has strong passwords checked, min8/max100, reuseOff, expirationNever. Both business OUs inspected: Rentals local password policy and AI Systems inherited policy showed these values. These are dated observations at selected OUs, not customer-wide effective-policy certification. No Google settings changed; full Console breadth remains pending until remaining pages reconciled.
