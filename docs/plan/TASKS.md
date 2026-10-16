@@ -362,7 +362,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Separate scoped service authorization and Hub route gates; full production catalog stays independent",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15Denver resume reconciliation: Actual Hub metadata: upstreamEnabledfalse,authorizedTargets0,RTC0; no authorized Workspace target. Exact prerequisite: Hub upstream enabled and separately scoped Workspace target/service pass. Remedy/next action: Configure optional Hub target and scoped service grant via owner secure flow, then original Hub runner performs wire checks."
+    "lastEvidence": "2026-10-16 fresh separate optional Hub search workspace returned tools:[],authorizedTargets:0,scanned:0,incomplete:false. Requires optional Hub target/service grant; no ordinary/TEST evidence substituted and no Hub configuration changed."
   },
   {
     "id": "GOOGLE-DIRECT-READ",
@@ -372,8 +372,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "No fixture writes; original account and connection identity; source/READY deployment independently verified",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-15Denver resume reconciliation: Original five-area TEST identity verified; prior safe29 reads and boundary receipts retained; all earlier fixtures cleaned/passes revoked. Exact prerequisite: Specifically consented exact nonproduction resources and foreign/denied matrix. Remedy/next action: Owner specifies/approves a fresh isolated exact-ID read fixture manifest; never recreate cleaned runs or substitute ordinary identity."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-16 actual protected original read_only TEST on independently READY5c23755/dpl_Exma1Dvb9Xk5Re4C6R1P6tDQjBer: retained five-area/29-read, direct/broker/batch denial and owned-handle evidence plus fresh exact Gmail(label/both messages), Drive folder/Doc and nonprimary Calendar event reads. Real foreign creator-run404/not_found and missing Drive/deleted-calendar404; fresh mail-only readonly write/area403 and both added grants401pass_revoked. Creator grant distinct, eight isolated objects exactly cleaned, calendar digests preserved/absence confirmed. No original read-grant writes; no ordinary/Hub substitution. Sheets/full exact matrix remains independently PENDING. Sanitized evidence docs/plan/evidence/2026-10-16-fresh-test-recovery.json."
   },
   {
     "id": "P2-7-UNKNOWN",
@@ -496,7 +496,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Original owner-issued read_only TEST pass only; at most twelve specifically consented non-production IDs; nonprimary exact Calendar; no fixture creation, mutations, private objects or tokens in public evidence",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "2026-10-15Denver resume reconciliation: Original runner present but its old fixture objects are cleaned. No currently approved complete exact-ID manifest. Exact prerequisite: One to twelve specifically consented exact nonproduction IDs and nonprimary calendar. Remedy/next action: Securely approve an exact new fixture manifest and read-only matrix; no IDs or secrets in public records."
+    "lastEvidence": "2026-10-16 approved fresh exact manifest:5/6 tool reads PASS (Drive folder, Doc, nonprimary event, Gmail label/message); second Gmail message metadata PASS, foreign run and missing/deleted provider404 verified. Sheets GET fails503service_error because Google Sheets API is disabled in existing Robinson AI Systems project. All8 objects cleaned and new grants revoked; original read_only pass remains valid until2026-10-16T21:57:21.645Z. Exact prerequisite: enable Sheets API, then retry SAME recorded trashed Sheet ID via original readonly pass within2 remaining calls (10/12 used); never recreate cleaned run. Matrix remains PENDING; source/READY already eligible."
   },
   {
     "id": "P8-7-EXACT-APP-READS",
@@ -583,8 +583,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "src/tools/dev-run-state.js; docs/plan/GOOGLE-ACCEPTANCE.md; docs/pr-cards/DEVELOPER-CONNECTION.md",
     "gates": "Checked READY deployment containing reviewed source; original approved short-lived Rentals TEST principal, exact owned resources and separate destructive confirmation. No provider scopes/spend, no other-pass cleanup, no uncertain fixture recreation. Preserve direct/Hub/relay/Sandbox boundaries.",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-15Denver resume reconciliation: Old fixture runs fully cleaned and creator grants revoked; no ambiguous-write takeover/recreation authorized. Exact prerequisite: Fresh authorized recovery fixture intent and original creator grant; destructive cleanup confirmation. Remedy/next action: Approve a new isolated original-principal recovery/lost-response scenario and cleanup, retaining immutable run ledger."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-16 owner Yes authorized one NEW Rentals TEST8-object cycle; new original creator and UUIDs on independently READY5c23755. Drive3/Calendar1/Gmail3 provider objects with immutable saved intent matched by owned ledger, completed client response withheld locally, same-run replay returned exactly equal provider IDs, normal replay verified. Original separate read grant received404not_found for all3 foreign creator ledgers; all3 final exact object graphs cleaned. No provider-to-ledger crash injected or claimed. New private calendar empty baseline/final digests identical, exact eventual deletion confirmed without second DELETE. Both fresh grants revoked/401, original read grant preserved; old runs untouched. Full sanitized limits/evidence docs/plan/evidence/2026-10-16-fresh-test-recovery.json."
   },
   {
     "id": "P6-1-GROUP-LIFECYCLE",
@@ -3068,3 +3068,16 @@ Real failures repaired, not bypassed: PR167's fixed-field error identified setti
 The ordinary native cloud adapter separately aborted full reads at20seconds even after warm re-entry. Bounded actual first-page reads confirmed the parser now accepts search_ads_360.service_status; no timed-out result was credited. Reused the existing owner-only Robinson Google Workspace Cloud Sites project appgprj_6acecb2f86908191a44791158fcedbb2, same URL/app/connection/bucket/keys/audience. Source b543ae0fc14275668ee63298a30e6f13acafa0d2 extends ONLY identity_policy_audit and explicitly policies-only overview to90seconds; all other operations/OAuth/renewals retain20seconds, and no automatic replay. All17 adapter tests plus Worker build/ESM validation pass. Supported source-helper push/package and owner-private version7 deployment appgdep_6ad196087e308191a86b3314d5e9a784 SUCCEEDED, has_mcp:true. No new credentials or consent; live whoami still actual Rentals/Gmail match. Full reports then succeeded; owned result recovery verified all4pages/12721bytes Rentals and4pages/15263bytes AI selector. This is separate adapter evidence, not Hub or TEST proof.
 
 All old fixtures remain cleaned and added write/low-rate grants revoked. Original read-only TEST grant/expiry unchanged; four optional proposals remain unselected; November1Denver PLUS separate owner approval/drain/recovery gate remains. No policy mutation, scope widening, paid resource or retirement. This genuine acceptance-evidence PR claims zero product bundles. Required exact evidence-head CI/review/merge and final permanent handoff must still be observed; no application release needed for evidence-only records.
+
+
+## October 16 — approved fresh TEST recovery and direct-read acceptance
+
+Owner Yes authorized the finite fresh8-object Rentals TEST cycle proposed in the PR169 handoff. Actual main3d9e309, live/canonical5c23755 and independent Vercel READYdpl_Exma1Dvb9Xk5Re4C6R1P6tDQjBer were verified, with exact main checks green/no open PRs. New protected two-hour creator/read-denial grants were issued securely; no old revoked pass or cleaned run was reused.
+
+All three fresh scenarios verified immutable stored requests, locally withheld completed-client-response recovery by same UUID/provider IDs, ordinary replay, original creator cleanup and foreign connection refusal. This is actual real-HTTPS/client-response recovery, not an injected provider/ledger crash. All seven fixture objects were cleaned, the eighth private calendar returned to its exact empty baseline and is confirmed absent at both Google endpoints after one read-only convergence check; DELETE was never replayed. Both fresh grants returned genuine confirmed audit receipts and subsequent401pass_revoked. Original five-area read_only pass remains unchanged, expiry October16 3:57pmDenver.
+
+Existing GOOGLE-DIRECT-READ and P8-7-OWNED-RECOVERY now PASSED; **23PASSED/6PENDING of29**. Earlier five-area/29 safe reads, readonly/broker/batch guard and owned-page evidence are retained, not recounted as new work. New original-pass exact Gmail/Drive/Doc/Calendar reads, second-message metadata, missing-provider404 and foreign-ledger404 complete the remaining direct boundaries.
+
+P0-2-EXACT-FIXTURE-READ remains PENDING: initial exact manifest5/6 passed; Google Sheets API is disabled in the server project. One diagnostic repeat confirmed503service_error/API-disabled. No new scope/credential is needed; API enablement is the exact configuration prerequisite.10of12 approved exact calls used, leaving2; retry only the SAME recorded now-trashed Sheet ID via original read_only grant before its expiry. This cloud browser cannot access Cloud Console (Site Unavailable); owner must enable Google Sheets API in existing Robinson AI Systems project843447730581. Do not recreate or untrash fixtures, reuse revoked grants, exceed the read cap or infer a new approval.
+
+All6 pending rows retain their gates: exact fixture Sheet API enablement; full individually approved165-case manifest/customer-wide consent; optional Hub target/service grant (fresh separate search0authorizedTargets); exact app resources/Chat/People access; operation-specific bulk fixtures; November1Denver plus separate approval/drain/recovery for plaintext retirement. Four optional proposals remain unselected. Sanitized evidence at docs/plan/evidence/2026-10-16-fresh-test-recovery.json omits Google IDs, provider bodies, grant identifiers and credentials. No production source change/release or product bundle is claimed. Required evidence-head checks/review/merge and postmerge proof remain part of closeout.
