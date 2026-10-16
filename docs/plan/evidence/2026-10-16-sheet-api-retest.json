@@ -21,7 +21,7 @@
   "apiEnabledProof": "Actual Google Sheets GET200 with exact expected spreadsheetId, validated by source smoke-provider-shapes helper.",
   "priorEvidence": "docs/plan/evidence/2026-10-16-fresh-test-recovery.json",
   "scope": {
-    "exactCallsUsed": 11,
+    "exactCallsUsed": 12,
     "exactCallsLimit": 12,
     "originalExpiresAt": "2026-10-16T21:57:21.645Z",
     "providerWrites": 0,
@@ -34,7 +34,7 @@
   "queueDecision": {
     "id": "P0-2-EXACT-FIXTURE-READ",
     "status": "PASSED",
-    "criteria": "Retains earlier five positive exact tools, second-message metadata, missing/deleted-provider404, foreign run404 and readonly/area403; completes initially failed Sheet read with fresh provider receipt."
+    "criteria": "Retains earlier five positive exact tools, second-message metadata, missing/deleted-provider404, foreign run404 and readonly/area403; completes initially failed Sheet read with fresh provider receipt. Final approved12th read supplied the existing Gmail fixture ID as a Drive fileId and received404/not_found. All12 approved exact calls are consumed; no more fixture reads authorized by this cycle."
   },
   "apiInventoryLimit": "No other disabled API is confirmed; full enabled-service inventory and unexercised optional APIs are not verified. People/Postmaster access/scope failures remain separate.",
   "remainingTasks": [
@@ -44,5 +44,15 @@
     "GOOGLE-RTC",
     "P5-2-PLAINTEXT-RETIRE"
   ],
-  "productBundlesClaimed": 0
+  "productBundlesClaimed": 0,
+  "wrongResourceIdNegative": {
+    "finishedAt": "2026-10-16T10:20:42.600375+00:00",
+    "callNumber": 12,
+    "case": "Gmail fixture ID supplied as Drive file ID",
+    "httpStatus": 404,
+    "code": "not_found",
+    "passed": true,
+    "sourceRevision": "5c23755d15f5f08a02fe052277833a8f060f43f2",
+    "providerWrites": 0
+  }
 }
