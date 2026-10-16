@@ -1,7 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import { buildApiClients } from '../../src/auth/google-auth-hosted.js';
+import { handlers as policyHandlers } from '../../src/tools/policy-audit.js';
 
 describe('hosted Google API clients', () => {
+  it('runs the policy audit through the real hosted factory and exact read-only REST request', async () => {
+    const requests = [];
+    const clients = buildApiClients({actingAs:'ops@example.test',request:async options => {
+      requests.push(options);
+      return {data: requests.length === 1 ? {policies:[],nextPageToken:'next'} : {policies:[]}};
+    }});
+    expect(clients.cloudidentity.groups.memberships).toBeTruthy();
+    const result = await policyHandlers.identity_policy_audit({domain:'example.test'},clients);
+    const report = JSON.parse(result.content[0].text);
+    expect(report).toMatchObject({complete:true,pagesRead:2,policiesRead:0,effective:false});
+    expect(report.summary.notReadable).toBeGreaterThan(0);
+    expect(requests).toEqual([
+      {url:'https://cloudidentity.googleapis.com/v1/policies',method:'GET',params:{filter:'customer == "customers/my_customer"',pageSize:100}},
+      {url:'https://cloudidentity.googleapis.com/v1/policies',method:'GET',params:{filter:'customer == "customers/my_customer"',pageSize:100,pageToken:'next'}}
+    ]);
+    expect(Object.keys(clients.cloudidentity.policies)).toEqual(['list']);
+  });
+  it('preserves real OAuth permission failures from the policy transport', async () => {
+    const denied = Object.assign(new Error('insufficient authentication scopes'), {code:403});
+    const clients = buildApiClients({request:async () => {throw denied;}});
+    await expect(policyHandlers.identity_policy_audit({domain:'example.test'},clients)).rejects.toBe(denied);
+  });
   it('sends explicit JSON through the real generated Groups Settings client for reads and patches', async () => {
     const requests = [];
     const group = {email:'fixture@example.test',whoCanJoin:'INVITED_CAN_JOIN'};
