@@ -1753,7 +1753,14 @@
       "siteverification": "Separate specifically approved scope/purpose, truthful capability disclosure and existing owner/origin/mailbox/signed-state gates; standard scopes unchanged.",
       "transferBound": "Optional maxResults1..100 enforced before provider and through actual REST adapter; default100 preserves provider default.",
       "historyBound": "Optional exact labelId plus maxResults1..100 forwarded to real Gmail SDK; invalid arguments refuse before provider.",
-      "unitTests": "All1854 passed locally; assembled check passed. Genuine released new-source regression remains separate."
+      "unitTests": "All1854 passed locally; assembled check passed. Genuine released new-source regression remains separate.",
+      "firstCI": "Initial check failed because P0-2 lastEvidence exceeded1200characters; concise ledger summary corrected without relaxing validation. Full evidence retained here."
+    },
+    "releasePins": {
+      "chromePagination": "1b83ba92dd5229b320aa6b334de8308f40d524e4",
+      "rootOrgunit": "0e049dcd83bbab609463ddb9d68d970423f7b075",
+      "postmasterConsent": "91e8368b264c3dd121c9d01b44997f0c04b88094",
+      "siteVerificationConsentTransferBoundHistoryLabel": "108ffb21a16000255d1741cbca0ef89a8bda9163"
     }
   },
   "providerMutationsThisResume": 16,
