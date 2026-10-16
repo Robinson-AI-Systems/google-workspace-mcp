@@ -1,6 +1,7 @@
 import { recordChange } from '../changelog.js';
 import { ok, googleList } from './util.js';
 import { exactOrgUnit } from './chrome-target.js';
+import { buildingCreateBody } from './building.js';
 import { buildSettingsBody, SETTINGS_DESCRIPTION, SETTINGS_SCHEMA_PROPERTIES } from './group-settings.js';
 
 const CUSTOMER = 'my_customer'; // Directory API shorthand for "your own Workspace customer"
@@ -86,7 +87,7 @@ export const tools = [
   // ---------- Buildings, features & calendar resources ----------
   { name: 'admin_list_buildings', description: 'List office buildings configured for room booking', inputSchema: { type: 'object', properties: {} } },
   { name: 'admin_get_building', description: 'Get one building', inputSchema: { type: 'object', properties: { buildingId: { type: 'string' } }, required: ['buildingId'] } },
-  { name: 'admin_create_building', description: 'Create a new building', inputSchema: { type: 'object', properties: { buildingId: { type: 'string' }, buildingName: { type: 'string' }, address: { type: 'object' } }, required: ['buildingId', 'buildingName'] } },
+  { name: 'admin_create_building', description: 'Create a new building with at least one named floor', inputSchema: { type: 'object', properties: { buildingId: { type: 'string' }, buildingName: { type: 'string' }, floorNames: { type: 'array', minItems: 1, items: { type: 'string', minLength: 1 }, description: 'Floor names ordered from lowest to highest' }, address: { type: 'object' } }, required: ['buildingId', 'buildingName', 'floorNames'] } },
   { name: 'admin_update_building', description: 'Update a building', inputSchema: { type: 'object', properties: { buildingId: { type: 'string' }, updates: { type: 'object' } }, required: ['buildingId', 'updates'] } },
   { name: 'admin_delete_building', description: 'Delete a building', inputSchema: { type: 'object', properties: { buildingId: { type: 'string' } }, required: ['buildingId'] } },
   { name: 'admin_list_features', description: 'List resource features (e.g. "Video Conference", "Wheelchair Accessible")', inputSchema: { type: 'object', properties: {} } },
@@ -424,7 +425,7 @@ export const handlers = {
     return ok(res.data);
   },
   admin_create_building: async (args, { admin }) => {
-    const res = await admin.resources.buildings.insert({ customer: CUSTOMER, requestBody: { buildingId: args.buildingId, buildingName: args.buildingName, address: args.address } });
+    const res = await admin.resources.buildings.insert({ customer: CUSTOMER, requestBody: buildingCreateBody(args) });
     return ok(res.data);
   },
   admin_update_building: async (args, { admin }) => {

@@ -41,7 +41,7 @@ const CALLS = {
   admin_create_role_assignment: { roleId: '7', assignedToUserKey: '12345' },
   admin_update_chrome_device: { deviceId: 'dev1', updates: { annotatedUser: 'sam' } },
   admin_move_chrome_devices_to_orgunit: { deviceIds: ['dev1', 'dev2'], orgUnitPath: '/Kiosks' },
-  admin_create_building: { buildingId: 'b1', buildingName: 'HQ' },
+  admin_create_building: { buildingId: 'b1', buildingName: 'HQ', floorNames: ['1'] },
   admin_update_building: { buildingId: 'b1', updates: { buildingName: 'HQ 2' } },
   admin_create_feature: { name: 'Projector' },
   admin_create_calendar_resource: { resourceId: 'r1', resourceName: 'Room 1' },

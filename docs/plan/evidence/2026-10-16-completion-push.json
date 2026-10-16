@@ -9,15 +9,16 @@
   },
   "finalReadiness": {
     "original14AreaReadOnlyTestPass": true,
-    "apisReady": 6,
-    "exactScopesReady": 4,
-    "status": "ready",
-    "vaultProbe": false
+    "apisReady": 5,
+    "exactScopesReady": 3,
+    "status": "NOT_CURRENTLY_READY_TASKS_GRANT_MISSING",
+    "vaultProbe": false,
+    "retainedEarlierSixApiFourScopeProof": true
   },
   "credentialReadiness": {
     "encryptedOnly": false,
     "accountsChecked": 2,
-    "ready": true,
+    "ready": "RECHECK_AFTER_FINAL_CONSENT",
     "problems": {
       "missingKey": false,
       "noAccounts": false,
@@ -27,10 +28,12 @@
       "refreshNotObserved": 0
     },
     "notBefore": "2026-11-01T06:00:00Z",
-    "retirementPerformed": false
+    "retirementPerformed": false,
+    "retainedPriorAllAccountReady": true,
+    "latestStorageMetadata": "Both connected accounts have encrypted copy and prior verified backfill/refresh markers; do not substitute old markers for genuine refresh of newly consented grant."
   },
   "exactAppAcceptance": {
-    "status": "PASSED",
+    "status": "PENDING_CURRENT_TASKS_RESTORATION",
     "retainedExactIntegrationChecksReady": 25,
     "fractionalAvailability": "Same original calendar ready on repaired released source before cleanup",
     "sharedDriveMembership": "Exact actor-only organizer ready; independent native404 cleanup",
@@ -45,7 +48,9 @@
       "logicalObjects": 15,
       "allCleaned": true,
       "newObjectsThisResume": 0
-    }
+    },
+    "retainedExactResourceProofStillValid": true,
+    "reason": "After owner-reported consent, current saved grant lost Tasks; actual integration check reports Tasks not_readable/scope_or_access_denied and tasks.readonly missing. Restore Tasks-only grant and verify readiness, do not recreate cleaned fixtures."
   },
   "hub": {
     "nativeDiscovery": "PASS",
@@ -59,7 +64,7 @@
     "correlationId": "9c803db1-21b9-4bb5-888b-d88980b749a0",
     "remaining": "Restricted relay, existing Sandbox and whole-route revocation still separately unverified; do not revoke useful passes",
     "noHubChanges": true,
-    "currentFollowup": "Native foundation/whoami remain TEST/writesfalse; search for relay/Sandbox/revocation exposes no callable tool. PR224 permanent receipt reconfirmed; native route is passed, broader route evidence remains separate Hub-agent-owned."
+    "currentFollowup": "Fresh native TEST/full/gateway/writesfalse and health foundationready/test_read_routing/providerCallsEnabled/1upstream. Initial parallel health/discovery connection_busy; sequential health succeeded, no grant takeover/configuration. Retained native routing proof valid; relay/Sandbox/revocation remain unverified Hub-agent-owned."
   },
   "newReads": [
     {
@@ -128,8 +133,8 @@
     "inventory": 166,
     "olderDocumentedInventory": 165,
     "decision": "Preserve all currently enumerated names; no dropping a case to fit older count",
-    "verifiedRetainedHandlerReads": 145,
-    "unverified": 19,
+    "verifiedRetainedHandlerReads": 149,
+    "unverified": 15,
     "ownerExcludedLive": 2,
     "allCatalogPassed": false,
     "countsCaveat": "Includes source-validated service metadata; not every report subcheck or security setting is healthy/readable",
@@ -541,8 +546,14 @@
       },
       {
         "tool": "workspace_chat_list_members",
-        "status": "UNVERIFIED",
-        "prerequisite": "New cycle authorizes private actor-only space. Not yet created because secure browser control is unavailable and API has no approved cleanup path. Need browser recovery before creation; no invites."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "genuine_original_readonly_test"
+        ],
+        "completionContinuation": "Exact newly created private actor-only Chat read200; one JOINED HUMAN owner/manager, no invites/messages/external members. Final permanent Chat cleanup awaits action-time owner confirmation.",
+        "retainedHttpObservations": [
+          200
+        ]
       },
       {
         "tool": "workspace_chat_list_messages",
@@ -622,7 +633,7 @@
       {
         "tool": "workspace_domain_list_verified",
         "status": "UNVERIFIED",
-        "prerequisite": "Specifically owner-approved siteverification scope and isolated purpose are released; live owner form HTTP200/exactpurpose/password gate/capability disclosure/noVault verified. Genuine owner/Google consent still blocked by browser service timeout. Metadata/token only after current-scope readiness; no DNS/ownership/verification submission.",
+        "prerequisite": "Isolated scope approved, but saved grant and actual token-info do not contain siteverification. Google Allow is pending; automatic approval review interpreted existing broad permissions as new access. All42 existing grants independently token-info READY; only requested addition is siteverification. No provider call until actual scope readiness.",
         "retainedHttpObservations": [
           403
         ]
@@ -1051,12 +1062,12 @@
       {
         "tool": "workspace_postmaster_list_domains",
         "status": "UNVERIFIED",
-        "prerequisite": "Owner-approved postmaster_read purpose released and live protected form contract verified. Genuine owner/Google consent blocked by browser outage. After ready, bounded domain list then only exact owned accessible domain/fixed7day traffic; no sending/domain verification."
+        "prerequisite": "Postmaster scope actually READY. One bounded list returned403 with explicit Postmaster API switched-off diagnosis. Cloud Console Site Unavailable persisted after one reload. Enable existing project API, then one bounded genuine read; no paid upgrade or domain verification."
       },
       {
         "tool": "workspace_postmaster_list_traffic_stats",
         "status": "UNVERIFIED",
-        "prerequisite": "Owner-approved postmaster_read purpose released and live protected form contract verified. Genuine owner/Google consent blocked by browser outage. After ready, bounded domain list then only exact owned accessible domain/fixed7day traffic; no sending/domain verification."
+        "prerequisite": "Postmaster API switched off as established by bounded domain-list error. No blind traffic call. After enablement, bounded list then exact returned owned accessible domain/fixed7day interval only."
       },
       {
         "tool": "workspace_admin_get_2sv_status",
@@ -1078,12 +1089,12 @@
       {
         "tool": "workspace_admin_get_building",
         "status": "UNVERIFIED",
-        "prerequisite": "No existing approved positive target established by retained selection. No new building/resource/device/schema/filter/response creation or purchases."
+        "prerequisite": "Approved tagged create returned opaque503; independent exact readonly404 found no created building. No replay. Confirmed source contract gap: floorNames required by Google but omitted by tool. Repair under review; failure cause remains unknown. Combined Admin budget12/12 native reads spent,3/6 mutation requests spent. More testing requires exact budget extension and released repair."
       },
       {
         "tool": "workspace_admin_get_calendar_resource",
         "status": "UNVERIFIED",
-        "prerequisite": "No existing approved positive target established by retained selection. No new building/resource/device/schema/filter/response creation or purchases."
+        "prerequisite": "Approved resource never created because full guarded cycle needs8 native reads and combined approved12 were consumed by reconciled failed building4 plus schema8. No additional calls; requires exact read-budget extension with cleanup reserve."
       },
       {
         "tool": "workspace_admin_get_chrome_device",
@@ -1172,8 +1183,14 @@
       },
       {
         "tool": "workspace_admin_get_schema",
-        "status": "UNVERIFIED",
-        "prerequisite": "No existing approved positive target established by retained selection. No new building/resource/device/schema/filter/response creation or purchases."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "genuine_original_readonly_test"
+        ],
+        "completionContinuation": "Exact new unused single-STRING-field schema read200; guarded create/delete audited and confirmed; independent readonly404. No profile assignments.",
+        "retainedHttpObservations": [
+          200
+        ]
       },
       {
         "tool": "workspace_admin_get_token",
@@ -1249,8 +1266,14 @@
       },
       {
         "tool": "workspace_forms_get_response",
-        "status": "UNVERIFIED",
-        "prerequisite": "New separate12object/50mutation approval includes Form and synthetic response. Neither created: browser control twice timed out before fixture work. Resume only after secure browser route recovers, no public sharing/publish expansion."
+        "status": "VERIFIED_RETAINED",
+        "evidenceKinds": [
+          "genuine_original_readonly_test"
+        ],
+        "completionContinuation": "Exact synthetic response read200 after own not-shared Form submission; one marker answer and no respondentEmail. Guarded Form deletion and independent404 cover Form/response cleanup.",
+        "retainedHttpObservations": [
+          200
+        ]
       },
       {
         "tool": "workspace_gmail_get_attachment",
@@ -1292,11 +1315,14 @@
       },
       {
         "tool": "workspace_identity_check_membership",
-        "status": "UNVERIFIED",
-        "prerequisite": "Retained200 omitted protobuf false is repaired in released source with strict regression. All group cycles exhausted; no additional group call.",
+        "status": "VERIFIED_RETAINED",
         "retainedHttpObservations": [
           200
-        ]
+        ],
+        "evidenceKinds": [
+          "genuine_original_readonly_test"
+        ],
+        "completionContinuation": "Newly approved one handler/two native metadata requests consumed; strict hasMembership:false for same original group and Rentals actor; no mutation."
       },
       {
         "tool": "workspace_identity_get_security_settings",
@@ -1532,7 +1558,7 @@
       {
         "tool": "workspace_workflow_health_report",
         "status": "UNVERIFIED",
-        "prerequisite": "Composes group settings and potentially delegated mailbox reads; exhausted group cycles/no impersonation apply inside workflows too."
+        "prerequisite": "Membership-only extra invocation now consumed; it does not authorize group-settings reads inside workflow. Original group cycles exhausted; additional exact workflow allowance still needed."
       },
       {
         "tool": "workspace_workflow_search_presence_check",
@@ -1693,7 +1719,7 @@
       {
         "tool": "workspace_domain_get_verification_token",
         "status": "UNVERIFIED",
-        "prerequisite": "Specifically owner-approved siteverification scope and isolated purpose are released; live owner form HTTP200/exactpurpose/password gate/capability disclosure/noVault verified. Genuine owner/Google consent still blocked by browser service timeout. Metadata/token only after current-scope readiness; no DNS/ownership/verification submission."
+        "prerequisite": "Same pending isolated Site Verification consent. No DNS/site submission/ownership changes permitted; scope capability disclosed. Need genuine grant then one exact approved owned-domain token read."
       },
       {
         "tool": "workspace_drive_download_file",
@@ -1768,19 +1794,27 @@
       "rootOrgunit": "0e049dcd83bbab609463ddb9d68d970423f7b075",
       "postmasterConsent": "91e8368b264c3dd121c9d01b44997f0c04b88094",
       "siteVerificationConsentTransferBoundHistoryLabel": "108ffb21a16000255d1741cbca0ef89a8bda9163"
+    },
+    "buildingFloors": {
+      "providerContract": "https://developers.google.com/workspace/admin/directory/reference/rest/v1/resources.buildings",
+      "defect": "Create schema and request omit floorNames, documented as requiring at least one entry",
+      "repair": "Require nonempty floors, forward through real SDK, validate before any Google call including preview, independently verify ordered floors after write",
+      "failureCause": "Opaque live503 not diagnosed as definitely caused by this omission",
+      "liveRetest": "Not performed; native-read cap exhausted and repaired source not yet released",
+      "verification": "All1859unit tests pass locally,105focused SDK/guard tests pass, full check passes. Exact-head hosted db/rtc/required checks and review remain merge gates."
     }
   },
-  "providerMutationsThisResume": 19,
+  "providerMutationsThisResume": 27,
   "releasePerformed": true,
   "fullProjectComplete": false,
   "secretHandling": "No credentials, provider bodies or private resource IDs included",
   "postmasterPrerequisite": {
     "scope": "postmaster.readonly",
-    "status": "missing",
-    "reason": "oauth_consent_missing",
+    "status": "ready",
+    "reason": "Actual token-info proves postmaster.readonly",
     "approval": "Existing written owner approval October2, retained P7-4 scope decision",
     "sourceRepair": "Released protected postmaster_read purpose; live form contract verified.",
-    "realConsent": "Pending genuine owner/Google consent because browser service unavailable; no blind Postmaster provider calls."
+    "realConsent": "Owner completed; current scope proof ready. API switched off separately blocks provider acceptance."
   },
   "retainedNarrowPass": {
     "areas": [
@@ -1805,9 +1839,9 @@
     "conditionalStatusUnavailable": "No returned transfer ID; unused conditional status allowance is not permission for another list or different operation."
   },
   "completionCycle": {
-    "createdLogicalObjects": 9,
-    "mutationBudgetSpent": 19,
-    "cleanupBudgetReserved": 0,
+    "createdLogicalObjects": 12,
+    "mutationBudgetSpent": 24,
+    "cleanupBudgetReserved": 1,
     "maxLogicalObjects": 12,
     "maxMutationRequests": 50,
     "completedPhases": [
@@ -1823,21 +1857,24 @@
       "verify_calendar_cleanup",
       "gmail_history",
       "cleanup_gmail_run",
-      "verify_gmail_cleanup_reconcile"
+      "verify_gmail_cleanup_reconcile",
+      "form",
+      "form_response_read",
+      "cleanup_form",
+      "verify_form_cleanup",
+      "chat_members_read"
     ],
-    "confirmedCleanedLogicalObjects": 9,
-    "retainedLogicalObjects": 0,
-    "retainedReason": "None. Exact label404 and both known tagged self-messages TRASH independently read after guarded cleanup. Drive3/Calendar1/draft/filter already confirmed cleaned.",
-    "uncreated": [
-      "private actor-only Chat space",
-      "Form",
-      "synthetic Form response"
-    ],
-    "browserBlocker": "Browser documentation/reconnect/reset previously timed out; fresh inventory check after approval also timed out300seconds. No consent/Form/Chat UI action attempted.",
+    "confirmedCleanedLogicalObjects": 11,
+    "retainedLogicalObjects": 1,
+    "retainedReason": "Private actor-only Chat space: final permanent UI deletion needs action-time owner confirmation. One cleanup mutation reserved.",
+    "uncreated": [],
+    "browserBlocker": "Recovered; actual Form/response/Chat created and exact reads passed. Google consent final access grant and permanent Chat deletion have action-time approval gates.",
     "gmail": "Scoped history passed on released code, then original creator-run cleanup done/confirmed/audited. Exact label404 and both self-message TRASH readbacks passed. No sends.",
     "drive": "Exact synthetic download bytes and exact Doc revision passed; all3 new files guarded permanent-delete confirmed. Independent absence checks transport-cancelled, not claimed.",
     "calendar": "Snapshot passed; original DELETE done but initially unconfirmed. Read-only exact verifier later calendar_not_found/existsfalse/listedfalse; no second DELETE.",
-    "cleanupRunnerCorrection": "Extra runner assumption that deleted label IDs immediately disappear from message metadata failed. Retained actual label404/messageTRASH proofs and tombstone observation; corrected only the extra assertion, no provider mutation repeated."
+    "cleanupRunnerCorrection": "Extra runner assumption that deleted label IDs immediately disappear from message metadata failed. Retained actual label404/messageTRASH proofs and tombstone observation; corrected only the extra assertion, no provider mutation repeated.",
+    "form": "One synthetic answer submitted through owner-authorized Form UI; exact readonly response200 one marker/no email, guarded Form deletion and independent404 passed.",
+    "chat": "Private, external-members checkboxfalse; exact1joined HUMAN owner/manager. No messages/invites. Active pending permanent cleanup confirmation."
   },
   "release184": {
     "ownerApprovedAt": "2026-10-16T18:10:13Z",
@@ -1901,6 +1938,40 @@
     },
     "googleConsentSubmitted": false
   },
-  "noFurtherReleaseNeededForKnownWork": "All currently confirmed source fixes released. Remaining consent/UI/resource/authorization/Hub/date gates are independent. This records-only update does not require another manual release.",
-  "retainedEvidenceNote": "sourceRevision/deployment identify the final independently verified observation. Retained earlier proofs remain bound to their original receipt revisions; none is relabelled as executed on5138204."
+  "noFurtherReleaseNeededForKnownWork": "Building contract repair will require checked release for genuine retest, plus exact Admin budget extension. Consent, Postmaster API enablement, cleanup confirmation, Hub and future retirement can progress independently; do not request another manual release yet.",
+  "retainedEvidenceNote": "sourceRevision/deployment identify the final independently verified observation. Retained earlier proofs remain bound to their original receipt revisions; none is relabelled as executed on5138204.",
+  "additionalAdminCycle": {
+    "approvedAt": "2026-10-16T18:31:16Z",
+    "maxObjects": 3,
+    "maxMutationRequests": 6,
+    "mutationRequestsSpent": 3,
+    "maxNativeReads": 12,
+    "nativeReadsSpent": 12,
+    "cleanupReserved": 0,
+    "schemaCreatedAndCleaned": true,
+    "buildingCreate": "503 unknown outcome, independent exact404 no object observed; not repeated",
+    "calendarResourceCreated": false,
+    "budgetCorrection": "Original proposal undercounted native guarded reads. A complete preview/create/read/preview/delete/absence cycle uses8, not4. Respected cap12. To finish two remaining objects, request combined totals28 native reads and7 conservative mutation requests, including all12/3 already consumed; preserve original failed creation request."
+  },
+  "additionalMembership": {
+    "maxHandlerInvocations": 1,
+    "maxNativeRequests": 2,
+    "invocationsConsumed": 1,
+    "nativeRequestsConsumed": 2,
+    "http": 200,
+    "strictBoolean": true,
+    "hasMembership": false,
+    "noMutations": true
+  },
+  "consentContinuation": {
+    "ownerReportedBothComplete": true,
+    "actualPostmasterScopeReady": true,
+    "actualSiteVerificationScopeReady": false,
+    "actualTasksScopeReady": false,
+    "existingGrantedScopesProvenReady": 42,
+    "proof": "Four bounded token-info batches12/12/12/6; no token or provider body published",
+    "approvalReview": "Rejected Site Verification Allow because broad prior permission list was interpreted as new access; no bypass. Token-info subsequently proved42 existing grants. Permission-only browserAuth request unsupported; final Allow awaits action-time owner confirmation.",
+    "sequentialFlowsRequired": true,
+    "noVaultAdditionRequested": true
+  }
 }
