@@ -248,4 +248,16 @@ describe('protected owner-initiated Google setup',()=>{
   expect(error.body).not.toContain('<script>');
   expect(holder.connected).toBe(0);
  });
+ it('discloses and protects the separately approved Postmaster v2 scope change',async()=>{
+  const page=response();await authorize({method:'GET',headers:{host:'workspace.example.test'},query:{purpose:'postmaster_v2_read'}},page);
+  expect(page.body).toContain('name="purpose" value="postmaster_v2_read"');
+  expect(page.body).toContain('view AND manage');expect(page.body).toContain('postmaster.traffic.readonly');
+  expect(page.body).toContain('Tasks read-only');expect(page.body).toContain('Site Verification');
+  expect((await submit({passphrase,purpose:'postmaster_v2_read'})).statusCode).toBe(400);
+  expect((await submit({passphrase,purpose:'postmaster_v2_read',account:'ops@example.test'},{origin:'https://foreign.test'})).statusCode).toBe(403);
+  expect((await submit({passphrase:'wrong',purpose:'postmaster_v2_read',account:'ops@example.test'})).statusCode).toBe(401);
+  const accepted=await submit({passphrase,purpose:'postmaster_v2_read',account:'ops@example.test'});
+  expect(accepted.statusCode).toBe(200);expect(holder.purpose).toBe('postmaster_v2_read');expect(holder.account).toBe('ops@example.test');
+ });
+
 });

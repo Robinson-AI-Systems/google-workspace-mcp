@@ -3405,3 +3405,21 @@ approval does not silently authorize them. Prepare and publish the checked sourc
 repair first. Source proof does not advance the full-catalog acceptance gate.
 
 Repair implementation: read-only v2 GET domains and POST domainStats:query; daily spam, SPF, DKIM, DMARC and delivery-error ratios retain existing output and pagination. Metrics split across pages merge without hiding duplicate metric/day results. Invalid identities, dates, values or pages fail closed; unavailable reputation remains unknown. Focused42 tests pass, including local HTTP serialization. All OAuth scope arrays and consent purposes unchanged; v2 provider acceptance remains pending exact scope approval/consent and checked release. No provider writes or new bundle credit.
+
+
+### P7-4 v2 permission approval and protected consent — October16,2026
+
+Owner explicitly approved both replacement permissions in this conversation after
+disclosure that postmaster.domain permits viewing AND managing registered domains.
+Scope of work remains reads on the existing Rentals ops account, retaining existing
+grants. Implement isolated postmaster_v2_read consent with postmaster.domain and
+postmaster.traffic.readonly plus the already approved Tasks/Site permissions together
+because isolated consent previously dropped a required grant. Preserve standard and
+prior isolated contracts, owner/origin/mailbox/nonce protections, and truthful domain
+management/Site capability disclosure. No domain writes or verification, user changes,
+DNS edits or sending. Check source, merge/review, verify merged CI and release the
+combined repair only when independent prerelease work is exhausted; then genuine
+consent, actual four-scope/retained API verification, saved-grant refresh retention,
+and one bounded domain list followed only by an owned accessible verified domain
+seven-day query. The owner's earlier conditional release authorization applies;
+source completion alone does not pass full-catalog acceptance or retire plaintext.
