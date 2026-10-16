@@ -7,7 +7,7 @@ import { chromeTarget } from './chrome-target.js';
 
 export const tools = [
   // ---------- Chrome Policy API ----------
-  { name: 'chrome_resolve_policies', description: "See what Chrome/ChromeOS policies currently apply to an org unit (what the admin console's Chrome management page would show you)", inputSchema: { type: 'object', properties: { orgUnitPath: { type: 'string' }, policySchemaFilter: { type: 'string', description: "e.g. 'chrome.users.*' for all user policies" } }, required: ['orgUnitPath'] } },
+  { name: 'chrome_resolve_policies', description: "See what Chrome/ChromeOS policies currently apply to an org unit (what the admin console's Chrome management page would show you)", inputSchema: { type: 'object', properties: { orgUnitPath: { type: 'string' }, policySchemaFilter: { type: 'string', description: "Required Chrome namespace or leaf policy, e.g. 'chrome.users.*'; '*' alone is rejected by Google" } }, required: ['orgUnitPath', 'policySchemaFilter'] } },
   { name: 'chrome_set_policy', description: 'Push a Chrome/ChromeOS policy to an org unit (e.g. force safe browsing, block extensions, set homepage) without touching the admin console', inputSchema: { type: 'object', properties: { orgUnitPath: { type: 'string' }, policySchema: { type: 'string', description: "e.g. 'chrome.users.BrowserSignin'" }, policyValue: { type: 'object' } }, required: ['orgUnitPath', 'policySchema', 'policyValue'] } },
   { name: 'chrome_list_policy_schemas', description: 'List every Chrome policy that can be set (the full menu)', inputSchema: { type: 'object', properties: { filter: { type: 'string' } } } },
 
@@ -34,15 +34,47 @@ export const tools = [
   { name: 'datatransfer_get_transfer_status', description: 'Check the status of a bulk data transfer', inputSchema: { type: 'object', properties: { transferId: { type: 'string' } }, required: ['transferId'] } }
 ];
 
+// Chrome API responses are paginated. Never label the first page a complete
+// catalog read, or silently accept a repeated cursor / malformed page.
+async function chromeReadAllPages(read, collection, label) {
+  const rows = [], seen = new Set();
+  let pageToken;
+  for (let page = 0; page < 10; page++) {
+    const data = (await read(pageToken))?.data;
+    if (!data || typeof data !== 'object' || Array.isArray(data) ||
+        (data[collection] !== undefined && !Array.isArray(data[collection])) ||
+        (data.nextPageToken !== undefined && typeof data.nextPageToken !== 'string'))
+      throw Error('Google Chrome ' + label + ' returned an invalid page.');
+    const batch = data[collection] || [];
+    if (batch.some(row => !row || typeof row !== 'object' || Array.isArray(row)))
+      throw Error('Google Chrome ' + label + ' returned an invalid row.');
+    rows.push(...batch);
+    const next = data.nextPageToken;
+    if (!next) return rows;
+    if (seen.has(next)) throw Error('Google Chrome ' + label + ' repeated a page cursor.');
+    seen.add(next);
+    pageToken = next;
+  }
+  throw Error('Google Chrome ' + label + ' exceeded ten pages; the read is incomplete.');
+}
+
 export const handlers = {
   chrome_resolve_policies: async (args, clients) => {
+    const filter = args.policySchemaFilter;
+    // Google permits wildcards only at the leaf of a specific namespace.
+    // The former default '*' is not a supported resolve filter.
+    if (typeof filter !== 'string' || filter.length > 512 ||
+        !/^chrome\\.[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)*\\.(?:[A-Za-z0-9_]+|\\*)$/.test(filter))
+      throw Error("invalid_args: policySchemaFilter must name a Chrome policy or leaf namespace such as 'chrome.users.*'.");
     const {chromepolicy} = clients;
     const targetResource = await chromeTarget(args.orgUnitPath, clients);
-    const res = await chromepolicy.customers.policies.resolve({
+    return ok(await chromeReadAllPages(pageToken => chromepolicy.customers.policies.resolve({
       customer: 'customers/my_customer',
-      requestBody: { policySchemaFilter: args.policySchemaFilter || '*', policyTargetKey: { targetResource } }
-    });
-    return ok(res.data.resolvedPolicies || []);
+      requestBody: {
+        policySchemaFilter: filter, policyTargetKey: { targetResource },
+        pageSize: 100, ...(pageToken ? { pageToken } : {})
+      }
+    }), 'resolvedPolicies', 'policy resolve'));
   },
   chrome_set_policy: async (args, clients) => {
     const {chromepolicy} = clients;
@@ -56,10 +88,11 @@ export const handlers = {
     });
     return ok({...res.data, targetResource});
   },
-  chrome_list_policy_schemas: async (args, { chromepolicy }) => {
-    const res = await chromepolicy.customers.policySchemas.list({ parent: 'customers/my_customer', filter: args.filter });
-    return ok(res.data.policySchemas || []);
-  },
+  chrome_list_policy_schemas: async (args, { chromepolicy }) =>
+    ok(await chromeReadAllPages(pageToken => chromepolicy.customers.policySchemas.list({
+      parent: 'customers/my_customer', filter: args.filter,
+      pageSize: 100, ...(pageToken ? { pageToken } : {})
+    }), 'policySchemas', 'policy schemas')),
 
   identity_get_security_settings: async (args, { admin }) => {
     const res = await admin.users.get({ userKey: args.userKey, fields: 'primaryEmail,isEnrolledIn2Sv,isEnforcedIn2Sv,isMailboxSetup,changePasswordAtNextLogin,ipWhitelisted' });
