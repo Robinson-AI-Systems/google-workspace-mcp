@@ -23,15 +23,16 @@ export function parsePolicyPage(response) {
     throw new Error('Google Policy API returned invalid or oversized policy rows; scan incomplete.');
   }
   for (const p of policies) {
-    if (!p || !/^policies\/[A-Za-z0-9_./-]+$/.test(p.name || '') ||
-        !p.setting || typeof p.setting !== 'object' ||
-        !/^settings\/[a-z_]+\.[A-Za-z0-9_]+$/.test(p.setting.type || '') ||
-        !p.setting.value || typeof p.setting.value !== 'object' ||
-        Array.isArray(p.setting.value) ||
-        (p.policyQuery !== undefined && (!p.policyQuery || typeof p.policyQuery !== 'object')) ||
-        (p.type !== undefined && !['ADMIN', 'SYSTEM', 'POLICY_TYPE_UNSPECIFIED'].includes(p.type))) {
-      throw new Error('Google Policy API returned an invalid policy resource; scan incomplete.');
-    }
+    // Fixed field labels diagnose real provider drift without returning private
+    // policy IDs, values, query expressions or arbitrary provider strings.
+    const invalid = !p ? 'resource object' :
+      !/^policies\/[A-Za-z0-9_./-]+$/.test(p.name || '') ? 'name format' :
+      !p.setting || typeof p.setting !== 'object' ? 'setting object' :
+      !/^settings\/[a-z_]+\.[A-Za-z0-9_]+$/.test(p.setting.type || '') ? 'setting.type format' :
+      !p.setting.value || typeof p.setting.value !== 'object' || Array.isArray(p.setting.value) ? 'setting.value object' :
+      p.policyQuery !== undefined && (!p.policyQuery || typeof p.policyQuery !== 'object') ? 'policyQuery object' :
+      p.type !== undefined && !['ADMIN', 'SYSTEM', 'POLICY_TYPE_UNSPECIFIED'].includes(p.type) ? 'type enum' : null;
+    if (invalid) throw new Error('Google Policy API returned an invalid policy resource ('+invalid+'); scan incomplete.');
   }
   // Google documents an absent OR empty cursor as the end of pagination.
   const nextPageToken = data.nextPageToken === '' ? null : (data.nextPageToken ?? null);
