@@ -14,7 +14,7 @@ import {
   getDefaultGoogleAccount,
   migrateLegacyGoogleAuth
 } from '../db.js';
-import { ALL_SCOPES, SCOPE_GROUPS, ACCEPTANCE_READ_SCOPES, CATALOG_READ_SCOPES, TASKS_READ_SCOPES, SITE_VERIFICATION_READ_SCOPES } from './scopes.js';
+import { ALL_SCOPES, SCOPE_GROUPS, ACCEPTANCE_READ_SCOPES, CATALOG_READ_SCOPES, TASKS_READ_SCOPES, SITE_VERIFICATION_READ_SCOPES, COMPLETION_READ_SCOPES } from './scopes.js';
 import { buildDataTransferClient } from './datatransfer-client.js';
 import { buildCloudIdentityPolicyClient } from './cloud-identity-policy-client.js';
 import { withFormsPublishing } from './forms-client.js';
@@ -41,12 +41,13 @@ export function buildGoogleOAuthClient() {
  * account chooser so you don't accidentally connect the wrong business.
  */
 export function getGoogleAuthUrl(state, loginHint, purpose = 'standard') {
-  if (!['standard', 'policy_read', 'acceptance_read', 'catalog_read', 'tasks_read', 'postmaster_read', 'siteverification_read'].includes(purpose)) throw new Error('Unknown Google consent purpose.');
+  if (!['standard', 'policy_read', 'acceptance_read', 'catalog_read', 'tasks_read', 'postmaster_read', 'siteverification_read', 'completion_read'].includes(purpose)) throw new Error('Unknown Google consent purpose.');
   const client = buildGoogleOAuthClient();
   return client.generateAuthUrl({
     access_type: 'offline',
     prompt: 'consent',
-    scope: purpose === 'policy_read' ? SCOPE_GROUPS.cloudIdentityPolicies :
+    scope: purpose === 'completion_read' ? COMPLETION_READ_SCOPES :
+      purpose === 'policy_read' ? SCOPE_GROUPS.cloudIdentityPolicies :
       purpose === 'acceptance_read' ? ACCEPTANCE_READ_SCOPES :
       purpose === 'catalog_read' ? CATALOG_READ_SCOPES :
       purpose === 'tasks_read' ? TASKS_READ_SCOPES :
