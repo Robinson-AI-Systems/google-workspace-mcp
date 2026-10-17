@@ -30,7 +30,7 @@ export default async function handler(req,res){
   headers(res);
   res.setHeader('Vary','Cookie');
   res.setHeader('Content-Security-Policy',
-    "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'");
+    "default-src 'none'; style-src 'unsafe-inline'; form-action 'self' https://accounts.google.com; base-uri 'none'; frame-ancestors 'none'");
   res.setHeader('Content-Type','text/html; charset=utf-8');
   if(!['GET','POST'].includes(req.method)){
     res.setHeader('Allow','GET, POST');

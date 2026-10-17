@@ -163,6 +163,14 @@ describe('P10-6 owner-only readiness route with existing passphrase lockout',()=
   expect(r.statusCode).toBe(200);
   expect(r.body).toContain('Owner passphrase');
   expect(r.headers['Referrer-Policy']).toBe('same-origin');
+  // Chromium checks form-action against each redirect in the form's 302 chain.
+  // Keep same-origin owner passphrase POST and permit only the Google OAuth origin.
+  const csp=r.headers['Content-Security-Policy'];
+  expect(csp).toContain("form-action 'self' https://accounts.google.com;");
+  expect(csp).toContain("default-src 'none'");
+  expect(csp).toContain("frame-ancestors 'none'");
+  expect(csp).not.toContain("form-action *");
+  expect(csp).not.toContain('https://evil.example.test');
   expect(r.body).not.toContain('different-public-client');
   expect(r.body).not.toContain('google-sub-a');
   expect(mocks.schemas).toBe(0);
@@ -206,6 +214,11 @@ describe('P10-6 owner-only readiness route with existing passphrase lockout',()=
     action:'verify_pilot_subject'},authHeaders),r);
   expect(r.statusCode).toBe(302);
   expect(r.headers.Location).toContain('accounts.google.com');
+  const providerOrigin=new URL(r.headers.Location).origin;
+  expect(providerOrigin).toBe('https://accounts.google.com');
+  expect(r.headers['Content-Security-Policy']).toContain(
+    "form-action 'self' "+providerOrigin+";");
+  expect(r.headers['Content-Security-Policy']).toContain("base-uri 'none'");
   expect(r.headers['Set-Cookie']).toContain('p10_google_browser=');
   expect(mocks.tx).toMatchObject({purpose:'login',policy:{pilotProbe:true}});
   expect(mocks.tx.principalId).toBeUndefined();
