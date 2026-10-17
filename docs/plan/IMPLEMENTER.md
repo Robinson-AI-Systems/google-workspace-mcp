@@ -2,6 +2,10 @@
 
 Start with ../SESSION-START.md and `npm run session:status`; that consolidated procedure controls workflow and release-aware acceptance. Existing templates below supply specialized review details, not a replacement rulebook.
 
+## Next implementation: P9/P10 user authority and parallel sign-in
+
+Read TASKS P9/P10 and [the concrete design](designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). Start P9-1; follow the complete outcomes and contracts. Sol5.6 should not invent tenant schema, callback ownership, cost acknowledgment, migration or rollout decisions. Original owner-only completion is historical; these new cards are not implemented. Build new sign-in alongside existing owner auth and preserve existing credentials/tokens.
+
 ## Product, builder and acceptance boundaries — owner correction 2026-10-13
 
 This repository builds a full independently usable custom MCP integration. Do not narrow

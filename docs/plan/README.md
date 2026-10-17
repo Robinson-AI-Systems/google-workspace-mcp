@@ -3,7 +3,13 @@
 Agent entry: [AGENTS.md](../../AGENTS.md). Complete SESSION-START §§0–1 before
 selecting new implementation; preserve the existing session:finish workload check.
 
-## October 17 — final Workspace acceptance complete
+## New roadmap — user authority and parallel multi-user sign-in
+
+Owner clarification October16,2026 Denver: development-agent spending/TEST restrictions must not become permanent product limits. Supported end-user operations need a usable consequence/approval path. Owner requested a concrete Sol5.6-ready roadmap and parallel Google sign-in that preserves the working owner login. Design is ready; implementation/public enrollment/paid tests/legacy retirement are NOT claimed or activated by this planning update. Original P0–P8 acceptance remains passed for its original scope; the newly added P9/P10 scope is unfinished.
+
+Authoritative execution contract: [User authority and parallel sign-in](designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). Start P9-1; follow dependencies and whole-outcome delivery groups. Do not interpret original29 passed acceptance rows as completion of the new scope. Add new source-pinned acceptance rows only when implementation exists.
+
+## October 17 — original owner-operated Workspace acceptance complete
 
 The owner asked this agent to complete the two remaining Hub-specific tests. Actual original Hub runner acceptance is now complete in Hub PR #227: separate local direct and GitHub-only encrypted relay both passed all five checks with exit0 against the existing independent Workspace RTC service. The same new TEST/read_only/nonwriting pass was then revoked by Workspace; original direct probe verified HTTP401 `pass_revoked`, and the original encrypted relay returned the exact same denial envelope. Earlier actual Sandbox direct, native Hub discovery/read/durable audit, read-only refusal and cleanup proofs remain accepted from Hub #224/#226 and Workspace #194/#196.
 
