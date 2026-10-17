@@ -222,13 +222,15 @@ export const handlers = {
         result.details = { ...result.details, status: 'incomplete',
           aggregateAuditFailure: true, reason: 'bulk_audit_unavailable' };
       }
-      return shapeReadResult(ok(result), { detail: 'full', toolName: 'workspace_bulk_operation' }, clients?.connection);
+      return shapeReadResult(ok(result), { detail: 'full', toolName: 'workspace_bulk_operation' },
+         clients?.connection,clients?.store?.storeResult);
     }
     // A true combined preview must run each guarded child preview, not just
     // defineWrite's generic summary. Never invoke the parent's apply path here.
     const details = await run(a, clients, true);
     const logged = await recordChange(clients, { tool: 'workspace_bulk_operation', target: a.operation, summary: 'PREVIEW: ' + a.operation + ' for ' + a.targets.length + ' targets', dryRun: true });
     const response = ok({ done: false, dryRun: true, logged: logged.logged, ...(logged.logged?{changeId:logged.id}:{}), details, ...(OPS[a.operation].spending?{costNotice:billingNotice(a)}:{}) });
-    return shapeReadResult(response, { detail: 'full', toolName: 'workspace_bulk_operation' }, clients?.connection);
+    return shapeReadResult(response, { detail: 'full', toolName: 'workspace_bulk_operation' },
+       clients?.connection,clients?.store?.storeResult);
   })
 };

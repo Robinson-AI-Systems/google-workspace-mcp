@@ -128,7 +128,9 @@ describe.skipIf(!url)('P10: separate principal-owned result, audit and rate pers
   try{
    const A=await start(ca.accessToken),B=await start(cb.accessToken);
    const [listA,listB]=await Promise.all([A.listTools(),B.listTools()]);
-   expect(listA.tools.some(t=>t.name==='workspace_list_accounts')).toBe(true);
+   // Compact listings intentionally expose only meta discovery and workflows;
+   // direct execution is independently authorized by the exact server policy.
+   expect(listA.tools.some(t=>t.name==='workspace_search_tools')).toBe(true);
    expect(listB.tools.some(t=>t.name==='workspace_search_tools')).toBe(true);
    expect(listA.tools.some(t=>t.name==='workspace_dev_create_fixtures')).toBe(false);
    expect(listA.tools.some(t=>t.name==='dns_list_records')).toBe(false);
