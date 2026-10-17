@@ -27,7 +27,18 @@ export async function initOwnerMigrationSchema(q=sql()){
    ON principal_owner_login_proofs(expires_at)`;
 }
 export async function ownerMigrationSnapshot(q=sql()){
- // No raw tokens, encrypted blobs, identities, owner email lists or secrets.
+ // This is reachable only after existing owner passphrase verification.
+ // Preserve exact identities/mailboxes and connection selectors for a usable
+ // dry run, but NEVER include bearer values, raw grants or ciphertext.
+ const accounts=await q`SELECT email,label,is_default,
+   tokens_enc IS NOT NULL AS encrypted FROM google_accounts
+   ORDER BY is_default DESC,created_at ASC`;
+ const connections=await q`SELECT client_id,google_account,profile,listing,areas,
+   expires_at,created_at FROM oauth_tokens
+   WHERE revoked_at IS NULL AND expires_at>now() ORDER BY created_at ASC`;
+ const linked=await q`SELECT issuer,google_sub,verified_email
+   FROM principal_google_identities WHERE principal_id=${OWNER_ID}::uuid
+   ORDER BY issuer,google_sub`;
  const rows=await q`SELECT
     (SELECT count(*)::int FROM google_accounts) AS owner_accounts,
     (SELECT count(*)::int FROM google_accounts WHERE tokens_enc IS NOT NULL) AS encrypted_accounts,
@@ -35,7 +46,10 @@ export async function ownerMigrationSnapshot(q=sql()){
     (SELECT count(*)::int FROM principal_google_identities WHERE principal_id=${OWNER_ID}::uuid) AS linked_owner_google_subjects,
     (SELECT count(*)::int FROM principals WHERE kind='user') AS separate_user_principals,
     (SELECT encrypted_only_at IS NOT NULL FROM google_token_storage WHERE id=true) AS encrypted_only`;
- return Object.freeze({...rows[0],dryRun:true,grantsChanged:false,connectionsRevoked:0,
+ return Object.freeze({...rows[0],accounts,connections,
+  linkedOwnerIdentities:linked.map(x=>({issuer:x.issuer,verifiedEmail:x.verified_email,
+   subjectFingerprint:digest(x.issuer+'\n'+x.google_sub).slice(0,32)})),
+  dryRun:true,grantsChanged:false,connectionsRevoked:0,
   next:'Explicit owner-only Google proof is required to link an identity; existing OAuth remains available.'});
 }
 export async function linkVerifiedOwner({issuer,sub,email},q=sql()){
@@ -54,6 +68,22 @@ export async function linkVerifiedOwner({issuer,sub,email},q=sql()){
  requireScope(saved.length===1,'identity_owned_elsewhere');
  return {linked:true,principalKind:'legacy_owner',idempotent:true,
    grantsMoved:false,connectionsRevoked:0};
+}
+// Reversible mapping only; do not revoke Google application grants, existing
+// agent bearers or other principals. Exact owner identity, never an email match.
+export async function unlinkVerifiedOwner(subjectFingerprint,q=sql()){
+ requireScope(typeof subjectFingerprint==='string'&&/^[a-f0-9]{32}$/.test(subjectFingerprint),
+  'invalid_subject_fingerprint');
+ const linked=await q`SELECT issuer,google_sub FROM principal_google_identities
+   WHERE principal_id=${OWNER_ID}::uuid`;
+ const found=linked.filter(x=>digest(x.issuer+'\\n'+x.google_sub).slice(0,32)===subjectFingerprint);
+ requireScope(found.length===1,'owner_mapping_not_found');
+ const row=found[0];
+ const removed=await q`DELETE FROM principal_google_identities
+   WHERE principal_id=${OWNER_ID}::uuid AND issuer=${row.issuer} AND google_sub=${row.google_sub}
+   RETURNING principal_id`;
+ requireScope(removed.length===1,'owner_mapping_not_found');
+ return {unlinked:true,grantsMoved:false,connectionsRevoked:0};
 }
 export async function isVerifiedOwner(issuer,sub,q=sql()){
  if(!issuerOk(issuer)||!subOk(sub))return false;
