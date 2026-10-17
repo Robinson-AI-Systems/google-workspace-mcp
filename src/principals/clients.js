@@ -2,7 +2,7 @@
 // V2 bearer context. This module never imports the installation owner's
 // stored Google token/default account or service-account key.
 import {publicGoogleClient} from './google.js';
-import {scopedStore,trustedCustomerDelegation} from './store.js';
+import {scopedStore,trustedCustomerDelegation,persistPrincipalGoogleRefresh} from './store.js';
 import {scopedDelegationClients} from './delegation.js';
 import {buildApiClients} from '../auth/google-auth-hosted.js';
 import {domainOfEmail} from '../domains.js';
@@ -18,6 +18,21 @@ export async function buildPrincipalApiClients(context){
  requireScope(tokens&&(tokens.access_token||tokens.refresh_token),'google_account_not_linked');
  const auth=publicGoogleClient(); // separate PUBLIC_* app only
  auth.setCredentials(tokens);
+ if(Number.isFinite(tokens.expiry_date)&&tokens.expiry_date<Date.now()+60000){
+   requireScope(tokens.refresh_token,'google_reconnect_required');
+   const {credentials}=await auth.refreshAccessToken();
+   requireScope(credentials?.access_token&&credentials.expiry_date>Date.now(),
+     'google_refresh_unavailable');
+   const saved=await persistPrincipalGoogleRefresh(context,credentials);
+   if(!saved){
+     await store.assertActive();
+     const winner=await store.getGrant(context.accountId);
+     requireScope(winner?.access_token&&winner.expiry_date>Date.now(),
+       'google_refresh_conflict_reconnect');
+     auth.setCredentials(winner);
+   }else auth.setCredentials({...tokens,...credentials,
+     refresh_token:credentials.refresh_token||tokens.refresh_token});
+ }
  auth.actingAs=account.email;
  const tenantCredential=await trustedCustomerDelegation(context);
  const delegation=scopedDelegationClients(tenantCredential);

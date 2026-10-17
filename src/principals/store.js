@@ -30,6 +30,7 @@ export async function initPrincipalSchema(q=sql()){
    status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','revoked')),
    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
    UNIQUE(issuer,google_sub),UNIQUE(id,principal_id))`;
+ await q`ALTER TABLE principal_google_accounts ADD COLUMN IF NOT EXISTS refresh_version INTEGER NOT NULL DEFAULT 0`;
  await q`CREATE TABLE IF NOT EXISTS principal_defaults (
    principal_id UUID PRIMARY KEY REFERENCES principals(id),account_id UUID NOT NULL,
    FOREIGN KEY(account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id))`;
@@ -128,7 +129,7 @@ export async function getPrincipal(principalId){
 export async function findAccount(principalId,accountId){
  if(!validUuid(principalId)||!validUuid(accountId))return null;
  const q=sql();
- const rows=await q`SELECT a.id,a.principal_id,a.issuer,a.google_sub,a.email,a.label,a.scope_list,a.token_version,
+ const rows=await q`SELECT a.id,a.principal_id,a.issuer,a.google_sub,a.email,a.label,a.scope_list,a.token_version,a.refresh_version,
    a.grant_ciphertext,a.status FROM principal_google_accounts a JOIN principals p ON p.id=a.principal_id
    WHERE a.id=${accountId}::uuid AND a.principal_id=${principalId}::uuid
    AND a.status='active' AND p.status='active'`;
@@ -186,6 +187,34 @@ export async function updateLinkedGrant({principalId,accountId,version,tokens,sc
    RETURNING token_version`;
  requireScope(changed.length===1,'version_conflict');
  return changed[0].token_version;
+}
+export async function persistPrincipalGoogleRefresh(context,tokens){
+ requireScope(context&&trustedContexts.has(context)&&context.principalKind==='user',
+   'invalid_scoped_context');
+ requireScope(tokens?.access_token&&typeof tokens.access_token==='string'&&
+   Number.isFinite(tokens.expiry_date)&&tokens.expiry_date>Date.now()&&
+   validUuid(context.principalId)&&validUuid(context.accountId)&&
+   validUuid(context.connectionId),'invalid_google_refresh');
+ const {principalId,accountId,connectionId,accountVersion}=context;
+ const row=await findAccount(principalId,accountId);
+ requireScope(row&&row.token_version===accountVersion&&row.grant_ciphertext,
+   'version_conflict');
+ const prior=openV2(row.grant_ciphertext,principalId,accountId,'google-grant');
+ requireScope(prior.refresh_token,'missing_google_refresh_grant');
+ const updated={...prior,...tokens,
+   refresh_token:tokens.refresh_token||prior.refresh_token};
+ const ciphertext=sealV2(updated,principalId,accountId,'google-grant'),q=sql();
+ const result=await q`UPDATE principal_google_accounts SET
+   grant_ciphertext=${ciphertext},refresh_version=refresh_version+1,updated_at=now()
+   WHERE id=${accountId}::uuid AND principal_id=${principalId}::uuid
+   AND token_version=${accountVersion} AND refresh_version=${row.refresh_version}
+   AND status='active' AND EXISTS(
+     SELECT 1 FROM principal_connections c JOIN principals p ON p.id=c.principal_id
+     WHERE c.id=${connectionId}::uuid AND c.principal_id=${principalId}::uuid
+       AND c.account_id=${accountId}::uuid AND c.revoked_at IS NULL
+       AND c.expires_at>now() AND p.status='active')
+   RETURNING refresh_version`;
+ return result.length===1;
 }
 export async function getLinkedGrant(principalId,accountId){
  const row=await findAccount(principalId,accountId);

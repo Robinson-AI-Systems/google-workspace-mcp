@@ -107,6 +107,24 @@ describe.skipIf(!url)('P10: separate principal-owned result, audit and rate pers
 
 
 
+ it('CAS-persists rotated public Google tokens without changing account permissions',async()=>{
+   const context=await store.readPrincipalAccess(ca.accessToken),version=context.accountVersion;
+   const attempts=await Promise.all([
+     store.persistPrincipalGoogleRefresh(context,{access_token:'token-r1',expiry_date:Date.now()+3600000}),
+     store.persistPrincipalGoogleRefresh(context,{access_token:'token-r2',expiry_date:Date.now()+3600000})
+   ]);
+   expect(attempts.filter(Boolean)).toHaveLength(1);
+   expect(attempts.filter(x=>!x)).toHaveLength(1);
+   const row=await store.findAccount(a,aa),grant=await store.getLinkedGrant(a,aa);
+   expect(row.token_version).toBe(version);
+   expect(row.refresh_version).toBe(1);
+   expect(grant.refresh_token).toBe('refresh-a');
+   expect(['token-r1','token-r2']).toContain(grant.access_token);
+   await expect(store.persistPrincipalGoogleRefresh(
+     Object.freeze({...context,principalId:b}),{access_token:'evil',expiry_date:Date.now()+3600000}
+   )).rejects.toThrow('invalid_scoped_context');
+   expect(await store.readPrincipalAccess(ca.accessToken)).toMatchObject({principalId:a,accountId:aa});
+ });
  it('raw PostgreSQL constraints refuse a foreign connection paired with a valid user and account',async()=>{
    const invalid=[
      ['result',`INSERT INTO principal_result_pages(handle,principal_id,account_id,
