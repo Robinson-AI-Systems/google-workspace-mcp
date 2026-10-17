@@ -231,5 +231,6 @@ export const tools = [
   { name: 'workflow_health_report', description: "Read-only security and hygiene report: who has 2-Step Verification, admins, recovery options, stale accounts, third-party apps with wide access, mail auto-forwarding, groups open to outsiders, licences nobody uses, Drive files open to anyone with the link. PASS/WARN/FAIL with a one-line fix each. Never shows tokens or passwords.", inputSchema: { type: 'object', properties: { scope: { type: 'string', default: 'all', description: "'all' for the whole Workspace, or one domain like example.com" } } } }
 ];
 export const handlers = {
-  workflow_health_report: async (args, clients) => ok(await healthReport(args.scope || 'all', clients))
+  workflow_health_report: async (args, clients) => ok(await healthReport(args.scope || 'all', clients,
+    clients?.store ? {gmailFor: clients.gmailFor,delegationReady:clients.delegationReady===true} : {}))
 };
