@@ -37,6 +37,17 @@ This is the existing roadmap P10-6's source-readiness contribution, **not a new 
 ```
 <!-- bundle-plan:end -->
 
-## Delivery
+## Delivery — source readiness contribution only
 
-Pending. A frozen plan is not implementation or external acceptance; preserve genuine remaining criteria unchanged.
+Source `4a9c6a929fab6931caea95f3af94fc9ed6a7173d` implements public service/data-use/support/deletion information, notices before incremental Google account linking, exact provider scope inventory, owner-passphrase-and-lockout protected configuration preflight, and one-use browser-bound signed Google OIDC subject discovery **without creating a principal, grant, agent token, or Google mutation**. An explicit operator Google Console and public-verification checklist accompanies the code.
+
+Original P10-6 criterion mapping remains honest:
+1. OFF → pilot → public with owner/Hub continuation: OFF remains default; no actual deployed new source/owner/Hub continuity proof is claimed here.
+2. Two distinct real Google identities/custom MCP clients, scope/denial/revocation/cleanup and one separately approved reversible write: unperformed. Protected subject discovery is not public enrollment or custom MCP pilot acceptance.
+3. Public app identity, privacy/support/delete information and Google scope/verification: source implementation exists; final owner-approved privacy/retention/support, owned verified hostname, sensitive/restricted scope categorization and Google verification/exception remain external.
+4. Complete source/provider receipt and original 29 preserved tasks: source-pinned pending acceptance rows added; zero real provider passes inferred from synthetic tests.
+
+**CI/review:** first PR candidate unit suite found a genuine support copy construction bug; fixed in `4a9c6a929fab6931caea95f3af94fc9ed6a7173d` alongside a browser same-origin form policy regression. Exact corrected-head CI/review/merge proof must be recorded at closeout; no historic red test is treated as passed.
+
+**Accounting:** P10-6 stays OPEN and counts zero whole completed subsections or bundles. All genuine Google app, checked release, owner/billing/legal and public mode approvals remain separate; see issue #205 and the original task IDs.
+
