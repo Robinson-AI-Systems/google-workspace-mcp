@@ -142,7 +142,8 @@ export function applyResultRules(registry){
   registry.handlers[tool.name]=async(args={},clients)=>{
    const {fields,detail,...input}=args;
    try{
-    const shaped=await shapeReadResult(await original(input,clients),{fields,detail,toolName:tool.name},clients?.connection);
+    const shaped=await shapeReadResult(await original(input,clients),{fields,detail,toolName:tool.name},clients?.connection,
+     clients?.store?.storeResult ?? storeRtcResult);
     // Field projection is an explicit request for only selected keys. The
     // normal full-object outputSchema does not describe that partial result;
     // preserve the requested projected content without claiming typed shape.
