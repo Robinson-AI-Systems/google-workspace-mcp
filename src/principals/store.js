@@ -6,6 +6,7 @@ import {OWNER_ID,digest,mint,validUuid,validEmail,requireScope} from './security
 import {normalizeConnectionPolicy} from '../oauth/connection-settings.js';
 import {initTenantSchema,makeTenantStore} from './tenant-store.js';
 import {loadCustomerDelegation} from './delegation.js';
+import {initOwnerMigrationSchema} from './owner-migration.js';
 let conn;
 const trustedContexts=new WeakSet(); // no caller-minted frozen principal is accepted
 const sql=()=>{if(!conn){if(!process.env.DATABASE_URL)throw Error('database_unavailable');conn=neon(process.env.DATABASE_URL);}return conn;};
@@ -82,6 +83,7 @@ export async function initPrincipalSchema(q=sql()){
    credential_ciphertext TEXT NOT NULL,enabled BOOLEAN NOT NULL DEFAULT false,
    revoked_at TIMESTAMPTZ,UNIQUE(principal_id,customer_id))`;
  await initTenantSchema(q);
+ await initOwnerMigrationSchema(q);
 }
 export async function legacyOwnerContext(accessToken){
  if(typeof accessToken!=='string'||accessToken.startsWith('p10'))return null;
