@@ -267,12 +267,22 @@ export const handlers = {
     }
   },
 
-  workflow_audit_external_sharing: async (args, { drive }) => {
+  workflow_audit_external_sharing: async (args, clients) => {
+    const {drive}=clients;
+    // Tenant connection domains come only from its authenticated account;
+    // the installation owner's optional GWS_PRIMARY_DOMAIN is not authority.
+    const internalDomains=(clients?.store?clients.allowedDomains:
+      [process.env.GWS_PRIMARY_DOMAIN]).filter(Boolean).map(d=>d.toLowerCase());
     const res = await drive.files.list({ pageSize: args.maxFilesToScan || 100, fields: 'files(id, name, webViewLink, permissions)', orderBy: 'modifiedTime desc' });
     const risky = [];
     for (const file of res.data.files || []) {
       const perms = await drive.permissions.list({ fileId: file.id, fields: 'permissions(type, role, emailAddress, domain)' }).catch(() => ({ data: { permissions: [] } }));
-      const external = (perms.data.permissions || []).filter(p => p.type === 'anyone' || (p.type === 'domain' && p.domain && !p.domain.endsWith(process.env.GWS_PRIMARY_DOMAIN || '')));
+      const external=(perms.data.permissions||[]).filter(p=>{
+         if(p.type==='anyone')return true;
+         if(p.type!=='domain'||typeof p.domain!=='string')return false;
+         const domain=p.domain.toLowerCase();
+         return !internalDomains.some(d=>domain===d||domain.endsWith('.'+d));
+       });
       if (external.length > 0) {
         risky.push({ fileId: file.id, name: file.name, link: file.webViewLink, exposedTo: external });
       }
