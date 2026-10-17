@@ -47,6 +47,12 @@ export async function initTenantSchema(q = sql()) {
     payload JSONB NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL,
     FOREIGN KEY(account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id))`;
+  // A UUID foreign key alone does not prove the referenced connection belongs
+  // to this same principal/account. Enforce the full triple in Postgres too:
+  // raw SQL, retries and future import paths cannot misassociate audit,
+  // pagination or counters even if an application caller is mistaken.
+  await q`CREATE UNIQUE INDEX IF NOT EXISTS principal_connections_owner_key
+    ON principal_connections(id,principal_id,account_id)`;
   await q`CREATE INDEX IF NOT EXISTS principal_result_expiry ON principal_result_pages(expires_at)`;
   await q`CREATE INDEX IF NOT EXISTS principal_result_owner ON principal_result_pages
     (principal_id,account_id,connection_id,credential_version)`;
@@ -73,6 +79,260 @@ export async function initTenantSchema(q = sql()) {
     usage INTEGER NOT NULL CHECK(usage>=0),
     PRIMARY KEY(principal_id,account_id,connection_id,credential_version,bucket,window_start),
     FOREIGN KEY(account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id))`;
+  // Separate simple FKs allow mismatched existing user and connection rows.
+  // This additive invariant protects the actual relationship across tables.
+  for(const [table,constraint] of [
+    ['principal_result_pages','p10_result_connection_owner'],
+    ['principal_changes','p10_change_connection_owner'],
+    ['principal_rate_windows','p10_rate_connection_owner']
+  ]){
+    // PostgreSQL identifiers are chosen only from this constant internal
+    // allowlist; never interpolate request-owned SQL table/column strings.
+    const safe=new Map([
+      ['principal_result_pages','p10_result_connection_owner'],
+      ['principal_changes','p10_change_connection_owner'],
+      ['principal_rate_windows','p10_rate_connection_owner']
+    ]);
+    if(safe.get(table)!==constraint)throw Error('unsupported_owner_relation');
+    if(table==='principal_result_pages'){
+      await q`DO $p10$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conname='p10_result_connection_owner'
+        AND conrelid='principal_result_pages'::regclass) THEN
+        ALTER TABLE principal_result_pages ADD CONSTRAINT p10_result_connection_owner
+          FOREIGN KEY(connection_id,principal_id,account_id)
+          REFERENCES principal_connections(id,principal_id,account_id);
+      END IF; END $p10// Principal-owned persistence for public MCP requests. This module is only
+// constructed from scopedStore's server-minted, WeakSet-verified AuthContext.
+// Neither provider arguments nor cookies may supply its ownership keys.
+import { neon } from '@neondatabase/serverless';
+import { validUuid, requireScope } from './security.js';
+
+let connection;
+const sql = () => {
+  if (!connection) {
+    if (!process.env.DATABASE_URL) throw Error('database_unavailable');
+    connection = neon(process.env.DATABASE_URL);
+  }
+  return connection;
+};
+const asJSON = value => value === undefined ? null : JSON.stringify(value);
+const positiveInt = (n, max) => Number.isSafeInteger(n) && n >= 1 && n <= max;
+const handlePattern = /^rtc_result_[A-Za-z0-9_-]{32}$/;
+
+export async function initTenantSchema(q = sql()) {
+  // Existing P10-B installations have the row but not its composite
+  // owned-account relation. Additive twice-safe migration; no key is moved.
+  await q`ALTER TABLE principal_delegations ADD COLUMN IF NOT EXISTS account_id UUID`;
+  await q`DO $p10_fk$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='principal_delegations_owned_account_fk'
+      AND conrelid='principal_delegations'::regclass) THEN
+      ALTER TABLE principal_delegations ADD CONSTRAINT principal_delegations_owned_account_fk
+        FOREIGN KEY (account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id);
+    END IF;
+  END $p10_fk$`;
+  await q`CREATE TABLE IF NOT EXISTS principal_delegation_subjects (
+    principal_id UUID NOT NULL REFERENCES principals(id),
+    account_id UUID NOT NULL,
+    customer_id TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    verified_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY(principal_id,customer_id,subject),
+    FOREIGN KEY(principal_id,customer_id)
+      REFERENCES principal_delegations(principal_id,customer_id) ON DELETE CASCADE,
+    FOREIGN KEY(account_id,principal_id)
+      REFERENCES principal_google_accounts(id,principal_id))`;
+  await q`CREATE TABLE IF NOT EXISTS principal_result_pages (
+    handle TEXT PRIMARY KEY,
+    principal_id UUID NOT NULL REFERENCES principals(id),
+    account_id UUID NOT NULL,
+    connection_id UUID NOT NULL REFERENCES principal_connections(id),
+    credential_version INTEGER NOT NULL CHECK (credential_version>=0),
+    payload JSONB NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    FOREIGN KEY(account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id))`;
+  // A UUID foreign key alone does not prove the referenced connection belongs
+  // to this same principal/account. Enforce the full triple in Postgres too:
+  // raw SQL, retries and future import paths cannot misassociate audit,
+  // pagination or counters even if an application caller is mistaken.
+  await q`CREATE UNIQUE INDEX IF NOT EXISTS principal_connections_owner_key
+    ON principal_connections(id,principal_id,account_id)`;
+  await q`CREATE INDEX IF NOT EXISTS principal_result_expiry ON principal_result_pages(expires_at)`;
+  await q`CREATE INDEX IF NOT EXISTS principal_result_owner ON principal_result_pages
+    (principal_id,account_id,connection_id,credential_version)`;
+  await q`CREATE TABLE IF NOT EXISTS principal_changes (
+    id BIGSERIAL PRIMARY KEY,
+    principal_id UUID NOT NULL REFERENCES principals(id),
+    account_id UUID NOT NULL,
+    connection_id UUID NOT NULL REFERENCES principal_connections(id),
+    acting_as TEXT NOT NULL,
+    tool TEXT NOT NULL,
+    target TEXT,summary TEXT,
+    before JSONB,after JSONB,
+    dry_run BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    FOREIGN KEY(account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id))`;
+  await q`CREATE INDEX IF NOT EXISTS principal_changes_owner ON principal_changes
+    (principal_id,account_id,connection_id,created_at DESC)`;
+;
+    }else if(table==='principal_changes'){
+      await q`DO $p10$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conname='p10_change_connection_owner'
+        AND conrelid='principal_changes'::regclass) THEN
+        ALTER TABLE principal_changes ADD CONSTRAINT p10_change_connection_owner
+          FOREIGN KEY(connection_id,principal_id,account_id)
+          REFERENCES principal_connections(id,principal_id,account_id);
+      END IF; END $p10// Principal-owned persistence for public MCP requests. This module is only
+// constructed from scopedStore's server-minted, WeakSet-verified AuthContext.
+// Neither provider arguments nor cookies may supply its ownership keys.
+import { neon } from '@neondatabase/serverless';
+import { validUuid, requireScope } from './security.js';
+
+let connection;
+const sql = () => {
+  if (!connection) {
+    if (!process.env.DATABASE_URL) throw Error('database_unavailable');
+    connection = neon(process.env.DATABASE_URL);
+  }
+  return connection;
+};
+const asJSON = value => value === undefined ? null : JSON.stringify(value);
+const positiveInt = (n, max) => Number.isSafeInteger(n) && n >= 1 && n <= max;
+const handlePattern = /^rtc_result_[A-Za-z0-9_-]{32}$/;
+
+export async function initTenantSchema(q = sql()) {
+  // Existing P10-B installations have the row but not its composite
+  // owned-account relation. Additive twice-safe migration; no key is moved.
+  await q`ALTER TABLE principal_delegations ADD COLUMN IF NOT EXISTS account_id UUID`;
+  await q`DO $p10_fk$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='principal_delegations_owned_account_fk'
+      AND conrelid='principal_delegations'::regclass) THEN
+      ALTER TABLE principal_delegations ADD CONSTRAINT principal_delegations_owned_account_fk
+        FOREIGN KEY (account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id);
+    END IF;
+  END $p10_fk$`;
+  await q`CREATE TABLE IF NOT EXISTS principal_delegation_subjects (
+    principal_id UUID NOT NULL REFERENCES principals(id),
+    account_id UUID NOT NULL,
+    customer_id TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    verified_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY(principal_id,customer_id,subject),
+    FOREIGN KEY(principal_id,customer_id)
+      REFERENCES principal_delegations(principal_id,customer_id) ON DELETE CASCADE,
+    FOREIGN KEY(account_id,principal_id)
+      REFERENCES principal_google_accounts(id,principal_id))`;
+  await q`CREATE TABLE IF NOT EXISTS principal_result_pages (
+    handle TEXT PRIMARY KEY,
+    principal_id UUID NOT NULL REFERENCES principals(id),
+    account_id UUID NOT NULL,
+    connection_id UUID NOT NULL REFERENCES principal_connections(id),
+    credential_version INTEGER NOT NULL CHECK (credential_version>=0),
+    payload JSONB NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    FOREIGN KEY(account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id))`;
+  // A UUID foreign key alone does not prove the referenced connection belongs
+  // to this same principal/account. Enforce the full triple in Postgres too:
+  // raw SQL, retries and future import paths cannot misassociate audit,
+  // pagination or counters even if an application caller is mistaken.
+  await q`CREATE UNIQUE INDEX IF NOT EXISTS principal_connections_owner_key
+    ON principal_connections(id,principal_id,account_id)`;
+  await q`CREATE INDEX IF NOT EXISTS principal_result_expiry ON principal_result_pages(expires_at)`;
+  await q`CREATE INDEX IF NOT EXISTS principal_result_owner ON principal_result_pages
+    (principal_id,account_id,connection_id,credential_version)`;
+  await q`CREATE TABLE IF NOT EXISTS principal_changes (
+    id BIGSERIAL PRIMARY KEY,
+    principal_id UUID NOT NULL REFERENCES principals(id),
+    account_id UUID NOT NULL,
+    connection_id UUID NOT NULL REFERENCES principal_connections(id),
+    acting_as TEXT NOT NULL,
+    tool TEXT NOT NULL,
+    target TEXT,summary TEXT,
+    before JSONB,after JSONB,
+    dry_run BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    FOREIGN KEY(account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id))`;
+  await q`CREATE INDEX IF NOT EXISTS principal_changes_owner ON principal_changes
+    (principal_id,account_id,connection_id,created_at DESC)`;
+;
+    }else{
+      await q`DO $p10$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conname='p10_rate_connection_owner'
+        AND conrelid='principal_rate_windows'::regclass) THEN
+        ALTER TABLE principal_rate_windows ADD CONSTRAINT p10_rate_connection_owner
+          FOREIGN KEY(connection_id,principal_id,account_id)
+          REFERENCES principal_connections(id,principal_id,account_id);
+      END IF; END $p10// Principal-owned persistence for public MCP requests. This module is only
+// constructed from scopedStore's server-minted, WeakSet-verified AuthContext.
+// Neither provider arguments nor cookies may supply its ownership keys.
+import { neon } from '@neondatabase/serverless';
+import { validUuid, requireScope } from './security.js';
+
+let connection;
+const sql = () => {
+  if (!connection) {
+    if (!process.env.DATABASE_URL) throw Error('database_unavailable');
+    connection = neon(process.env.DATABASE_URL);
+  }
+  return connection;
+};
+const asJSON = value => value === undefined ? null : JSON.stringify(value);
+const positiveInt = (n, max) => Number.isSafeInteger(n) && n >= 1 && n <= max;
+const handlePattern = /^rtc_result_[A-Za-z0-9_-]{32}$/;
+
+export async function initTenantSchema(q = sql()) {
+  // Existing P10-B installations have the row but not its composite
+  // owned-account relation. Additive twice-safe migration; no key is moved.
+  await q`ALTER TABLE principal_delegations ADD COLUMN IF NOT EXISTS account_id UUID`;
+  await q`DO $p10_fk$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='principal_delegations_owned_account_fk'
+      AND conrelid='principal_delegations'::regclass) THEN
+      ALTER TABLE principal_delegations ADD CONSTRAINT principal_delegations_owned_account_fk
+        FOREIGN KEY (account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id);
+    END IF;
+  END $p10_fk$`;
+  await q`CREATE TABLE IF NOT EXISTS principal_delegation_subjects (
+    principal_id UUID NOT NULL REFERENCES principals(id),
+    account_id UUID NOT NULL,
+    customer_id TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    verified_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY(principal_id,customer_id,subject),
+    FOREIGN KEY(principal_id,customer_id)
+      REFERENCES principal_delegations(principal_id,customer_id) ON DELETE CASCADE,
+    FOREIGN KEY(account_id,principal_id)
+      REFERENCES principal_google_accounts(id,principal_id))`;
+  await q`CREATE TABLE IF NOT EXISTS principal_result_pages (
+    handle TEXT PRIMARY KEY,
+    principal_id UUID NOT NULL REFERENCES principals(id),
+    account_id UUID NOT NULL,
+    connection_id UUID NOT NULL REFERENCES principal_connections(id),
+    credential_version INTEGER NOT NULL CHECK (credential_version>=0),
+    payload JSONB NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    FOREIGN KEY(account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id))`;
+  // A UUID foreign key alone does not prove the referenced connection belongs
+  // to this same principal/account. Enforce the full triple in Postgres too:
+  // raw SQL, retries and future import paths cannot misassociate audit,
+  // pagination or counters even if an application caller is mistaken.
+  await q`CREATE UNIQUE INDEX IF NOT EXISTS principal_connections_owner_key
+    ON principal_connections(id,principal_id,account_id)`;
+  await q`CREATE INDEX IF NOT EXISTS principal_result_expiry ON principal_result_pages(expires_at)`;
+  await q`CREATE INDEX IF NOT EXISTS principal_result_owner ON principal_result_pages
+    (principal_id,account_id,connection_id,credential_version)`;
+  await q`CREATE TABLE IF NOT EXISTS principal_changes (
+    id BIGSERIAL PRIMARY KEY,
+    principal_id UUID NOT NULL REFERENCES principals(id),
+    account_id UUID NOT NULL,
+    connection_id UUID NOT NULL REFERENCES principal_connections(id),
+    acting_as TEXT NOT NULL,
+    tool TEXT NOT NULL,
+    target TEXT,summary TEXT,
+    before JSONB,after JSONB,
+    dry_run BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    FOREIGN KEY(account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id))`;
+  await q`CREATE INDEX IF NOT EXISTS principal_changes_owner ON principal_changes
+    (principal_id,account_id,connection_id,created_at DESC)`;
+;
+    }
+  }
 }
 
 // No exported argument can override these private closure-held identity fields.
