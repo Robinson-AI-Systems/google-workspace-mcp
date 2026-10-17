@@ -239,28 +239,32 @@ restricts only the named operation. Source completion never proves actual Google
     "state": "EXTERNAL_ONLY",
     "remaining": "Source classification and unit controls completed. No new real billable or TEST fixture acceptance authorized; reconcile real runtime permissions after deployed P9 live mode.",
     "evidence": "PR #201 head ed9ba9578381616f29341a0bdc063b84cd8064da, frozen P9 report docs/plan/evidence/p9-bundle-delivery.json, classification and focused tests; exact-head mandatory CI succeeded run #38999853714. No P9 deployed/live acceptance claimed.",
-    "next": "After P9 deployment and owner-selected disposable live read-only grant, run safe positive/read-only-negative/revocation acceptance; do not change Hub."
+    "next": "After P9 deployment and owner-selected disposable live read-only grant, run safe positive/read-only-negative/revocation acceptance; do not change Hub.",
+    "gate": "Exact source merged and deployed for live runtime profile/area evaluation; only an owner-granted disposable account read and permission-denial acceptance is eligible without additional paid-provider authorization."
   },
   {
     "id": "P9-2",
     "state": "EXTERNAL_ONLY",
     "remaining": "Exact cost consent and guarded batch writes implemented/tested. Real paid license assignment/change NOT approved or executed; require separate explicit owner amount/unknown exposure approval and protected target before any provider mutation.",
     "evidence": "PR #201 head ed9ba9578381616f29341a0bdc063b84cd8064da, frozen P9 report docs/plan/evidence/p9-bundle-delivery.json, classification and focused tests; exact-head mandatory CI succeeded run #38999853714. No P9 deployed/live acceptance claimed.",
-    "next": "After P9 deployment, no actual paid license mutation without independent owner approval; source acceptance only."
+    "next": "After P9 deployment, no actual paid license mutation without independent owner approval; source acceptance only.",
+    "gate": "Paid Google licensing assignment/upgrade requires separate owner approval of exact connected account, disposable users, SKU, and unknown billing exposure; no automated or unapproved paid mutation."
   },
   {
     "id": "P9-3",
     "state": "EXTERNAL_ONLY",
     "remaining": "P9 live source implemented and CI tested. Real Google provider live read, scoped write refusal and disposable-grant revocation await deployment, user-selected owner grant and consent. Hub relay/Sandbox live-write proof is Hub-owned.",
     "evidence": "PR #201 head ed9ba9578381616f29341a0bdc063b84cd8064da, frozen P9 report docs/plan/evidence/p9-bundle-delivery.json, classification and focused tests; exact-head mandatory CI succeeded run #38999853714. No P9 deployed/live acceptance claimed.",
-    "next": "After P9 deployment and owner-selected disposable live read-only grant, run safe positive/read-only-negative/revocation acceptance; do not change Hub."
+    "next": "After P9 deployment and owner-selected disposable live read-only grant, run safe positive/read-only-negative/revocation acceptance; do not change Hub.",
+    "gate": "Real live RTC/native provider acceptance waits until an independently READY source deployment, authenticated owner-selected ephemeral grant and safe non-billable target; Hub live-write relay is a separate Hub-owned dependency."
   },
   {
     "id": "P9-4",
     "state": "EXTERNAL_ONLY",
     "remaining": "Discovery/catalog/source parity implemented and CI tested. Deployed native/live catalog read-only comparison and provider entitlement confirmation still pending.",
     "evidence": "PR #201 head ed9ba9578381616f29341a0bdc063b84cd8064da, frozen P9 report docs/plan/evidence/p9-bundle-delivery.json, classification and focused tests; exact-head mandatory CI succeeded run #38999853714. No P9 deployed/live acceptance claimed.",
-    "next": "After P9 deployment and owner-selected disposable live read-only grant, run safe positive/read-only-negative/revocation acceptance; do not change Hub."
+    "next": "After P9 deployment and owner-selected disposable live read-only grant, run safe positive/read-only-negative/revocation acceptance; do not change Hub.",
+    "gate": "Cross-door live native/RTC discovery and reconnect acceptance waits until source deployed and an owner-authorized disposable live read-only pass; source unit/SQL/RTC checks are already complete."
   },
   {
     "id": "P10-1",
@@ -660,7 +664,11 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Only after a READY deployment including P9 and a separately owner-issued disposable live read-only grant; no Google writes, no credential exposure, preserve TEST/Hub grants and original evidence.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "PR #201 isolated fake-provider HTTPS/native write/read and real Postgres schema checks passed; NO deployed P9 direct live probe exists. Queue it until deployed and owner grants."
+    "lastEvidence": "PR #201 isolated fake-provider HTTPS/native write/read and real Postgres schema checks passed; NO deployed P9 direct live probe exists. Queue it until deployed and owner grants.",
+    "subsections": [
+      "P9-3",
+      "P9-4"
+    ]
   },
   {
     "id": "P9-LICENSE-PAID",
@@ -673,7 +681,10 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P9-LIVE-DIRECT"
     ],
     "status": "PENDING",
-    "lastEvidence": "Source/test fake-provider Google licensing request shape and uncertain outcome tests passed; actual Google license changes NOT attempted or approved."
+    "lastEvidence": "Source/test fake-provider Google licensing request shape and uncertain outcome tests passed; actual Google license changes NOT attempted or approved.",
+    "subsections": [
+      "P9-2"
+    ]
   },
   {
     "id": "P9-HUB-LIVE",
@@ -686,7 +697,10 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P9-LIVE-DIRECT"
     ],
     "status": "PENDING",
-    "lastEvidence": "Hub companion contract committed in Workspace PR #201. Prior Hub D-4 TEST/read-only direct relay acceptance was previously passed and is not reused as live-write evidence."
+    "lastEvidence": "Hub companion contract committed in Workspace PR #201. Prior Hub D-4 TEST/read-only direct relay acceptance was previously passed and is not reused as live-write evidence.",
+    "subsections": [
+      "P9-3"
+    ]
   }
 ]
 ```
