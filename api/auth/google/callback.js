@@ -25,6 +25,30 @@ export default async function handler(req,res){
   // accept unverified email/hd/client hints from request parameters.
   const verified=await verifyGoogleCode({client:publicGoogleClient(),code:req.query.code,
     verifier:tx.verifier,nonceHash:tx.nonce_hash});
+  // Owner-passphrase authenticated identity discovery for a disposable pilot
+  // tester: use a one-use, browser-bound OIDC transaction while normal public
+  // enrollment is OFF. Reveal only the stable verified subject to that browser.
+  // Never mint a principal, store grants, expose a Google token or enable tools.
+  if(tx.policy?.pilotProbe===true){
+    requireScope(tx.purpose==='login'&&!tx.principal_id&&!tx.policy?.ownerProof,
+      'invalid_pilot_subject_proof');
+    const safe=x=>String(x).replace(/[&<>"']/g,c=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+    res.setHeader('Content-Type','text/html; charset=utf-8');
+    res.setHeader('Content-Security-Policy',
+      "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
+    res.status(200).send('<!doctype html><meta charset="utf-8">'+
+      '<title>Verified pilot subject</title>'+
+      '<main style="font:16px/1.5 system-ui;max-width:42rem;margin:3rem auto">'+
+      '<h1>Google-verified tester identity (no enrollment)</h1>'+
+      '<p>Verify you used the intended disposable Google tester. This identifier is not a Google access token.</p>'+
+      '<p>Verified account: '+safe(verified.email)+'</p>'+
+      '<p>Google subject ID to configure privately: <code>'+safe(verified.sub)+'</code></p>'+
+      '<p>Put the subject ID in PUBLIC_PILOT_GOOGLE_SUBJECTS through the protected deployment settings. '+
+      'Do not paste it into chat, source control or issue comments. Pilot mode remains OFF until separately approved.</p>'+
+      '</main>');return;
+  }
   // The owner recovery path is never a public principal enrollment or
   // a new Google mailbox grant. Its passphrase-protected, one-use transaction
   // authorizes linking; later login requires the linked verified issuer/sub.

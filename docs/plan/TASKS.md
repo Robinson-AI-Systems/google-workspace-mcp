@@ -800,7 +800,37 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     ],
     "lastEvidence": "Security fix source 57ed0f87e3a109f5eeda9faac3d2159e0808b105 merged in PR #206 at main e9ef3ad57d0c8e55e258bf3ce7e51f6513155203. CI #39044406126 check, unit, db, rtc and aggregate test all green; Daily live policy #39044406118 passed. Vercel production remained eece407e5f8e2a2094793355e9a5ca086567e5c1 at inspection; no post-release anonymous production privacy readback yet."
   }
-
+,
+  {
+    "id": "P10-6-PUBLIC-DISCLOSURE",
+    "priority": 3,
+    "requiredRevision": "4a9c6a929fab6931caea95f3af94fc9ed6a7173d",
+    "task": "Verify real public homepage, privacy/data-use, support, deletion/help pages and authenticated portal disclosure on independently READY source, with operator-approved final accurate privacy/retention/support and Google-owned domain before public brand verification.",
+    "procedure": "docs/plan/P10-PILOT-CHECKLIST.md; docs/pr-cards/P10-PILOT-READINESS.md; public GET/HEAD and authenticated account portal",
+    "gates": "Reviewed source on real serving READY release, zero owner mailbox exposure; independent owner privacy/retention review, actual domain ownership and matching OAuth consent links. No provider write, enrollment, paid review or assertion of Google approval.",
+    "dependsOn": [],
+    "status": "PENDING",
+    "subsections": [
+      "P10-6"
+    ],
+    "lastEvidence": "PR #208 source 4a9c6a929fab6931caea95f3af94fc9ed6a7173d includes public prelaunch information and synthetic route tests. No live serving revision, reviewed final privacy policy, verified custom domain or approved public consent claim."
+  },
+  {
+    "id": "P10-6-OWNER-SUBJECT-PROBE",
+    "priority": 3,
+    "requiredRevision": "4a9c6a929fab6931caea95f3af94fc9ed6a7173d",
+    "task": "After checked release and separate PUBLIC Google app, owner-authenticated canonical readiness readback and one-time SDK-verified subject discovery for each disposable tester, proving no principal, Google grant, agent connection or owner credential changed.",
+    "procedure": "api/owner/pilot-readiness.js; api/auth/google/callback.js; docs/plan/P10-PILOT-CHECKLIST.md",
+    "gates": "Independent serving READY source; separate public client ID/secret protected in Vercel, exact registered callback; two owner-authorized Testing Google identities; existing owner passphrase; browser state/nonce/PKCE proof and no subject IDs in logs/chat. Remain public-OFF until further explicit pilot activation.",
+    "dependsOn": [
+      "P10-OWNER-CONTINUITY"
+    ],
+    "status": "PENDING",
+    "subsections": [
+      "P10-6"
+    ],
+    "lastEvidence": "PR #208 source 4a9c6a929fab6931caea95f3af94fc9ed6a7173d mock SDK and protected route tests only. Public Google client missing and no authentic user OIDC subject/independent owner proof yet."
+  }
 ]
 
 ```
