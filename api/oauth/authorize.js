@@ -20,6 +20,9 @@ import {getPrincipal,listAccounts,issuePrincipalCode} from '../../src/principals
 import {requireSession,requireCsrf} from '../../src/principals/session.js';
 import {publicMode,publicResource,headers} from '../../src/principals/security.js';
 
+function publicSignInAvailable(){
+ try{return publicMode()!=='off';}catch{return false;} // bad public config cannot lock out legacy owner
+}
 function renderLoginPage({ error, hidden, accounts, selected, profile }) {
   const selectedProfile = ['read_only','everyday','full'].includes(profile) ? profile : 'read_only';
   const hiddenInputs = Object.entries(hidden).map(([k, v]) => `<input type="hidden" name="${k}" value="${escapeHtml(v || '')}">`).join('\n');
@@ -49,7 +52,7 @@ function renderLoginPage({ error, hidden, accounts, selected, profile }) {
   <form method="POST">
     <h1>Robinson Google Workspace MCP</h1>
     ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
-    ${publicMode()!=='off'?'<p><a href="/api/oauth/authorize?'+new URLSearchParams({...hidden,auth_method:'google'}).toString()+'" style="color:#075fca">Sign in with a separate Google account</a></p>':''}
+    ${publicSignInAvailable()?'<p><a href="/api/oauth/authorize?'+new URLSearchParams({...hidden,auth_method:'google'}).toString()+'" style="color:#075fca">Sign in with a separate Google account</a></p>':''}
     ${accountField}
     <label for="profile">Permission level</label>
     <select name="profile" id="profile">${['read_only','everyday','full'].map(value=>`<option value="${value}"${selectedProfile===value ? ' selected' : ''}>${({read_only:'Read only',everyday:'Everyday',full:'Full'})[value]}</option>`).join('')}</select>
