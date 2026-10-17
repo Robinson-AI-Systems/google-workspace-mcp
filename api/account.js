@@ -1,7 +1,7 @@
 // User-owned account portal. No global owner mailbox/connection listing.
 import {initSchema} from '../src/db.js';
 import {listAccounts,listConnections,revokeConnection,disconnectAccount,deletionPreview,
-  setPrincipalDefault} from '../src/principals/store.js';
+  setPrincipalDefault,requestDeletion,cancelDeletion} from '../src/principals/store.js';
 import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.js';
 import {readCookie,headers} from '../src/principals/security.js';
 const escape=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -26,6 +26,8 @@ export default async function handler(req,res){
        return res.status(200).json({defaultAccountId:await setPrincipalDefault(principalId,body.id)});
      }
      if(action==='delete_preview')return res.status(200).json(await deletionPreview(principalId));
+     if(action==='request_delete')return res.status(200).json(await requestDeletion(principalId));
+     if(action==='cancel_delete')return res.status(200).json(await cancelDeletion(principalId));
      return res.status(400).json({error:'unknown_action'});
    }
    const accounts=await listAccounts(principalId),connections=await listConnections(principalId);
@@ -50,6 +52,8 @@ export default async function handler(req,res){
        ' · '+escape(c.id)+form('revoke_connection',c.id,'Revoke this agent connection')+'</li>').join('')+'</ul>'+
      '<h2>Account deletion</h2><p>Preview counts before any irreversible decision. No deletion occurs on this page; Google grants and retained audit data may require separate treatment.</p>'+
        form('delete_preview','','Preview deletion')+
+       form('request_delete','','Request recoverable deletion (no irreversible removal)')+
+       form('cancel_delete','','Cancel pending deletion')+
      '<form action="/api/auth/logout" method="POST"><input type="hidden" name="csrf" value="'+escape(csrf)+'"><button>Log out of this browser (agents remain)</button></form></main>';
    return res.status(200).send(html);
  }catch{return res.status(403).json({error:'invalid_session_or_scope'});}

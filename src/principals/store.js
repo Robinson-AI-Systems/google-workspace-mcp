@@ -68,6 +68,9 @@ export async function initPrincipalSchema(q=sql()){
  await q`CREATE INDEX IF NOT EXISTS principal_connections_principal ON principal_connections(principal_id,account_id)`;
  await q`CREATE TABLE IF NOT EXISTS principal_refresh_uses (
    refresh_hash TEXT PRIMARY KEY,family UUID NOT NULL,used_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
+ await q`CREATE TABLE IF NOT EXISTS principal_deletion_requests (
+   principal_id UUID PRIMARY KEY REFERENCES principals(id),requested_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+   cancelled_at TIMESTAMPTZ,confirmed_at TIMESTAMPTZ)`;
  await q`CREATE TABLE IF NOT EXISTS principal_delegations (
    id UUID PRIMARY KEY,principal_id UUID NOT NULL REFERENCES principals(id),
    customer_id TEXT NOT NULL,scopes TEXT[] NOT NULL,subject_rule TEXT NOT NULL,
@@ -307,7 +310,12 @@ export async function readPrincipalAccess(token){
    JOIN principal_google_accounts a ON a.id=c.account_id AND a.principal_id=c.principal_id
    WHERE c.access_hash=${digest(token)} AND c.expires_at>now()
    AND c.revoked_at IS NULL AND p.status='active' AND a.status='active'`;
- return rows.length===1?Object.freeze(rows[0]):null;
+ if(rows.length!==1)return null;
+ const row=rows[0],settings=policy(row);
+ return Object.freeze({principalId:row.principal_id,principalKind:row.principal_kind,
+   accountId:row.account_id,connectionId:row.connection_id,mode:settings.mode,
+   profile:settings.profile,listing:settings.listing,areas:settings.areas,
+   resource:row.resource,clientId:row.client_id});
 }
 export async function rotatePrincipalRefresh(token,{clientId,resource}={}){
  if(typeof token!=='string'||!/^p10r_[A-Za-z0-9_-]{43}$/.test(token)||
@@ -377,4 +385,41 @@ export async function deletionPreview(principalId){
     AND revoked_at IS NULL) AS sessions`;
  return {...rows[0],previewOnly:true,deleted:false,
   next:'Account deletion needs separate irreversible confirmation and retention disclosure before launch.'};
+}
+
+export function scopedStore(context){
+ // Inject this wrapper into future P10-4 public clients, never call global DB
+ // helpers with a caller-provided tenant. No public tool dispatch exists yet.
+ requireScope(context&&Object.isFrozen(context)&&context.principalKind==='user'&&
+   validUuid(context.principalId),'invalid_scoped_context');
+ const principal=context.principalId;
+ return Object.freeze({
+   listAccounts:()=>listAccounts(principal),
+   getAccount:id=>findAccount(principal,id),
+   getGrant:id=>getLinkedGrant(principal,id),
+   setDefault:id=>setPrincipalDefault(principal,id),
+   listConnections:()=>listConnections(principal),
+   revokeConnection:id=>revokeConnection(principal,id),
+   disconnectAccount:id=>disconnectAccount(principal,id),
+   deletionPreview:()=>deletionPreview(principal)
+ });
+}
+export async function requestDeletion(principalId){
+ requireScope(validUuid(principalId));
+ const q=sql();
+ const rows=await q`INSERT INTO principal_deletion_requests(principal_id)
+   SELECT id FROM principals WHERE id=${principalId}::uuid AND kind='user' AND status='active'
+   ON CONFLICT(principal_id) DO UPDATE SET requested_at=now(),cancelled_at=NULL
+   WHERE principal_deletion_requests.confirmed_at IS NULL
+   RETURNING requested_at`;
+ requireScope(rows.length===1,'invalid_deletion_request');
+ return {pending:true,irreversible:false,requestedAt:rows[0].requested_at};
+}
+export async function cancelDeletion(principalId){
+ requireScope(validUuid(principalId));
+ const q=sql();
+ const rows=await q`UPDATE principal_deletion_requests SET cancelled_at=now()
+   WHERE principal_id=${principalId}::uuid AND cancelled_at IS NULL
+    AND confirmed_at IS NULL RETURNING requested_at`;
+ return {cancelled:rows.length===1,deleted:false};
 }

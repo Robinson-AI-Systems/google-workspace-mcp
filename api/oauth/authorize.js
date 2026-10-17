@@ -49,7 +49,7 @@ function renderLoginPage({ error, hidden, accounts, selected, profile }) {
   <form method="POST">
     <h1>Robinson Google Workspace MCP</h1>
     ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
-    ${publicMode()!=='off'?'<p><a href="#google-login" style="color:#075fca">Sign in with a separate Google account</a></p>':''}
+    ${publicMode()!=='off'?'<p><a href="/api/oauth/authorize?'+new URLSearchParams({...hidden,auth_method:'google'}).toString()+'" style="color:#075fca">Sign in with a separate Google account</a></p>':''}
     ${accountField}
     <label for="profile">Permission level</label>
     <select name="profile" id="profile">${['read_only','everyday','full'].map(value=>`<option value="${value}"${selectedProfile===value ? ' selected' : ''}>${({read_only:'Read only',everyday:'Everyday',full:'Full'})[value]}</option>`).join('')}</select>
@@ -84,7 +84,7 @@ export default async function handler(req, res) {
   await ensureMigrated().catch(() => {}); // best effort; the page still renders if Google is unreachable
   const params = req.method === 'GET' ? req.query : await parseBody(req);
   const { client_id, redirect_uri, state, code_challenge, code_challenge_method, response_type } = params;
-  const hidden = { client_id, redirect_uri, state, code_challenge, code_challenge_method };
+  const hidden = { client_id, redirect_uri, state, code_challenge, code_challenge_method, resource: params.resource };
 
   if (response_type && response_type !== 'code') {
     res.status(400).send('Only response_type=code is supported.');
