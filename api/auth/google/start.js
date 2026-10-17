@@ -38,7 +38,7 @@ export default async function handler(req,res){
   const verifier=randomBytes(48).toString('base64url');
   await createTransaction({state,nonce,browser,verifier,purpose,
     principalId:session?.principal_id||null,clientId,redirectUri,resource,codeChallenge,
-    policy:{group}});
+    policy:{group,clientState:purpose==='mcp_authorize'?params.state||null:null}});
   const url=providerUrl({client,state,nonce,verifier,group});
   res.setHeader('Set-Cookie',cookie(BROWSER_COOKIE,browser,'/api/auth/google',600));
   res.writeHead(302,{Location:url});res.end();

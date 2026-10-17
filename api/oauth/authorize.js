@@ -116,7 +116,7 @@ export default async function handler(req, res) {
       if(req.method!=='GET')return res.status(401).send('Sign in before authorizing this client.');
       if(publicMode()==='off')return res.status(503).send('New public sign-in is currently disabled.');
       const next=new URL('/api/auth/google/start',publicResource());
-      for(const key of ['client_id','redirect_uri','resource','code_challenge'])
+      for(const key of ['client_id','redirect_uri','resource','code_challenge','state'])
         next.searchParams.set(key,params[key]);
       next.searchParams.set('purpose','mcp_authorize');
       return res.status(200).send('<!doctype html><h1>Google sign-in</h1><p>Authorize this registered MCP client using your Google account.</p><a href="'+escapeHtml(next.toString())+'">Continue securely with Google</a>');

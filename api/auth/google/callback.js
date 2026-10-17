@@ -49,6 +49,7 @@ export default async function handler(req,res){
     next.searchParams.set('code_challenge_method','S256');
     next.searchParams.set('resource',tx.resource);
     next.searchParams.set('auth_method','google');
+    if(tx.policy?.clientState)next.searchParams.set('state',tx.policy.clientState);
     res.writeHead(302,{Location:next.toString()});res.end();return;
   }
   res.writeHead(302,{Location:'/api/account'});res.end();

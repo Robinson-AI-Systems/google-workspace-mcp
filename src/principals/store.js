@@ -144,6 +144,9 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
  const foreign=await q`SELECT id FROM principal_google_accounts
    WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id<>${principalId}::uuid`;
  requireScope(!foreign.length,'identity_owned_elsewhere');
+ const identity=await q`SELECT principal_id FROM principal_google_identities
+   WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id<>${principalId}::uuid`;
+ requireScope(identity.length===0,'identity_owned_elsewhere');
  const id=crypto.randomUUID();
  const sealed=sealV2(tokens,principalId,id,'google-grant');
  const rows=await q`INSERT INTO principal_google_accounts
@@ -330,7 +333,8 @@ export async function rotatePrincipalRefresh(token,{clientId,resource}={}){
  // A consumed refresh token replay revokes the entire family, even if a
  // competing request just rotated it successfully on a different instance.
  await q`UPDATE principal_connections SET revoked_at=now() WHERE family IN
-   (SELECT family FROM principal_refresh_uses WHERE refresh_hash=${prior})`;
+   (SELECT family FROM principal_refresh_uses WHERE refresh_hash=${prior})
+   AND client_id=${clientId} AND resource=${resource}`;
  return null;
 }
 export async function listConnections(principalId){
