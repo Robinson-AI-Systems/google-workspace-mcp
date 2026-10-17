@@ -36,6 +36,8 @@ describe('P8-4 complete generic OpenAPI document',()=>{
   const identity=spec.paths['/api/whoami'].get.responses['200'].content['application/json'].schema;
   expect(identity.required).toEqual(['ok','result','mode']);
   expect(identity.properties.result).toEqual({$ref:'#/components/schemas/Identity'});
+  expect(identity.properties.mode.enum).toEqual(['test','live']);
+  expect(spec.components.schemas.Manifest.properties.modes.items.enum).toEqual(['test','live']);
  });
  it('documents actual string projection, numbered UTF-8 recovery, guarded writes and bounded batches',()=>{
   const retrieval=spec.paths['/api/results/{handle}'].get;

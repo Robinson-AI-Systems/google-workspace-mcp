@@ -107,6 +107,30 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   await holder.db.revokeRtcPass(issued.id);
   expect((await invoke('GET',{door:'whoami'},{},issued.token)).statusCode).toBe(401);
  });
+ it('permits live guarded writes and discoverable areas, but keeps live dev fixtures inaccessible',async()=>{
+  const issued=await holder.db.createRtcPass({googleAccount:'ops@example.test',mode:'live',
+    profile:'full',areas:['mail','workspace'],allowWrites:true,confirmedAccount:'ops@example.test',hours:2});
+  const who=await invoke('GET',{door:'whoami'},{},issued.token);
+  expect(who).toMatchObject({statusCode:200,body:{mode:'live',result:{mode:'live',profile:'full'}}});
+  const catalog=await invoke('GET',{door:'tools',listing:'catalog',q:'gmail_create_label'}, {},issued.token);
+  expect(catalog.statusCode).toBe(200);
+  expect(catalog.body.mode).toBe('live');
+  const direct=await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'live-guarded'},issued.token);
+  expect(direct.statusCode).toBe(200);
+  expect(direct.body.mode).toBe('live');
+  expect(direct.body.result.done).toBe(true);
+  const fixture=await invoke('POST',{tool:'workspace_dev_create_fixtures'},
+    {dryRun:true},issued.token);
+  expect(fixture.statusCode).toBe(403);
+  expect(fixture.body.error.code).toBe('outside_scope');
+  const read=await holder.db.createRtcPass({googleAccount:'ops@example.test',mode:'live',
+    profile:'read_only',areas:['mail'],allowWrites:false,hours:2});
+  expect((await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'denied'},read.token)).statusCode).toBe(403);
+  expect((await invoke('GET',{tool:'workspace_gmail_create_label'},{},read.token)).statusCode).toBe(403);
+  await holder.db.revokeRtcPass(issued.id);
+  await holder.db.revokeRtcPass(read.id);
+  expect((await invoke('GET',{door:'whoami'},{},issued.token)).statusCode).toBe(401);
+ });
  it('rejects a revoked pass immediately',async()=>{
   const pass=await holder.db.getRtcPass(token);
   await holder.db.revokeRtcPass(pass.id);
