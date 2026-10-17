@@ -18,7 +18,8 @@ export function allowedTool(name, c={}) {
  // The developer fixture creation/cleanup tools are TEST-only; ordinary
  // Workspace operations and non-writing integration checks remain live-capable.
  if(c.mode==='live'&&['workspace_dev_create_fixtures','workspace_dev_cleanup'].includes(name))return false;
- if (RTC_META.has(name) return true; // The dispatcher rechecks the selected target's area and profile.
+ if (RTC_META.has(name)) return true; // The dispatcher rechecks the selected target's area and profile.
+ if(c.allow_writes===false&&isWrite(name))return false;
  if (Array.isArray(c.areas)&&!c.areas.includes(rtcArea(name)))return false;
  if (c.profile==='read_only'&&isWrite(name))return false;
  if (c.profile==='everyday'&&isWrite(name)&&['admin','workspace','dns','licensing','vault'].includes(rtcArea(name)))return false;
@@ -44,6 +45,9 @@ export function toolMetadata(t){
  // risk is separate and does not justify a developer-imposed user prohibition.
  const billingRisk=['licensing_assign_license','licensing_update_assignment','workspace_bulk_operation'].includes(t.name);
  const warning=billingRisk?'BILLING WARNING: possible Google charges; price unknown. ':'';
- return {...t,description:(warning+t.description).slice(0,160),area:rtcArea(t.name),profiles:writes?['everyday','full']:['read_only','everyday','full'],writes,money:false,billingRisk,destructive,audience:audienceFor(t.name),
+ return {...t,description:(warning+t.description).slice(0,160),area:rtcArea(t.name),
+ profiles:['read_only','everyday','full'].filter(profile=>allowedTool(t.name,{profile,areas:[rtcArea(t.name)]})),
+ modes:['workspace_dev_create_fixtures','workspace_dev_cleanup'].includes(t.name)?['test']:['test','live'],
+ writes,money:false,billingRisk,destructive,audience:audienceFor(t.name),
  annotations:{readOnlyHint:!writes,destructiveHint:destructive,idempotentHint:!writes,openWorldHint:true}};
 }
