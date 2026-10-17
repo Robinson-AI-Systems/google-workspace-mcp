@@ -590,11 +590,11 @@ export async function consumeAuthCode(code) {
 }
 
 // ---------- Connector OAuth: access tokens ----------
-export async function createAccessToken({ accessToken, refreshToken, clientId, googleAccount, profile = 'full', listing = 'catalog', areas = null, mode = null, costPolicy = {mode:'per_action'}, ttlSeconds = 3600 * 24 * 30 }) {
+export async function createAccessToken({ accessToken, refreshToken, clientId, googleAccount, profile = 'full', listing = 'catalog', areas = null, mode = null, costPolicy = {mode:'per_action'}, cost_policy, ttlSeconds = 3600 * 24 * 30 }) {
   const q = db();
   await q`
     INSERT INTO oauth_tokens (access_token, refresh_token, client_id, google_account, profile, listing, areas, mode, cost_policy, expires_at)
-    VALUES (${accessToken}, ${refreshToken || null}, ${clientId}, ${googleAccount ? normalizeEmail(googleAccount) : null}, ${profile}, ${listing}, ${areas}, ${mode}, ${JSON.stringify(normalizeBillingPolicy(costPolicy,{account:googleAccount}))}::jsonb, now() + (${ttlSeconds} || ' seconds')::interval)
+    VALUES (${accessToken}, ${refreshToken || null}, ${clientId}, ${googleAccount ? normalizeEmail(googleAccount) : null}, ${profile}, ${listing}, ${areas}, ${mode}, ${JSON.stringify(normalizeBillingPolicy(cost_policy ?? costPolicy,{account:googleAccount}))}::jsonb, now() + (${ttlSeconds} || ' seconds')::interval)
   `;
 }
 

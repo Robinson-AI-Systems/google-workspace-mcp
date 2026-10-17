@@ -226,10 +226,10 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       return snapshot;
     },
 
-    async createAccessToken({ accessToken, refreshToken, clientId, googleAccount, profile = 'full', listing = 'catalog', areas = null, mode = null, costPolicy={mode:'per_action'}, ttlSeconds = 3600 * 24 * 30 }) {
+    async createAccessToken({ accessToken, refreshToken, clientId, googleAccount, profile = 'full', listing = 'catalog', areas = null, mode = null, costPolicy={mode:'per_action'}, cost_policy, ttlSeconds = 3600 * 24 * 30 }) {
       state.tokens.push({
         access_token: accessToken, refresh_token: refreshToken || null, client_id: clientId,
-        google_account: googleAccount ? norm(googleAccount) : null, profile, listing, areas,mode,cost_policy:normalizeBillingPolicy(costPolicy,{account:googleAccount}),
+        google_account: googleAccount ? norm(googleAccount) : null, profile, listing, areas,mode,cost_policy:normalizeBillingPolicy(cost_policy ?? costPolicy,{account:googleAccount}),
         expires_at: afterSeconds(ttlSeconds), created_at: at(), last_used_at: null, revoked_at: null
       });
     },

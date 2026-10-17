@@ -47,7 +47,7 @@ export function toolMetadata(t){
  const warning=billingRisk?'BILLING WARNING: possible Google charges; price unknown. ':'';
  return {...t,description:(warning+t.description).slice(0,160),area:rtcArea(t.name),
  profiles:['read_only','everyday','full'].filter(profile=>allowedTool(t.name,{profile,areas:[rtcArea(t.name)]})),
- modes:['workspace_dev_create_fixtures','workspace_dev_cleanup'].includes(t.name)?['test']:['test','live'],
- writes,money:false,billingRisk,destructive,audience:audienceFor(t.name),
+ ...(['workspace_dev_create_fixtures','workspace_dev_cleanup'].includes(t.name)?{modes:['test']}:{}),
+ writes,money:false,...(billingRisk?{billingRisk:true}:{}),destructive,audience:audienceFor(t.name),
  annotations:{readOnlyHint:!writes,destructiveHint:destructive,idempotentHint:!writes,openWorldHint:true}};
 }

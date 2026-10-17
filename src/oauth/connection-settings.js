@@ -3,7 +3,7 @@
 // row. Treat corrupt or missing existing policy as a denied refresh, not as
 // an implicit upgrade to the full profile. Never infer a wider area grant.
 import { normalizeBillingPolicy } from '../rtc/billing-authority.js';
-export const CONNECTION_SETTINGS_FIELDS=Object.freeze(['profile','listing','areas','mode','costPolicy']);
+export const CONNECTION_SETTINGS_FIELDS=Object.freeze(['profile','listing','areas','mode','cost_policy']);
 export const CONNECTION_PROFILES=Object.freeze(['read_only','everyday','full']);
 export const CONNECTION_LISTINGS=Object.freeze(['catalog','compact']);
 export const CONNECTION_AREAS=Object.freeze([
@@ -38,7 +38,7 @@ export function normalizeConnectionPolicy(source,{grant='refresh_token'}={}) {
      areas.every(area=>typeof area==='string'&&allowedArea.has(area))&&
      new Set(areas).size===areas.length))
   throw Error('invalid_connection_policy');
- return Object.freeze({profile,listing,areas:areas===null?null:Object.freeze([...areas]),mode,costPolicy});
+ return Object.freeze({profile,listing,areas:areas===null?null:Object.freeze([...areas]),mode,cost_policy:costPolicy});
 }
 export function connectionPolicyToDb(record,{grant='refresh_token'}={}) {
  const settings=normalizeConnectionPolicy(record,{grant});

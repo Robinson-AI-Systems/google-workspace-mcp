@@ -27,7 +27,7 @@ const response=async body=>{
   await handler({method:'POST',body},res);
   return res;
 };
-const policy={profile:'read_only',listing:'compact',areas:['mail','calendar'],mode:null,costPolicy:{mode:'per_action'}};
+const policy={profile:'read_only',listing:'compact',areas:['mail','calendar'],mode:null,cost_policy:{mode:'per_action'}};
 const code={code:'auth',grant_type:'authorization_code',client_id:'client-1',
   client_secret:'secret',redirect_uri:'https://client.test/oauth/callback',
   code_verifier:'good'};
@@ -46,7 +46,7 @@ beforeEach(()=>{
 describe('P8-2 single connection-policy authority',()=>{
  it('keeps exact registry areas and profile-listing field inventory together',()=>{
    expect(CONNECTION_AREAS).toEqual(RTC_AREAS);
-   expect(CONNECTION_SETTINGS_FIELDS).toEqual(['profile','listing','areas','mode','costPolicy']);
+   expect(CONNECTION_SETTINGS_FIELDS).toEqual(['profile','listing','areas','mode','cost_policy']);
    expect(Object.keys(connectionPolicyToDb(policy))).toEqual(CONNECTION_SETTINGS_FIELDS);
    expect(connectionPolicyToDb(policy)).toEqual(policy);
    expect(Object.isFrozen(normalizeConnectionPolicy(policy).areas)).toBe(true);
@@ -58,11 +58,11 @@ describe('P8-2 single connection-policy authority',()=>{
      {...policy,listing:'all'}, {...policy,areas:undefined},
      {...policy,areas:['mail','mail']},{...policy,areas:['mail','superuser']},
      {...policy,areas:'*'},{...policy,areas:Array(15).fill('mail')},
-     {...policy,mode:'sandbox'},{...policy,costPolicy:{mode:'standing',account:'ops@example.test'}},
-     {...policy,costPolicy:{mode:'per_action',extra:true}}
+     {...policy,mode:'sandbox'},{...policy,cost_policy:{mode:'standing',account:'ops@example.test'}},
+     {...policy,cost_policy:{mode:'per_action',extra:true}}
    ])expect(()=>connectionPolicyToDb(corrupt)).toThrow('invalid_connection_policy');
    expect(connectionPolicyToDb({},{grant:'authorization_code'})).toEqual({
-     profile:'full',listing:'catalog',areas:null,mode:null,costPolicy:{mode:'per_action'}
+     profile:'full',listing:'catalog',areas:null,mode:null,cost_policy:{mode:'per_action'}
    });
    expect(()=>connectionPolicyToDb({profile:null,listing:null,areas:null},
      {grant:'authorization_code'})).toThrow('invalid_connection_policy');
@@ -72,7 +72,7 @@ describe('P8-2 single connection-policy authority',()=>{
    for(const changed of [
      {...policy,profile:'full'},{...policy,listing:'catalog'},
      {...policy,areas:null},{...policy,areas:['mail']},{...policy,mode:'test'},
-     {...policy,costPolicy:{mode:'deny'}}
+     {...policy,cost_policy:{mode:'deny'}}
    ])expect(()=>verifyPolicyCopy(policy,changed))
      .toThrow('connection_policy_widening_or_loss');
  });
@@ -95,7 +95,7 @@ describe('P8-2 actual OAuth issuance/refresh endpoint integration',()=>{
    expect(Object.fromEntries(CONNECTION_SETTINGS_FIELDS.map(k=>[k,holder.created[0][k]])))
       .toEqual(policy);
    expect(holder.created[0].googleAccount).toBe(storedCode.google_account);
-   expect(holder.created[0]).toMatchObject({mode:null,costPolicy:{mode:'per_action'}});
+   expect(holder.created[0]).toMatchObject({mode:null,cost_policy:{mode:'per_action'}});
  });
  it('keeps read_only profile and restrictive areas/listing across refresh',async()=>{
    const out=await response(refresh);
@@ -138,12 +138,12 @@ describe('P8-2 actual OAuth issuance/refresh endpoint integration',()=>{
    holder.record={...storedCode,profile:'full',areas:['admin'],mode:'live',cost_policy:standing};
    let out=await response(code);
    expect(out.statusCode).toBe(200);
-   expect(holder.created.at(-1)).toMatchObject({mode:'live',costPolicy:standing});
+   expect(holder.created.at(-1)).toMatchObject({mode:'live',cost_policy:standing});
    holder.created.length=0;
    holder.refresh={...holder.record,client_id:'client-1'};
    out=await response(refresh);
    expect(out.statusCode).toBe(200);
-   expect(holder.created.at(-1)).toMatchObject({mode:'live',costPolicy:standing});
+   expect(holder.created.at(-1)).toMatchObject({mode:'live',cost_policy:standing});
  });
  it('fails closed on invalid or alien account standing policies and corrupt explicit modes',async()=>{
    for(const invalid of [

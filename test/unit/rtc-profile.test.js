@@ -18,7 +18,7 @@ describe('RTC connection policy',()=>{
   const {normalizeConnectionPolicy}=await import('../../src/oauth/connection-settings.js');
   const old={profile:'read_only',listing:'catalog',areas:['admin','dns']};
   expect(normalizeConnectionPolicy(old)).toMatchObject(old);
-  expect(normalizeConnectionPolicy(old)).toMatchObject({mode:null,costPolicy:{mode:'per_action'}});
+  expect(normalizeConnectionPolicy(old)).toMatchObject({mode:null,cost_policy:{mode:'per_action'}});
   for(const [area,read,write] of [['chrome','chrome_resolve_policies','chrome_set_policy'],['domain','domain_list_verified','domain_confirm_verification']]){
    expect(allowedTool(read,old)).toBe(false);
    expect(allowedTool(read,{profile:'read_only',areas:[area]})).toBe(true);
@@ -37,7 +37,7 @@ describe('RTC connection policy',()=>{
    expect(description.money).toBe(false);
    expect(description.description).toMatch(/BILLING WARNING.*price unknown/);
   }
-  expect(toolMetadata(registry.tools.find(t=>t.name==='licensing_remove_license')).billingRisk).toBe(false);
+  expect(toolMetadata(registry.tools.find(t=>t.name==='licensing_remove_license')).billingRisk??false).toBe(false);
   expect(toolMetadata(registry.tools.find(t=>t.name==='licensing_assign_license')).profiles).toEqual(['full']);
   expect(toolMetadata(registry.tools.find(t=>t.name==='workspace_bulk_operation')).profiles).toEqual(['full']);
  });
