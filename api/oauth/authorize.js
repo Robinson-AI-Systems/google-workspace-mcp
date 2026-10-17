@@ -16,12 +16,15 @@ import { clientIp, evaluateLogin, LOCKOUT_WINDOW_MINUTES } from '../../src/oauth
 import { ensureMigrated } from '../../src/auth/google-auth-hosted.js';
 import { RTC_AREAS } from '../../src/rtc/catalog.js';
 import { selectedBillingPolicy } from '../../src/rtc/billing-authority.js';
+import {getPrincipal,listAccounts,issuePrincipalCode} from '../../src/principals/store.js';
+import {requireSession,requireCsrf} from '../../src/principals/session.js';
+import {publicMode,publicResource,headers} from '../../src/principals/security.js';
 
 function renderLoginPage({ error, hidden, accounts, selected, profile }) {
   const selectedProfile = ['read_only','everyday','full'].includes(profile) ? profile : 'read_only';
   const hiddenInputs = Object.entries(hidden).map(([k, v]) => `<input type="hidden" name="${k}" value="${escapeHtml(v || '')}">`).join('\n');
   const accountField = accounts.length === 0
-    ? `<p class="note">No Google account is connected yet. Open <code>/api/google/authorize</code> first, then come back.</p>`
+    ? `<label for="google_account">Connected owner mailbox address</label><input type="email" name="google_account" id="google_account" value="${escapeHtml(selected||'')}" required><p class="note">The owner passphrase is required before any connected mailbox is disclosed.</p>`
     : accounts.length === 1
       ? `<input type="hidden" name="google_account" value="${escapeHtml(accounts[0].email)}">
          <p class="note">This connection will act as <strong>${escapeHtml(accounts[0].label || accounts[0].email)}</strong>.</p>`
@@ -46,6 +49,7 @@ function renderLoginPage({ error, hidden, accounts, selected, profile }) {
   <form method="POST">
     <h1>Robinson Google Workspace MCP</h1>
     ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
+    ${publicMode()!=='off'?'<p><a href="#google-login" style="color:#075fca">Sign in with a separate Google account</a></p>':''}
     ${accountField}
     <label for="profile">Permission level</label>
     <select name="profile" id="profile">${['read_only','everyday','full'].map(value=>`<option value="${value}"${selectedProfile===value ? ' selected' : ''}>${({read_only:'Read only',everyday:'Everyday',full:'Full'})[value]}</option>`).join('')}</select>
@@ -66,7 +70,7 @@ function renderLoginPage({ error, hidden, accounts, selected, profile }) {
     <label for="passphrase">Admin passphrase</label>
     <input type="password" name="passphrase" id="passphrase" autofocus required>
     ${hiddenInputs}
-    <button type="submit"${accounts.length === 0 ? ' disabled' : ''}>Authorize Claude</button>
+    <button type="submit">Authorize as existing owner</button>
   </form>
 </body></html>`;
 }
@@ -97,7 +101,58 @@ export default async function handler(req, res) {
     return;
   }
 
-  const accounts = await listGoogleAccounts();
+  // New Google sign-in is a separate auth path. Never enumerate the original
+  // owner's mailboxes before passphrase authentication or to a V2 principal.
+  if(params.auth_method==='google'){
+    let resource;
+    try{resource=publicResource()+'/api/mcp';}catch{return res.status(503).send('MCP origin unavailable.');}
+    if(params.resource!==resource||params.code_challenge_method!=='S256'||
+      !/^[A-Za-z0-9_-]{43}$/.test(params.code_challenge||''))
+      return res.status(400).send('V2 requires exact MCP resource and S256 PKCE.');
+    headers(res);
+    let session;
+    try{session=await requireSession(req);}catch{session=null;}
+    if(!session){
+      if(req.method!=='GET')return res.status(401).send('Sign in before authorizing this client.');
+      if(publicMode()==='off')return res.status(503).send('New public sign-in is currently disabled.');
+      const next=new URL('/api/auth/google/start',publicResource());
+      for(const key of ['client_id','redirect_uri','resource','code_challenge'])
+        next.searchParams.set(key,params[key]);
+      next.searchParams.set('purpose','mcp_authorize');
+      return res.status(200).send('<!doctype html><h1>Google sign-in</h1><p>Authorize this registered MCP client using your Google account.</p><a href="'+escapeHtml(next.toString())+'">Continue securely with Google</a>');
+    }
+    const accounts=await listAccounts(session.principal_id);
+    if(req.method==='GET'){
+      const csrfCookie=String(req.headers?.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('p10_csrf='));
+      const csrf=csrfCookie?decodeURIComponent(csrfCookie.split('=').slice(1).join('=')):'';
+      const inputs=['client_id','redirect_uri','state','code_challenge','code_challenge_method','resource']
+        .map(key=>'<input type="hidden" name="'+key+'" value="'+escapeHtml(params[key]||'')+'">').join('');
+      return res.status(200).send('<!doctype html><meta charset="utf-8"><h1>Authorize this agent</h1>'+
+        '<p>Only your own linked Google accounts and selected permissions are available. Agent access is issued but tool dispatch remains disabled pending cross-principal acceptance.</p>'+
+        (accounts.length?'<form method="POST">'+inputs+'<input type="hidden" name="auth_method" value="google">'+
+          '<input type="hidden" name="csrf" value="'+escapeHtml(csrf)+'">'+
+          '<select name="account_id">'+accounts.map(a=>'<option value="'+escapeHtml(a.id)+'">'+escapeHtml(a.label||a.email)+'</option>').join('')+'</select>'+
+          '<select name="profile"><option value="read_only">Read only</option><option value="everyday">Everyday</option><option value="full">Full</option></select>'+
+          '<button type="submit">Authorize selected account</button></form>':
+          '<p>No linked Google account. Open /api/account in this browser to add your own verified Google grant.</p>'));
+    }
+    try{
+      requireCsrf(req,session,params);
+      const selected=accounts.find(a=>a.id===params.account_id);
+      if(!selected)throw Error('outside_scope');
+      const code=await issuePrincipalCode({
+        principalId:session.principal_id,accountId:selected.id,clientId:client_id,
+        redirectUri:redirect_uri,resource,codeChallenge:params.code_challenge,
+        profile:['read_only','everyday','full'].includes(params.profile)?params.profile:'read_only',
+        listing:'compact',areas:null,costPolicy:{mode:'per_action'}
+      });
+      const redirect=new URL(redirect_uri);redirect.searchParams.set('code',code);
+      if(state)redirect.searchParams.set('state',state);
+      res.writeHead(302,{Location:redirect.toString()});res.end();return;
+    }catch{return res.status(403).send('Authorization rejected for this principal/account.');}
+  }
+  // The public page never exposes owner account listings. Authenticate first.
+  const accounts = req.method==='GET'?[]:await listGoogleAccounts();
 
   if (req.method === 'GET') {
     res.setHeader('Content-Type', 'text/html');
@@ -105,6 +160,7 @@ export default async function handler(req, res) {
     return;
   }
 
+  if(req.method!=='POST')return res.status(405).send('Method not allowed');
   // POST: check passphrase, then check the chosen account is one we know.
   if (!process.env.ADMIN_PASSPHRASE) {
     res.status(500).send('Server misconfigured: ADMIN_PASSPHRASE is not set.');
@@ -120,14 +176,14 @@ export default async function handler(req, res) {
   if (verdict.status === 'locked') {
     res.setHeader('Content-Type', 'text/html');
     res.setHeader('Retry-After', String(LOCKOUT_WINDOW_MINUTES * 60));
-    res.status(429).send(renderLoginPage({ error: `Too many wrong passphrases from this connection. Wait ${LOCKOUT_WINDOW_MINUTES} minutes before trying again.`, hidden, accounts, selected: keptAccount, profile: params.profile }));
+    res.status(429).send(renderLoginPage({ error: `Too many wrong passphrases from this connection. Wait ${LOCKOUT_WINDOW_MINUTES} minutes before trying again.`, hidden, accounts: [], selected: keptAccount, profile: params.profile }));
     return;
   }
   if (verdict.status === 'wrong') {
     res.setHeader('Content-Type', 'text/html');
     // Keep the account they picked so a passphrase typo doesn't silently flip it back to the default.
     const left = verdict.attemptsLeft > 0 ? ` ${verdict.attemptsLeft} ${verdict.attemptsLeft === 1 ? 'try' : 'tries'} left before a ${LOCKOUT_WINDOW_MINUTES}-minute lockout.` : ` The next wrong try starts a ${LOCKOUT_WINDOW_MINUTES}-minute lockout.`;
-    res.status(401).send(renderLoginPage({ error: `Incorrect passphrase. Your account choice was kept.${left}`, hidden, accounts, selected: keptAccount, profile: params.profile }));
+    res.status(401).send(renderLoginPage({ error: `Incorrect passphrase. Your account choice was kept.${left}`, hidden, accounts: [], selected: keptAccount, profile: params.profile }));
     return;
   }
   const chosen = keptAccount;
