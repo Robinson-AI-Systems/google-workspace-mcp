@@ -36,4 +36,21 @@ Source: [approved P10-7 original scope](../plan/designs/USER-AUTHORITY-AND-PARAL
 <!-- bundle-plan:end -->
 
 ## Delivery
-Pending implementation and exact-head verification. No real Google credentials, OAuth-project changes, publication, public activation, provider write, spend or owner-login retirement are authorized by this card.
+
+All original P10-7 source-engineering criteria are mapped one-for-one in
+`docs/plan/evidence/p10-owner-migration-bundle-delivery.json` (implementation source
+`3442f6ac2840f667ff3643c372e1096466accbfd`, checked GitHub Actions run
+`39037581770` with check/unit/real Postgres/RTC/aggregate all successful).
+Measured source 304 lines added and 40 removed; this single security-critical
+roadmap subsection earns the explicit below-guide exception, without pretending
+P10-6's real Google/public pilot is complete.
+
+**Source CI is not real end-user acceptance.** The checked reviewed main,
+independently READY deployment, actual separate public Google OAuth project and
+consent, real owner passphrase/Google dual-login and rollback readbacks still require
+their own gates. The independent existing Hub TEST, original owner tokens/Google
+grants and safe production defaults remain unchanged. No production credentials,
+flags, release, provider mutation, spending or optional legacy-login retirement
+were performed. The new `P10-OWNER-MIGRATION-LIVE` acceptance row remains PENDING.
+Final documentation-only exact PR-head checks and reviews are separate from
+the already-verified source head.
