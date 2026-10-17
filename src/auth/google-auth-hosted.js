@@ -171,8 +171,15 @@ function lazyClient(target, name, factory) {
  * This matters on the hosted request path where a new tool call otherwise paid
  * the construction cost for every Google API whether it used it or not.
  */
-export function buildApiClients(auth) {
+export function buildApiClients(auth, {tenantDelegation}={}) {
   const clients = { auth, actingAs: auth.actingAs };
+  if(tenantDelegation){
+    // Explicitly set these even when no delegation is configured: the
+    // legacy helper must never fall back to the installation-owner key.
+    clients.delegationReady=tenantDelegation.configured;
+    clients.gmailFor=email=>tenantDelegation.forGmail(email);
+    clients.delegatedClientsFor=(email,scopes)=>tenantDelegation.forServices(email,scopes);
+  }
   const services = {
     gmail: () => google.gmail({ version: 'v1', auth }),
     postmaster: () => buildPostmasterClient(auth),
@@ -192,7 +199,9 @@ export function buildApiClients(auth) {
     groupssettings: () => google.groupssettings({ version: 'v1', auth, params: { alt: 'json' } }),
     licensing: () => google.licensing({ version: 'v1', auth }),
     datatransfer: () => buildDataTransferClient(auth),
-    alertcenter: () => google.alertcenter({ version: 'v1beta1', auth: buildAlertCenterAuth(auth.actingAs) }),
+    alertcenter: () => tenantDelegation
+      ? tenantDelegation.forAlert(auth.actingAs)
+      : google.alertcenter({ version: 'v1beta1', auth: buildAlertCenterAuth(auth.actingAs) }),
     chromepolicy: () => google.chromepolicy({ version: 'v1', auth }),
     cloudidentity: () => {
       const client = google.cloudidentity({ version: 'v1', auth });
