@@ -309,7 +309,7 @@ Do not create competing instruction files or documentation-only PRs.
    disabled Vercel previews remain off and no manual deploy is permitted
    for a development batch. Preserve Basic/queued builds, Neon resource
    limits and autosuspend, owner spending/production/destructive gates,
-   and plaintext-token retirement's thirty-day time gate. Stripe LIVE
+   and plaintext-token retirement's readiness, drain and recovery requirements (the owner removed the waiting date and completed activation). Stripe LIVE
    remains disabled wherever relevant; Cortiware remains deferred.
 
 At the end, report the user/developer capability advanced, exact actual

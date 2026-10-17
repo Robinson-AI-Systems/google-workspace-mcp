@@ -1,3 +1,7 @@
+## Owner-requested final documentation, Git cleanup and Workspace release
+
+October17 UTC: reconcile current operational guides and historical evidence boundaries; renew the exact bounded housekeeping manifest, archive all reviewed development tips before leased removal, retain release receipts and protect open/concurrently advanced branches. There are no open product PRs or missing Workspace features. Then release the final checked Workspace main snapshot under the owner's explicit one-off release authorization. Record actual cleanup Action, exact source/live SHA and Vercel READY proof in this PR's permanent closeout comment. This is administrative closeout, not another product bundle or a repeat of accepted provider tests.
+
 ## October 17 — final Workspace acceptance complete
 
 The owner asked this agent to complete the two remaining Hub-specific tests. Actual original Hub runner acceptance is now complete in Hub PR #227: separate local direct and GitHub-only encrypted relay both passed all five checks with exit0 against the existing independent Workspace RTC service. The same new TEST/read_only/nonwriting pass was then revoked by Workspace; original direct probe verified HTTP401 `pass_revoked`, and the original encrypted relay returned the exact same denial envelope. Earlier actual Sandbox direct, native Hub discovery/read/durable audit, read-only refusal and cleanup proofs remain accepted from Hub #224/#226 and Workspace #194/#196.

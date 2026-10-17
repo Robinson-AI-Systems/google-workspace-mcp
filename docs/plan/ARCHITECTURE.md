@@ -1,5 +1,12 @@
 # Architecture — maintained through October 12, 2026
 
+## Current completion and release state — October 17, 2026 UTC
+
+All 29 required acceptance tasks and all 48 required roadmap subsections are complete. Workspace PR197 and Hub PR227 record genuine local/direct, encrypted GitHub-only relay, Sandbox direct, native Hub audit/read, same-pass revocation and cleanup. See [final route evidence](evidence/2026-10-17-final-hub-route-acceptance.json). The independent Workspace server remains usable without Hub; only optional P8-6 is on request. The owner has now requested a checked Workspace release after this documentation and Git closeout; the final released SHA/deployment belongs in the merged PR's permanent release receipt. Earlier dated pending observations below are historical, not new work or permission requests.
+
+Encrypted-only cutover is already complete for both accounts (account/legacy plaintext zero); do not replay activation. Alert Center delegation and protected runtime opt-in are approved and enabled, with a genuine empty list verified. The three no-resource exact GET development contracts, retired unsupported operation and two owner-excluded Vault live positives retain their original limits; completion does not claim every Google operation has a live positive fixture.
+
+
 Read this before touching code. It describes what exists, why, and the
 conventions every card must keep. Where the code and this page disagree, the
 code is the truth and this page gets fixed in the same PR. (Last full audit of
@@ -221,9 +228,11 @@ SQL statement; another pass’s receipts stay untouched. The P8-4 DB test uses t
 real concurrent PostgreSQL backends, including configured limits and window rollover.
 Source/local/CI evidence remains separate from deployed or genuine Google acceptance.
 
-RTC profiles, metadata, bounded result handles, guarded HTTPS tool routes and short-lived read-only TEST passes are implemented and locally tested. The authoritative implementation and blocked external acceptance live in `TASKS.md`. Neither pinned Hub reference conformance nor simulated Google proves protected deployed direct/relay/Sandbox and revocation against a real service. Never widen scopes or treat test profile acceptance as production activation.
+RTC profiles, metadata, bounded result handles, guarded HTTPS tool routes and short-lived read-only TEST passes are implemented and locally tested. The authoritative completed implementation and accepted external proofs live in `TASKS.md`. Neither pinned Hub reference conformance nor simulated Google proves protected deployed direct/relay/Sandbox and revocation against a real service. Never widen scopes or treat test profile acceptance as production activation.
 
 ## Known Bugs — genuine acceptance follow-up, October16,2026
+
+The final smoke report/casebook supersedes unresolved wording in this recovery chronology. All authorized fixture cleanup and required acceptance are complete; retained resource, edition and owner-exclusion limitations are documented rather than counted as live positive results.
 
 | Check | Actual result and disposition | Re-entry |
 | --- | --- | --- |
@@ -249,13 +258,15 @@ they do not satisfy the full-catalog runner's separate read_only credential gate
 
 ## Known gaps (as of 2026-10-02)
 
+Historical initial inventory: the current completed ledger and final developer casebook supersede these original pending descriptions; they do not reopen completed cards.
+
 | Where | What | Card |
 | --- | --- | --- |
 | `gmail_untrash_message`, `gmail_untrash_thread`, `sheets_duplicate_sheet`, `sheets_format_cells`, `sheets_freeze_rows`, `sheets_autoresize_columns`, `sheets_sort_range`, `sheets_merge_cells`, `sheets_unmerge_cells`, `sheets_protect_range`, `domain_confirm_verification` | Change things with no `dryRun`, read-back or change-log row, and `check-writes.mjs` does not catch them because their verbs are not in its list. None deletes anything | P5-1 (finish) |
 | `admin_list_alerts`, `admin_get_alert`, `admin_delete_alert` | Requires separately approved service-account DWD and runtime opt-in; user OAuth cannot authorize it | Corrected in PR194; activation evidence in `evidence/2026-10-16-alert-center-activation.json` |
 | `src/auth/scopes.js` `classroom` group | The sign-in asks for four Classroom permissions but no tool uses Classroom | Cleanup, needs every account to re-authorize if removed |
 | Read-only smoke test (`scripts/smoke-readonly.mjs`) | Does not exist yet, so tools that never worked against a real account are not yet found | P0-2 |
-| `google_accounts.tokens` | Plain copy still written next to the encrypted one | P5-2 (not before 30 days after encryption went live, 2026-10-02) |
+| `google_accounts.tokens` | Original gap resolved: encrypted-only storage active, both account/legacy plaintext counts zero | P5-2 complete; owner removed the waiting date, readiness and protected activation proof retained |
 | Version, changelog, generated tool catalog | `package.json` is 2.0.0; generated README catalog and changelog maintained by `npm run gen:catalog` and semantic CI | P5-4 |
 
 Fixed since the first version of this page (kept so old PR text still makes
@@ -385,7 +396,7 @@ fails the service conformance step; reference success cannot substitute for it.
   plaintextAccounts for next-refresh verification. Source tests are not live
   retirement. Hub discovers this service, with its own scoped grant and audit.
 
-Final retirement review also closes the retained single-account google_auth copy: only after encrypted-only activation and a successful account refresh, clear a legacy credential whose refresh token exactly matches that account’s pre/post renewal token. Unmatched credentials and the table remain intact; no activation-time bulk erase. Sanitized inspection adds legacyPlaintextCopies; real PG tests cover unrelated-account refusal, rotation, next-refresh timing and no resurrection. Actual live counts remain unverified until release.
+Final retirement review also closes the retained single-account google_auth copy: only after encrypted-only activation and a successful account refresh, clear a legacy credential whose refresh token exactly matches that account’s pre/post renewal token. Unmatched credentials and the table remain intact; no activation-time bulk erase. Sanitized inspection adds legacyPlaintextCopies; real PG tests cover unrelated-account refusal, rotation, next-refresh timing and no resurrection. Actual encrypted-only readback has completed for both connected accounts with account/legacy plaintext zero; see evidence/2026-10-16-encrypted-cutover.json.
 
 
 Final released acceptance: PR194 source42afbaa independently READY; retired
@@ -395,10 +406,10 @@ both-account saved-grant renewal/mailbox/persistence verification complete;
 plaintextAccounts0, legacyPlaintextCopies0, allproblems0. Subsequent actual
 Gmail-backed whoami200/matching identity. See encrypted-cutover.json and screenshot.
 Catalog report/developer audit is complete with the documented resource/config
-limits; positive Alert Center still needs separate apps.alerts authorization.
-Native Hub connection is proved, but separately listed broader Hub relay/Sandbox/
-revocation checks remain pending for Hub-agent reconciliation; earlier native-only
-closure wording does not waive or prove them. No reverse discovery is required.
+limits. Alert Center authorization and an actual empty list are now verified.
+Native Hub and the separate local/direct, GitHub-only encrypted relay, Sandbox
+and revocation/cleanup gates are accepted in Hub PR227 and Workspace PR197.
+No reverse discovery is required; see evidence/2026-10-17-final-hub-route-acceptance.json.
 
 
 Current Alert Center configuration supersedes the earlier pending authorization: explicit owner approval, saved five-scope readback, production opt-in and READY checked config redeploy completed. Original TEST list200/native empty array is genuine Google proof; exact GET remains development-tested/no-resource. See `evidence/2026-10-16-alert-center-activation.json`. No provider write test or whole-customer healthy claim.

@@ -6,7 +6,7 @@ Current source independently observed READY: `42afbaaf138d293d6042acd874c0fd3c32
 
 **160 verified retained handler/service reads; 3 development-tested GETs without live resources; 1 retired unsupported operation; 2 owner-excluded live Vault cases.** Historical inventory166; active read catalog165 after retirement. These counts include service metadata, and do not prove every subcheck in composite reports is healthy.
 
-Original P0-2 report criterion permits failures documented in the Known Bugs table. The developer catalog audit is complete with the explicit dispositions below; broader Hub acceptance remains separately pending. See [Known Bugs and provider limitations](ARCHITECTURE.md#known-bugs--genuine-acceptance-follow-up-october162026) and [P0-2](TASKS.md#p0-2--smoke-test-every-read-only-tool-against-a-real-account-m).
+Original P0-2 report criterion permits failures documented in the Known Bugs table. The developer catalog audit is complete with the explicit dispositions below; broader Hub acceptance is now complete in Hub PR227 / Workspace PR197. Exact original runner and cleanup proof is in [final route evidence](evidence/2026-10-17-final-hub-route-acceptance.json). See [Known Bugs and provider limitations](ARCHITECTURE.md#known-bugs--genuine-acceptance-follow-up-october162026) and [P0-2](TASKS.md#p0-2--smoke-test-every-read-only-tool-against-a-real-account-m).
 
 | Tool | Result | Evidence or precise remaining prerequisite |
 | --- | --- | --- |
@@ -177,7 +177,9 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 | `workspace_sheets_get_sheet_as_csv` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner |
 | `workspace_slides_export_as_pdf` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner |
 
-## Remaining-work review before the approved conditional release
+## Historical remaining-work review before the approved conditional release
+
+The following dated recovery progression preserves original observations. Its obsolete November1, Postmaster, Alert Center and Hub pending statements are superseded by the completed cutover/activation and final Hub receipts linked above; do not rerun these already completed operations.
 
 - Building: released required-floor tagged cycle and cleanup passed, cumulative28reads/7requests exactlyused.
 - Tasks/Site coexistence: resolved on READYf96 after explicit owner approval. Genuine combined consent, all three scope checks and six-API/four-scope readiness pass before and after genuine saved-grant refresh; both connected accounts encrypted ready.

@@ -107,5 +107,12 @@
     "https://developers.google.com/workspace/admin/data-transfer/reference/rest/v1/transfers/get",
     "https://developers.google.com/workspace/admin/directory/reference/rest/v1/chromeosdevices/get",
     "https://admin.googleapis.com/$discovery/rest?version=directory_v1"
+  ],
+  "historicalSnapshot": true,
+  "currentDisposition": "Snapshot fields retained as originally observed. Later accepted Alert Center activation, actual encrypted cutover and final Hub routes supersede the earlier false live-claim flags; see the separate immutable receipts.",
+  "supersededBy": [
+    "2026-10-16-alert-center-activation.json",
+    "2026-10-16-encrypted-cutover.json",
+    "2026-10-17-final-hub-route-acceptance.json"
   ]
 }

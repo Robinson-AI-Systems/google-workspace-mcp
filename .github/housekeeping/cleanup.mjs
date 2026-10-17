@@ -3,10 +3,10 @@ import {readFileSync,appendFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 const sha=/^[a-f0-9]{40}$/;
 export function validatePlan(p,repo){
- if(p?.maintenanceBranch!==undefined&&p.maintenanceBranch!=='ai/codex/completion-recovery-20261014')throw Error('Invalid maintenance branch');
- if(p?.version!==1||p.repository!==repo||!/^archive\/housekeeping-2026-10-13$/.test(p.archive)||!Array.isArray(p.branches)||p.branches.length>300)throw Error('Invalid repository-bound plan');
+ if(p?.maintenanceBranch!==undefined&&!['ai/codex/completion-recovery-20261014','ai/codex/documentation-git-closeout-20261017'].includes(p.maintenanceBranch))throw Error('Invalid maintenance branch');
+ if(p?.version!==1||p.repository!==repo||!/^archive\/housekeeping-2026-10-(13|17)$/.test(p.archive)||!Array.isArray(p.branches)||p.branches.length>300)throw Error('Invalid repository-bound plan');
  const seen=new Set();
- for(const b of p.branches){if(!/^(ai\/|copilot\/|phase-3-reversible-state$)/.test(b.name)||!/^[A-Za-z0-9/_-]+$/.test(b.name)||!sha.test(b.sha)||seen.has(b.name)||!['merged','superseded','test-fixture'].includes(b.disposition))throw Error('Invalid pinned branch');seen.add(b.name);}
+ for(const b of p.branches){if(!(p.archive==='archive/housekeeping-2026-10-17'?/^(ai\/|acceptance\/|audit\/|completion\/|docs\/|fix\/)/:/^(ai\/|copilot\/|phase-3-reversible-state$)/).test(b.name)||!/^[A-Za-z0-9/_-]+$/.test(b.name)||!sha.test(b.sha)||seen.has(b.name)||!['merged','superseded','test-fixture'].includes(b.disposition))throw Error('Invalid pinned branch');seen.add(b.name);}
  return p;
 }
 const git=args=>execFileSync('git',args,{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
@@ -45,7 +45,7 @@ async function activeBranches(repo){
 const remoteHeads=()=>new Map(git(['ls-remote','--heads','origin']).split('\n').filter(Boolean).map(s=>{const [v,r]=s.split(/\s+/);return [r.slice('refs/heads/'.length),v];}));
 export async function run(){
  const repo=process.env.GITHUB_REPOSITORY;let plan=validatePlan(JSON.parse(readFileSync(new URL('./plan.json',import.meta.url),'utf8')),repo);
- if(process.env.GITHUB_EVENT_NAME!=='push'||process.env.GITHUB_REF!=='refs/heads/main'||!process.env.GITHUB_TOKEN||Date.now()>Date.parse('2026-10-16T00:00:00Z'))throw Error('Outside authorized one-time maintenance context');
+ if(process.env.GITHUB_EVENT_NAME!=='push'||process.env.GITHUB_REF!=='refs/heads/main'||!process.env.GITHUB_TOKEN||Date.now()>Date.parse(plan.archive==='archive/housekeeping-2026-10-17'?'2026-10-19T00:00:00Z':'2026-10-16T00:00:00Z'))throw Error('Outside authorized one-time maintenance context');
  git(['fetch','--quiet','--no-tags','--prune','origin','+refs/heads/*:refs/remotes/origin/*']);
  const main=git(['rev-parse','refs/remotes/origin/main']);let remote=remoteHeads();
  plan=includeMaintenanceBranch(plan,remote,main);

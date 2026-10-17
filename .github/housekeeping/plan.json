@@ -1,948 +1,603 @@
 {
   "version": 1,
   "repository": "Robinson-AI-Systems/google-workspace-mcp",
-  "archive": "archive/housekeeping-2026-10-13",
-  "maintenanceBranch": "ai/codex/completion-recovery-20261014",
+  "archive": "archive/housekeeping-2026-10-17",
+  "maintenanceBranch": "ai/codex/documentation-git-closeout-20261017",
   "branches": [
     {
-      "name": "ai/chatgpt/runtime-safety-verification",
-      "sha": "6f8cf594d577cb42642d6af83572412f111afc99",
+      "name": "acceptance/existing-pass-bulk-20261016",
+      "sha": "5a496f6d55048a15cc848446bb4d4fb092f10a89",
       "disposition": "merged",
-      "prs": [
-        19
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/P6-1-group-settings",
-      "sha": "cfa65b7b6ab255d823f8fa7c181561c53172b44a",
+      "name": "acceptance/fresh-test-recovery-oct16",
+      "sha": "f2d736d5dd632259f0c0df3c9f2e6989076d364f",
       "disposition": "merged",
-      "prs": [
-        25
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/P7-1-shared-drives",
-      "sha": "fae2d619525bc100607bfe4240f55afb7f88e8a9",
+      "name": "acceptance/policy-audit-20261015",
+      "sha": "46f4938e7ea25bbefea339ab57c4b8ec3680fad1",
       "disposition": "merged",
-      "prs": [
-        27
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/P8-rate-limit-test",
-      "sha": "f900e80d6dd9cbb86fac0193ab0e5a07f557b0a8",
+      "name": "acceptance/sheets-api-retest-oct16",
+      "sha": "282673db6746590a7a0ba0482aa45dd088b7a179",
       "disposition": "merged",
-      "prs": [
-        29
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/P8-tool-contract",
-      "sha": "ac4199d70713cc183981b9c314413ac4312c5de8",
+      "name": "ai/bundle-guidance-alignment-20261015",
+      "sha": "8f5bac22dc838daa8fe17e76acf43cc9af47ad8d",
       "disposition": "merged",
-      "prs": [
-        28
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/docs-audit-2026-10-02",
-      "sha": "398e68afa1a662ad89dc9531b2e3a59ded80f30e",
+      "name": "ai/codex/acceptance-empty-queue-provenance",
+      "sha": "ffa333ae698c34d1a42fdc86afc8d21ae6d9f342",
       "disposition": "merged",
-      "prs": [
-        24
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/domain-wide-delegation",
-      "sha": "a62f9161cec6a47a7156a897a30a0a74aa24f311",
+      "name": "ai/codex/acceptance-first-session",
+      "sha": "fefda03d8a78d5debefb298915cf8197898ebb5b",
       "disposition": "merged",
-      "prs": [
-        3
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/fix-refresh-grant",
-      "sha": "4ff8e5bdcf5771cd77027ec8166e583e1723fc8b",
+      "name": "ai/codex/batch-subsections-prompt-session-scope-20261014",
+      "sha": "df619083f497f997ecb307430f2bf4b54a2f661e",
       "disposition": "merged",
-      "prs": [
-        4
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/implementation-plan",
-      "sha": "f362b553cabba3fab33ed3024966b13f5e569b8b",
+      "name": "ai/codex/bundle-scope-accounting",
+      "sha": "a3a6e85df91d575150a76a43ccb52d8cc3e7dae6",
       "disposition": "merged",
-      "prs": [
-        5
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/keep-account-choice",
-      "sha": "72e44e7f2239c4b07ca852f69159f2959d5dcd60",
+      "name": "ai/codex/completion-work-selection",
+      "sha": "adab40f3d282ae298e1f91363d04ef597b2f84ef",
       "disposition": "merged",
-      "prs": [
-        2
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/multi-account",
-      "sha": "6cba2684e302969e8bad2ba2e5749a14dca47768",
+      "name": "ai/codex/release-needed-alert",
+      "sha": "576ab01401f5ab241fd1449c1431d810c68c5076",
       "disposition": "merged",
-      "prs": [
-        1
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p0-4-7-upload-url-docs",
-      "sha": "c7f8165365d1fb9fabe386edf4a84582a75f5d1b",
+      "name": "ai/codex/session-execution-efficiency",
+      "sha": "11f024cedfffe64532d07f3b3baead0ef79ca919",
       "disposition": "merged",
-      "prs": [
-        7
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p0-6-encrypt-tokens",
-      "sha": "e08cdaa74a2493d2d31e35f24cf856362db4359c",
+      "name": "ai/codex/throughput-averages-20261014",
+      "sha": "c5ad321d0e2102fb922b3777cd9449831661e0a5",
       "disposition": "merged",
-      "prs": [
-        8
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p0-foundation-tests-lockout",
-      "sha": "a64e8a24286f4ef2f4b5ecd6f7a87eed1a3794f1",
+      "name": "ai/codex/workspace-design-closure-20261014",
+      "sha": "a2d595c766f7923b5690adf956cd2816fb81fd9b",
       "disposition": "merged",
-      "prs": [
-        6
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p1-1-change-log",
-      "sha": "b3857bd3b5b00925e4aa05743ca5ec55d9e30e40",
+      "name": "ai/complete-scoped-result-projection-20261015",
+      "sha": "0ca25214c5b481f3585f2a3b65123ac39f3542ff",
       "disposition": "merged",
-      "prs": [
-        10
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p1-2-5-errors-results",
-      "sha": "83afc3be442befdf1d8ee219031075d43f65875d",
+      "name": "ai/console-walk-audit-evidence-20261016",
+      "sha": "1751fad74736c23f73291a6f0f20a1c0330b72e0",
       "disposition": "merged",
-      "prs": [
-        9
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p1-3-write-wrapper",
-      "sha": "5dbc2c006f0e73d34affc38b343db39c300c69b7",
+      "name": "ai/console-walkthrough-gaps-20261015",
+      "sha": "086dc6b2e6e8eb48b46dbdd572043d915cc801d6",
       "disposition": "merged",
-      "prs": [
-        13,
-        11
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p1-4-account-guardrails",
-      "sha": "38d1887ec114149090a90eff4f1a744c31fd715c",
+      "name": "ai/finish-admin-proof-and-provider-not-found-20261015",
+      "sha": "8b552657b60c895e38e17e511c540d3cef2120ef",
       "disposition": "merged",
-      "prs": [
-        12
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p2-ops-tools",
-      "sha": "bd6a760f46f665fafdec904e82107bc972183f5f",
+      "name": "ai/finish-owned-fixtures-and-readiness-20261015",
+      "sha": "ed874b46d6419e46e5f29ed6b2b3b9263776f69b",
       "disposition": "merged",
-      "prs": [
-        14
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p3-hardening",
-      "sha": "d1743a5a863933731031b24c3f1e5da3d5d6d16f",
+      "name": "ai/fix-policy-consent-form-origin-20261016",
+      "sha": "995585d7ee6927da638b3d3aa109f342ead86655",
       "disposition": "merged",
-      "prs": [
-        18
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p3-staff-business",
-      "sha": "92e0dab9bbc03607aafe8968228407f96cb1a9e4",
+      "name": "ai/fix-real-groups-settings-json-20261015",
+      "sha": "6d62dda290038468e2b421bbc33570b012a72327",
       "disposition": "merged",
-      "prs": [
-        17
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p3-workflows",
-      "sha": "43b3f3a2cd278330740f7e814e386aa7c35046f0",
+      "name": "ai/gpt6/outcome-sized-session-policy",
+      "sha": "53cbfa5a819ca279700d59fbafd40790a8a2816d",
       "disposition": "merged",
-      "prs": [
-        16,
-        15
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p4-delegation",
-      "sha": "fcb1fea6d3099c1d7e9100e3673e207065cbffd6",
+      "name": "ai/gpt6/p0-2-complete-provider-proof",
+      "sha": "2d610599dcb36cbe8b17bd766d4a55f02171c454",
       "disposition": "merged",
-      "prs": [
-        21
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p4-dns-delegation",
-      "sha": "7faf3e9fffb0e592bef0c5eb3b3167e9211d470d",
+      "name": "ai/gpt6/p0-2-provider-result-proof-20261014",
+      "sha": "5f2492396e888a807933182f0d4e5fa3ec322e13",
       "disposition": "merged",
-      "prs": [
-        20
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/p5-write-safety",
-      "sha": "70a795f7dd39f54f70ef083e240568f5e6e14af8",
+      "name": "ai/gpt6/p0-read-smoke-real-rtc-pages-20261014",
+      "sha": "0efa5b53584f391cacb0885229eb0d351bbd8faa",
       "disposition": "merged",
-      "prs": [
-        23
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/phase7-plan",
-      "sha": "5bde4979ca10329af20b6045208569ad9142ef45",
+      "name": "ai/gpt6/p7-1-idempotent-shared-drive-retry-20261014",
+      "sha": "8a5804c0ef371e98b91502195ae43c51ed14b988",
       "disposition": "merged",
-      "prs": [
-        26
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/claude/retire-local-mode",
-      "sha": "7ecdd103795f22e76a4a8b6e01d8713d27a005f3",
+      "name": "ai/gpt6/p7-2-auditor-provider-pagination-20261014",
+      "sha": "b798053931ff5ba71e2d79a10bff6abed5bc5ead",
       "disposition": "merged",
-      "prs": [
-        22
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/codex/agent-delegation",
-      "sha": "35aefd2650b5fd3cd3bf7bb311bba3fa2730d5a9",
+      "name": "ai/gpt6/p7-8-finish-schema-evidence-20261014",
+      "sha": "60bab6f9512140b38b56572a137ce4b5cd7f81f4",
       "disposition": "merged",
-      "prs": [
-        82
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/codex/ci-cost-efficiency",
-      "sha": "09b49e6bc65c5f646e8fc4772d07e530310dfd7b",
+      "name": "ai/gpt6/p7-8-guarded-bulk-20261014",
+      "sha": "0d10ef55ba2208162b0bc16bcae9b6e5d3024d58",
       "disposition": "merged",
-      "prs": [
-        38
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/codex/daily-live-policy",
-      "sha": "b8a99fa4c65d3b3f1a78d7f419f2dda5a890805a",
+      "name": "ai/gpt6/p8-7-app-resource-preflight",
+      "sha": "3be3caceafdb2b1336de5b63db740acf3d0033c8",
       "disposition": "merged",
-      "prs": [
-        35
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/codex/developer-review-corrections",
-      "sha": "9b37fd1dc1418483720f704550fc786ef9119fdb",
+      "name": "ai/gpt6/p8-7-calendar-exact-time-ledger-20261014",
+      "sha": "656bb4d35916e45e18327add83732b9f912b6b11",
       "disposition": "merged",
-      "prs": [
-        83
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/codex/hosting-cost-handoff-2026-10-12",
-      "sha": "92d90449a29f737e831b72eca6f2fd91b94149ef",
+      "name": "ai/gpt6/p8-7-drive-cleanup-child-safety-20261014",
+      "sha": "e4a25af05f197bfccf71cd542b2b914282f09385",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/gpt6/p8-7-exact-drive-fixture-proof-20261014",
+      "sha": "da7d5148299dfad5f32fd0d99912e307ed4bfdfc",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/gpt6/p8-7-gmail-foreign-label-isolation-20261014",
+      "sha": "37ca9980e1a239b1750c848a822b13d1810b2347",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/gpt6/p8-8-console-readback-workflows",
+      "sha": "14a786f34ef65cf11c7fe12bb0d9da35c460ed70",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/organization-policy-audit-20261016",
+      "sha": "f717dd89144bc21c00cd8ee2ee96727296ec5e0f",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/owner-consent-safe-continuation-20261016",
+      "sha": "c60a6f58af0524a09ad2c27a4b577cac3976d204",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/owner-test-form-origin-20261015",
+      "sha": "199dfc23c11928f92418407cebc20d0bf55f4b7b",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/p0-2-all-reviewed-read-casebook-20261015",
+      "sha": "2bcd0096e1935345caa29889e0730477543559dd",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/p0-2-catalog-smoke-coverage-20261015",
+      "sha": "7ec097fb40acd7d3b8935b26067efe19cedae437",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/p0-2-source-bound-proof-owner-scope-20261015",
+      "sha": "a4e1f0c3b060e8862525a32ab5b2625d8426ac93",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/p5-2-encrypted-only-transition-20261015",
+      "sha": "d4d9e3e4354ebb16ce00914dd7dfab02809bc5cd",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/p6-1-group-settings-complete-20261015",
+      "sha": "5d6321e057f477cb1f25762f8aa6530a64bfc985",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/p7-1-shared-drive-lifecycle-20261015",
+      "sha": "aae2bebb4aead361678429102bb3e3b095fc055c",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/p7-2-explicit-policy-evidence-20261015",
+      "sha": "7ea6c3240bc3ca09ad99e9939f6034a24325302e",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/p8-2-connection-policy-preservation-20261015",
+      "sha": "d16d58c5b123560a8b29ae422a50244894644b66",
+      "disposition": "merged",
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
+    },
+    {
+      "name": "ai/p8-3-test-pass-runtime-withdrawal-20261015",
+      "sha": "f67cbe8fb0351d35b301e56ef5495acd0790fe58",
       "disposition": "superseded",
       "prs": [],
-      "reason": "Reviewed historical recovery branch; superseded implementation or infrastructure handoff retained in archive."
+      "reason": "Runtime TEST enrollment withdrawal already integrated in main: pass-options and withdrawal tests exact blobs match; current getRtcPass/rtcPassFailureCode retain each guard and row reuse. Three commits patch-equivalent, two guard/query changes independently present. Preserve obsolete source history; do not merge stale plaintext-storage implementation."
     },
     {
-      "name": "ai/codex/neon-cost-record",
-      "sha": "977a2e50a0acb5e8c19a5dd5f93e46eee2ccbd5d",
+      "name": "ai/p8-4-complete-http-contract-20261015",
+      "sha": "72f12f9c0466df7cb7a6c3afc050f70509e38c42",
       "disposition": "merged",
-      "prs": [
-        37
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/codex/p0-exact-read-acceptance",
-      "sha": "37754bca669f833deec704b682eb9847b2963a80",
-      "disposition": "merged",
-      "prs": [
-        69
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/codex/p7-5-safe-undo",
-      "sha": "ecc8c1a9f4b3f1cf2bae2b29b8d98e15e2b826d2",
-      "disposition": "merged",
-      "prs": [
-        61
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/codex/p8-calendar-preservation",
-      "sha": "f9da85a1c973305aa9dc0f61bd16f560ae561203",
-      "disposition": "merged",
-      "prs": [
-        68
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/codex/p8-google-acceptance-runner",
-      "sha": "92a923c04482eca82716f7ac11b237d276045a96",
-      "disposition": "superseded",
       "prs": [],
-      "reason": "Reviewed historical recovery branch; superseded implementation or infrastructure handoff retained in archive."
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/codex/p8-owner-coverage",
-      "sha": "7659855209602d28c0506ccf0796283135ac5410",
+      "name": "ai/p8-8-console-user-key-contract-20261015",
+      "sha": "fe930683348aa1d6e22c4b106777ffc211e646c4",
       "disposition": "merged",
-      "prs": [
-        64
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/codex/p8-test-write-passes",
-      "sha": "db04601a64fe6ee474e836e766b8406cbcfa8011",
+      "name": "ai/p8-8-delegated-mailbox-real-acceptance-20261015",
+      "sha": "0952ae6adacebed2ebba67eed4435cab51a1a2d6",
       "disposition": "merged",
-      "prs": [
-        62
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/codex/p8-workflow-contracts",
-      "sha": "b233f349c39a01d520c960086bc64993e012533f",
+      "name": "ai/p8-8-delegates-live-auth-fix-20261015",
+      "sha": "35934934dce2d085f1663644f3005a2eef352ce5",
       "disposition": "merged",
-      "prs": [
-        63
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/codex/release-refresh-20261013",
-      "sha": "263e704552f30e27242cba3b7d29af0375f6cd5a",
+      "name": "ai/p8-service-conformance-fixture-recovery-20261015",
+      "sha": "020788df81aa30350964e78c6e95716d9e64141a",
       "disposition": "merged",
-      "prs": [
-        76
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/denver-midnight-release",
-      "sha": "afce3ce0ba05ccfddb3cd8d520626c338a492bee",
+      "name": "ai/protected-token-readiness-20261015",
+      "sha": "839ec90dcd1ea9f9784db8c76a1a3ab2048abe15",
       "disposition": "merged",
-      "prs": [
-        67
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/gateway-architecture-recovery",
-      "sha": "91c757f475c9cb2d55ffd9ce0c03cac4a2ec8cce",
+      "name": "ai/real-rentals-test-acceptance-20261015",
+      "sha": "6102d1af136fdf14b957c540a30b867554faeace",
       "disposition": "merged",
-      "prs": [
-        65
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/google-owner-consent-security-20261013",
-      "sha": "eff2e1779a7759a4ab8dca0c514c756850bbff4c",
+      "name": "ai/record-live-provider-404-acceptance-20261015",
+      "sha": "aa2cb58d16c2cec13abce78c11bf5b01fddc2760",
       "disposition": "merged",
-      "prs": [
-        85
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/integration-service-probes-20261013",
-      "sha": "4348861bc77a78c6f7b58eeddeac295e6ec85c91",
+      "name": "ai/record-live-readiness-and-agent-guidance-20261015",
+      "sha": "76fda419c80f442ffca0059494cf36403904005c",
       "disposition": "merged",
-      "prs": [
-        89
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/owner-directory-coverage-proof-20261013",
-      "sha": "eed81eaec8944029302c08ce36b13701124c1f87",
+      "name": "ai/session-bundle-stop-recovery-20261015",
+      "sha": "ae3e1cb4feadcd83879b1a26111693a4fbca22b0",
       "disposition": "merged",
-      "prs": [
-        80
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/owner-page-canonical-housekeeping-20261013",
-      "sha": "ad2dcfcd9d4f54652d842a6aca5cf057f900cfe6",
+      "name": "completion/alert-center-acceptance",
+      "sha": "05747ce5705e75e023175476e13b75da5a1a4f7a",
       "disposition": "merged",
-      "prs": [
-        84
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p5-1-exhaustive-semantics-workflow",
-      "sha": "5491b58362ac8914b04d274ee692b264e7b9b1fb",
+      "name": "completion/final-cutover-evidence",
+      "sha": "41c6debe7ffdf410db5629dfde525d2e08dbad1e",
       "disposition": "merged",
-      "prs": [
-        49
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p5-1-semantic-guards",
-      "sha": "8ef594be42a82d97f0ad49d13721f05faf39f15d",
+      "name": "completion/final-hub-acceptance-20261017",
+      "sha": "535d811f85580640d5a98052e3493f63bc147137",
       "disposition": "merged",
-      "prs": [
-        45
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-1-object-summaries",
-      "sha": "005027a88e1bb99fd158b8262282d6d4cd8d7705",
+      "name": "completion/postmaster-domain-verified",
+      "sha": "1c23969caf007c92a88da99d3096475bf6e03e65",
       "disposition": "merged",
-      "prs": [
-        41
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-1-typed-owner-diagnostics",
-      "sha": "5a2dcb9afdfbd76f05927b5e7344cdd4c66fa553",
+      "name": "completion/postmaster-v2-consent",
+      "sha": "7f12b5d1ab52ab14023ad8f24472cdf4aa718b41",
       "disposition": "merged",
-      "prs": [
-        57
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-1-typed-workflow-results",
-      "sha": "969a6e5b376e8f06d90b1a63036a510162ff6546",
+      "name": "completion/postmaster-v2-evidence",
+      "sha": "3764e9dce2893e8aac3ed4252492929a252c9d18",
       "disposition": "merged",
-      "prs": [
-        44
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-7-crash-recovery",
-      "sha": "f7ff944ca4cd970f21d8c80139bd7bb8087014c8",
+      "name": "completion/postmaster-v2-retirement",
+      "sha": "ac428bb0be17b3c4484c119cd4c9f4489d214e10",
       "disposition": "merged",
-      "prs": [
-        46
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-7-document-workflow-preflight-20261013",
-      "sha": "d3367f4fbb3097731ba2074e29fff94fcae1e744",
+      "name": "completion/readiness-and-provider-audit",
+      "sha": "c229a66d6e6e3e416ef6f8aee10f7399b76ecbd2",
       "disposition": "merged",
-      "prs": [
-        91
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-7-gmail-fixtures",
-      "sha": "02d841742ec8d18b67579d1a9565a10739bc0edd",
+      "name": "completion/recovered-readiness-20261016",
+      "sha": "8feeaf47f4385306c803548fcc131934bfe4c1ab",
       "disposition": "merged",
-      "prs": [
-        48
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-7-owned-calendar-fixtures",
-      "sha": "f390a5f7349075ea9ebddf0070adc720867b8c1c",
+      "name": "completion/released-187-acceptance",
+      "sha": "52a338955812684e1b88d0926947fac41991f8e0",
       "disposition": "merged",
-      "prs": [
-        47
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-7-precise-trash-cleanup",
-      "sha": "d6829b62d9101954805cc504fad0334eefdc84f6",
+      "name": "completion/verified-combined-consent",
+      "sha": "b15d5b75f4e24acd2edb4902acc0dcace2150f5c",
       "disposition": "merged",
-      "prs": [
-        43
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-7-tagged-drive-fixtures",
-      "sha": "d70759e4aa03b5bea916e2b211704ec15202fd9b",
+      "name": "docs/released-acceptance-184-20261016",
+      "sha": "366aa0af02370d821eb70bc37da0f989fd5703a1",
       "disposition": "merged",
-      "prs": [
-        42
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-8-evidence-aware-owner-overview",
-      "sha": "601bfbbb9dda328e0d137f39e94a171f9fe7e088",
+      "name": "fix/actual-fixture-read-contracts-20261016",
+      "sha": "4d6bebf1bd1c9c7593bb2268c523f6548caefab4",
       "disposition": "merged",
-      "prs": [
-        56
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-8-guided-readback-evidence",
-      "sha": "ea85e446f46e02ff4f49349c56aa97d0bb3c4b43",
+      "name": "fix/building-floors-completion-20261016",
+      "sha": "81620fc76c8a79e685a2e68cc7f35ffaa620034c",
       "disposition": "merged",
-      "prs": [
-        58
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-8-health-scan-completeness",
-      "sha": "8eadacb363a12596e11bedd411d274bedbcd0685",
+      "name": "fix/catalog-read-consent-20261016",
+      "sha": "5ac71347c9a844cfba822ccf33c0abb086a1a154",
       "disposition": "merged",
-      "prs": [
-        59
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-8-paginated-security-snapshot",
-      "sha": "00db748a61c16b9a0a569a144bb66bbad0b08455",
+      "name": "fix/chrome-read-bounded-completion-20261016",
+      "sha": "bd0205ed135d02c3b378cadb5cfe979a503da076",
       "disposition": "merged",
-      "prs": [
-        60
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/p8-google-safe-acceptance",
-      "sha": "154b2ab88a3d52608c7abcb0925f4c4f93c13be6",
+      "name": "fix/encrypted-test-pass-issuance-20261016",
+      "sha": "c20550a3f852a940c859a36de3271787d781a9dd",
       "disposition": "merged",
-      "prs": [
-        66
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/policy-exact-ou-evidence-20261013",
-      "sha": "7af5bfc9762f2fda3e7d90bce05d2640a9fadfc8",
+      "name": "fix/existing-test-pass-handoff",
+      "sha": "50e2fe5cbcda5ebb1f6747827ef5637569054821",
       "disposition": "merged",
-      "prs": [
-        90
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/postmaster-range-digest-20261013",
-      "sha": "1b4ff50b8ff5316619df5c4879f096e1436c2ebc",
+      "name": "fix/issuable-catalog-areas-20261016",
+      "sha": "e08f1ee9669a471d9384019881027bc16b1e91ab",
       "disposition": "merged",
-      "prs": [
-        88
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/reports-customerwide-boundary-20261013",
-      "sha": "73e7d72734c80758cb70a94b51b88b725826fb3b",
+      "name": "fix/policy-only-owner-overview",
+      "sha": "45c9ae7078616efc0dd39250d1b8f696c8ca97c1",
       "disposition": "merged",
-      "prs": [
-        78
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/reports-legacy-pagination-20261013",
-      "sha": "058e830dcfccd1b724551185f41545edbeb86f8b",
+      "name": "fix/policy-provider-field-diagnostic",
+      "sha": "ce56a4134a6ec5801e0f7632165f247eedb8702f",
       "disposition": "merged",
-      "prs": [
-        86
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/rtc-batch-budget-handles",
-      "sha": "87a2e79b5bd6f42297a9e1b56757c51b7aa6f4f1",
+      "name": "fix/policy-setting-identifiers",
+      "sha": "71b248df00dd17800f1541ee623d90e0774de906",
       "disposition": "merged",
-      "prs": [
-        74
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/rtc-bounded-result-default-20261013",
-      "sha": "00282f42ae3781c7a1671db3919c1d1cce4e2e00",
+      "name": "fix/postmaster-consent-completion-20261016",
+      "sha": "91e8368b264c3dd121c9d01b44997f0c04b88094",
       "disposition": "merged",
-      "prs": [
-        77
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/rtc-exact-catalog-pagination",
-      "sha": "6ea7c9bb2da984885291854021530b9f2b1c9478",
+      "name": "fix/provider-contract-audit-20261016",
+      "sha": "3bb3e6475ba7b52754876f4f07cdd45b55b1f7d0",
       "disposition": "merged",
-      "prs": [
-        73
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/rtc-http-contract-inputs-20261013",
-      "sha": "c2ab35abdc1eca0d72bf69ffc855feda3e5a0b63",
+      "name": "fix/read-acceptance-consent-20261016",
+      "sha": "50843c2c881c6df1345ce34fd49a4165f443c606",
       "disposition": "merged",
-      "prs": [
-        79
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/rtc-output-pass-redaction",
-      "sha": "f680879872c416f451b1d2f60c44b2f91db51079",
+      "name": "fix/root-ou-completion-20261016",
+      "sha": "0e049dcd83bbab609463ddb9d68d970423f7b075",
       "disposition": "merged",
-      "prs": [
-        72
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/rtc-paged-discovery-20261013",
-      "sha": "99e8593d64ecba45edfee7edd2abcb457d74f10c",
+      "name": "fix/site-verification-completion-20261016",
+      "sha": "d21f25d8171e56413001e1b8966782da0a3c8ead",
       "disposition": "merged",
-      "prs": [
-        87
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     },
     {
-      "name": "ai/gpt6/rtc-real-http-read-dispatch",
-      "sha": "af39f14fe1c05dc3a6cf6e784697c7bcb09caa3e",
+      "name": "fix/tasks-only-recovery-20261016",
+      "sha": "538bf7f8ccf1c3dc29e29c7f31f96f7287206c31",
       "disposition": "merged",
-      "prs": [
-        70
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/gpt6/rtc-unicode-pagination",
-      "sha": "579e4efd56d23a292e44aa04b23b4757e04786cf",
-      "disposition": "merged",
-      "prs": [
-        71
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/gpt6/standalone-direct-mcp-origin",
-      "sha": "c240d7bd3c69dfbc0d264577bbf72497b8466fcc",
-      "disposition": "merged",
-      "prs": [
-        75
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/owner-setup-holistic-reliability-2026-10-13",
-      "sha": "75a4bc74d65a3e658e64b6a95f94eb3a799d56b9",
-      "disposition": "superseded",
-      "prs": [
-        81
-      ],
-      "reason": "Reviewed historical recovery branch; superseded implementation or infrastructure handoff retained in archive."
-    },
-    {
-      "name": "ai/rtc/30-profile-auth",
-      "sha": "22fae52f3516d38af4439a3b024a93489c968b99",
-      "disposition": "merged",
-      "prs": [
-        30
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/rtc/31-result-storage",
-      "sha": "80f9ae8ed833303e62b63f5132eed877b2630e1a",
-      "disposition": "merged",
-      "prs": [
-        31
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/rtc/32-owner-passes",
-      "sha": "50dc6ac4cfdf3fd9198af6d7a12fa10d70833861",
-      "disposition": "merged",
-      "prs": [
-        32
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/rtc/33-https-contract",
-      "sha": "e126a4561b787924f2f20b58754bc8ceefbd5c58",
-      "disposition": "merged",
-      "prs": [
-        33
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/rtc/34-conformance-hardening",
-      "sha": "4c3d2d554cfef4c7a8f976a8e7d87b5db16c7e48",
-      "disposition": "merged",
-      "prs": [
-        34
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/rtc/35-owner-overview",
-      "sha": "365f4b008bde297828547504d79d3c568b3279d7",
-      "disposition": "merged",
-      "prs": [
-        36
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/rtc/39-nonprod-smoke",
-      "sha": "1ac0e325b9e4b357b2412b90d13287f346410792",
-      "disposition": "merged",
-      "prs": [
-        39
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/rtc/40-dev-integration",
-      "sha": "1ee218ff28f3ebbdf6382ce42c1b6f86350196bd",
-      "disposition": "merged",
-      "prs": [
-        40
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/2026-10-12-p5-4-registry-catalog",
-      "sha": "e6d979c278de83178ff53951304192b7c53aee9f",
-      "disposition": "merged",
-      "prs": [
-        50
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/2026-10-12-p7-2-policy-audit",
-      "sha": "33429729415f56def6f265e91940248649c492f2",
-      "disposition": "merged",
-      "prs": [
-        53
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/2026-10-12-p7-2-policy-baseline-evidence",
-      "sha": "ca763d50f3819d67e18312ad110e7dfbf16c8f53",
-      "disposition": "merged",
-      "prs": [
-        54
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/2026-10-12-p7-3-reports-activity",
-      "sha": "a3e36a7c1dccaa105496dad0fc8bc687d519e880",
-      "disposition": "merged",
-      "prs": [
-        51
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/2026-10-12-p7-4-postmaster-readonly",
-      "sha": "adbfbef5efe38a799ccb691746e2476ba00780b1",
-      "disposition": "merged",
-      "prs": [
-        52
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/2026-10-12-p8-1-typed-read-results",
-      "sha": "b5fe24394a49e253d138a2a63b3897aa817982f7",
-      "disposition": "merged",
-      "prs": [
-        55
-      ],
-      "reason": "Original PR merged; preserve exact source history, including squash-merged tips."
-    },
-    {
-      "name": "ai/codex/calendar-deletion-verification",
-      "sha": "ce3654888996952018a6b4e293e97ff97804ef13",
-      "disposition": "merged",
-      "prs": [
-        94
-      ],
-      "reason": "Verified merged PR; preserve exact source history including squash-merged tips."
-    },
-    {
-      "name": "ai/codex/calendar-readonly-cleanup-verifier",
-      "sha": "7cbc3f50ebc001b7857d9b2f165d8b2787eaefc8",
-      "disposition": "merged",
-      "prs": [
-        95
-      ],
-      "reason": "Verified merged PR; preserve exact source history including squash-merged tips."
-    },
-    {
-      "name": "ai/codex/mobile-native-connection",
-      "sha": "8325219a60458c348ff15f8a573d97cebbdf006e",
-      "disposition": "merged",
-      "prs": [
-        93
-      ],
-      "reason": "Verified merged PR; preserve exact source history including squash-merged tips."
-    },
-    {
-      "name": "ai/codex/daily-release-recovery-2026-10-14",
-      "sha": "2aaf133bd58cfc4afa96adab4a80048869747ade",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/codex/first-pass-validation-2026-10-14",
-      "sha": "ffcae2be41eb611d2a5a14d806f193c2982b3341",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/codex/session-efficiency-2026-10-14",
-      "sha": "c63167c311bcd63a21fc46c054cf4dd386b67fcf",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/calendar-deletion-two-source-proof",
-      "sha": "36985db5628b7edee5cb07b2324c30249e8c71f2",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/fix-search-presence-unknown-structured",
-      "sha": "bed87d5fad533fbe06e1ba19854fb9f05d67b96b",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/p0-2-readonly-catalog-smoke",
-      "sha": "a756a56f67e59dbca29d1e1ad52531ecadbba3ca",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/p7-2-owner-policy-audit-20261014",
-      "sha": "7098069dfed17bfff71e98ed60200c0b916e8a01",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/p8-7-calendar-ledger-id-proof",
-      "sha": "03cd19923a4d0a68ff499a4c4425f00761b24879",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/p8-7-drive-fixture-complete-proof",
-      "sha": "beb3e1bfe4610a31509e2567704a6bd0973560f6",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/p8-7-exact-resource-readiness",
-      "sha": "2561d22227779f74bcdbe0995302da46871d425c",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/p8-7-gmail-exact-identity",
-      "sha": "1185312801745b8d48ff66d2503d8555627a89f5",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/p8-7-seven-api-provider-readiness",
-      "sha": "2d8ad9c7d6fa14b0449157c779b11244edb85423",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/p8-8-owner-policy-coverage",
-      "sha": "ee3d4c454cfa130356435851d719eff0dd30c6ae",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/p8-8-owner-settings-review",
-      "sha": "9e85b6ea0f9d5175dc98cdb861780b5f4d9b290a",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/repair-daily-release-trigger-20261014",
-      "sha": "ef8fe53f867c335521c728a5b925a063151d2584",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
-    },
-    {
-      "name": "ai/gpt6/search-presence-guidance",
-      "sha": "f1ee7ef07dc2f993b3ec26657b329b38713777be",
-      "disposition": "merged",
-      "reason": "Verified main includes this implementation; preserve exact source-tip history before pruning."
+      "prs": [],
+      "reason": "Exact source tip is an ancestor of reviewed main 82eb5f468ad3c3ac1178138e36bd6680144acd6b; preserve source history before leased deletion."
     }
   ]
 }

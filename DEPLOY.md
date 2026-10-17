@@ -1,5 +1,12 @@
 # Deploying the hosted version
 
+## Current completion and release state — October 17, 2026 UTC
+
+All 29 required acceptance tasks and all 48 required roadmap subsections are complete. Workspace PR197 and Hub PR227 record genuine local/direct, encrypted GitHub-only relay, Sandbox direct, native Hub audit/read, same-pass revocation and cleanup. See [final route evidence](docs/plan/evidence/2026-10-17-final-hub-route-acceptance.json). The independent Workspace server remains usable without Hub; only optional P8-6 is on request. The owner has now requested a checked Workspace release after this documentation and Git closeout; the final released SHA/deployment belongs in the merged PR's permanent release receipt. Earlier dated pending observations below are historical, not new work or permission requests.
+
+Encrypted-only cutover is already complete for both accounts (account/legacy plaintext zero); do not replay activation. Alert Center delegation and protected runtime opt-in are approved and enabled, with a genuine empty list verified. The three no-resource exact GET development contracts, retired unsupported operation and two owner-excluded Vault live positives retain their original limits; completion does not claim every Google operation has a live positive fixture.
+
+
 This gets you a private web address that Claude (on any device — phone, browser, desktop) can talk to. Three accounts are involved: **Google Cloud** (you set this up — nobody else can do this step for you, it needs your Google login), **Neon** and **Vercel** (already connected to this session — Claude sets these up for you).
 
 ## Part 1 — Google Cloud setup (you do this — 10 minutes)
@@ -217,7 +224,7 @@ The owner approved the `https://www.googleapis.com/auth/postmaster.readonly` OAu
 
 ## Cloud Identity Policy API (P7-2, read-only)
 
-The owner approved `https://www.googleapis.com/auth/cloud-identity.policies.readonly` on October 2, 2026. The server requests it only for account OAuth sign-ins; **do not add it to `DELEGATED_SCOPES`** without a separate owner grant. Each existing account that needs policy reads must revisit `/api/google/authorize?account=<their-email>`, approve the new scope, and hold Google Super Admin permission with the Cloud Identity Policy API enabled. The underlying API returns customer-wide explicit policies, not calculated per-domain effective settings. A connection restricted to one business must ask the owner and pass `crossDomain: true` before accessing organization-wide data. Missing, inherited and unsupported settings are not automatically compliant. Proof of actual connected TEST access/deployment remains pending in the status ledger.
+The owner approved `https://www.googleapis.com/auth/cloud-identity.policies.readonly` on October 2, 2026. The server requests it only for account OAuth sign-ins; **do not add it to `DELEGATED_SCOPES`** without a separate owner grant. Each existing account that needs policy reads must revisit `/api/google/authorize?account=<their-email>`, approve the new scope, and hold Google Super Admin permission with the Cloud Identity Policy API enabled. The underlying API returns customer-wide explicit policies, not calculated per-domain effective settings. A connection restricted to one business must ask the owner and pass `crossDomain: true` before accessing organization-wide data. Missing, inherited and unsupported settings are not automatically compliant. Actual connected TEST policy reads and the dated organization audit are recorded as accepted in the status ledger; customer-wide explicit observations still do not prove effective domain/OU compliance.
 
 ### Explicit TEST write passes
 
@@ -259,6 +266,6 @@ recover by a compatible forward fix, encrypted restore or account reconnection,
 never by rolling back to plaintext-only code. Activation changes durable storage
 mode; each account's plaintext clears only on its next successful save/refresh.
 
-Final retirement review also closes the retained single-account google_auth copy: only after encrypted-only activation and a successful account refresh, clear a legacy credential whose refresh token exactly matches that account’s pre/post renewal token. Unmatched credentials and the table remain intact; no activation-time bulk erase. Sanitized inspection adds legacyPlaintextCopies; real PG tests cover unrelated-account refusal, rotation, next-refresh timing and no resurrection. Actual live counts remain unverified until release.
+Final retirement review also closes the retained single-account google_auth copy: only after encrypted-only activation and a successful account refresh, clear a legacy credential whose refresh token exactly matches that account’s pre/post renewal token. Unmatched credentials and the table remain intact; no activation-time bulk erase. Sanitized inspection adds legacyPlaintextCopies; real PG tests cover unrelated-account refusal, rotation, next-refresh timing and no resurrection. Actual cutover readback is complete for both accounts: account/legacy plaintext counts are zero. See docs/plan/evidence/2026-10-16-encrypted-cutover.json; the procedure above is for recovery reference, not a request to repeat activation.
 
 The protected activation form refreshes every existing connected account after mode activation, using only its saved grant and verifying mailbox identity. This combines the approved cutover and required next-renewal checks in one authenticated operator action. On any error, inspect aggregate state before retrying; activation is durable/idempotent and no scopes are added.
