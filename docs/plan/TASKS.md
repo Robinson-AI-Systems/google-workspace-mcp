@@ -268,24 +268,24 @@ restricts only the named operation. Source completion never proves actual Google
   },
   {
     "id": "P10-1",
-    "state": "OPEN",
-    "remaining": "Principal-scoped storage and legacy compatibility; complete all original acceptance in the new execution contract.",
-    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
-    "next": "P9-1; public dispatch off; additive migration; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+    "state": "REVIEW",
+    "remaining": "P10-B cohesive source plus dedicated unit/real-PG tests assembled; exact-head mandatory CI, review and merge not yet passed. Original full acceptance and post-deploy gates remain distinct.",
+    "evidence": "Branch implementation/p10-dual-identity-foundation at 95fffebbdf4ffab275427190d0060636651c4f72; preimplementation frozen P10-1/2/3 plan 6ce201207552e628d96cacedb8c8aa626120fded. Added additive SQL owner-scoped principals, public SDK OIDC/browser flows, separate V2 MCP credentials, owner-compatible barrier; source syntax validated, CI NOT YET RUN.",
+    "next": "Run exact-head unit/DB/RTC/check/release-policy, correct every failure; review and merge, then reclassify EXTERNAL_ONLY with distinct real-world acceptance gates."
   },
   {
     "id": "P10-2",
-    "state": "OPEN",
-    "remaining": "Google identity/login and owned grant linking; complete all original acceptance in the new execution contract.",
-    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
-    "next": "P10-1; stable verified subject and single-use transaction; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+    "state": "REVIEW",
+    "remaining": "P10-B cohesive source plus dedicated unit/real-PG tests assembled; exact-head mandatory CI, review and merge not yet passed. Original full acceptance and post-deploy gates remain distinct.",
+    "evidence": "Branch implementation/p10-dual-identity-foundation at 95fffebbdf4ffab275427190d0060636651c4f72; preimplementation frozen P10-1/2/3 plan 6ce201207552e628d96cacedb8c8aa626120fded. Added additive SQL owner-scoped principals, public SDK OIDC/browser flows, separate V2 MCP credentials, owner-compatible barrier; source syntax validated, CI NOT YET RUN.",
+    "next": "Run exact-head unit/DB/RTC/check/release-policy, correct every failure; review and merge, then reclassify EXTERNAL_ONLY with distinct real-world acceptance gates."
   },
   {
     "id": "P10-3",
-    "state": "OPEN",
-    "remaining": "Dual MCP authorization/session/account management; complete all original acceptance in the new execution contract.",
-    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
-    "next": "P10-1/P10-2; existing owner tokens work; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+    "state": "REVIEW",
+    "remaining": "P10-B cohesive source plus dedicated unit/real-PG tests assembled; exact-head mandatory CI, review and merge not yet passed. Original full acceptance and post-deploy gates remain distinct.",
+    "evidence": "Branch implementation/p10-dual-identity-foundation at 95fffebbdf4ffab275427190d0060636651c4f72; preimplementation frozen P10-1/2/3 plan 6ce201207552e628d96cacedb8c8aa626120fded. Added additive SQL owner-scoped principals, public SDK OIDC/browser flows, separate V2 MCP credentials, owner-compatible barrier; source syntax validated, CI NOT YET RUN.",
+    "next": "Run exact-head unit/DB/RTC/check/release-policy, correct every failure; review and merge, then reclassify EXTERNAL_ONLY with distinct real-world acceptance gates."
   },
   {
     "id": "P10-4",
