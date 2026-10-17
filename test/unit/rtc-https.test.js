@@ -65,6 +65,20 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   expect(r.body.result.tools.every(t=>t.name.startsWith('workspace_')&&!t.writes)).toBe(true);
   expect(toInternal('workspace_gmail_list_messages')).toBe('gmail_list_messages');
  });
+ it('optionally discovers a restricted but supported capability without permitting invocation',async()=>{
+  const listed=await invoke('GET',{door:'tools',listing:'catalog',q:'licensing_assign_license',showUnavailable:'true'});
+  expect(listed.statusCode).toBe(200);
+  const match=listed.body.result.tools.find(t=>t.name==='workspace_licensing_assign_license');
+  expect(match).toMatchObject({available:false,needsReconnect:true,billingRisk:true});
+  expect(match.description).toContain('BILLING WARNING');
+  const defaultList=await invoke('GET',{door:'tools',listing:'catalog',q:'licensing_assign_license'});
+  expect(defaultList.body.result.tools).toHaveLength(0);
+  expect((await invoke('POST',{tool:'workspace_licensing_assign_license'},
+    {skuId:'paid',userId:'ops@example.test',confirm:true})).statusCode).toBe(403);
+  const desc=await invoke('GET',{tool:'workspace_licensing_assign_license',showUnavailable:'true'});
+  expect(desc).toMatchObject({statusCode:200,body:{result:{available:false,needsReconnect:true}}});
+  expect((await invoke('GET',{door:'tools',showUnavailable:'yes'})).statusCode).toBe(400);
+ });
  it('paginates HTTP catalogs without dropping remaining tools',async()=>{
   const first=await invoke('GET',{door:'tools',listing:'catalog',limit:'2',page:'1'});
   expect(first.body.result.tools).toHaveLength(2);

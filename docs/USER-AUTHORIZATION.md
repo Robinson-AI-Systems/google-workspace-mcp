@@ -6,6 +6,8 @@ This independent Workspace MCP allows a **connected user's** authorized agent to
 
 Connect through the existing native MCP OAuth door. The owner chooses the already-connected mailbox, **Read only**, **Everyday** or **Full**, and optional allowed tool areas. The ordinary owner sign-in and existing saved connectors continue to work; an old token with no explicit mode remains a legacy owner connection and is never upgraded silently. New native connections select live mode; OAuth refresh copies the stored profile, areas, mode, and billing policy, not a new default.
 
+To discover supported capabilities outside your current grant without invoking them, set `includeUnavailable:true` on `workspace_search_tools` or `workspace_describe_tool`, or `showUnavailable=true` on the authenticated RTC catalog/description GET. Such entries are marked `available:false` and `needsReconnect:true`; they are never executable until the user selects a broader grant. The catalog cannot promise that Google's provider edition or OAuth scopes support the operation.
+
 Read only permits supported reads; Everyday permits routine writes in enabled areas while withholding high-impact admin areas; Full adds guarded high-impact operations in selected areas. Neither a profile nor a supplied argument grants a Google role, new OAuth scope or extra domain permission. Reconnect/reauthorize deliberately if broader permissions are needed. A tool denied by the existing account/area grant is not secretly unsupported.
 
 ## Independently issued HTTPS RTC pass
