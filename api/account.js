@@ -57,6 +57,9 @@ export default async function handler(req,res){
    const html='<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
      '<title>My Workspace connections</title><main style="max-width:720px;margin:auto;font:16px/1.5 system-ui;padding:1rem">'+
      '<h1>My Google Workspace MCP</h1><p>Only this authenticated principal’s accounts and agent connections appear here.</p>'+
+     '<p>Before linking mail, files or administrator scopes, review how Google data is used by your selected agent: '+
+     '<a href="/api/privacy">privacy and data use</a>, <a href="/api/support">support</a> and '+
+     '<a href="/api/data-deletion">local disconnection and deletion limits</a>. Google controls which requested permissions you approve.</p>'+
      '<h2>Google connections</h2><ul>'+accounts.map(a=>'<li>'+escape(a.label||a.email)+' · '+
        escape(a.scope_list.join(', '))+' · '+(a.is_default?'Default':'Linked')+
        form('set_default',a.id,'Make default')+form('disconnect_account',a.id,'Disconnect locally')+'</li>').join('')+'</ul>'+

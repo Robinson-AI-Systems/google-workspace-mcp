@@ -1,6 +1,6 @@
 # Robinson Google Workspace MCP
 
-**Next roadmap:** [P9 user authority and P10 parallel multi-user Google sign-in](docs/plan/designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). Designed, not implemented; existing owner-operated service stays usable. New user scope is tracked separately from completed original acceptance.
+**Roadmap status:** [P9 user authority and P10 parallel multi-user Google sign-in](docs/plan/designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). P9 and P10-1..5/7 source engineering is merged; real P10-6 Google two-user custom-MCP pilot and public publication remain unaccepted. Owner and existing Hub TEST connections remain supported. The public pilot is **OFF by default**; do not interpret this README as launch approval. See [P10 owner setup](docs/PUBLIC-SIGNIN-OWNER-GUIDE.md) and [pilot readiness](docs/pr-cards/P10-PILOT-READINESS.md).
 
 [![ci](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/workflows/ci.yml)
 

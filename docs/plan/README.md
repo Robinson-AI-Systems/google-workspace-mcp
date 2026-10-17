@@ -5,9 +5,9 @@ selecting new implementation; preserve the existing session:finish workload chec
 
 ## New roadmap — user authority and parallel multi-user sign-in
 
-Owner clarification October16,2026 Denver: development-agent spending/TEST restrictions must not become permanent product limits. Supported end-user operations need a usable consequence/approval path. Owner requested a concrete Sol5.6-ready roadmap and parallel Google sign-in that preserves the working owner login. Design is ready; implementation/public enrollment/paid tests/legacy retirement are NOT claimed or activated by this planning update. Original P0–P8 acceptance remains passed for its original scope; the newly added P9/P10 scope is unfinished.
+Owner clarification October16,2026 Denver: development-agent spending/TEST restrictions must not become permanent product limits. Supported end-user operations need a usable consequence/approval path. Owner requested a concrete Sol5.6-ready roadmap and parallel Google sign-in that preserves the working owner login. P9 and P10-1..5/7 source engineering is merged; P10-6 real Google two-user pilot and public publication remain OPEN, and paid testing, public enrollment and optional legacy retirement are not activated. Original P0–P8 acceptance remains passed for its original scope; the newly added P9/P10 scope is unfinished.
 
-Authoritative execution contract: [User authority and parallel sign-in](designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). Start P9-1; follow dependencies and whole-outcome delivery groups. Do not interpret original29 passed acceptance rows as completion of the new scope. Add new source-pinned acceptance rows only when implementation exists.
+Authoritative execution contract: [User authority and parallel sign-in](designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). Follow current engineering-readiness and acceptance dependencies; do not redo merged features. Do not interpret original29 passed acceptance rows as completion of the new scope. Add new source-pinned acceptance rows only when implementation exists.
 
 ## October 17 — original owner-operated Workspace acceptance complete
 
