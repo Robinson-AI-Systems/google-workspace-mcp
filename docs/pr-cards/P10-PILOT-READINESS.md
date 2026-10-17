@@ -51,3 +51,16 @@ Original P10-6 criterion mapping remains honest:
 
 **Accounting:** P10-6 stays OPEN and counts zero whole completed subsections or bundles. All genuine Google app, checked release, owner/billing/legal and public mode approvals remain separate; see issue #205 and the original task IDs.
 
+
+## Owner-approved maintenance clarification — 2026-10-17: standalone identity-only pilot
+
+This note records a *new owner separation-of-concerns decision*; it does not revise the frozen source-readiness bundle plan above or change the original P10-6 full-product acceptance criteria. **Workspace can be used independently of Hub.** Hub's expired TEST grant cannot prevent a Workspace-only two-identity sign-in pilot; Hub relay and TEST refusal acceptance remains PENDING separately and must never be marked passed on historical receipts. The owner approved identity-only Stage 1 earlier today and explicitly corrected the erroneous Hub activation dependency.
+
+Stage 1 acceptance criteria before and after `PUBLIC_SIGNIN_MODE=pilot`:
+1. Independently prove checked serving READY `live` revision and original directly connected owner Workspace identity/account-list read; keep owner passphrase, owner Google OAuth and legacy bearer/refresh infrastructure unchanged. Record any still-untested original owner bearer/refresh replay separately, never infer a pass.
+2. Verify separate Google OAuth client, verified two-subject allowlist, V2 encryption and `PUBLIC_P10_TOOL_EXECUTION_VERIFIED` absent/false; preserve the existing real Postgres isolation source+CI evidence. Permit exactly the two verified subjects to **sign in**, not to execute MCP tools.
+3. Owner's earlier explicit Stage 1 approval authorizes only Vercel Production `PUBLIC_SIGNIN_MODE=pilot` and its environment configuration; a changed Vercel environment variable does **not by itself guarantee a new deployment**. Use only an independently authorized checked source release or **separately approved off-cycle production deployment of the exact verified live SHA** to apply it. Verify the new READY deployment, canonical alias, `pilotRosterCount=2`, `currentMode=pilot`, `toolExecutionFlagEnabled=false`, `legacyOwnerNewSignInEnabled=true`, and owner `workspace_whoami` / list-account continuation. If isolation or old owner access fails, set the mode to `off` and apply it with the same authorized, independently verified deployment procedure; the env edit alone is not a runtime rollback.
+4. Actual independent Google A/B session and wrong-subject refusal/CSRF/log-out acceptance require authenticated browser observations; report them as PENDING until witnessed. Same for two real MCP clients, replay, revocation, original bearer/refresh matrix, and production Hub connection/denials.
+5. Stage 2 tool execution, all real provider writes, public sign-in, customer-wide delegation, legacy owner sign-in retirement and off-schedule source releases are **not** authorized. Do not mark `P10-OWNER-CONTINUITY`, `P10-VERIFY-GOOGLE`, or `P10-MCP-PILOT` PASSED merely because Stage 1 mode is active.
+
+This is a maintenance/decision-alignment correction, not an invented roadmap subsection or completed implementation bundle; source functionality remains unchanged.

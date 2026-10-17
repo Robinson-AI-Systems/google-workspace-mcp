@@ -3,6 +3,12 @@
 Agent entry: [AGENTS.md](../../AGENTS.md). Complete SESSION-START §§0–1 before
 selecting new implementation; preserve the existing session:finish workload check.
 
+## Owner clarification — 2026-10-17: Workspace pilot is Hub-independent
+
+The owner explicitly clarified that **Hub is optional**: the original Hub TEST RTC relay/denial and the separately planned generic Hub LIVE production integration must never block verified **direct Workspace** use. The original historical Hub evidence and any current expired pass are tracked honestly under the existing Hub-specific completion/continuity requirements and remain PENDING where fresh evidence is missing. Do not replace original proofs or mark those acceptance rows passed.
+
+The owner has already approved **Stage 1 direct Workspace identity-only** for the two verified, configured Google subjects. The operating rules and exact guarded activation/rollback criteria are in `docs/PUBLIC-SIGNIN-OWNER-GUIDE.md` and `docs/plan/P10-PILOT-CHECKLIST.md`. Stage 1 may set only Production `PUBLIC_SIGNIN_MODE=pilot` after checked serving-source and direct original-owner readback, leaving tool execution OFF, old owner grants/sign-in unchanged and downstream real A/B browser provider acceptance still pending. Stage 2, public enrollment, optional owner retirement and real provider writes are not authorized by this clarification.
+
 ## New roadmap — user authority and parallel multi-user sign-in
 
 Owner clarification October16,2026 Denver: development-agent spending/TEST restrictions must not become permanent product limits. Supported end-user operations need a usable consequence/approval path. Owner requested a concrete Sol5.6-ready roadmap and parallel Google sign-in that preserves the working owner login. P9 and P10-1..5/7 source engineering is merged; P10-6 real Google two-user pilot and public publication remain OPEN, and paid testing, public enrollment and optional legacy retirement are not activated. Original P0–P8 acceptance remains passed for its original scope; the newly added P9/P10 scope is unfinished.
