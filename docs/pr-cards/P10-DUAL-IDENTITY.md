@@ -62,3 +62,15 @@ Public execution remains OFF until the P10-4 full isolation gate.
 ## Delivery
 
 P10-1..P10-3 implemented as one coherent source outcome with full frozen criterion-to-code/test mapping in `docs/plan/evidence/p10-bundle-delivery.json`. Real provider live acceptance is deferred behind deployed source, separate public Google OAuth configuration and P10-4/5 isolation. No public tool dispatch or release authorized.
+## Post-merge security regression — anonymous homepage owner mailbox disclosure (2026-10-17)
+
+This is a newly found defect against the original P10-3 owner-mailbox privacy criterion, **not** a new roadmap subsection, a repeat P10-B bundle or provider acceptance. The previously frozen P10-B plan and delivered criteria remain unchanged. The separate P10-6 real pilot still requires its own external approvals and evidence (tracked in issue #205).
+
+### Correction acceptance, frozen before implementation
+
+1. An anonymous GET/HEAD of the public homepage must not query or disclose existing owner or user Google account rows, labels, defaults or connection metadata, even if legacy owner accounts are present. It must not initialize migration, ask Google for tokens or touch provider state merely to render the entry point.
+2. Public landing content stays useful for an MCP user without advertising any authenticated selection: a plain service description, relative MCP endpoint and a link to the separately authenticated account portal. No user identity/addresses, credentials, provider scopes, connection counts or environment secrets are rendered.
+3. Protect no-cache and HTML response types; unsupported methods refuse; HEAD performs no write or data read. Existing owner OAuth/native/RTC and user portal contracts remain unchanged.
+4. Add an actual handler regression test for anonymous GET/HEAD/POST and an explicit source-level import/owner-inventory guard; full exact-head CI and reviews before merge. Deployed anonymous reachability/privacy remains a separate source-pinned post-release check.
+
+**Delivery scope:** Public-homepage-only security repair and regression tests; no public pilot activation, production change, credentials, Google mutation or bundle-credit claim. GitHub-only remote session uses required exact-head Actions for tests not executable in its unprovisioned local runner.
