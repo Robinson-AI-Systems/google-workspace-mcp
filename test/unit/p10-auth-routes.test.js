@@ -30,6 +30,7 @@ vi.mock('../../src/principals/store.js',()=>({
  upsertLinkedAccount:async params=>{h.accountLinks.push(params);return 'account-a';},
  listAccounts:async()=>[],listConnections:async()=>[],deletionPreview:async()=>({previewOnly:true}),
  disconnectAccount:async()=>0,revokeConnection:async()=>0,setPrincipalDefault:async()=>null,
+ requestDeletion:async()=>({pending:true}),cancelDeletion:async()=>({cancelled:true}),
  issuePrincipalCode:async()=> 'p10c_'+'c'.repeat(43),
  consumePrincipalCode:async({code,verifier})=>{h.codeConsumeCount++;return code==='p10c_'+'c'.repeat(43)&&verifier==='valid-verifier'
    ?{principal_id:'33333333-3333-4333-8333-333333333333',account_id:'44444444-4444-4444-8444-444444444444',profile:'read_only',listing:'compact',areas:null,mode:'live',

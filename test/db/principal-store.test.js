@@ -83,7 +83,7 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
     redirectUri:options.redirectUri,resource:options.resource,verifier})));
   expect(one.filter(Boolean)).toHaveLength(1);
   const issued=await store.issuePrincipalConnection(one.find(Boolean));
-  expect((await store.readPrincipalAccess(issued.accessToken)).principal_id).toBe(a);
+  expect((await store.readPrincipalAccess(issued.accessToken)).principalId).toBe(a);
   const settings={clientId:'mcp-client',resource:options.resource};
   const two=await Promise.all([1,2].map(()=>store.rotatePrincipalRefresh(issued.refreshToken,settings)));
   expect(two.filter(Boolean)).toHaveLength(1);
@@ -95,6 +95,8 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
  it('disconnects the chosen account without touching a foreign principal',async()=>{
   expect(await store.disconnectAccount(b,aa)).toBe(0);
   expect(await store.deletionPreview(a)).toMatchObject({previewOnly:true,deleted:false});
+  expect(await store.requestDeletion(a)).toMatchObject({pending:true,irreversible:false});
+  expect(await store.cancelDeletion(a)).toMatchObject({cancelled:true,deleted:false});
   expect(await store.disconnectAccount(a,aa)).toBe(1);
   expect(await store.findAccount(a,aa)).toBeNull();
   expect(await store.findAccount(b,bb)).not.toBeNull();
