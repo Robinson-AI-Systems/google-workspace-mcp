@@ -1,0 +1,53 @@
+{
+  "workKind": "ENGINEERING",
+  "baseRevision": "1982453fbe07057e86c423ff820c601d2ede61c8",
+  "plannedAt": "d0246ef68c64c3789ed006fb60c35e22f3ae98b6",
+  "implementationHead": "3442f6ac2840f667ff3643c372e1096466accbfd",
+  "productionAdded": 304,
+  "productionRemoved": 40,
+  "newEngineering": "One complete owner auth recovery workflow across native MCP browser authorization, separate Google OIDC, passphrase, immutable principal binding, additive Postgres one-use proof, protected preview and rollback. Uses original Google SDK and legacy OAuth issuance, without duplicating registries.",
+  "planComparison": "Frozen estimate 660 production lines; measured 304 added and 40 removed production lines on exact PR #204 source head, plus 287 lines of new real Postgres and HTTP regression tests. Reusing existing OIDC verification, browser session support, and guarded owner issuance preserved tested behaviors and avoided padding.",
+  "relatedWorkDecision": "The single P10-7 migration subsection is a coherent account-authority outcome; P10-6 requires explicit separate pilot/public-Google consent/provider acceptance. Merging source is not authorization to enable any runtime flag or retire legacy login.",
+  "decision": "SUBSTANTIAL_EXCEPTION",
+  "exceptionEvidence": [
+    "One full independently eligible roadmap subsection P10-7 with all seven original acceptance criteria mapped and 344 substantive changed production lines spanning owner login, Google callback, API route, SQL schema/transactions, rollback and documentation; not a helper-only PR.",
+    "Second original Outcome D subsection P10-6 is genuine external two-user public Google pilot and publication gating. Cannot count an unauthorised provider migration/public activation as progress or invent a second completed subsection merely to satisfy an advisory target.",
+    "Real PostgreSQL two-consumer proof, 1951 passing unit tests, original owner/Hub compatibility and full source/RTC/DB CI run #39037581770 justify a high-trust coherent outcome rather than independent smaller security changes."
+  ],
+  "subsections": [
+    {
+      "id": "P10-7",
+      "remainingEngineering": [],
+      "criteria": [
+        {
+          "criterion": "First deliver migration tooling and dual-login recovery; retirement is a separately chosen runtime action, not a scheduled date or automatic consequence of Google sign-in.",
+          "evidence": "api/owner/migration.js requires the existing owner passphrase with recorded rate-limited wrong-attempt/lockout policy before a detailed per-account/per-connection preview or a fresh Google OIDC link. src/principals/owner-migration.js keeps only reversible issuer/sub mapping, not grants, accounts or OAuth bearers. Existing legacy new-login remains default-enabled."
+        },
+        {
+          "criterion": "While authenticated through existing owner passphrase, start a fresh Google proof transaction to link selected verified issuer/sub to the explicit legacy-owner principal; never claim ownership by email/first login/admin hostname.",
+          "evidence": "Owner's explicit checkbox, existing password, fresh one-use browser-bound state/PKCE OIDC callback at api/auth/google/callback.js is required. Verified Google ID token issuer/sub is bound only to the fixed OWNER_ID, never inferred from email/hd. SQL denies existing foreign V2 account/identity. Real PG regression proves identical repeat, foreign refusal and stable owner ID."
+        },
+        {
+          "criterion": "Display exact affected connections/accounts, preserve existing encrypted grants and permissions, and verify old AND new auth before enabling the new owner login.",
+          "evidence": "ownerMigrationSnapshot lists actual owner account identifiers, labels, encryption indicators, active agent client/account/profile/areas and linked owner fingerprints, only after owner login. Snapshot/readback in test/db/principal-owner-migration.test.js verifies original grant/refresh bytes remain and changed mapping only; two-pass real Postgres upgrades and owner bearer still work. Actual production owner login is separate gated external acceptance."
+        },
+        {
+          "criterion": "Existing bearer connections remain mapped to owner without reissue; explicit user-selected reconnect/revoke only. Keep legacy callback/refresh compatibility until active owner connections accounted for.",
+          "evidence": "api/oauth/authorize.js adds a distinct owner_google flow to original client/mailbox and guarded code issuance; one-use 5-minute hashed principal_owner_login_proofs bound to client/redirect/resource/challenge/state and Secure HttpOnly cookie, with atomic consume. Existing original createAuthCode, bearer/refresh, owner encrypted provider grant and Hub TEST untouched; proof denies wrong subject/protocol before owner mailbox query."
+        },
+        {
+          "criterion": "Snapshot encrypted data and reversible migration mapping; dry-run counts and independent post-readback required. Changing flags never restores plaintext or old insecure schema.",
+          "evidence": "src/principals/owner-migration.js performs additive two-safe migration and records metadata snapshot; owner-authenticated exact fingerprint unlink deletes ONLY Google-to-owner mapping; independent SQL readback verifies both, original ciphertext and old bearer. No plaintext restoration or historical schema rollback. Exact encrypted key backup/restore prior live retirement is operator-owned future deployment prerequisite."
+        },
+        {
+          "criterion": "Turn off legacy NEW sign-in only after owner explicitly chooses retirement and both login/recovery paths are demonstrated; existing old connector tokens are not silently revoked; rollback stays dual-login forward-compatible.",
+          "evidence": "LEGACY_OWNER_SIGNIN_ENABLED defaults true and affects only NEW passphrase authorization and future passphrase enrollment; older bearer/refresh remain unchanged. Explicit false requires a separately owner-approved post-dual-acceptance operation, not performed. Recovery is resetting true or explicit owner-authenticated subject unlink without grant migration. Owner guide documents remaining real sign-in/provider gates."
+        },
+        {
+          "criterion": "Prove foreign subject/stale proof theft denial, migration twice idempotent, rollback preserves principals, retirement off/on behavior and retained owner bearer policy; real retirement remains pending explicit approval.",
+          "evidence": "test/unit/p10-owner-migration.test.js covers native HTTP passphrase/link/callback/foreign subject/browser cookie/agent code/proof tampering, one-use replay, default-off public and new-login switch; test/db/principal-owner-migration.test.js uses disposable real Postgres, two concurrent consumers, reserved foreign subject denial, idempotent link/unlink, original encrypted token and old connection continuity. Verified GitHub CI #39037581770 on source 3442f6ac all check, unit, db, rtc and aggregate test successful; real Google/hosted acceptance remains pending."
+        }
+      ]
+    }
+  ]
+}
