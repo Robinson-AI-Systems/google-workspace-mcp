@@ -152,6 +152,7 @@ describe('P10-6 owner-only readiness route with existing passphrase lockout',()=
   await pilot(request('GET',{}, {host:'mcp.example.test',cookie:'p10_session=private'}),r);
   expect(r.statusCode).toBe(200);
   expect(r.body).toContain('Owner passphrase');
+  expect(r.headers['Referrer-Policy']).toBe('same-origin');
   expect(r.body).not.toContain('different-public-client');
   expect(r.body).not.toContain('google-sub-a');
   expect(mocks.schemas).toBe(0);

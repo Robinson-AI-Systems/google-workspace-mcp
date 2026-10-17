@@ -39,6 +39,9 @@ export default async function handler(req,res){
   let origin;
   try{origin=publicResource();}catch{return res.status(503).send('Canonical service origin unavailable.');}
   if(req.method==='GET'){
+    // Browser navigation form POSTs with Referrer-Policy: no-referrer may
+    // arrive with Origin: null; preserve strict same-origin authentication.
+    res.setHeader('Referrer-Policy','same-origin');
     // Prevent alias-host form submissions from failing the strict Origin gate.
     if(req.headers?.host&&req.headers.host.toLowerCase()!==new URL(origin).host.toLowerCase()){
       res.writeHead(303,{Location:origin+'/api/owner/pilot-readiness'});res.end();return;

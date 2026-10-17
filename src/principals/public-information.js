@@ -92,8 +92,8 @@ export function supportInfo(env=process.env){
   return '<p>Robinson AI Systems operates this Workspace MCP integration. '+
     'For sign-in, account, privacy or deletion questions, contact the service operator.</p>'+
     (address?'<p>Email: <a href="mailto:'+encodeURIComponent(address)+'">'+esc(address)+'</a>.</p>':
-      '<p><strong>Public support contact is not configured.</strong> An invited pilot user ',
-      'should contact the organization that invited them. The operator must configure ',
+      '<p><strong>Public support contact is not configured.</strong> An invited pilot user '+
+      'should contact the organization that invited them. The operator must configure '+
       'PUBLIC_SUPPORT_EMAIL before a general launch.</p>')+
     '<p>Never email OAuth client secrets, Google tokens or passphrases.</p>';
 }
