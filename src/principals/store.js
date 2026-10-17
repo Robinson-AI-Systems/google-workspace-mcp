@@ -4,6 +4,7 @@ import {neon} from '@neondatabase/serverless';
 import {sealV2,openV2} from './crypto.js';
 import {OWNER_ID,digest,mint,validUuid,validEmail,requireScope} from './security.js';
 import {normalizeConnectionPolicy} from '../oauth/connection-settings.js';
+import {initTenantSchema,makeTenantStore} from './tenant-store.js';
 let conn;
 const trustedContexts=new WeakSet(); // no caller-minted frozen principal is accepted
 const sql=()=>{if(!conn){if(!process.env.DATABASE_URL)throw Error('database_unavailable');conn=neon(process.env.DATABASE_URL);}return conn;};
@@ -78,6 +79,7 @@ export async function initPrincipalSchema(q=sql()){
    customer_id TEXT NOT NULL,scopes TEXT[] NOT NULL,subject_rule TEXT NOT NULL,
    credential_ciphertext TEXT NOT NULL,enabled BOOLEAN NOT NULL DEFAULT false,
    revoked_at TIMESTAMPTZ,UNIQUE(principal_id,customer_id))`;
+ await initTenantSchema(q);
 }
 export async function legacyOwnerContext(accessToken){
  if(typeof accessToken!=='string'||accessToken.startsWith('p10'))return null;
@@ -306,7 +308,8 @@ export async function readPrincipalAccess(token){
  if(typeof token!=='string'||!/^p10a_[A-Za-z0-9_-]{43}$/.test(token))return null;
  const q=sql();
  const rows=await q`SELECT c.id AS connection_id,c.principal_id,c.account_id,c.resource,
-   c.client_id,c.profile,c.listing,c.areas,c.mode,c.cost_policy,p.kind AS principal_kind,
+   c.client_id,c.profile,c.listing,c.areas,c.mode,c.cost_policy,
+   a.email AS account_email,a.token_version AS account_version,p.kind AS principal_kind,
    p.status AS principal_status
    FROM principal_connections c JOIN principals p ON p.id=c.principal_id
    JOIN principal_google_accounts a ON a.id=c.account_id AND a.principal_id=c.principal_id
@@ -317,7 +320,9 @@ export async function readPrincipalAccess(token){
  const context=Object.freeze({principalId:row.principal_id,principalKind:row.principal_kind,
    accountId:row.account_id,connectionId:row.connection_id,mode:settings.mode,
    profile:settings.profile,listing:settings.listing,areas:settings.areas,
-   resource:row.resource,clientId:row.client_id});
+   resource:row.resource,clientId:row.client_id,
+   accountVersion:row.account_version,actingAs:row.account_email,
+   costPolicy:Object.freeze({...settings.cost_policy})});
  trustedContexts.add(context);
  return context;
 }
@@ -398,6 +403,7 @@ export function scopedStore(context){
    validUuid(context.principalId),'invalid_scoped_context');
  const principal=context.principalId;
  return Object.freeze({
+   ...makeTenantStore(context),
    listAccounts:()=>listAccounts(principal),
    getAccount:id=>findAccount(principal,id),
    getGrant:id=>getLinkedGrant(principal,id),
