@@ -14,6 +14,8 @@
 // env var (raw JSON or base64 of it). Until that var exists, everything here reports
 // "not configured" and the rest of the server works exactly as before.
 import { google } from 'googleapis';
+import { GMAIL_SETTINGS_SCOPES, CALENDAR_SCOPE, DRIVE_FILE_SCOPE, DELEGATED_SCOPES, ALERT_CENTER_SCOPE } from './delegation-scopes.js';
+export { GMAIL_SETTINGS_SCOPES, CALENDAR_SCOPE, DRIVE_FILE_SCOPE, DELEGATED_SCOPES, ALERT_CENTER_SCOPE } from './delegation-scopes.js';
 
 let cached; // parsed key, so we don't re-parse on every call
 
@@ -44,18 +46,14 @@ export function isDelegationConfigured() {
  * ALL_SCOPES list. Widen this on purpose, one scope at a time, if a future
  * tool genuinely needs more, and authorize the same list in the Admin console.
  */
-export const GMAIL_SETTINGS_SCOPES = [
-  'https://www.googleapis.com/auth/gmail.settings.basic',
-  'https://www.googleapis.com/auth/gmail.settings.sharing'
-];
-export const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar';
-export const DRIVE_FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+// The approved constant values live in delegation-scopes.js so the
+// public tenant path never has to import the installation-owner key loader.
 // Everything the robot identity may ever be authorized for in the Admin console. Chris approved adding the last
 // two on 2026-10-02 ("I approve calendar and drive.file for the robot identity") for the business apps:
 // calendar = the business calendar; drive.file = only files and folders the robot itself created.
 // Nothing asks for all of them at once: each call requests only the subset it needs (see buildDelegatedAuth), so
 // Gmail branding keeps working even before the two new entries are added in the Admin console.
-export const DELEGATED_SCOPES = [...GMAIL_SETTINGS_SCOPES, CALENDAR_SCOPE, DRIVE_FILE_SCOPE];
+// DELEGATED_SCOPES is re-exported from the shared reviewed constant module.
 
 /** Non-secret facts about the service account, for status tools and setup pages. */
 export function describeServiceAccount() {
@@ -98,7 +96,7 @@ export function delegatedClients(userEmail, scopes = []) {
 
 // Alert Center is a distinct opt-in: its sole scope allows both reads and
 // writes. Never widen DELEGATED_SCOPES or silently fall back to user OAuth.
-export const ALERT_CENTER_SCOPE = 'https://www.googleapis.com/auth/apps.alerts';
+// ALERT_CENTER_SCOPE is re-exported from the shared reviewed constant module.
 export function buildAlertCenterAuth(userEmail) {
   if (process.env.GOOGLE_ALERT_CENTER_DELEGATION_ENABLED !== 'true') {
     throw new Error('Alert Center requires separately authorized service-account domain-wide delegation for apps.alerts (read and write). See DEPLOY.md, Alert Center. User OAuth cannot authorize this API.');
