@@ -18,8 +18,16 @@ export async function buildPrincipalApiClients(context){
  const auth=publicGoogleClient(); // separate PUBLIC_* app only
  auth.setCredentials(tokens);
  auth.actingAs=account.email;
- const delegation=scopedDelegationClients(await trustedCustomerDelegation(context));
+ const tenantCredential=await trustedCustomerDelegation(context);
+ const delegation=scopedDelegationClients(tenantCredential);
  const clients=buildApiClients(auth,{tenantDelegation:delegation});
+ clients.tenantDelegationInfo=Object.freeze(tenantCredential?
+  {customerId:tenantCredential.customerId,
+   serviceAccountEmail:tenantCredential.key.client_email,
+   clientId:tenantCredential.key.client_id,
+   scopes:Object.freeze([...tenantCredential.scopes]),
+   verifiedSubjects:Object.freeze([...tenantCredential.verifiedSubjects])}:
+  {configured:false,scopes:Object.freeze([]),verifiedSubjects:Object.freeze([])});
  clients.store=store;
  clients.principal=context.principalId;
  clients.accountId=context.accountId;
