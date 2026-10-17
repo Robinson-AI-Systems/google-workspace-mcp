@@ -65,6 +65,20 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   expect(r.body.result.tools.every(t=>t.name.startsWith('workspace_')&&!t.writes)).toBe(true);
   expect(toInternal('workspace_gmail_list_messages')).toBe('gmail_list_messages');
  });
+ it('optionally discovers a restricted but supported capability without permitting invocation',async()=>{
+  const listed=await invoke('GET',{door:'tools',listing:'catalog',q:'licensing_assign_license',showUnavailable:'true'});
+  expect(listed.statusCode).toBe(200);
+  const match=listed.body.result.tools.find(t=>t.name==='workspace_licensing_assign_license');
+  expect(match).toMatchObject({available:false,needsReconnect:true,billingRisk:true});
+  expect(match.description).toContain('BILLING WARNING');
+  const defaultList=await invoke('GET',{door:'tools',listing:'catalog',q:'licensing_assign_license'});
+  expect(defaultList.body.result.tools).toHaveLength(0);
+  expect((await invoke('POST',{tool:'workspace_licensing_assign_license'},
+    {skuId:'paid',userId:'ops@example.test',confirm:true})).statusCode).toBe(403);
+  const desc=await invoke('GET',{tool:'workspace_licensing_assign_license',showUnavailable:'true'});
+  expect(desc).toMatchObject({statusCode:200,body:{result:{available:false,needsReconnect:true}}});
+  expect((await invoke('GET',{door:'tools',showUnavailable:'yes'})).statusCode).toBe(400);
+ });
  it('paginates HTTP catalogs without dropping remaining tools',async()=>{
   const first=await invoke('GET',{door:'tools',listing:'catalog',limit:'2',page:'1'});
   expect(first.body.result.tools).toHaveLength(2);
@@ -127,6 +141,31 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   await holder.db.revokeRtcPass(write.id);
   expect((await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'denied'},write.token)).statusCode).toBe(401);
   expect(holder.writes).toBe(2);
+ });
+
+ it('permits live guarded writes and discoverable areas, but keeps live dev fixtures inaccessible',async()=>{
+  const issued=await holder.db.createRtcPass({googleAccount:'ops@example.test',mode:'live',
+    profile:'full',areas:['mail','workspace'],allowWrites:true,confirmedAccount:'ops@example.test',hours:2});
+  const who=await invoke('GET',{door:'whoami'},{},issued.token);
+  expect(who).toMatchObject({statusCode:200,body:{mode:'live',result:{mode:'live',profile:'full'}}});
+  const catalog=await invoke('GET',{door:'tools',listing:'catalog',q:'gmail_create_label'}, {},issued.token);
+  expect(catalog.statusCode).toBe(200);
+  expect(catalog.body.mode).toBe('live');
+  const direct=await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'live-guarded'},issued.token);
+  expect(direct.statusCode).toBe(200);
+  expect(direct.body.mode).toBe('live');
+  expect(direct.body.result.done).toBe(true);
+  const fixture=await invoke('POST',{tool:'workspace_dev_create_fixtures'},
+    {dryRun:true},issued.token);
+  expect(fixture.statusCode).toBe(403);
+  expect(fixture.body.error.code).toBe('outside_scope');
+  const read=await holder.db.createRtcPass({googleAccount:'ops@example.test',mode:'live',
+    profile:'read_only',areas:['mail'],allowWrites:false,hours:2});
+  expect((await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'denied'},read.token)).statusCode).toBe(403);
+  expect((await invoke('GET',{tool:'workspace_gmail_create_label'},{},read.token)).statusCode).toBe(403);
+  await holder.db.revokeRtcPass(issued.id);
+  await holder.db.revokeRtcPass(read.id);
+  expect((await invoke('GET',{door:'whoami'},{},issued.token)).statusCode).toBe(401);
  });
 
 });

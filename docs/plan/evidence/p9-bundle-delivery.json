@@ -1,0 +1,90 @@
+{
+  "workKind": "ENGINEERING",
+  "workDeliveredAt": "2026-10-16 America/Denver, October 17 UTC",
+  "baseRevision": "33422162ac7eceb0f6c21fe36dc027808159cc3d",
+  "plannedAt": "4ffaeed879f474d539593942b4eb5785e58a0cc5",
+  "implementationHead": "ed9ba9578381616f29341a0bdc063b84cd8064da",
+  "productionAdded": 278,
+  "productionRemoved": 76,
+  "planComparison": "Frozen estimate 850 additions. Actual 278 production additions plus 76 deletions across 11 implementation files; repeated legacy refusal/policy logic was reused instead of padded. Four complete P9 subsection outcomes were implemented in one integrated PR.",
+  "newEngineering": "P9-1 classification; P9-2 actual guarded Google licensing consent, digest and stored standing policy; P9-3 test/live owner and OAuth issuance with persisted Postgres/HTTPS identity; P9-4 discoverable billing warnings and authenticated reconnect metadata across native/direct paths.",
+  "relatedWorkDecision": "One substantial coherent P9 A bundle delivered as PR #201; P10 principal-scoped public login remains the designated successor and Hub live-write acceptance is independently Hub-owned. No owner-approved live billable change or unscheduled release performed.",
+  "decision": "SUBSTANTIAL_EXCEPTION",
+  "exceptionEvidence": [
+    "Four original interdependent roadmap subsections are delivered end-to-end across authenticated owner UI, SQL schema, native OAuth issue/refresh, HTTPS RTC, guarded child Licensing API dispatch, catalog and fake-provider/real Postgres tests; meaningful capability coverage matters more than adding a fixed number of lines.",
+    "Reused 211 original provenance-guarded write handlers, registered tool schemas and admission tests instead of duplicating hundreds of lines; the available source change is smaller than the frozen estimate precisely because the project already had the needed verified helpers and no production padding is justified."
+  ],
+  "subsections": [
+    {
+      "id": "P9-1",
+      "remainingEngineering": [],
+      "criteria": [
+        {
+          "criterion": "Inventory and classify every confirmed hard runtime policy denial as developer-only, provider-required, security-boundary or user-configured; remediate inappropriate developer ceilings.",
+          "evidence": "docs/plan/evidence/user-authority-classification.json lists specific checked source symbols, denial classification, dispositional remedy and regression test seam; src/tools/bulk.js no longer has the unconditional independent_spending_approval_required refusal."
+        },
+        {
+          "criterion": "Keep existing licensing preview warnings, readonly and area denials, and full native guarded admin access; do not erase underlying technical bounds.",
+          "evidence": "src/rtc/catalog.js continues enforcing user-selected profile, areas and TEST-only developer fixture boundaries; src/tools/write.js and guards-admin.js retain registered confirmation/readback/auditing and 20-target technical bound."
+        }
+      ]
+    },
+    {
+      "id": "P9-2",
+      "remainingEngineering": [],
+      "criteria": [
+        {
+          "criterion": "Exact normalized cost-bearing bulk previews disclose unknown price and return deterministic request digest without writes; confirmed per-action writes demand explicit cost acknowledgment and matching digest.",
+          "evidence": "src/rtc/billing-authority.js exports normalized server-side per_action/deny/standing selections and SHA256 digest; bulk preview includes unknown cost notice, sorted targets and SKU; test/unit/bulk.test.js confirms stable digest and no provider mutation."
+        },
+        {
+          "criterion": "Server-saved standing authorization can permit only the account/operation/area/charge exposure selected by the user, while revoked/denied/unverifiable cap policies fail closed.",
+          "evidence": "src/tools/bulk.js requires confirmCost plus matching approvedCostDigest for each per-action licensing write, rejects changing targets/SKUs and unverified user cap, and uses only persisted clients.rtcPolicy for standing authority; TEST pass cost_policy deny; original child guards/area/domain still apply."
+        },
+        {
+          "criterion": "Guarded child dispatch and per-target readback/audit/partial failure remain correct with domain, area, read-only and uncertainty denials; registry and aliases expose exact cost fields.",
+          "evidence": "test/unit/bulk.test.js executes exact licensing.licenseAssignments.insert requestBody.userId and readback through actual registry, rejects stale/no approval, and records mixed confirmed/unknown results without replay; source tests passed at second PR head ed9ba957."
+        }
+      ]
+    },
+    {
+      "id": "P9-3",
+      "remainingEngineering": [],
+      "criteria": [
+        {
+          "criterion": "Separate authenticated live grants from retained TEST grants; preserve existing TEST pass identities, read-only Hub grants, revocation and legacy native behavior.",
+          "evidence": "src/rtc/pass-options.js, src/db.js and api/rtc/passes.js support owner-issued test/live mode, selected profiles, areas, expiry, writes and saved cost_policy. Existing TEST pass allowlist, readonly Hub and revocation remain intact; test/unit/rtc-pass-page.test.js and test/db/test-pass-issuance.test.js cover migrations and behavior."
+        },
+        {
+          "criterion": "New live Full and Read only permissions, explicit areas, selected expiry, owner account, developer-fixture exclusion and HTTPS OpenAPI/manifest/whoami semantics agree end to end.",
+          "evidence": "api/rtc-gateway.js, src/rtc/openapi.js and src/rtc/catalog.js echo wire mode test/live and enforce TEST-only developer mutations; src/oauth/connection-settings.js and api/oauth/authorize.js persist user cost selection through native auth/token refresh; test/unit/authorize.test.js, oauth-connection-settings.test.js and rtc-https.test.js cover owner/native/direct dispatch and refusals."
+        },
+        {
+          "criterion": "Create exact checked Workspace implementation schema and companion Hub handoff without claiming unperformed Hub live-write acceptance or authorizing real paid/destructive tests.",
+          "evidence": "docs/plan/evidence/p9-workspace-to-hub-handoff.md documents the actual direct Workspace contract, specific Hub relay/Sandbox follow-up, no reverse discovery and no false claims of live paid Google acceptance; real provider checks remain queued behind deployed source and explicit owner grant."
+        }
+      ]
+    },
+    {
+      "id": "P9-4",
+      "remainingEngineering": [],
+      "criteria": [
+        {
+          "criterion": "Discovery, tool description, direct invocation, workspace_call, aliases and batch agree on allowed operations and truthful warnings, with reconnect/setup guidance where insufficient.",
+          "evidence": "src/rtc/catalog.js computes advertised profiles with the same allowedTool gate as dispatch, adds billingRisk warning distinct from money-out, and preserves TEST-only fixture modes; src/rtc/openapi.js publishes matching wire metadata."
+        },
+        {
+          "criterion": "Document end-user grant and per-action/standing cost controls separately from development-test authorization without hiding billable capabilities.",
+          "evidence": "src/tools/rtc-meta.js and api/rtc-gateway.js support optional includeUnavailable/showUnavailable truthful needsReconnect metadata while actual invocation remains guarded; test/unit/rtc-profile.test.js, rtc-https.test.js and rtc-openapi.test.js cover denied listing/description/invocation parity."
+        },
+        {
+          "criterion": "Table-driven risky-operation parity confirms no developer-only denial, secret exposure, confirmation loss or unsupported success claims across native and direct doors.",
+          "evidence": "docs/USER-AUTHORIZATION.md explains per-action digest, standing cost selection, scopes and denied-vs-unavailable discovery; docs/DEVELOPER-TEST-GRANTS.md isolates $0 coding-agent limits, retains TEST grants and refuses claiming real provider effects."
+        }
+      ]
+    }
+  ],
+  "checkAtHead": "ed9ba9578381616f29341a0bdc063b84cd8064da",
+  "verification": "After source/test correction, run #38999853714 jobs unit/check/rtc/db/test all succeeded, Daily live policy #38999853730 succeeded. Final docs commit must have its own exact-head CI before merging.",
+  "providerAcceptance": "NOT DONE: new P9 live provider/non-destructive actual reads and revocation need a deployed source and owner-created disposable live grant; paid licensing execution requires a separate exact explicit owner authorization. TEST D-4 previously passed does not prove P9 live."
+}

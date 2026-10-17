@@ -30,8 +30,10 @@ function fakeRes() {
   return res;
 }
 
-function post({ passphrase, account = 'rentals@example.test', ip = '1.1.1.1', profile='read_only' }) {
+function post({ passphrase, account = 'rentals@example.test', ip = '1.1.1.1', profile='read_only',areas,cost_consent,ack_unknown_charges }) {
   const form = new URLSearchParams({ client_id: 'claude', redirect_uri: REDIRECT, state: 'st', profile, passphrase, google_account: account });
+  for(const [name,value] of Object.entries({areas,cost_consent,ack_unknown_charges}))
+    if(value!==undefined)form.set(name,value);
   const req = Readable.from([form.toString()]);
   req.method = 'POST';
   req.headers = { 'content-type': 'application/x-www-form-urlencoded', 'x-vercel-forwarded-for': ip };
@@ -75,6 +77,32 @@ describe('passphrase page lockout', () => {
     expect(code.google_account).toBe('rentals@example.test');
   });
 
+  it('persists an explicitly selected live owner policy and unknown-billing cost consent in a one-time code',async()=>{
+    const page=fakeRes();await handler({method:'GET',query:{client_id:'claude',redirect_uri:REDIRECT},headers:{}},page);
+    expect(page.body).toContain('name="cost_consent"');
+    expect(page.body).toContain('name="ack_unknown_charges"');
+    const signed=await login({passphrase:PASSPHRASE,profile:'full',areas:'admin,workspace',
+      cost_consent:'standing_assign',ack_unknown_charges:'yes'});
+    expect(signed.statusCode).toBe(302);
+    const code=new URL(signed.headers.Location).searchParams.get('code');
+    expect(await fake.consumeAuthCode(code)).toMatchObject({google_account:'rentals@example.test',
+      profile:'full',areas:['admin','workspace'],mode:'live',cost_policy:{
+        mode:'standing',account:'rentals@example.test',operations:['assign_license'],
+        allowUnknownPrice:true,maxChargeUsd:null}});
+  });
+  it('rejects unapproved standing licensing billing without issuing an OAuth code',async()=>{
+    for(const selection of [
+      {profile:'read_only',cost_consent:'standing_assign',ack_unknown_charges:'yes'},
+      {profile:'full',areas:'mail',cost_consent:'standing_assign',ack_unknown_charges:'yes'},
+      {profile:'full',cost_consent:'standing_assign'},
+      {profile:'full',cost_consent:'nonsense'}
+    ]){
+      const res=await login({passphrase:PASSPHRASE,...selection});
+      expect(res.statusCode).toBe(400);
+      expect(res.headers.Location).toBeUndefined();
+    }
+    expect(fake.__state.codes.size).toBe(0);
+  });
   it('answers a wrong passphrase with 401, keeps the chosen account, and says how many tries are left', async () => {
     const res = await login({ passphrase: 'nope', account: 'rentals@example.test' });
     expect(res.statusCode).toBe(401);

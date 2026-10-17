@@ -432,7 +432,10 @@ describe.skipIf(!url)('database (real Postgres)', () => {
         googleAccount:'ops@example.test'};
       await db.createAccessToken({accessToken:first,...opts,...source});
       const issued=await db.getTokenByRefreshToken(refresh);
-      expect(connectionPolicyToDb(issued)).toEqual(source);
+      expect(connectionPolicyToDb(issued)).toMatchObject(source);
+      expect(connectionPolicyToDb(issued)).toMatchObject({
+        mode:null,cost_policy:{mode:'per_action'}
+      });
       await db.createAccessToken({accessToken:next,...opts,
         ...connectionPolicyToDb(issued)});
       const actual=await db.getAccessToken(next);
@@ -440,6 +443,8 @@ describe.skipIf(!url)('database (real Postgres)', () => {
       expect(actual.google_account).toBe('ops@example.test');
       expect(actual.profile).toBe('read_only');
       expect(actual.areas).toEqual(['mail','calendar']);
+      expect(actual.mode).toBeNull();
+      expect(actual.cost_policy).toEqual({mode:'per_action'});
       // Verify the original and refresh are bound to the same client account
       // and no privileged 'full' token was minted as a side effect.
       const rows=await rawQuery(`SELECT access_token,client_id,google_account,profile,listing,areas

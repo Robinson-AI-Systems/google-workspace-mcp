@@ -183,14 +183,97 @@ describe('combined preview, confirmation and target order', () => {
 });
 
 describe('fixed operation-specific fences',()=>{
-  it('refuses billing-risk license assignments and changes without independent spending authority',async()=>{
+  it('discloses unknown Google licensing exposure with an argument-bound stable SHA256 digest and NO write',async()=>{
+    const {clients,calls,when}=env();
+    when('licensing.licenseAssignments.get').resolves(({skuId,userId})=>({data:{productId:'Google-Apps',skuId,userId}}));
+    const input=args({operation:'assign_license',parameters:{skuId:'test-sku'},dryRun:true});
+    const preview=body(await bulk(input,clients));
+    expect(preview.costNotice).toMatchObject({mayIncurCharges:true,estimateStatus:'unknown',priceEstimate:null,
+      targetCount:2,productId:'Google-Apps',skuId:'test-sku',unknownOrUnboundedExposure:true});
+    expect(preview.costNotice.requestDigest).toMatch(/^[a-f0-9]{64}$/);
+    expect(preview.details.counts.preview).toBe(2);
+    const reordered=body(await bulk({...input,targets:[...input.targets].reverse()},clients));
+    expect(reordered.costNotice.requestDigest).toBe(preview.costNotice.requestDigest);
+    const before=calls.filter(x=>/licensing\.licenseAssignments\.(insert|patch|delete)/.test(x.path));
+    expect(before).toHaveLength(0);
+    const noCost=body(await bulk({...input,dryRun:false,confirm:true},clients));
+    expect(noCost).toMatchObject({done:false,needsCostConfirmation:true});
+    expect(noCost.costNotice.requestDigest).toBe(preview.costNotice.requestDigest);
+    expect(calls.filter(x=>x.path==='licensing.licenseAssignments.insert')).toHaveLength(0);
+  });
+
+  it('denies wrong or stale licensing consent without a provider write and rejects cost flags on nonbillable tools',async()=>{
     const {clients,calls}=env();
-    for(const operation of ['assign_license','change_license']){
-      const params=operation==='change_license'?{skuId:'old',newSkuId:'new'}:{skuId:'old'};
-      const out=body(await bulk(args({operation,parameters:params,confirm:true}),clients)).details;
-      expect(out.results.every(r=>r.reason==='independent_spending_approval_required')).toBe(true);
+    const input=args({operation:'change_license',parameters:{skuId:'starter',newSkuId:'plus'}});
+    const old=body(await bulk({...input,dryRun:true},clients)).costNotice.requestDigest;
+    for(const request of [
+      {...input,confirm:true,confirmCost:true,approvedCostDigest:'0'.repeat(64)},
+      {...input,confirm:true,confirmCost:true,approvedCostDigest:old,parameters:{skuId:'starter',newSkuId:'premium'}},
+      {...input,confirm:true,confirmCost:false,approvedCostDigest:old}
+    ]) {
+      const refused=body(await bulk(request,clients));
+      expect(refused.done).toBe(false);
     }
-    expect(calls.filter(x=>x.path.startsWith('licensing.'))).toEqual([]);
+    expect(calls.filter(x=>x.path==='licensing.licenseAssignments.patch')).toHaveLength(0);
+    expect(()=>normalizeBulkArgs(args({confirmCost:true}))).toThrow('invalid_args');
+    expect(()=>normalizeBulkArgs(args({approvedCostDigest:'0'.repeat(64)}))).toThrow('invalid_args');
+  });
+
+  it('uses the original guarded licensing insert with the exact published Google API shape and readback',async()=>{
+    const {clients,calls,when}=env();
+    when('licensing.licenseAssignments.insert').resolves(({productId,skuId,requestBody})=>
+      ({data:{productId,skuId,userId:requestBody.userId}}));
+    when('licensing.licenseAssignments.get').resolves(({productId,skuId,userId})=>({data:{productId,skuId,userId}}));
+    const input=args({operation:'assign_license',parameters:{skuId:'business-plus'}});
+    const preview=body(await bulk({...input,dryRun:true},clients));
+    const approved=body(await bulk({...input,confirm:true,confirmCost:true,
+      approvedCostDigest:preview.costNotice.requestDigest},clients));
+    expect(approved.details.counts.confirmed).toBe(2);
+    expect(calls.filter(x=>x.path==='licensing.licenseAssignments.insert').map(x=>x.args[0])).toEqual([
+      {productId:'Google-Apps',skuId:'business-plus',requestBody:{userId:'a@example.test'}},
+      {productId:'Google-Apps',skuId:'business-plus',requestBody:{userId:'b@example.test'}}
+    ]);
+    expect(calls.filter(x=>x.path==='licensing.licenseAssignments.get')).toHaveLength(6);
+    expect(approved.done).toBe(true);
+  });
+
+  it('standing user-selected licensing authority is account and operation bound, distinct from the Full profile',async()=>{
+    const {clients,calls,when}=env();
+    when('licensing.licenseAssignments.insert').resolves(({productId,skuId,requestBody})=>({data:{productId,skuId,userId:requestBody.userId}}));
+    when('licensing.licenseAssignments.get').resolves(({productId,skuId,userId})=>({data:{productId,skuId,userId}}));
+    const assignment=args({operation:'assign_license',parameters:{skuId:'paid'}});
+    clients.rtcPolicy={profile:'full',areas:['workspace','admin'],cost_policy:{
+      mode:'standing',account:'ops@example.test',operations:['assign_license'],
+      allowUnknownPrice:true,maxChargeUsd:null}};
+    let approved=body(await bulk(assignment,clients));
+    expect(approved.details.counts.confirmed).toBe(2);
+    expect(calls.filter(x=>x.path==='licensing.licenseAssignments.insert')).toHaveLength(2);
+    clients.rtcPolicy.cost_policy={...clients.rtcPolicy.cost_policy,maxChargeUsd:50};
+    expect(body(await bulk(assignment,clients)).refused).toBe('spending_cap_unverifiable');
+    clients.rtcPolicy.cost_policy={mode:'deny'};
+    expect(body(await bulk(assignment,clients)).refused).toBe('user_denied_spending');
+    clients.rtcPolicy.cost_policy={mode:'per_action'};
+    expect(body(await bulk(assignment,clients)).needsCostConfirmation).toBe(true);
+    clients.rtcPolicy={profile:'read_only',areas:['admin'],cost_policy:{mode:'per_action'}};
+    const preview=body(await bulk({...assignment,dryRun:true},clients));
+    expect(preview.details.counts.refused).toBe(2);
+    expect(calls.filter(x=>x.path==='licensing.licenseAssignments.insert')).toHaveLength(2);
+  });
+
+  it('truthfully records a partial or unknown provider license assignment without blind replay',async()=>{
+    const {clients,calls,when}=env();
+    when('licensing.licenseAssignments.insert').resolves(({productId,skuId,requestBody})=>{
+      if(requestBody.userId==='a@example.test')throw googleError(503,'backendError','possibly committed');
+      return {data:{productId,skuId,userId:requestBody.userId}};
+    });
+    when('licensing.licenseAssignments.get').resolves(({productId,skuId,userId})=>({data:{productId,skuId,userId}}));
+    const input=args({operation:'assign_license',parameters:{skuId:'paid'}});
+    const digest=body(await bulk({...input,dryRun:true},clients)).costNotice.requestDigest;
+    const result=body(await bulk({...input,confirm:true,confirmCost:true,approvedCostDigest:digest},clients));
+    expect(result.details.counts.unknown).toBe(1);
+    expect(result.details.counts.confirmed).toBe(1);
+    expect(calls.filter(x=>x.path==='licensing.licenseAssignments.insert')).toHaveLength(2);
+    expect(result.details.status).toBe('incomplete');
   });
 
   it('only the seven fixed operation mappings exist; mailbox operations need delegation',async()=>{

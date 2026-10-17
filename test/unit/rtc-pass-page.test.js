@@ -141,4 +141,51 @@ describe('owner RTC pass setup',()=>{
   expect(await holder.db.getRtcPass(token)).toBeNull();
  });
 
+ it('creates an explicitly authorized live full pass from a connected non-TEST account, preserving TEST defaults',async()=>{
+  await holder.db.saveGoogleTokensFor('live@example.test',{access_token:'fake'});
+  const fields={passphrase:process.env.ADMIN_PASSPHRASE,google_account:'live@example.test',mode:'live',
+    profile:'full',areas:'admin,mail',hours:'72',allow_writes:'yes',
+    confirmed_account:'live@example.test',cost_consent:'standing_assign',ack_unknown_charges:'yes'};
+  const res=await post(fields);
+  expect(res.statusCode).toBe(200);
+  const token=res.body.match(/rtc_pass_[A-Za-z0-9_-]{43}/)?.[0];
+  const pass=await holder.db.getRtcPass(token);
+  expect(pass).toMatchObject({mode:'live',profile:'full',allow_writes:true,for_hub:false,
+    google_account:'live@example.test',areas:['admin','mail'],cost_policy:{
+      mode:'standing',account:'live@example.test',operations:['assign_license'],allowUnknownPrice:true,maxChargeUsd:null}});
+  const issued=await holder.db.listRtcPasses();
+  expect(JSON.stringify(issued)).not.toContain(token);
+  process.env.RTC_TEST_ACCOUNT_EMAILS='other@example.test';
+  expect(await holder.db.getRtcPass(token)).not.toBeNull();
+  expect((await holder.db.revokeConnection(pass.id)).revoked).toBe(1);
+  expect(await holder.db.getRtcPass(token)).toBeNull();
+ });
+ it('rejects live privilege widening, missing profile/area, cost cap bypass or unapproved standing charges',async()=>{
+  await holder.db.saveGoogleTokensFor('live@example.test',{access_token:'fake'});
+  const base={passphrase:process.env.ADMIN_PASSPHRASE,google_account:'live@example.test',
+    mode:'live',profile:'full',areas:'admin',allow_writes:'yes',confirmed_account:'live@example.test'};
+  for(const altered of [
+    {profile:'read_only',allow_writes:'yes'},
+    {profile:'full',allow_writes:undefined},
+    {profile:'full',areas:''},
+    {profile:'everyday',cost_consent:'standing_assign',ack_unknown_charges:'yes'},
+    {profile:'full',cost_consent:'standing_assign'},
+    {profile:'full',cost_consent:'standing_assign',ack_unknown_charges:'yes',areas:'mail'},
+    {confirmed_account:'different@example.test'},
+    {cost_consent:'bogus'}
+  ]) {
+    const res=await post({...base,...altered});
+    expect(res.statusCode,JSON.stringify(altered)).toBe(400);
+  }
+  expect(await holder.db.listRtcPasses()).toHaveLength(0);
+ });
+ it('allows an explicitly selected read-only live Hub grant without borrowing TEST enrollment',async()=>{
+  await holder.db.saveGoogleTokensFor('live@example.test',{access_token:'fake'});
+  const out=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'live@example.test',
+    mode:'live',profile:'read_only',areas:'mail',for_hub:'yes',hours:'8760'});
+  expect(out.statusCode).toBe(200);
+  const token=out.body.match(/rtc_pass_[A-Za-z0-9_-]{43}/)[0];
+  expect(await holder.db.getRtcPass(token)).toMatchObject({mode:'live',profile:'read_only',for_hub:true,allow_writes:false});
+ });
+
 });

@@ -28,7 +28,7 @@ function reply(res,status,data,retryAfter){
  if(retryAfter)res.setHeader('Retry-After',String(retryAfter));
  return res.status(status).json(data);
 }
-const success=(res,result,mode='test')=>{
+const success=(res,result,mode)=>{
  const data={ok:true,result:rtcWriteReceipt(result),mode};
  if(result&&typeof result==='object'&&typeof result.handle==='string'){
    data.handle=result.handle;
@@ -82,8 +82,8 @@ function errorStatus(code,httpStatus){
 export function manifest(){
  const metadata=registry.tools.map(expose);
  return {rtc:1,server:'google-workspace-mcp',prefix:'workspace',version:'1.0.0',
-  areas:RTC_AREAS,counts:{tools:metadata.length,writes:metadata.filter(t=>t.writes).length,money:0},
-  profiles:['read_only','everyday','full'],listingModes:['catalog','compact'],modes:['test'],
+  areas:RTC_AREAS,counts:{tools:metadata.length,writes:metadata.filter(t=>t.writes).length,money:0,billingRisk:metadata.filter(t=>t.billingRisk).length},
+  profiles:['read_only','everyday','full'],listingModes:['catalog','compact'],modes:['test','live'],
   devTools:true,conformance:{status:'pending_real_D4_acceptance'},
   deployment:{sourceRevision:/^[a-f0-9]{40}$/.test(process.env.VERCEL_GIT_COMMIT_SHA||'')?process.env.VERCEL_GIT_COMMIT_SHA:null}};
 }
@@ -116,9 +116,9 @@ export function createRtcGateway(){
  const authorization=req.headers.authorization||'';
  const token=authorization.startsWith('Bearer ')?authorization.slice(7):'';
  const pass=await getRtcPass(token);
- if(!pass)return fail(res,401,await rtcPassFailureCode(token),'Valid non-production RTC pass required.');
+ if(!pass)return fail(res,401,await rtcPassFailureCode(token),'A valid issued RTC pass is required.');
  if(!await chargeRtcPass(pass.id,pass.rate_limit_per_minute))return fail(res,429,'rate_limited','Pass call limit reached.','Retry after this minute.',60);
- if(req.method==='GET'&&door==='whoami')return success(res,{connection:pass.id,account:pass.google_account,profile:pass.profile,areas:pass.areas,listing:pass.listing,mode:pass.mode,allow_writes:pass.allow_writes});
+ if(req.method==='GET'&&door==='whoami')return success(res,{connection:pass.id,account:pass.google_account,profile:pass.profile,areas:pass.areas,listing:pass.listing,mode:pass.mode,allow_writes:pass.allow_writes},pass.mode);
  if(req.method==='GET'&&door==='tools'){
   const q=String(req.query?.q||'').toLowerCase(),area=req.query?.area,audience=req.query?.audience;
   // Clamping/truncating malformed pagination can silently skip or repeat tools.
@@ -131,21 +131,26 @@ export function createRtcGateway(){
   };
   const limit=parsePageNumber(req.query?.limit,10,100);
   const page=parsePageNumber(req.query?.page,1,100000);
+  if(req.query?.showUnavailable!==undefined&&!['true','false'].includes(String(req.query.showUnavailable)))
+    return fail(res,400,'invalid_args','showUnavailable must be true or false.');
   if((req.query?.listing!==undefined&&!['catalog','compact'].includes(req.query.listing))||
      (area!==undefined&&!RTC_AREAS.includes(area))||
      (audience!==undefined&&!['owner','operator','builder'].includes(audience)))
     return fail(res,400,'invalid_args','Unknown listing, area or audience.');
   if(limit===null||page===null)return fail(res,400,'invalid_args','Page and limit must be bounded positive integers.');
-  const all=listedTools(registry.tools,pass,req.query?.listing||(q?'catalog':pass.listing))
-   .map(expose).filter(t=>(!q||(t.name+' '+t.description).toLowerCase().includes(q))&&(!area||t.area===area)&&(!audience||t.audience.includes(audience)));
+  const selected=req.query?.showUnavailable==='true'?registry.tools:
+    listedTools(registry.tools,pass,req.query?.listing||(q?'catalog':pass.listing));
+  const all=selected.map(t=>({...expose(t),available:allowedTool(t.name,pass),
+    ...(!allowedTool(t.name,pass)?{needsReconnect:true,
+      reason:'connection_policy_or_test_mode_restricts_capability'}:{})})).filter(t=>(!q||(t.name+' '+t.description).toLowerCase().includes(q))&&(!area||t.area===area)&&(!audience||t.audience.includes(audience)));
   const start=(page-1)*limit;
   const tools=all.slice(start,start+limit);
-  return success(res,{tools,next:start+limit<all.length?String(page+1):null});
+  return success(res,{tools,next:start+limit<all.length?String(page+1):null},pass.mode);
  }
  if(req.method==='GET'&&handle){
   const result=decodeMcp(await readStoredResult({handle,page:req.query?.page,fields:req.query?.fields},pass.id));
   if(result?.error)return fail(res,result.error.code==='invalid_args'?400:404,result.error.code,result.error.what);
-  return success(res,result);
+  return success(res,result,pass.mode);
  }
  if(name){
   if(name==='_batch'){
@@ -171,7 +176,7 @@ export function createRtcGateway(){
    // apply their same small-result/connection-owned expiring-handle rule.
    const raw=await registry.handlers.workspace_batch(args,await clientsFor(pass));
    const result=decodeMcp(await shapeReadResult(raw,{toolName:'workspace_batch'},pass.id));
-   return result?.error?fail(res,errorStatus(result.error.code,result.error.httpStatus),result.error.code,result.error.what,'',result.error.code==='rate_limited'?60:undefined):success(res,result);
+   return result?.error?fail(res,errorStatus(result.error.code,result.error.httpStatus),result.error.code,result.error.what,'',result.error.code==='rate_limited'?60:undefined):success(res,result,pass.mode);
   }
   const internal=toInternal(name);
   if(!internal)return fail(res,404,'not_found','Unknown RTC tool.');
@@ -186,12 +191,18 @@ export function createRtcGateway(){
   }else if(req.method==='POST'&&isWrite(internal)&&!pass.allow_writes){
    return fail(res,403,'refused_by_guard','This pass is read only.');
   }
-  if(!allowedTool(internal,pass))return fail(res,403,'outside_scope','Tool is outside the pass permissions.');
-  if(req.method==='GET')return success(res,expose(registry.tools.find(t=>t.name===internal)));
+  const available=allowedTool(internal,pass);
+  if(req.method==='GET'&&req.query?.showUnavailable==='true'){
+   const item=registry.tools.find(t=>t.name===internal);
+   return success(res,{...expose(item),available,...(!available?{needsReconnect:true,
+     reason:'connection_policy_or_test_mode_restricts_capability'}:{})},pass.mode);
+  }
+  if(!available)return fail(res,403,'outside_scope','Tool is outside the pass permissions.');
+  if(req.method==='GET')return success(res,expose(registry.tools.find(t=>t.name===internal)),pass.mode);
   if(req.method!=='POST')return fail(res,405,'invalid_args','Tool invocation requires POST.');
   if(Buffer.byteLength(JSON.stringify(req.body||{}))>65536)return fail(res,413,'invalid_args','Arguments too large.');
   const result=decodeMcp(await registry.handlers[internal](aliasArgs(internal,req.body||{}),await clientsFor(pass)));
-  return result?.error?fail(res,errorStatus(result.error.code,result.error.httpStatus),result.error.code,result.error.what,'',result.error.code==='rate_limited'?60:undefined):success(res,result);
+  return result?.error?fail(res,errorStatus(result.error.code,result.error.httpStatus),result.error.code,result.error.what,'',result.error.code==='rate_limited'?60:undefined):success(res,result,pass.mode);
  }
  return fail(res,404,'not_found','Unknown RTC route.');
  } catch(error) {

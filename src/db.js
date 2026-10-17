@@ -8,6 +8,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { loadKey, encryptJson, decryptJson } from './crypto.js';
 import { normalizeDomains, domainOfEmail } from './domains.js';
 import {passOptions,testAccountEnrolled} from './rtc/pass-options.js';
+import {normalizeBillingPolicy} from './rtc/billing-authority.js';
 
 let sql;
 function db() {
@@ -90,6 +91,12 @@ export async function initSchema() {
       await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS areas TEXT[]`;
     }
   }
+  // New explicitly selected owner connector policy. NULL mode preserves the
+  // existing legacy-owner bearer without treating it as a TEST enrollment.
+  await q`ALTER TABLE oauth_codes ADD COLUMN IF NOT EXISTS mode TEXT`;
+  await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS mode TEXT`;
+  await q`ALTER TABLE oauth_codes ADD COLUMN IF NOT EXISTS cost_policy JSONB NOT NULL DEFAULT '{"mode":"per_action"}'::jsonb`;
+  await q`ALTER TABLE oauth_tokens ADD COLUMN IF NOT EXISTS cost_policy JSONB NOT NULL DEFAULT '{"mode":"per_action"}'::jsonb`;
   // Every try at the passphrase page, so repeated wrong guesses from one
   // address can be locked out (see src/oauth/login-guard.js). Additive only.
   await q`
@@ -128,6 +135,8 @@ export async function initSchema() {
   )`;
   await q`CREATE INDEX IF NOT EXISTS rtc_passes_expiry ON rtc_passes(expires_at)`;
   await q`ALTER TABLE rtc_passes ADD COLUMN IF NOT EXISTS for_hub BOOLEAN NOT NULL DEFAULT false`;
+  // Historical TEST passes have no standing cost authorization.
+  await q`ALTER TABLE rtc_passes ADD COLUMN IF NOT EXISTS cost_policy JSONB NOT NULL DEFAULT '{"mode":"deny"}'::jsonb`;
   await q`CREATE TABLE IF NOT EXISTS rtc_rate_limits (
     pass_id TEXT NOT NULL,
     window_start TIMESTAMPTZ NOT NULL,
@@ -564,11 +573,11 @@ export async function getOAuthClient(clientId) {
 }
 
 // ---------- Connector OAuth: authorization codes (PKCE) ----------
-export async function createAuthCode({ code, clientId, redirectUri, codeChallenge, codeChallengeMethod, googleAccount, profile = 'full', listing = 'catalog', areas = null, ttlSeconds = 600 }) {
+export async function createAuthCode({ code, clientId, redirectUri, codeChallenge, codeChallengeMethod, googleAccount, profile = 'full', listing = 'catalog', areas = null, mode = 'live', costPolicy = {mode:'per_action'}, ttlSeconds = 600 }) {
   const q = db();
   await q`
-    INSERT INTO oauth_codes (code, client_id, redirect_uri, code_challenge, code_challenge_method, google_account, profile, listing, areas, expires_at)
-    VALUES (${code}, ${clientId}, ${redirectUri}, ${codeChallenge || null}, ${codeChallengeMethod || null}, ${googleAccount ? normalizeEmail(googleAccount) : null}, ${profile}, ${listing}, ${areas}, now() + (${ttlSeconds} || ' seconds')::interval)
+    INSERT INTO oauth_codes (code, client_id, redirect_uri, code_challenge, code_challenge_method, google_account, profile, listing, areas, mode, cost_policy, expires_at)
+    VALUES (${code}, ${clientId}, ${redirectUri}, ${codeChallenge || null}, ${codeChallengeMethod || null}, ${googleAccount ? normalizeEmail(googleAccount) : null}, ${profile}, ${listing}, ${areas}, ${mode}, ${JSON.stringify(normalizeBillingPolicy(costPolicy,{account:googleAccount}))}::jsonb, now() + (${ttlSeconds} || ' seconds')::interval)
   `;
 }
 
@@ -581,11 +590,11 @@ export async function consumeAuthCode(code) {
 }
 
 // ---------- Connector OAuth: access tokens ----------
-export async function createAccessToken({ accessToken, refreshToken, clientId, googleAccount, profile = 'full', listing = 'catalog', areas = null, ttlSeconds = 3600 * 24 * 30 }) {
+export async function createAccessToken({ accessToken, refreshToken, clientId, googleAccount, profile = 'full', listing = 'catalog', areas = null, mode = null, costPolicy = {mode:'per_action'}, cost_policy, ttlSeconds = 3600 * 24 * 30 }) {
   const q = db();
   await q`
-    INSERT INTO oauth_tokens (access_token, refresh_token, client_id, google_account, profile, listing, areas, expires_at)
-    VALUES (${accessToken}, ${refreshToken || null}, ${clientId}, ${googleAccount ? normalizeEmail(googleAccount) : null}, ${profile}, ${listing}, ${areas}, now() + (${ttlSeconds} || ' seconds')::interval)
+    INSERT INTO oauth_tokens (access_token, refresh_token, client_id, google_account, profile, listing, areas, mode, cost_policy, expires_at)
+    VALUES (${accessToken}, ${refreshToken || null}, ${clientId}, ${googleAccount ? normalizeEmail(googleAccount) : null}, ${profile}, ${listing}, ${areas}, ${mode}, ${JSON.stringify(normalizeBillingPolicy(cost_policy ?? costPolicy,{account:googleAccount}))}::jsonb, now() + (${ttlSeconds} || ' seconds')::interval)
   `;
 }
 
@@ -593,7 +602,7 @@ export async function createAccessToken({ accessToken, refreshToken, clientId, g
 export async function getTokenByRefreshToken(refreshToken) {
   const q = db();
   if (!refreshToken) return null;
-  const rows = await q`SELECT client_id, google_account, profile, listing, areas FROM oauth_tokens WHERE refresh_token = ${refreshToken} AND revoked_at IS NULL ORDER BY created_at DESC LIMIT 1`;
+  const rows = await q`SELECT client_id, google_account, profile, listing, areas, mode, cost_policy FROM oauth_tokens WHERE refresh_token = ${refreshToken} AND revoked_at IS NULL ORDER BY created_at DESC LIMIT 1`;
   return rows[0] || null;
 }
 
@@ -753,29 +762,31 @@ export async function getRtcResult(handle,connection){
 // RTC 1 passes: test-mode read-only issuance with owner-managed revocation.
 // Secrets are returned exactly once to the owner setup page; only SHA256 digests persist.
 export async function createRtcPass(options){
- const {account,areas,limit,ttl,forHub,allowWrites,profile}=passOptions(options);
+ const {account,areas,limit,ttl,forHub,allowWrites,profile,mode}=passOptions(options);
  if(!account)throw new Error('Missing connected account.');
- if(!testAccountEnrolled(account))throw new Error('Account is not authorized for RTC non-production TEST passes. Configure RTC_TEST_ACCOUNT_EMAILS with the approved scratch mailbox.');
+ if(mode==='test'&&!testAccountEnrolled(account))throw new Error('Account is not authorized for RTC non-production TEST passes. Configure RTC_TEST_ACCOUNT_EMAILS with the approved scratch mailbox.');
  const q=db();
  const accountRows=await q`SELECT 1 FROM google_accounts WHERE email=${account}`;
  if(!accountRows[0])throw new Error('Unknown connected account.');
  const token='rtc_pass_'+crypto.randomBytes(32).toString('base64url');
  const hash=crypto.createHash('sha256').update(token).digest('hex');
  const id='pass_'+hash.slice(0,20);
- await q`INSERT INTO rtc_passes(id,token_hash,google_account,areas,rate_limit_per_minute,expires_at,for_hub,allow_writes,profile)
- VALUES (${id},${hash},${account},${areas},${limit},now() + (${ttl} || ' hours')::interval,${forHub},${allowWrites},${profile})`;
+ const costPolicy=mode==='test'?{mode:'deny'}:normalizeBillingPolicy(options.costPolicy,{account});
+ await q`INSERT INTO rtc_passes(id,token_hash,google_account,areas,rate_limit_per_minute,expires_at,for_hub,allow_writes,profile,mode,cost_policy)
+ VALUES (${id},${hash},${account},${areas},${limit},now() + (${ttl} || ' hours')::interval,${forHub},${allowWrites},${profile},${mode},${JSON.stringify(costPolicy)}::jsonb)`;
  return {token,id};
 }
 export async function getRtcPass(token){
  if(typeof token!=='string'||!/^rtc_pass_[A-Za-z0-9_-]{43}$/.test(token))return null;
  const hash=crypto.createHash('sha256').update(token).digest('hex');
  const q=db();
- const rows=await q`SELECT id,google_account,profile,areas,listing,mode,allow_writes,for_hub,rate_limit_per_minute,expires_at
+ const rows=await q`SELECT id,google_account,profile,areas,listing,mode,cost_policy,allow_writes,for_hub,rate_limit_per_minute,expires_at
  FROM rtc_passes WHERE token_hash=${hash} AND revoked_at IS NULL AND expires_at>now()`;
  const pass=rows[0]||null;
  // Revocation of the TEST enrollment takes effect at every RTC gateway
  // request, not only during pass creation. Do not reissue or widen scope.
- return pass&&testAccountEnrolled(pass.google_account)?pass:null;
+ if(!pass||!['test','live'].includes(pass.mode))return null;
+ return pass.mode==='live'||testAccountEnrolled(pass.google_account)?pass:null;
 }
 export async function revokeRtcPass(id){
  const q=db();
@@ -784,7 +795,7 @@ export async function revokeRtcPass(id){
 }
 export async function listRtcPasses(){
  const q=db();
- return q`SELECT id AS connection_id, 'pass' AS kind,google_account,profile,listing,areas,mode,allow_writes,for_hub,
+ return q`SELECT id AS connection_id, 'pass' AS kind,google_account,profile,listing,areas,mode,cost_policy,allow_writes,for_hub,
  rate_limit_per_minute,created_at,expires_at,revoked_at FROM rtc_passes ORDER BY created_at DESC`;
 }
 export async function chargeRtcPass(id,limit){
@@ -811,13 +822,13 @@ export async function rtcPassFailureCode(token){
  if(typeof token!=='string'||!/^rtc_pass_[A-Za-z0-9_-]{43}$/.test(token))return 'permission';
  const hash=crypto.createHash('sha256').update(token).digest('hex');
  const q=db();
- const rows=await q`SELECT revoked_at,expires_at,google_account FROM rtc_passes WHERE token_hash=${hash}`;
+ const rows=await q`SELECT revoked_at,expires_at,google_account,mode FROM rtc_passes WHERE token_hash=${hash}`;
  if(!rows[0])return 'permission';
  if(rows[0].revoked_at)return 'pass_revoked';
  if(new Date(rows[0].expires_at).getTime()<=Date.now())return 'pass_expired';
  // Do not reveal the configured enrollment list to unauthenticated callers.
  // Report the same neutral permission denial as any unrecognized pass.
- if(!testAccountEnrolled(rows[0].google_account))return 'permission';
+ if(rows[0].mode==='test'&&!testAccountEnrolled(rows[0].google_account))return 'permission';
  return 'permission';
 }
 

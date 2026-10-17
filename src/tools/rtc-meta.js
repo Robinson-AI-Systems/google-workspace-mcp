@@ -7,8 +7,8 @@ const schema = (props,required=[])=>({type:'object',properties:props,required});
 const str={type:'string'};
 const callSchema=schema({name:str,args:{type:'object',description:'Arguments accepted by the selected tool.',additionalProperties:true}},['name']);
 export const tools=[
- {name:'workspace_search_tools',description:'Search only allowed Workspace tools. Continue with nextOffset until null to retrieve all matching tools without loading the entire catalog at once.',inputSchema:schema({query:str,area:str,audience:{type:'string',enum:['builder','owner','operator']},limit:{type:'integer',default:10,minimum:1,maximum:30},offset:{type:'integer',minimum:0,description:'Zero-based position in the filtered catalog. Pass nextOffset to continue.'}})},
- {name:'workspace_describe_tool',description:'Describe the input schema and permissions for one allowed Workspace tool.',inputSchema:schema({name:str},['name'])},
+ {name:'workspace_search_tools',description:'Search permitted Workspace tools, or include unavailable capabilities with an explicit needsReconnect notice. Page with nextOffset.',inputSchema:schema({query:str,area:str,includeUnavailable:{type:'boolean'},audience:{type:'string',enum:['builder','owner','operator']},limit:{type:'integer',default:10,minimum:1,maximum:30},offset:{type:'integer',minimum:0,description:'Zero-based position in the filtered catalog. Pass nextOffset to continue.'}})},
+ {name:'workspace_describe_tool',description:'Describe an allowed tool; optional unavailable capability metadata can explain why the user must reconnect.',inputSchema:schema({name:str,includeUnavailable:{type:'boolean'}},['name'])},
  {name:'workspace_call',description:'Invoke an allowed Workspace tool using the same safety and domain guards as MCP direct calls.',inputSchema:callSchema},
  {name:'workspace_get_result',description:'Read one page of an oversized result owned by this connection.',inputSchema:schema({handle:str,page:{type:'integer',minimum:1},fields:str},['handle'])},
  {name:'workspace_batch',description:'Run up to ten read-only tool calls with the same connection permissions and guards.',inputSchema:schema({calls:{type:'array',items:callSchema,minItems:1,maxItems:10}},['calls'])}
@@ -25,6 +25,7 @@ export const handlers={
  async workspace_get_result(args={},clients){return readStoredResult(args,clients?.connection);},
  async workspace_search_tools(args={},clients){
    const {tools}=await catalog();
+   if(args.includeUnavailable!==undefined&&typeof args.includeUnavailable!=='boolean')throw new Error('invalid_args: includeUnavailable must be boolean.');
    if(args.query!==undefined&&typeof args.query!=='string')throw new Error('invalid_args: query must be a string.');
    if(args.area!==undefined&&typeof args.area!=='string')throw new Error('invalid_args: area must be a string.');
    if(args.audience!==undefined&&!['builder','owner','operator'].includes(args.audience))throw new Error('invalid_args: unknown audience.');
@@ -33,14 +34,26 @@ export const handlers={
    const query=(args.query||'').trim().toLowerCase();
    const limit=args.limit??10, offset=args.offset??0;
    // Always restrict the catalog to authorized tools before counting or paging.
-   const matches=listedTools(tools,clients?.rtcPolicy||{},'catalog').map(toolMetadata).filter(t=>(!args.area||t.area===args.area)&&(!args.audience||t.audience.includes(args.audience))&&(!query||(t.name+' '+t.description).toLowerCase().includes(query)));
+   const policy=clients?.rtcPolicy||{};
+   const visible=args.includeUnavailable===true?tools:listedTools(tools,policy,'catalog');
+   const matches=visible.map(t=>({...toolMetadata(t),
+     available:allowedTool(t.name,policy),
+     ...(!allowedTool(t.name,policy)?{needsReconnect:true,reason:'connection_policy_or_test_mode_restricts_capability'}:{})})).filter(t=>(!args.area||t.area===args.area)&&(!args.audience||t.audience.includes(args.audience))&&(!query||(t.name+' '+t.description).toLowerCase().includes(query)));
    const found=matches.slice(offset,offset+limit), next=offset+found.length;
    return ok({tools:found.map(({inputSchema,...metadata})=>metadata),count:found.length,totalMatched:matches.length,offset,nextOffset:next<matches.length?next:null});
  },
  async workspace_describe_tool(args={},clients){
    const registry=await catalog();
-   if(!registry.tools.some(t=>t.name===args.name)||!allowedTool(args.name,clients?.rtcPolicy||{}))return errorResult(new Error('outside_scope: Tool not available.'));
-   return ok(toolMetadata(registry.tools.find(t=>t.name===args.name)));
+   if(args.includeUnavailable!==undefined&&typeof args.includeUnavailable!=='boolean')
+     return errorResult(new Error('invalid_args: includeUnavailable must be boolean.'));
+   const policy=clients?.rtcPolicy||{};
+   const tool=registry.tools.find(t=>t.name===args.name);
+   if(!tool||!allowedTool(args.name,policy)&&args.includeUnavailable!==true)
+     return errorResult(new Error('outside_scope: Tool not available.'));
+   const available=allowedTool(args.name,policy);
+   return ok({...toolMetadata(tool),available,...(!available?{
+     needsReconnect:true,reason:'connection_policy_or_test_mode_restricts_capability'
+   }:{})});
  },
  async workspace_call(args={},clients){
    try {const handler=await lookup(args.name,clients);return await handler(args.args||{},clients);}

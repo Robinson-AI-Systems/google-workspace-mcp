@@ -15,7 +15,11 @@ export function isWrite(name) {
  return !READ_ONLY_TOOL_NAMES.has(name);
 }
 export function allowedTool(name, c={}) {
+ // The developer fixture creation/cleanup tools are TEST-only; ordinary
+ // Workspace operations and non-writing integration checks remain live-capable.
+ if(c.mode==='live'&&['workspace_dev_create_fixtures','workspace_dev_cleanup'].includes(name))return false;
  if (RTC_META.has(name)) return true; // The dispatcher rechecks the selected target's area and profile.
+ if(c.allow_writes===false&&isWrite(name))return false;
  if (Array.isArray(c.areas)&&!c.areas.includes(rtcArea(name)))return false;
  if (c.profile==='read_only'&&isWrite(name))return false;
  if (c.profile==='everyday'&&isWrite(name)&&['admin','workspace','dns','licensing','vault'].includes(rtcArea(name)))return false;
@@ -37,6 +41,13 @@ export function audienceFor(name){
 }
 export function toolMetadata(t){
  const writes=isWrite(t.name),destructive=Boolean(GUARDS[t.name]?.destructive)||t.name==='workspace_undo_change';
- return {...t,description:t.description.slice(0,160),area:rtcArea(t.name),profiles:writes?['everyday','full']:['read_only','everyday','full'],writes,money:false,destructive,audience:audienceFor(t.name),
+ // RTC money denotes direct funds movement (none supported here). Billing
+ // risk is separate and does not justify a developer-imposed user prohibition.
+ const billingRisk=['licensing_assign_license','licensing_update_assignment','workspace_bulk_operation'].includes(t.name);
+ const warning=billingRisk?'BILLING WARNING: possible Google charges; price unknown. ':'';
+ return {...t,description:(warning+t.description).slice(0,160),area:rtcArea(t.name),
+ profiles:['read_only','everyday','full'].filter(profile=>allowedTool(t.name,{profile,areas:[rtcArea(t.name)]})),
+ ...(['workspace_dev_create_fixtures','workspace_dev_cleanup'].includes(t.name)?{modes:['test']}:{}),
+ writes,money:false,...(billingRisk?{billingRisk:true}:{}),destructive,audience:audienceFor(t.name),
  annotations:{readOnlyHint:!writes,destructiveHint:destructive,idempotentHint:!writes,openWorldHint:true}};
 }

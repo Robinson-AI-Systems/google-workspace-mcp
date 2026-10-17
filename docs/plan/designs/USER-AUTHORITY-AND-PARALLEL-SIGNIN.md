@@ -185,3 +185,69 @@ Primary references; implementer must recheck the applicable current versions at 
 ## 8. Companion Hub handoff (copy-ready after Workspace P9-3 has a checked schema)
 
 Implement the Hub-owned part of end-user authority in Robinson-AI-Systems/robinsons-toolkit-hub. Read its AGENTS, docs/END-USER-AUTHORITY.md if present, original RTC contract and current owner decisions. Development TEST/read-only/$0 restrictions are developer operating policy, not a permanent product ban. Preserve the already working Workspace TEST grant and its acceptance receipts. Consume Workspace's exact P9-3 live/test schema and selected profile/area/write policy; require explicit user connection consent, never silently upgrade an existing read-only grant. Audit Hub's own dispatch/alias/tool metadata/CLI/relay/SDK guards for blanket TEST-only/refusal paths and implement supported authorized normal use, with full original provider confirmation, cost notices, narrowing, audit/results and revocation semantics. No Workspace->Hub discovery or provider credentials in Hub. Test both retained TEST/read-only denials and approved live guarded execution through original doors; provider writes/paid resources still need exact development-test approval. Do not report read-only D-4 as live-write acceptance. Publish exact source/contracts/route-specific proof and remaining original gates; don't rebuild the known-good connection or alter another server's source. Workspace agent supplies its actual implementing commit and schemas before this handoff is executed.
+
+
+<!-- bundle-plan:start -->
+```json
+{
+  "workKind": "ENGINEERING",
+  "baseRevision": "33422162ac7eceb0f6c21fe36dc027808159cc3d",
+  "outcome": "P9 A: authorized end-user operations across bulk licensing, regular RTC credentials and native discovery while preserving existing TEST grants.",
+  "integrationBoundary": "Bulk normalization and guarded children, server-owned permission/cost selection, RTC issuance, SQL lookup, actual HTTPS/native dispatch, wire metadata and accountable tests.",
+  "newEngineering": "Implement the owner-approved P9-1 through P9-4 complete product paths, original guards, standing-vs-per-action cost authority, mode-specific issuance and safe capability discovery.",
+  "estimatedProductionLines": 850,
+  "relatedWorkDecision": "Implement the four mutually dependent P9 cards as one coherent outcome; defer P10 principal migration and Hub-owned changes to their designated successor/dependent groups.",
+  "subsections": [
+    {
+      "id": "P9-1",
+      "acceptance": [
+        "Inventory and classify every confirmed hard runtime policy denial as developer-only, provider-required, security-boundary or user-configured; remediate inappropriate developer ceilings.",
+        "Keep existing licensing preview warnings, readonly and area denials, and full native guarded admin access; do not erase underlying technical bounds."
+      ],
+      "remainingEngineering": [
+        "Inventory exact source and symbols, publish checked classification evidence and correct developer-only runtime ceilings.",
+        "Make actual confirmation semantics consistent with direct user consent and server-verified standing delegation where applicable."
+      ]
+    },
+    {
+      "id": "P9-2",
+      "acceptance": [
+        "Exact normalized cost-bearing bulk previews disclose unknown price and return deterministic request digest without writes; confirmed per-action writes demand explicit cost acknowledgment and matching digest.",
+        "Server-saved standing authorization can permit only the account/operation/area/charge exposure selected by the user, while revoked/denied/unverifiable cap policies fail closed.",
+        "Guarded child dispatch and per-target readback/audit/partial failure remain correct with domain, area, read-only and uncertainty denials; registry and aliases expose exact cost fields."
+      ],
+      "remainingEngineering": [
+        "Add robust SHA256 digest and cost notice, argument normalization, validation and guarded cost fence to bulk tool.",
+        "Persist trusted user-selected authorization policy and carry it to actual tool execution without caller policy bypass.",
+        "Exercise exact child request shapes, no-retry unknown outcomes, readback, actual registry and delegation/denial fixtures."
+      ]
+    },
+    {
+      "id": "P9-3",
+      "acceptance": [
+        "Separate authenticated live grants from retained TEST grants; preserve existing TEST pass identities, read-only Hub grants, revocation and legacy native behavior.",
+        "New live Full and Read only permissions, explicit areas, selected expiry, owner account, developer-fixture exclusion and HTTPS OpenAPI/manifest/whoami semantics agree end to end.",
+        "Create exact checked Workspace implementation schema and companion Hub handoff without claiming unperformed Hub live-write acceptance or authorizing real paid/destructive tests."
+      ],
+      "remainingEngineering": [
+        "Implement explicit issuance mode and selected profiles through owner form, server validators, SQL/fake stores and gateway policy.",
+        "Enforce live-vs-test developer fixtures and pass narrowing without changing legacy pass byte contracts or general owner account credentials.",
+        "Test end-to-end authenticated live direct metadata/writes/denials and publish wire schemas plus Hub handoff."
+      ]
+    },
+    {
+      "id": "P9-4",
+      "acceptance": [
+        "Discovery, tool description, direct invocation, workspace_call, aliases and batch agree on allowed operations and truthful warnings, with reconnect/setup guidance where insufficient.",
+        "Document end-user grant and per-action/standing cost controls separately from development-test authorization without hiding billable capabilities.",
+        "Table-driven risky-operation parity confirms no developer-only denial, secret exposure, confirmation loss or unsupported success claims across native and direct doors."
+      ],
+      "remainingEngineering": [
+        "Align native and RTC catalog/metadata/summaries and verify user-facing cost notices survive wrappers.",
+        "Publish practical end-user and development-only guides; add parity tests over risky/provider-sensitive names."
+      ]
+    }
+  ]
+}
+```
+<!-- bundle-plan:end -->

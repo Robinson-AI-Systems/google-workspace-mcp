@@ -36,6 +36,8 @@ describe('P8-4 complete generic OpenAPI document',()=>{
   const identity=spec.paths['/api/whoami'].get.responses['200'].content['application/json'].schema;
   expect(identity.required).toEqual(['ok','result','mode']);
   expect(identity.properties.result).toEqual({$ref:'#/components/schemas/Identity'});
+  expect(identity.properties.mode.enum).toEqual(['test','live']);
+  expect(spec.components.schemas.Manifest.properties.modes.items.enum).toEqual(['test','live']);
  });
  it('documents actual string projection, numbered UTF-8 recovery, guarded writes and bounded batches',()=>{
   const retrieval=spec.paths['/api/results/{handle}'].get;
@@ -44,6 +46,8 @@ describe('P8-4 complete generic OpenAPI document',()=>{
   expect(spec.components.schemas.StoredResult.oneOf[0].required).toContain('content');
   expect(spec.components.schemas.StoredResult.oneOf[1].required).toContain('payload');
   const calls=spec.paths['/api/tools/_batch'].post.requestBody.content['application/json'].schema.properties.calls;
+  expect(spec.paths['/api/tools'].get.parameters.some(p=>p.name==='showUnavailable')).toBe(true);
+  expect(spec.paths['/api/tools/{name}'].get.parameters.some(p=>p.name==='showUnavailable')).toBe(true);
   expect(calls.maxItems).toBe(10);expect(calls.items.required).toEqual(['name']);
   expect(spec.paths['/api/tools/{name}'].post.description).toMatch(/confirmed.*logged/);
   expect(spec.paths['/api/tools/_batch'].post.description).toContain('no changing tool');

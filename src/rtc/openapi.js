@@ -15,14 +15,14 @@ const parameter = (name, schema, description, location = 'query') => ({
   name, in: location, required: location === 'path', description, schema
 });
 const envelope = result => object({
-  ok: { const: true }, result, mode: { const: 'test' },
+  ok: { const: true }, result, mode: { type:'string', enum: ['test','live'] },
   handle: string, count: integer, summary: string
 }, ['ok', 'result', 'mode']);
 const errorResponse = description => ({ description, content: json(ref('Error')) });
 const responses = (schema, description) => ({
   '200': { description, content: json(schema) },
   '400': errorResponse('Malformed arguments or provider request refused. Inspect the RTC error code; do not blindly retry writes.'),
-  '401': errorResponse('Missing, invalid, expired or revoked service-issued TEST pass.'),
+  '401': errorResponse('Missing, invalid, expired or revoked service-issued RTC pass.'),
   '403': errorResponse('Profile, area, read-only, domain or operation guard refused the request.'),
   '404': errorResponse('Unknown tool or inaccessible, expired or foreign result handle.'),
   '405': errorResponse('HTTP method is not supported by this door.'),
@@ -51,7 +51,7 @@ export function rtcOpenapi(origin = '') {
   return {
     openapi: '3.1.0',
     info: { title: 'Robinson Google Workspace RTC tools', version: '1.0.0',
-      description: 'Independent Workspace RTC 1 API. All provider operations use the same guarded registry as MCP. Only service-issued TEST passes authenticate these doors; native connector OAuth tokens do not. This description is not live Google or Hub acceptance.' },
+      description: 'Independent Workspace RTC 1 API. All provider operations use the same guarded registry as MCP. Service-issued TEST and user-authorized live passes authenticate these doors; native connector OAuth tokens do not. Live capabilities still require user-selected permission and provider entitlement.' },
     servers,
     security: [{ rtcPass: [] }],
     paths: {
@@ -65,7 +65,7 @@ export function rtcOpenapi(origin = '') {
       } },
       '/api/whoami': { get: {
         operationId: 'whoami', summary: 'Identify the current service-issued pass',
-        responses: responses(envelope(ref('Identity')), 'Pass account, areas and TEST policy. No bearer secret is returned.')
+        responses: responses(envelope(ref('Identity')), 'Pass account, areas and selected test/live policy. No bearer secret is returned.')
       } },
       '/api/tools': { get: {
         operationId: 'searchTools', summary: 'Page the permitted tool catalog',
@@ -74,6 +74,7 @@ export function rtcOpenapi(origin = '') {
           parameter('area', { type: 'string', enum: RTC_AREAS }, 'Filter to one existing tool area.'),
           parameter('audience', { type: 'string', enum: ['owner','operator','builder'] }, 'Filter by intended audience.'),
           parameter('listing', { type: 'string', enum: ['catalog','compact'] }, 'Defaults to the pass listing setting; does not widen authority.'),
+          parameter('showUnavailable', bool, 'When true, include supported but unauthorized tools as available:false and needsReconnect:true; never grants access.'),
           parameter('limit', { type: 'integer', minimum: 1, maximum: 100, default: 10 }, 'Tools per page.'),
           parameter('page', { type: 'integer', minimum: 1, maximum: 100000, default: 1 }, 'One-based catalog page.')
         ],
@@ -84,6 +85,7 @@ export function rtcOpenapi(origin = '') {
         parameters: [nameParameter],
         get: {
           operationId: 'describeTool', summary: 'Read an authorized tool schema',
+          parameters: [parameter('showUnavailable',bool,'When true, return metadata for an unavailable capability with available:false; invocation remains forbidden.')],
           responses: responses(envelope(ref('Tool')), 'Exact registry input schema, optional output schema, and safety metadata.')
         },
         post: {
@@ -112,16 +114,16 @@ export function rtcOpenapi(origin = '') {
       } }
     },
     components: {
-      securitySchemes: { rtcPass: { type: 'http', scheme: 'bearer', bearerFormat: 'RTC service-issued TEST pass',
+      securitySchemes: { rtcPass: { type: 'http', scheme: 'bearer', bearerFormat: 'RTC service-issued test/live pass',
         description: 'Short-lived service-owned pass. Authorization: Bearer <pass>. Never place credentials in query parameters, tool arguments, reports or logs.' } },
       schemas: {
         Error: object({ ok: { const: false }, error: object({ what: string, cause: string, todo: string, technical: string, code: string }) }),
         Identity: object({ connection: string, account: string, profile: { type: 'string', enum: ['read_only','everyday','full'] },
           areas: { type: ['array','null'], items: string }, listing: { type: 'string', enum: ['catalog','compact'] },
-          mode: { const: 'test' }, allow_writes: bool }),
-        Tool: object({ name: string, description: { type: 'string', maxLength: 160 }, inputSchema: { type: 'object' },
+          mode: { type:'string', enum:['test','live'] }, allow_writes: bool }),
+        Tool: object({ name: string, description: { type: 'string', maxLength: 160 }, modes: strings, inputSchema: { type: 'object' },
           outputSchema: { type: 'object' }, area: string, profiles: strings, audience: strings,
-          writes: bool, money: bool, destructive: bool,
+          writes: bool, money: bool, billingRisk: bool, available:bool, needsReconnect:bool, reason:string, destructive: bool,
           annotations: object({ readOnlyHint: bool, destructiveHint: bool, idempotentHint: bool, openWorldHint: bool })
         }, ['name','description','inputSchema','area','profiles','audience','writes','money','destructive','annotations'], true),
         StoredResult: { oneOf: [
@@ -131,8 +133,8 @@ export function rtcOpenapi(origin = '') {
           object({ handle: string, bytes: integer, payload: string })
         ] },
         Manifest: object({ rtc: { const: 1 }, server: { const: 'google-workspace-mcp' }, prefix: { const: 'workspace' }, version: string,
-          areas: strings, counts: object({ tools: integer, writes: integer, money: integer }),
-          profiles: strings, listingModes: strings, modes: { type: 'array', items: { const: 'test' } }, devTools: bool,
+          areas: strings, counts: object({ tools: integer, writes: integer, money: integer, billingRisk:integer }),
+          profiles: strings, listingModes: strings, modes: { type: 'array', items: { type:'string', enum:['test','live'] } }, devTools: bool,
           conformance: object({ status: string }), deployment: object({ sourceRevision: { type: ['string','null'], pattern: '^[a-f0-9]{40}$' } })
         })
       }

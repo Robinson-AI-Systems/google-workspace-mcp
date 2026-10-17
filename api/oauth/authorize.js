@@ -15,6 +15,7 @@ import {
 import { clientIp, evaluateLogin, LOCKOUT_WINDOW_MINUTES } from '../../src/oauth/login-guard.js';
 import { ensureMigrated } from '../../src/auth/google-auth-hosted.js';
 import { RTC_AREAS } from '../../src/rtc/catalog.js';
+import { selectedBillingPolicy } from '../../src/rtc/billing-authority.js';
 
 function renderLoginPage({ error, hidden, accounts, selected, profile }) {
   const selectedProfile = ['read_only','everyday','full'].includes(profile) ? profile : 'read_only';
@@ -52,6 +53,16 @@ function renderLoginPage({ error, hidden, accounts, selected, profile }) {
     <select name="listing" id="listing"><option value="compact">Compact</option><option value="catalog">All tools</option></select>
     <label for="areas">Optional allowed areas (comma separated; leave blank for all)</label>
     <input type="text" name="areas" id="areas" placeholder="mail,files,calendar">
+    <label for="cost_consent">Licensing and possible charges</label>
+    <p class="note">Assigning or changing license SKUs may incur unknown or unbounded charges. Full is a permission profile, NOT automatic billing approval. Ordinary operations remain available according to Google's actual permissions.</p>
+    <select name="cost_consent" id="cost_consent">
+      <option value="per_action">Request my approval for each exact billable operation</option>
+      <option value="deny">Disallow bulk licensing charges</option>
+      <option value="standing_assign">Standing approval to assign licenses</option>
+      <option value="standing_change">Standing approval to change licenses</option>
+      <option value="standing_both">Standing approval for both license operations</option>
+    </select>
+    <label><input type="checkbox" name="ack_unknown_charges" value="yes"> I accept unknown account-specific charges for my selected standing authorization</label>
     <label for="passphrase">Admin passphrase</label>
     <input type="password" name="passphrase" id="passphrase" autofocus required>
     ${hiddenInputs}
@@ -134,8 +145,19 @@ export default async function handler(req, res) {
   if (areas && (areas.length > RTC_AREAS.length || areas.some(x=>!RTC_AREAS.includes(x)))) {
     res.status(400).send('Invalid area list. Use only: ' + RTC_AREAS.join(', ')); return;
   }
+  let costPolicy;
+  try {
+    costPolicy=selectedBillingPolicy(params.cost_consent,chosen,{
+      acceptedUnknown:params.ack_unknown_charges==='yes'
+    });
+    if(costPolicy.mode==='standing'&&(profile!=='full'||
+       (areas!==null&&!areas.includes('admin'))))
+      throw Error('Standing licensing authority requires the Full profile and the admin area.');
+  }catch {
+    res.status(400).send('The selected billing authorization is invalid. Standing permission requires Full access and explicit acknowledgement of unknown charges.'); return;
+  }
   const code = randomToken(24);
-  await createAuthCode({ code, clientId: client_id, redirectUri: redirect_uri, codeChallenge: code_challenge, codeChallengeMethod: code_challenge_method, googleAccount: chosen, profile, listing, areas });
+  await createAuthCode({ code, clientId: client_id, redirectUri: redirect_uri, codeChallenge: code_challenge, codeChallengeMethod: code_challenge_method, googleAccount: chosen, profile, listing, areas, mode:'live', costPolicy });
 
   const redirectUrl = new URL(redirect_uri);
   redirectUrl.searchParams.set('code', code);
