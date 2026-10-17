@@ -1,7 +1,7 @@
 // Distinct public Google app: NEVER borrow the owner GOOGLE_OAUTH_CLIENT_*.
 import crypto from 'node:crypto';
 import {google} from 'googleapis';
-import {publicResource,requireScope,validEmail} from './security.js';
+import {publicResource,requireScope,validEmail,digest} from './security.js';
 import {SCOPE_GROUPS} from '../auth/scopes.js';
 export const IDENTITY_SCOPES=Object.freeze(['openid','email','profile']);
 export const PUBLIC_SCOPE_GROUPS=Object.freeze({
@@ -26,8 +26,8 @@ export function providerUrl({client,state,nonce,verifier,group='identity'}){
    code_challenge:challenge,code_challenge_method:'S256',state,nonce
  });
 }
-export async function verifyGoogleCode({client,code,verifier,nonce}){
- requireScope(typeof code==='string'&&code.length>0&&verifier&&nonce,'invalid_google_callback');
+export async function verifyGoogleCode({client,code,verifier,nonceHash}){
+ requireScope(typeof code==='string'&&code.length>0&&verifier&&nonceHash,'invalid_google_callback');
  // Current Google SDK getToken({code,codeVerifier}) and verifyIdToken({idToken,audience})
  // perform provider-side PKCE and verified signature+audience/expiry validation.
  const {tokens}=await client.getToken({code,codeVerifier:verifier,
@@ -39,7 +39,7 @@ export async function verifyGoogleCode({client,code,verifier,nonce}){
  requireScope(claims&&['accounts.google.com','https://accounts.google.com'].includes(claims.iss)
    &&claims.aud===process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID
    &&Number.isFinite(claims.exp)&&claims.exp>Math.floor(Date.now()/1000)
-   &&claims.nonce===nonce&&claims.email_verified===true
+   &&typeof claims.nonce==='string'&&digest(claims.nonce)===nonceHash&&claims.email_verified===true
    &&typeof claims.sub==='string'&&claims.sub.length>=4&&
    validEmail(claims.email),'invalid_verified_identity');
  return {issuer:claims.iss,sub:claims.sub,email:claims.email.toLowerCase(),
