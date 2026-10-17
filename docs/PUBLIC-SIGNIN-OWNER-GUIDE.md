@@ -2,6 +2,14 @@
 
 The existing owner login, its `GOOGLE_OAUTH_CLIENT_ID/SECRET`, encrypted existing Google grants, owner `ADMIN_PASSPHRASE`, and existing custom MCP/Hub TEST connections are retained. The new **public** Google sign-in requires a **different Google Cloud OAuth client/consent screen/project**, using `PUBLIC_GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET`. The exact redirect to register on that separate client is `<PUBLIC_BASE_URL>/api/auth/google/callback`. On Vercel Production, set the public client ID as **Config** and the server-only GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET as **Secret**. Never store the new OAuth secret under a PUBLIC_-prefixed variable or save it as Config. Do not edit or substitute the owner application's OAuth credentials or authorize production rollout from development.
 
+## Owner decision — October 17, 2026: Hub is optional for standalone Stage 1
+
+**Do not gate the independent Workspace product's identity-only two-user pilot on Hub availability, a Hub pass, Hub cloud adapter scope or Hub release schedule.** Hub is an optional RTC gateway; its historical continuity checks remain required as independently tracked Hub/Workspace integration acceptance, but cannot prevent authorized direct Workspace Google login. The owner explicitly corrected the earlier mistaken coupling and approved the narrowly restricted Stage 1 activation.
+
+Stage 1 `PUBLIC_SIGNIN_MODE=pilot` is eligible after a source/CI-verified READY production snapshot, genuine direct original-owner `workspace_whoami`/account-list continuation, separate verified Google OAuth client and precisely two approved verified subjects, existing principal/DB isolation source proof, and unchanged legacy login/owner credentials. It is **identity-only**, with `PUBLIC_P10_TOOL_EXECUTION_VERIFIED` absent/false. Preserve the normal direct owner route and confirm it again after the Vercel Production configuration-only rebuild. Verify the protected readiness report and both independent tester browser sessions; until they are observed, mark their real acceptance as pending.
+
+Do not falsify `P10-OWNER-CONTINUITY` or interpret this Stage 1 configuration as a pass for the original bearer/refresh, Hub-specific relay/denials, real user/provider login negative cases or two-client MCP checks. Those remain open in their own acceptance rows. Stage 2 tool execution, public enrollment, real provider writes, legacy retirement and manual source release each retain their original independent authorization/testing gates.
+
 ## Default state and activation
 
 `PUBLIC_SIGNIN_MODE=off` is the safe default. This is a **deployment/developer gate** for new enrollment, not a permanent prohibition on end-user capabilities. `pilot` admits only subjects explicitly listed in `PUBLIC_PILOT_GOOGLE_SUBJECTS` after the Google SDK verifies `sub`; `public` permits eligible verified new users. A typed email, user-agent, `hd` or matching Workspace email suffix does not authorize a principal or customer delegation. Deployment of this P10-B source does **not** authorize changing either flag. P10-4 must prove whole-tool/storage separation first, P10-5 must prove customer-scoped admin/delegation, and P10-6 must prove real two-user custom MCP acceptance/public readiness.
@@ -18,7 +26,7 @@ V2 MCP `p10c_` authorization codes, `p10a_` bearer and `p10r_` refresh are disti
 
 ### Needed external actions (not auto-performed)
 
-Register a second Google OAuth project/application/client/consent screen with the exact public callback, arrange verified scopes and applicable privacy/support/verification, then explicitly approve pilot after P10-4/5. Until those prerequisites, preserve OFF and verify source/real disposable Postgres only. There is no authorization here for a charge, real customer write, owner-grant migration, public rollout or retirement of existing owner login.
+Register a second Google OAuth project/application/client/consent screen with the exact public callback, arrange verified scopes and applicable privacy/support/verification, then explicitly approve pilot after P10-4/5. For **identity-only Stage 1**, apply the 2026-10-17 independent direct-Workspace decision above; keep new-user MCP tool execution OFF. For Stage 2 and public publication, satisfy the complete original provider/tenant acceptance and separately applicable approvals. There is no authorization here for a charge, real customer write, owner-grant migration, public rollout or retirement of existing owner login.
 
 
 ## P10 C — independent customer admin and delegated operations
