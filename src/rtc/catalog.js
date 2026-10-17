@@ -43,7 +43,7 @@ export function toolMetadata(t){
  // RTC money denotes direct funds movement (none supported here). Billing
  // risk is separate and does not justify a developer-imposed user prohibition.
  const billingRisk=['licensing_assign_license','licensing_update_assignment','workspace_bulk_operation'].includes(t.name);
- const warning=billingRisk?' MAY CHANGE GOOGLE BILL; price unknown; user cost authorization required.':'';
- return {...t,description:(t.description+warning).slice(0,160),area:rtcArea(t.name),profiles:writes?['everyday','full']:['read_only','everyday','full'],writes,money:false,billingRisk,destructive,audience:audienceFor(t.name),
+ const warning=billingRisk?'BILLING WARNING: possible Google charges; price unknown. ':'';
+ return {...t,description:(warning+t.description).slice(0,160),area:rtcArea(t.name),profiles:writes?['everyday','full']:['read_only','everyday','full'],writes,money:false,billingRisk,destructive,audience:audienceFor(t.name),
  annotations:{readOnlyHint:!writes,destructiveHint:destructive,idempotentHint:!writes,openWorldHint:true}};
 }
