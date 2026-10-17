@@ -183,10 +183,10 @@ describe.skipIf(!url)('P10: separate principal-owned result, audit and rate pers
  it('actual native SDK and meta-dispatch share exact owner A/B boundaries with zero Google calls',async()=>{
   const env={PUBLIC_BASE_URL:process.env.PUBLIC_BASE_URL,
    PUBLIC_GOOGLE_OAUTH_CLIENT_ID:process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
-   PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET:process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET};
+   GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET:process.env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET};
   process.env.PUBLIC_BASE_URL='https://service.test';
   process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID='public-test-client-id';
-  process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET='public-test-client-secret';
+  process.env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET='public-test-client-secret';
   const connected=[];
   const start=async token=>{
     const context=await store.readPrincipalAccess(token);
