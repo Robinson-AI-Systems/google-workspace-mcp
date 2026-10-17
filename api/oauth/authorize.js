@@ -155,7 +155,7 @@ export default async function handler(req, res) {
     }catch{return res.status(403).send('Authorization rejected for this principal/account.');}
   }
   // The public page never exposes owner account listings. Authenticate first.
-  const accounts = req.method==='GET'?[]:await listGoogleAccounts();
+  let accounts=[]; // No owner mailbox DB query before successful passphrase.
 
   if (req.method === 'GET') {
     res.setHeader('Content-Type', 'text/html');
@@ -189,6 +189,7 @@ export default async function handler(req, res) {
     res.status(401).send(renderLoginPage({ error: `Incorrect passphrase. Your account choice was kept.${left}`, hidden, accounts: [], selected: keptAccount, profile: params.profile }));
     return;
   }
+  accounts=await listGoogleAccounts(); // Only after owner authentication.
   const chosen = keptAccount;
   if (!accounts.some((a) => a.email === chosen)) {
     // (passphrase check below happens first in practice; this guards a tampered form)
