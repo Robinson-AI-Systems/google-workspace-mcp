@@ -2,17 +2,13 @@
 // that act inside another user's mailbox, and they can only touch Gmail
 // settings (display name, signature, send-as identities) because the robot
 // identity is granted nothing else; see src/auth/service-account.js.
-import { google } from 'googleapis';
 import { recordChange } from '../changelog.js';
 import { ok } from './util.js';
 import { delegatedGmail, delegationReady, delegatedServices, mailboxAllowed } from './delegated.js';
-import { buildDelegatedAuth, describeServiceAccount, isDelegationConfigured, GMAIL_SETTINGS_SCOPES, CALENDAR_SCOPE, DRIVE_FILE_SCOPE } from '../auth/service-account.js';
+import { describeServiceAccount } from '../auth/service-account.js';
+import { GMAIL_SETTINGS_SCOPES, CALENDAR_SCOPE, DRIVE_FILE_SCOPE } from '../auth/delegation-scopes.js';
 
 const norm = (e) => String(e || '').trim().toLowerCase();
-
-function gmailFor(userEmail) {
-  return google.gmail({ version: 'v1', auth: buildDelegatedAuth(userEmail) });
-}
 
 export const tools = [
   {
@@ -95,7 +91,13 @@ export async function brandingMatches(clients, { email, displayName, signatureHt
 
 export const handlers = {
   async workspace_delegation_status(args, clients) {
-    const info = describeServiceAccount();
+    const info=clients?.store ? {
+       configured:clients.delegationReady===true,
+       serviceAccountEmail:clients.tenantDelegationInfo?.serviceAccountEmail||null,
+       clientId:clients.tenantDelegationInfo?.clientId||null,
+       customerId:clients.tenantDelegationInfo?.customerId||null,
+       scopesToAuthorize:clients.tenantDelegationInfo?.scopes||[]
+     } : describeServiceAccount();
     if (!info.configured) {
       return ok({
         ...info,
@@ -137,11 +139,12 @@ export const handlers = {
   },
 
   async workflow_brand_mailbox(args, clients) {
-    if (!isDelegationConfigured()) {
+    if (!delegationReady(clients)) {
       return ok({ done: false, reason: 'Domain-wide delegation is not set up. Run workspace_delegation_status for the steps.' });
     }
     const user = norm(args.userEmail);
-    const gmail = gmailFor(user);
+    if(!mailboxAllowed(clients,user))return ok({done:false,reason:'outside_scope: Delegated mailbox is not in this customer's verified access.'});
+     const gmail=delegatedGmail(clients,user);
     const report = { user, primary: null, aliases: [], skipped: [], defaultSender: null };
 
     // What the mailbox looks like before we touch it (for the change log). Alias existence is not affected by the
