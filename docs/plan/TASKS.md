@@ -1,8 +1,8 @@
 ## New roadmap — user authority and parallel multi-user sign-in
 
-Owner clarification October16,2026 Denver: development-agent spending/TEST restrictions must not become permanent product limits. Supported end-user operations need a usable consequence/approval path. Owner requested a concrete Sol5.6-ready roadmap and parallel Google sign-in that preserves the working owner login. Design is approved. P9-1..P9-4 engineering is implemented in cohesive PR #201 with synthetic and real-Postgres CI; actual P9 live provider acceptance awaits an eligible deployed revision and owner-selected safe grants. P10 multi-user public enrollment and legacy retirement remain NOT implemented or activated. Original P0–P8 acceptance remains passed for its original scope; the newly added P9/P10 scope is unfinished.
+Owner clarification October16,2026 Denver: development-agent spending/TEST restrictions must not become permanent product limits. Supported end-user operations need a usable consequence/approval path. Owner requested a concrete Sol5.6-ready roadmap and parallel Google sign-in that preserves the working owner login. Design is approved. P9-1..P9-4 engineering is implemented in cohesive PR #201 with synthetic and real-Postgres CI; actual P9 live provider acceptance awaits an eligible deployed revision and owner-selected safe grants. P10-1 through P10-5 and P10-7 source engineering has since merged; real two-user pilot/publication acceptance P10-6 is still OPEN, and public activation and optional legacy-login retirement remain OFF. Original P0–P8 acceptance remains passed for its original scope; the newly added P9/P10 live/provider scope is not yet accepted.
 
-Authoritative execution contract: [User authority and parallel sign-in](designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). Start P9-1; follow dependencies and whole-outcome delivery groups. Do not interpret original29 passed acceptance rows as completion of the new scope. Add new source-pinned acceptance rows only when implementation exists.
+Authoritative execution contract: [User authority and parallel sign-in](designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). Follow current engineering-readiness and acceptance rows in dependency order; do not repeat already-merged implementation. Do not interpret original29 passed acceptance rows as completion of the new scope. Add new source-pinned acceptance rows only when implementation exists.
 
 ## Owner-requested final documentation, Git cleanup and Workspace release
 
@@ -310,8 +310,8 @@ restricts only the named operation. Source completion never proves actual Google
     "id": "P10-6",
     "state": "OPEN",
     "remaining": "Two-user pilot and public publication acceptance; complete all original acceptance in the new execution contract.",
-    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
-    "next": "P9-4/P10-4/P10-5; explicit real-account/publication gates; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+    "evidence": "P9-1..4, P10-1..5 and P10-7 source are now merged; P10-6 genuine provider/two-user custom MCP pilot/publication proof remains unperformed. Owner granted a narrowly scoped non-billable two-user pilot on 2026-10-17, recorded in issue #205; credentials, public activation and release not approved by that statement.",
+    "next": "First create/configure separate PUBLIC Google OAuth app and two authorized disposable verified test subjects, preserve owner credentials; then independently authorize the checked current-main release and perform original owner/Hub continuity followed by two-user pilot under the existing acceptance queue. Public enrollment, admin/customer delegation, paid provider actions and legacy-login retirement still need their own gates."
   },
   {
     "id": "P10-7",
@@ -721,7 +721,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P10-1",
       "P10-3"
     ],
-    "lastEvidence": "Source/test owner MCP continuity and original DB/TEST upgrade pass, but P10 is on PR #202 head not deployed. This is not a real P10 live pass."
+    "lastEvidence": "2026-10-17 P10-B is independently Vercel READY on eece407e5f8e2a2094793355e9a5ca086567e5c1 (deployment dpl_BCtAah6AeA5pWwwCnZLdZLPHz5sy). Existing owner MCP cloud connection actually returned expected Rentals whoami and a read-only two-account owner list; no credentials or mutation. This is only a partial native owner continuity observation: the original Hub-owned RTC TEST identity/denials, signed original bearer/refresh matrix and source-specific receipt are NOT fully verified. Hub cloud connection separately reports TEST/no writes, but namespace has no Workspace target. Task remains PENDING."
   },
   {
     "id": "P10-VERIFY-GOOGLE",
@@ -737,7 +737,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-2"
     ],
-    "lastEvidence": "Google SDK mock and 2-principal SQL source tests passed CI #39002582767. No separate public client credential or real Google browser login used."
+    "lastEvidence": "Google SDK mock and 2-principal SQL source tests passed CI #39002582767. Owner authorized one non-billable two-user pilot once a separate Google OAuth app is configured (issue #205, 2026-10-17). Vercel production environment still has no PUBLIC_GOOGLE_OAUTH_CLIENT_ID or PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET; no actual browser Google login, approved real subjects or provider acceptance executed. Remains PENDING."
   },
   {
     "id": "P10-MCP-PILOT",
@@ -753,7 +753,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-3"
     ],
-    "lastEvidence": "P10 B has separate minted V2 credentials and a deliberate public_dispatch_not_enabled 403, so no public provider read or two real external clients were attempted."
+    "lastEvidence": "P10 B has separate minted V2 credentials and deliberate public_dispatch_not_enabled 403. Owner approved a bounded non-billable two-user pilot in issue #205, not credential provisioning, release, public activation or a write. No real new Google subject login or two external client test yet; remains PENDING."
   },
   {
     "id": "P10-CUSTOMER-DELEGATION",
@@ -785,9 +785,24 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     ],
     "status": "PENDING",
     "lastEvidence": "2026-10-17 source GitHub CI #39037581770 and disposable real PostgreSQL/mock Google route tests passed; NO actual real Google owner link, deployed new-owner login, provider consent, production cutoff/rollback or P10-6 publication acceptance occurred."
+  },
+  {
+    "id": "P10-ANONYMOUS-HOMEPAGE-PRIVACY",
+    "priority": 1,
+    "requiredRevision": "57ed0f87e3a109f5eeda9faac3d2159e0808b105",
+    "task": "After a reviewed checked release including the P10 homepage privacy correction, verify an unauthenticated production GET / never lists or implies any installation-owner mailbox, account label, default, connection count or credential. Also verify HEAD is bodyless and unsupported POST is denied while authenticated owner OAuth and account management remain functional.",
+    "procedure": "api/index.js; test/unit/p10-public-homepage.test.js; docs/pr-cards/P10-DUAL-IDENTITY.md; PR #206; manual read-only HTTP observation with independent source/READY proof",
+    "gates": "Only a verified serving READY production revision containing the exact reviewed source and safe unauthenticated HTTP GET/HEAD/POST. No Google login, credential, customer-wide data, private account enumeration, token, mutation, fixture reuse, flag change or manual release without separate checked approval.",
+    "dependsOn": [],
+    "status": "PENDING",
+    "subsections": [
+      "P10-3"
+    ],
+    "lastEvidence": "Security fix source 57ed0f87e3a109f5eeda9faac3d2159e0808b105 merged in PR #206 at main e9ef3ad57d0c8e55e258bf3ce7e51f6513155203. CI #39044406126 check, unit, db, rtc and aggregate test all green; Daily live policy #39044406118 passed. Vercel production remained eece407e5f8e2a2094793355e9a5ca086567e5c1 at inspection; no post-release anonymous production privacy readback yet."
   }
 
 ]
+
 ```
 
 <!-- release-acceptance:end -->
