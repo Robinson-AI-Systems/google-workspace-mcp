@@ -59,6 +59,14 @@ describe.skipIf(!url)('P10-7 owner identity mapping and replay-safe proof, actua
   const after=await migrate.ownerMigrationSnapshot();
   expect(after).toMatchObject({owner_accounts:1,active_owner_connections:1,
    linked_owner_google_subjects:1,separate_user_principals:1});
+  expect(after.accounts).toEqual(expect.arrayContaining([
+    expect.objectContaining({email:'original-owner@example.test',encrypted:true})]));
+  expect(after.connections).toEqual(expect.arrayContaining([
+    expect.objectContaining({client_id:'original-client',profile:'read_only'})]));
+  expect(after.linkedOwnerIdentities).toHaveLength(1);
+  expect(after.linkedOwnerIdentities[0].subjectFingerprint).toMatch(/^[a-f0-9]{32}$/);
+  expect(JSON.stringify(after)).not.toContain('owner-oauth-refresh');
+  expect(JSON.stringify(after)).not.toContain('longstanding-owner-bearer');
   expect((await pool.query("SELECT principal_id FROM principal_google_identities WHERE google_sub=$1",[ownerSub])).rows[0].principal_id)
    .toBe('00000000-0000-4000-8000-000000000001');
   expect((await db.getTokenByRefreshToken('longstanding-owner-refresh')).areas).toEqual(['mail']);
@@ -77,6 +85,19 @@ describe.skipIf(!url)('P10-7 owner identity mapping and replay-safe proof, actua
   expect(await migrate.consumeOwnerLoginProof(proof,metadata)).toBe(false);
   expect(await migrate.inspectOwnerLoginProof(proof,metadata)).toBe(false);
   expect((await pool.query("SELECT count(*)::int AS n FROM principal_owner_login_proofs WHERE consumed_at IS NOT NULL")).rows[0].n).toBe(1);
+ });
+ it('explicit mapping unlink rolls back owner Google sign-in without touching original grants or user principals',async()=>{
+  const snapshot=await migrate.ownerMigrationSnapshot();
+  expect(await migrate.isVerifiedOwner(issuer,ownerSub)).toBe(true);
+  await expect(migrate.unlinkVerifiedOwner('0'.repeat(32))).rejects.toThrow('owner_mapping_not_found');
+  expect(await migrate.unlinkVerifiedOwner(snapshot.linkedOwnerIdentities[0].subjectFingerprint))
+   .toMatchObject({unlinked:true,connectionsRevoked:0,grantsMoved:false});
+  expect(await migrate.isVerifiedOwner(issuer,ownerSub)).toBe(false);
+  expect(await migrate.isVerifiedOwner(issuer,'distinct-user-sub')).toBe(false);
+  expect((await store.legacyOwnerContext('longstanding-owner-bearer')).principal_kind).toBe('legacy_owner');
+  expect((await db.getTokenByRefreshToken('longstanding-owner-refresh')).areas).toEqual(['mail']);
+  expect((await migrate.ownerMigrationSnapshot()).linked_owner_google_subjects).toBe(0);
+  await migrate.linkVerifiedOwner({issuer,sub:ownerSub,email:'owner-recovery@example.test'});
  });
  it('legacy-new-login switch is separate from durable old bearer and scoped user grants',async()=>{
   expect(migrate.legacyNewLoginEnabled({})).toBe(true);
