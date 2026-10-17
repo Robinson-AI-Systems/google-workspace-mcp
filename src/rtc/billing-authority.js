@@ -55,7 +55,7 @@ export function evaluateBillingAuthority(raw,a,actingAs) {
   try{policy=normalizeBillingPolicy(raw);}catch{return {kind:'refused',reason:'invalid_saved_billing_policy'};}
   if(policy.mode==='deny')return {kind:'refused',reason:'user_denied_spending'};
   if(policy.mode==='per_action')return {kind:'per_action'};
-  if(!email(actingAs)||actingAs.toLowerCase()!==policy.account||
+  if(!email(actingAs)||actingAs.trim().toLowerCase()!==policy.account||
      !policy.operations.includes(a.operation))
     return {kind:'refused',reason:'standing_cost_scope_mismatch'};
   // Real account-specific price is not available through the licensing API.

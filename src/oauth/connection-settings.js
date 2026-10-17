@@ -2,7 +2,8 @@
 // grant and every refresh MUST copy the same exact settings from the issuing
 // row. Treat corrupt or missing existing policy as a denied refresh, not as
 // an implicit upgrade to the full profile. Never infer a wider area grant.
-export const CONNECTION_SETTINGS_FIELDS=Object.freeze(['profile','listing','areas']);
+import { normalizeBillingPolicy } from '../rtc/billing-authority.js';
+export const CONNECTION_SETTINGS_FIELDS=Object.freeze(['profile','listing','areas','mode','costPolicy']);
 export const CONNECTION_PROFILES=Object.freeze(['read_only','everyday','full']);
 export const CONNECTION_LISTINGS=Object.freeze(['catalog','compact']);
 export const CONNECTION_AREAS=Object.freeze([
@@ -25,12 +26,17 @@ export function normalizeConnectionPolicy(source,{grant='refresh_token'}={}) {
  const profile=legacy&&!property(source,'profile')?'full':source.profile;
  const listing=legacy&&!property(source,'listing')?'catalog':source.listing;
  const areas=legacy&&!property(source,'areas')?null:source.areas;
+ // Explicit new connection modes do not silently reclassify legacy owner bearer rows.
+ const mode=property(source,'mode')?source.mode:null;
+ const costPolicy=normalizeBillingPolicy(property(source,'cost_policy')?source.cost_policy:source.costPolicy,
+   {account:source.google_account || source.googleAccount});
  if(!CONNECTION_PROFILES.includes(profile)||!CONNECTION_LISTINGS.includes(listing)||
+   ![null,'test','live'].includes(mode)||
    !(areas===null || Array.isArray(areas)&&areas.length<=CONNECTION_AREAS.length&&
      areas.every(area=>typeof area==='string'&&allowedArea.has(area))&&
      new Set(areas).size===areas.length))
   throw Error('invalid_connection_policy');
- return Object.freeze({profile,listing,areas:areas===null?null:Object.freeze([...areas])});
+ return Object.freeze({profile,listing,areas:areas===null?null:Object.freeze([...areas]),mode,costPolicy});
 }
 export function connectionPolicyToDb(record,{grant='refresh_token'}={}) {
  const settings=normalizeConnectionPolicy(record,{grant});

@@ -200,6 +200,8 @@ export const handlers = {
         return ok({done:false,refused:decision.reason,costNotice:notice});
       }
       standing = decision.kind === 'standing';
+      if (a.approvedCostDigest!==null && a.approvedCostDigest!==notice.requestDigest)
+        return ok({done:false,refused:'stale_or_incorrect_cost_digest',costNotice:notice});
       if (!standing && !a.confirmCost) {
         return ok({done:false,needsCostConfirmation:true,costNotice:notice,
           note:'Ask the user to approve potentially unknown charges, then set confirmCost and the preview requestDigest.'});
