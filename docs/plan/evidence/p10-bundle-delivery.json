@@ -1,0 +1,72 @@
+{
+  "workKind": "ENGINEERING",
+  "baseRevision": "c6f64546214946a55f7355146f68bed220b906eb",
+  "plannedAt": "6ce201207552e628d96cacedb8c8aa626120fded",
+  "implementationHead": "681932972526ac3ea943666abcb8955ac25eb742",
+  "productionAdded": 886,
+  "productionRemoved": 8,
+  "planComparison": "Frozen engineering estimate 1,750 meaningful new lines; actual 886 production additions/8 removals across 14 source paths. Reused stable Google OAuth SDK, owner credential handlers, guarded registry, existing encryption key and session policy; substantially exceeded the 400-800 guide by completing three entire interconnected cards rather than padding.",
+  "newEngineering": "Original P10-1/2/3 full dual identity foundation: V2 scoped SQL+AAD grant store, OAuth2 verified OIDC and browser-bound login/link, hardened owner-compatible OAuth choice and separate principal credential rotation, exact scoped account portal and 5 real Postgres+new unit tests.",
+  "relatedWorkDecision": "Keep outcome B P10-1..3 one PR #202; P10-4 full tool/DB/provider isolation and P10-5 customer admin delegation remain separately approved subsequent outcome. Leave PUBLIC_SIGNIN_MODE off and public tool dispatch denied; Hub, Google production config and paid provider tests untouched.",
+  "decision": "SUBSTANTIAL",
+  "subsections": [
+    {
+      "id": "P10-1",
+      "remainingEngineering": [],
+      "criteria": [
+        {
+          "criterion": "Add scoped V2 Postgres principal, Google identity/account, default, session, OAuth transaction/code/connection and delegation ownership stores with composite references and versioned encryption, while preserving every legacy owner bearer and ciphertext.",
+          "evidence": "`src/principals/store.js:initPrincipalSchema` creates additive principals, issuer/sub, composite account ownership, private defaults, hashed OAuth/session credentials, delegations and deletion requests; `src/principals/crypto.js` seals V2 grants with principal/account/purpose AAD; `scopedStore` admits only server-minted frozen contexts."
+        },
+        {
+          "criterion": "Explicitly map old database/token/Hub grants to a fixed legacy owner adapter without public fallback; old upgrades twice and owner bearer/read/refresh/deny must still work.",
+          "evidence": "`src/db.js:initSchema` runs additive V2 schema; explicit owner UUID, original oauth_tokens and google_accounts data remain; direct native owner MCP `legacyOwnerContext` requires exact stored original bearer; `test/db/principal-store.test.js` ran five real-Postgres tests and old upgrade/Hub TEST regression suites passed in correction run #39002582767."
+        },
+        {
+          "criterion": "Verify foreign reference denial, concurrent account refresh compare-and-swap, exact scoped store membership, developer caller inventory and public dispatch disabled before P10-4.",
+          "evidence": "`test/db/principal-store.test.js` covers two principals' foreign account/default denial, concurrent token-version CAS and browser/code/refresh races; `test/unit/p10-mcp-gate.test.js` proves new bearer is blocked from every legacy Google client before P10-4; `docs/plan/evidence/p10-storage-caller-matrix.json` lists explicitly unscoped callers and their future isolation requirements."
+        }
+      ]
+    },
+    {
+      "id": "P10-2",
+      "remainingEngineering": [],
+      "criteria": [
+        {
+          "criterion": "Introduce separate PUBLIC Google OAuth SDK with verified OIDC JWT, stable issuer/sub identity, hashed state/nonce/browser binding and S256 provider PKCE; default public sign-in OFF.",
+          "evidence": "`src/principals/google.js` uses only separate PUBLIC Google OAuth SDK credentials; opens OIDC-only signin, S256 provider PKCE, nonce, state, browser cookie; `api/auth/google/start.js` rejects enrollment while off, pilot subjects filtered only after SDK verified sub; session cookies are HttpOnly Secure SameSite."
+        },
+        {
+          "criterion": "Offer public start/callback/session/logout, pilot verified subject admission and browser-bound one-use callback; existing owner OAuth project and login never change.",
+          "evidence": "`api/auth/google/callback.js` atomically consumes server-stored transaction with browser binding; `verifyGoogleCode` invokes Google SDK verifyIdToken with intended audience and validates verified issuer, expiry, nonce, email_verified, subject; legacy owner email cannot be auto-claimed; `test/unit/p10-google-auth.test.js` tests claims and no fallback."
+        },
+        {
+          "criterion": "Add authenticated incremental Google grant linking, independently verify identity and ownership, encrypt grants and preserve missing refresh token; test tampering, replay and consent rejection.",
+          "evidence": "`api/account.js` POST link, distinct Google start/callback POST link purpose, exact session CSRF and verified issuer/sub ownership, per-provider scope checks and encrypted grant storage; updates preserve old refresh tokens. `test/unit/p10-auth-routes.test.js` covers foreign cookies, replay, pilot rejection and link consent; `test/db/principal-store.test.js` covers grant CAS/cross-owner denial."
+        }
+      ]
+    },
+    {
+      "id": "P10-3",
+      "remainingEngineering": [],
+      "criteria": [
+        {
+          "criterion": "Offer neutral MCP authorization choice while continuing existing owner sign-in; V2 OAuth code and token exchanges bind registered client/redirect, S256 PKCE, resource, immutable principal/account/policy.",
+          "evidence": "`api/oauth/authorize.js` has neutral owner/Google choice, no owner account DB lookup before successful passphrase, and V2 principal-only account choice; `api/oauth/token.js` splits p10c_ authorization and p10r_ refresh from existing owner path with exact registered client/redirect/S256 PKCE/resource, denying provider tokens to agents."
+        },
+        {
+          "criterion": "Use dedicated hashed V2 access/refresh store with atomic single-use refresh family replay denial, user session and account management; never dispatch V2 tools until P10-4 isolation.",
+          "evidence": "`src/principals/store.js` issues hashed p10a_/p10r_ credentials with atomic one-use refresh/family replay revocation, exact stored principal/account/profile/areas/client/resource, and `api/mcp.js` rejects public execution 403 before loading owner provider clients until P10-4. `test/db/principal-store.test.js` proves race/replay; `test/unit/p10-mcp-authorize.test.js`, `p10-mcp-gate.test.js` and original direct MCP fixtures cover route semantics."
+        },
+        {
+          "criterion": "Prove two-user HTTP/real-Postgres code replay/foreign account/revoke/CSRF separation and owner OAuth/native/RTC regression.",
+          "evidence": "`api/account.js` and `/api/auth/session`, `/api/auth/logout` show only own agent/grant entries, enforce CSRF and exact IDs on local revocation, disconnect, default, and recoverable deletion; browser logout leaves agent credentials alone. `test/unit/p10-auth-routes.test.js` and real-Postgres tests cover two-identity session/revoke isolation and owner continuity."
+        }
+      ]
+    }
+  ],
+  "firstCI": "PR #202 initial head 9a454d9 ran CI #39002466096: RTC and check passed, new real P10 DB tests passed; legacy direct-MCP fixture omitted explicit new owner-context mock and old upgrade tests needed cascaded legacy mapping/fixture truncate. Both corrected without weakening tests.",
+  "correctionCI": "CI #39002582767 on head 0f9f20f24e38c7e7e515ae4478f9fea2e069db2e: unit, DB, RTC, check, aggregate test and release-policy passed.",
+  "finalGate": "After last security/plan/docs changes, exact final-head CI and PR review/merge still required; this record is source criterion evidence, NOT actual multi-user provider acceptance.",
+  "realAcceptance": "No separate PUBLIC_* Google OAuth app credentials configured; production still on older live revision. New-user real pilot and tool dispatch require P10-4/5, owner-authorized two-user trial, public release/Google verification. Existing 29 original-scope passes remain valid."
+}

@@ -268,24 +268,27 @@ restricts only the named operation. Source completion never proves actual Google
   },
   {
     "id": "P10-1",
-    "state": "REVIEW",
-    "remaining": "P10-B cohesive source plus dedicated unit/real-PG tests assembled; exact-head mandatory CI, review and merge not yet passed. Original full acceptance and post-deploy gates remain distinct.",
-    "evidence": "Branch implementation/p10-dual-identity-foundation at 95fffebbdf4ffab275427190d0060636651c4f72; preimplementation frozen P10-1/2/3 plan 6ce201207552e628d96cacedb8c8aa626120fded. Added additive SQL owner-scoped principals, public SDK OIDC/browser flows, separate V2 MCP credentials, owner-compatible barrier; source syntax validated, CI NOT YET RUN.",
-    "next": "Run exact-head unit/DB/RTC/check/release-policy, correct every failure; review and merge, then reclassify EXTERNAL_ONLY with distinct real-world acceptance gates."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Core principal/owner adapter and real PostgreSQL developer contracts are implemented; historical owner connection evidence still requires post-deployment checks, never V2 global fallback.",
+    "evidence": "PR #202 source head 681932972526ac3ea943666abcb8955ac25eb742, frozen plan 6ce201207552e628d96cacedb8c8aa626120fded, criterion report docs/plan/evidence/p10-bundle-delivery.json; 5 new real Postgres tests and P10 unit suites passed CI #39002582767 prior to final refinements. Final exact-head checks and review required before merge.",
+    "next": "Reconcile actual READY deployment after the checked release. Complete separately queued source-pinned P10 acceptance only if provider/public configuration and P10-4/5 owner authorization prerequisites are satisfied; do not enable public dispatch early.",
+    "gate": "After deployed source and owner-authorized original bearer, run non-destructive owner and Hub continuation on live; real multi-principal dispatch awaits P10-4."
   },
   {
     "id": "P10-2",
-    "state": "REVIEW",
-    "remaining": "P10-B cohesive source plus dedicated unit/real-PG tests assembled; exact-head mandatory CI, review and merge not yet passed. Original full acceptance and post-deploy gates remain distinct.",
-    "evidence": "Branch implementation/p10-dual-identity-foundation at 95fffebbdf4ffab275427190d0060636651c4f72; preimplementation frozen P10-1/2/3 plan 6ce201207552e628d96cacedb8c8aa626120fded. Added additive SQL owner-scoped principals, public SDK OIDC/browser flows, separate V2 MCP credentials, owner-compatible barrier; source syntax validated, CI NOT YET RUN.",
-    "next": "Run exact-head unit/DB/RTC/check/release-policy, correct every failure; review and merge, then reclassify EXTERNAL_ONLY with distinct real-world acceptance gates."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Public login, verified OIDC transaction and incremental link are source-implemented; real separate-project sign-in and consent cannot be asserted without configured PUBLIC_* app and approved pilot.",
+    "evidence": "PR #202 source head 681932972526ac3ea943666abcb8955ac25eb742, frozen plan 6ce201207552e628d96cacedb8c8aa626120fded, criterion report docs/plan/evidence/p10-bundle-delivery.json; 5 new real Postgres tests and P10 unit suites passed CI #39002582767 prior to final refinements. Final exact-head checks and review required before merge.",
+    "next": "Reconcile actual READY deployment after the checked release. Complete separately queued source-pinned P10 acceptance only if provider/public configuration and P10-4/5 owner authorization prerequisites are satisfied; do not enable public dispatch early.",
+    "gate": "New public Google OAuth project/client and callback must be configured independently; real pilot subject acceptance and real scope linking await P10-4/5 and owner authorization, not automatic live/public configuration."
   },
   {
     "id": "P10-3",
-    "state": "REVIEW",
-    "remaining": "P10-B cohesive source plus dedicated unit/real-PG tests assembled; exact-head mandatory CI, review and merge not yet passed. Original full acceptance and post-deploy gates remain distinct.",
-    "evidence": "Branch implementation/p10-dual-identity-foundation at 95fffebbdf4ffab275427190d0060636651c4f72; preimplementation frozen P10-1/2/3 plan 6ce201207552e628d96cacedb8c8aa626120fded. Added additive SQL owner-scoped principals, public SDK OIDC/browser flows, separate V2 MCP credentials, owner-compatible barrier; source syntax validated, CI NOT YET RUN.",
-    "next": "Run exact-head unit/DB/RTC/check/release-policy, correct every failure; review and merge, then reclassify EXTERNAL_ONLY with distinct real-world acceptance gates."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Dual owner/V2 MCP code/refresh and scoped account portal implemented with P10-4 gate blocking V2 tool dispatch; actual two-user end-to-end MCP/provider use remains future acceptance.",
+    "evidence": "PR #202 source head 681932972526ac3ea943666abcb8955ac25eb742, frozen plan 6ce201207552e628d96cacedb8c8aa626120fded, criterion report docs/plan/evidence/p10-bundle-delivery.json; 5 new real Postgres tests and P10 unit suites passed CI #39002582767 prior to final refinements. Final exact-head checks and review required before merge.",
+    "next": "Reconcile actual READY deployment after the checked release. Complete separately queued source-pinned P10 acceptance only if provider/public configuration and P10-4/5 owner authorization prerequisites are satisfied; do not enable public dispatch early.",
+    "gate": "Real Google-based principal MCP tool execution and two-user external client acceptance await full P10-4/5 isolation proof and approved PUBLIC_SIGNIN_MODE pilot; public dispatch explicitly remains disabled."
   },
   {
     "id": "P10-4",
@@ -701,6 +704,53 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P9-3"
     ]
+  },
+  {
+    "id": "P10-OWNER-CONTINUITY",
+    "priority": 2,
+    "requiredRevision": "681932972526ac3ea943666abcb8955ac25eb742",
+    "task": "On a READY deployment including P10 B, recheck existing owner's registered native MCP bearer/read-only account list and RTC Hub TEST identity/denials without reissuing or revoking existing grants.",
+    "procedure": "docs/PUBLIC-SIGNIN-OWNER-GUIDE.md",
+    "gates": "Requires deployment ancestry, original owner account's already-authorized read-only resources and original pass ownership; no new paid/provider write or owner credential changes.",
+    "dependsOn": [],
+    "status": "PENDING",
+    "subsections": [
+      "P10-1",
+      "P10-3"
+    ],
+    "lastEvidence": "Source/test owner MCP continuity and original DB/TEST upgrade pass, but P10 is on PR #202 head not deployed. This is not a real P10 live pass."
+  },
+  {
+    "id": "P10-VERIFY-GOOGLE",
+    "priority": 3,
+    "requiredRevision": "681932972526ac3ea943666abcb8955ac25eb742",
+    "task": "After independent public Google OAuth app configuration and P10-4/5 isolation, prove disposable user A/B signed OIDC login, subject/email/nonce denial, own linked account scopes, logout and exact cleanup.",
+    "procedure": "docs/PUBLIC-SIGNIN-OWNER-GUIDE.md",
+    "gates": "Requires separate PUBLIC Google project credentials, registered callback, approved pilot subjects and explicit owner authorization; P10-4/5 before pilot/public activation, no customer-wide Google reads.",
+    "dependsOn": [
+      "P10-OWNER-CONTINUITY"
+    ],
+    "status": "PENDING",
+    "subsections": [
+      "P10-2"
+    ],
+    "lastEvidence": "Google SDK mock and 2-principal SQL source tests passed CI #39002582767. No separate public client credential or real Google browser login used."
+  },
+  {
+    "id": "P10-MCP-PILOT",
+    "priority": 4,
+    "requiredRevision": "681932972526ac3ea943666abcb8955ac25eb742",
+    "task": "Prove distinct Google principal account authorization and two independent real custom MCP clients plus owner concurrency, resource/PKCE tampering, replay, revocation and harmless provider readback.",
+    "procedure": "docs/PUBLIC-SIGNIN-OWNER-GUIDE.md",
+    "gates": "Needs P10-VERIFY-GOOGLE passed, fully implemented P10-4 tool/store and P10-5 delegation isolation verified on real disposable Postgres, explicit owner-approved pilot; no write without authorization.",
+    "dependsOn": [
+      "P10-VERIFY-GOOGLE"
+    ],
+    "status": "PENDING",
+    "subsections": [
+      "P10-3"
+    ],
+    "lastEvidence": "P10 B has separate minted V2 credentials and a deliberate public_dispatch_not_enabled 403, so no public provider read or two real external clients were attempted."
   }
 ]
 ```

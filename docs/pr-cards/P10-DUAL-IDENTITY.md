@@ -61,4 +61,4 @@ Public execution remains OFF until the P10-4 full isolation gate.
 
 ## Delivery
 
-Not yet implemented. Retain complete acceptance evidence and exact remaining work in the final delivery record.
+P10-1..P10-3 implemented as one coherent source outcome with full frozen criterion-to-code/test mapping in `docs/plan/evidence/p10-bundle-delivery.json`. Real provider live acceptance is deferred behind deployed source, separate public Google OAuth configuration and P10-4/5 isolation. No public tool dispatch or release authorized.
