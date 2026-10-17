@@ -5,6 +5,7 @@ import {sealV2,openV2} from './crypto.js';
 import {OWNER_ID,digest,mint,validUuid,validEmail,requireScope} from './security.js';
 import {normalizeConnectionPolicy} from '../oauth/connection-settings.js';
 import {initTenantSchema,makeTenantStore} from './tenant-store.js';
+import {loadCustomerDelegation} from './delegation.js';
 let conn;
 const trustedContexts=new WeakSet(); // no caller-minted frozen principal is accepted
 const sql=()=>{if(!conn){if(!process.env.DATABASE_URL)throw Error('database_unavailable');conn=neon(process.env.DATABASE_URL);}return conn;};
@@ -396,6 +397,11 @@ export async function deletionPreview(principalId){
   next:'Account deletion needs separate irreversible confirmation and retention disclosure before launch.'};
 }
 
+export async function trustedCustomerDelegation(context){
+ requireScope(context&&trustedContexts.has(context)&&Object.isFrozen(context)&&
+  context.principalKind==='user','invalid_scoped_context');
+ return loadCustomerDelegation(context);
+}
 export function scopedStore(context){
  // Inject this wrapper into future P10-4 public clients, never call global DB
  // helpers with a caller-provided tenant. No public tool dispatch exists yet.
