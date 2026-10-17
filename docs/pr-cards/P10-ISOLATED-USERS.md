@@ -48,4 +48,4 @@ This execution card implements the already approved P10-4/P10-5 criteria from [t
 
 ## Delivery
 
-PENDING. Count neither P10-4 nor P10-5 as completed before full source, fixture, two-process PostgreSQL, review and exact-head CI evidence, and maintain the existing P9/P10 acceptance backlog separately.
+Source implementation of both whole P10-4/P10-5 subsections is recorded criterion by criterion in `docs/plan/evidence/p10-c-bundle-delivery.json`. The separate real external Google pilot/customer delegated consent and publication are not accepted by CI, and all production rollout/owner approval gates remain. Do not enable public tool dispatch without explicit checked activation.

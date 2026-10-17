@@ -292,17 +292,19 @@ restricts only the named operation. Source completion never proves actual Google
   },
   {
     "id": "P10-4",
-    "state": "OPEN",
-    "remaining": "Every tool/store/result/guard isolated by principal; complete all original acceptance in the new execution contract.",
-    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
-    "next": "P10-3; required real two-process PG proof before pilot; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Full source/real PG/scoped-registry P10-4 engineering done; actual hosted public user A/B and owner concurrent isolation, code/revoke before provider pilot remain external acceptance.",
+    "evidence": "PR #203 planned e4dccbc0e586d6674ec636e30f18ef802ed599f9; source 43d113726baba063ca45755ee7611189dd137651 before report, docs/plan/evidence/p10-c-bundle-delivery.json and machine matrix docs/plan/evidence/p10-caller-matrix.json. Real database two-process and unit SDK cases; final exact-head CI/review to be checked before merge.",
+    "next": "Confirm READY source ancestry and owner/provider prerequisites. Execute genuine documented pilot and customer-scoped acceptance P10-6 only when approved; retain legacy owner and Hub TEST history.",
+    "gate": "On a READY production revision containing PR #203, only a separately approved verified pilot may activate PUBLIC_SIGNIN_MODE and PUBLIC_P10_TOOL_EXECUTION_VERIFIED together, after non-destructive legacy owner and new-principal read/revoke acceptance; never enable dispatch based on source/unit tests alone."
   },
   {
     "id": "P10-5",
-    "state": "OPEN",
-    "remaining": "Per-customer privileged Google capability setup; complete all original acceptance in the new execution contract.",
-    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
-    "next": "P10-4; never reuse owner global delegation; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Independent customer-owned delegated-credential encryption/verified Directory/DWD, scoped Gmail/Calendar/Drive/Alert Center engineering done; real Google app/customer consent and entitlement verification remain external.",
+    "evidence": "PR #203 planned e4dccbc0e586d6674ec636e30f18ef802ed599f9; source 43d113726baba063ca45755ee7611189dd137651 before report, docs/plan/evidence/p10-c-bundle-delivery.json and machine matrix docs/plan/evidence/p10-caller-matrix.json. Real database two-process and unit SDK cases; final exact-head CI/review to be checked before merge.",
+    "next": "Confirm READY source ancestry and owner/provider prerequisites. Execute genuine documented pilot and customer-scoped acceptance P10-6 only when approved; retain legacy owner and Hub TEST history.",
+    "gate": "Requires a separately created PUBLIC Google OAuth project/client, Google-verified admin/customer and independently approved customer-specific service-account domain-wide delegation/scope, disposable pilot accounts and owner permission. Synthetic SDK tests do not prove provider consent."
   },
   {
     "id": "P10-6",
@@ -751,6 +753,23 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P10-3"
     ],
     "lastEvidence": "P10 B has separate minted V2 credentials and a deliberate public_dispatch_not_enabled 403, so no public provider read or two real external clients were attempted."
+  },
+  {
+    "id": "P10-CUSTOMER-DELEGATION",
+    "priority": 5,
+    "requiredRevision": "43d113726baba063ca45755ee7611189dd137651",
+    "task": "After the isolated P10 C revision is deployed and owner-approved, prove a disposable authorized Workspace administrator links their own customer DWD key/scopes/subject, actual Google identity and admin entitlement, scoped Gmail/Calendar/Drive/Alert Center readback, refusal to another principal, local revocation, no owner/global fallback.",
+    "procedure": "docs/PUBLIC-SIGNIN-OWNER-GUIDE.md",
+    "gates": "Requires P10-OWNER-CONTINUITY, P10-VERIFY-GOOGLE and public P10-4 pilot isolation, real customer Admin Console approved subject/scopes and owner disposable read-only test authorization; never submit customer JSON keys in chat, do not spend or mutate production.",
+    "dependsOn": [
+      "P10-VERIFY-GOOGLE",
+      "P10-OWNER-CONTINUITY"
+    ],
+    "status": "PENDING",
+    "subsections": [
+      "P10-5"
+    ],
+    "lastEvidence": "Source and fake SDK/real Postgres tenant configuration tests in PR #203 only; no real Customer Admin Console DWD or public OAuth app connection attempted."
   }
 ]
 ```

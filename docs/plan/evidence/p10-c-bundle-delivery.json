@@ -1,0 +1,61 @@
+{
+  "workKind": "ENGINEERING",
+  "baseRevision": "eece407e5f8e2a2094793355e9a5ca086567e5c1",
+  "plannedAt": "e4dccbc0e586d6674ec636e30f18ef802ed599f9",
+  "implementationHead": "43d113726baba063ca45755ee7611189dd137651",
+  "productionAdded": 800,
+  "productionRemoved": 76,
+  "newEngineering": "One fully integrated P10 Outcome C covering both originally approved P10-4 and P10-5: principal-owned registry/native HTTP dispatch, tenant data and rate isolation, customer-specific delegated Google credentials, real two-process PostgreSQL trust proof, exact SDK behavior and end-user setup.",
+  "planComparison": "Original 1,900 production line estimate was not a quota. Actual implementation 800 additions and 76 removals across 26 source paths, plus substantial tests, a 37-module audited caller matrix and original developer/provider gates. Reuse owner-tested registry/guard/SDK handlers instead of duplicating implementation; no artificial padding.",
+  "relatedWorkDecision": "P10-4/5 share principal, account, delegated provider and all registered tool caller trust boundaries. Kept in PR #203. P10-6 pilot/publication and P10-7 optional owner migration remain separate dependent outcomes; no provider credential, billing mutation or release authorized.",
+  "decision": "SUBSTANTIAL",
+  "subsections": [
+    {
+      "id": "P10-4",
+      "remainingEngineering": [],
+      "criteria": [
+        {
+          "criterion": "Before enabling pilot execution, finish all section2 imports and storage-bearing tools across native MCP, RTC, search/describe/meta, workspace_call, batch, bulk, undo, results, account/default/connection management, business resources, changes, dev fixtures and every guarded callback.",
+          "evidence": "api/mcp.js double-gated public HTTP bearer -> createIsolatedPrincipalServer on verified WeakSet-minted AuthContext; src/principals/clients.js injects public Google OAuth, tenant-owned store and DWD across exact registry. src/tools/rtc-meta.js recurses through guarded registry for search/describe/call/batch and no foreign selector; guards.js/guards-admin.js, bulk.js, undo.js, src/rtc/results.js and src/changelog.js use injected scoped tenant stores; public owner business/DNS/developer fixture exclusions enforced by catalog."
+        },
+        {
+          "criterion": "Use explicit scoped clients/dependency injection; new users can never load installation-owner service account, global default account or business-resource state; machine-readable caller matrix proves coverage.",
+          "evidence": "src/principals/store.js principal-only AuthContext verified using private WeakSet, account Version + active SQL; src/principals/tenant-store.js tenant result/audit/rate and composite PostgreSQL FKs; src/principals/clients.js never loads legacy owner Google grant; src/tools/delegated.js refuses missing tenant delegation without owner environment fallback. Machine-checked docs/plan/evidence/p10-caller-matrix.json inventories every 37 registered modules and 14 critical nonregistry constructor seams with test/unit/p10-caller-matrix.test.js."
+        },
+        {
+          "criterion": "Prove owner/userA/userB overlapping IDs and warmed parallel requests keep all state isolated; denied foreign IDs create zero provider clients/writes; cache, rate and undo use principal/account/credential-version keys.",
+          "evidence": "test/db/principal-tenant-store.test.js creates two independent OS child processes sharing one disposable PostgreSQL schema, tests foreign account/grant/result denial, independent rate counters, 3-column FK raw SQL denial, warm native SDK two-client search/call/batch/list/revoke, history/undo and no Google call before refusal; test/db/principal-store.test.js and refresh CAS concurrency protect owner/userA/userB against cross-tenant rekey and stale permissions; owner direct MCP regression checked."
+        },
+        {
+          "criterion": "Run real disposable Postgres tests for cross-principal SQL denial, refresh races, result ownership/pagination, accounts, connections, change/undo visibility, fixture run ownership and rate counters across two processes; owner request matrix stays green.",
+          "evidence": "Required exact-head real disposable Postgres test contract in test/db/principal-tenant-store.test.js and test/db/principal-store.test.js; cross-principal wrong IDs/prefixes, account/default/revoke, result pagination and changes/undo, tokens/refresher CAS and independent Node processes, rate windows. Developer-only TEST fixture access is deliberately owner-scoped and not inherited; test/unit/p10-scoped-callers.test.js and original source/RTC suites preserve owner pass/connector behavior."
+        }
+      ]
+    },
+    {
+      "id": "P10-5",
+      "remainingEngineering": [],
+      "criteria": [
+        {
+          "criterion": "Public users get only their own Google OAuth rights; privileged/admin operations require that customer's real permissions and configured delegated credential, never the installation owner's global credential.",
+          "evidence": "src/principals/clients.js public connector gets only its linked PUBLIC Google OAuth client and exact account, with tenantDelegation built from independently encrypted customer-approved key. src/auth/google-auth-hosted.js uses provided tenant-delegation callbacks; global GOOGLE_SERVICE_ACCOUNT_JSON remains owner-only legacy. Scope/subject/edition denied by actual Google provider, not a development product ban."
+        },
+        {
+          "criterion": "Provide independently tenant-configured delegated client, explicit scope/subject/customer binding, encrypted credential entry/lifecycle/revoke, independently verified admin/customer authority and truthful capability remediation without disabling unrelated user tools.",
+          "evidence": "src/principals/delegation.js checks actual Admin SDK Directory user isAdmin customerId, requires separately granted admin verification scope and real Google JWT domain-wide consent before encrypted owner-bound key persistence; api/account.js signed-in CSRF-protected key submission, verified target mailboxes and local revoke; tenant scopes, verified customer ID and per-mailbox authorization enforced before provider construction. No private key ever in tool args/URLs/output."
+        },
+        {
+          "criterion": "Update delegated Gmail/Calendar/Drive, Alert Center and readiness callers; owner legacy delegation still works, no email/hd domain claim grants customer ownership.",
+          "evidence": "src/auth/google-auth-hosted.js and src/tools/delegated.js wire proper injected customer-only delegated Gmail/Calendar/Drive and Alert Center auth; src/tools/workflows.js suppresses installation-owner business calendar/Drive IDs for public users; src/principals/delegation.js accepts no hd/email-domain authority inference. Missing DWD gives customer-specific remediation while unrelated OAuth-based tools stay callable."
+        },
+        {
+          "criterion": "Test owner delegation continuity and A/B cross-customer denial, absent/revoked/wrong subject/scope/customer and no global-secret fallback before provider use, with exact SDK shapes; real customer activation stays separately gated.",
+          "evidence": "test/unit/p10-customer-delegation.test.js checks Google SDK Directory GET exact request shape, JWT authorize scope/subject, encrypted ciphertext, owner vs customer isolation, missing admin role/mismatched customer/foreign accounts, absent/revoked scope and local revocation without claiming provider revocation. test/unit/p10-scoped-callers.test.js exercises builder behavior and missing tenant key; original owner clients continue using original service-account path and CI. Real customer Admin Console and DWD approval remain external P10-6 acceptance gates."
+        }
+      ]
+    }
+  ],
+  "verification": "Original draft PR #203 CI #39006026122 passed before continuation; malformed additive-SQL source reconstruction corrected after red #39025590539; rebuilt ownership, two-process Postgres and source CI #39025791942 passed. At new head #017d00b3, CI #39026142885 passed DB, RTC, check and failed two synthetic delegation tests because missing nonlive DATABASE_URL in the fake fixture; corrected in next commit. CI #39026519639 on refreshed source passed check, DB, RTC; final unit and then exact report head still to be observed. No real Google customer credential or live P10 acceptance claimed.",
+  "review": "Owner and developer authority remain distinct. V2 public tool execution requires PUBLIC_SIGNIN_MODE != off AND PUBLIC_P10_TOOL_EXECUTION_VERIFIED true, neither configured/activated by this work; production remains older live. Original owner connector/grants and current 29 historical provider passes preserved.",
+  "externalAcceptance": "Original P10-4/5 source verification is not a real customer Google Admin/DWD configuration nor custom public MCP pilot. Real PUBLIC_GOOGLE_OAUTH_* configuration, verified App/consent/scope, owner-approved two-person pilot and customer DWD permissions required before public activation."
+}
