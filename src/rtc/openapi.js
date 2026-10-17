@@ -15,14 +15,14 @@ const parameter = (name, schema, description, location = 'query') => ({
   name, in: location, required: location === 'path', description, schema
 });
 const envelope = result => object({
-  ok: { const: true }, result, mode: { const: 'test' },
+  ok: { const: true }, result, mode: { type:'string', enum: ['test','live'] },
   handle: string, count: integer, summary: string
 }, ['ok', 'result', 'mode']);
 const errorResponse = description => ({ description, content: json(ref('Error')) });
 const responses = (schema, description) => ({
   '200': { description, content: json(schema) },
   '400': errorResponse('Malformed arguments or provider request refused. Inspect the RTC error code; do not blindly retry writes.'),
-  '401': errorResponse('Missing, invalid, expired or revoked service-issued TEST pass.'),
+  '401': errorResponse('Missing, invalid, expired or revoked service-issued RTC pass.'),
   '403': errorResponse('Profile, area, read-only, domain or operation guard refused the request.'),
   '404': errorResponse('Unknown tool or inaccessible, expired or foreign result handle.'),
   '405': errorResponse('HTTP method is not supported by this door.'),
@@ -51,7 +51,7 @@ export function rtcOpenapi(origin = '') {
   return {
     openapi: '3.1.0',
     info: { title: 'Robinson Google Workspace RTC tools', version: '1.0.0',
-      description: 'Independent Workspace RTC 1 API. All provider operations use the same guarded registry as MCP. Only service-issued TEST passes authenticate these doors; native connector OAuth tokens do not. This description is not live Google or Hub acceptance.' },
+      description: 'Independent Workspace RTC 1 API. All provider operations use the same guarded registry as MCP. Service-issued TEST and user-authorized live passes authenticate these doors; native connector OAuth tokens do not. Live capabilities still require user-selected permission and provider entitlement.' },
     servers,
     security: [{ rtcPass: [] }],
     paths: {
@@ -65,7 +65,7 @@ export function rtcOpenapi(origin = '') {
       } },
       '/api/whoami': { get: {
         operationId: 'whoami', summary: 'Identify the current service-issued pass',
-        responses: responses(envelope(ref('Identity')), 'Pass account, areas and TEST policy. No bearer secret is returned.')
+        responses: responses(envelope(ref('Identity')), 'Pass account, areas and selected test/live policy. No bearer secret is returned.')
       } },
       '/api/tools': { get: {
         operationId: 'searchTools', summary: 'Page the permitted tool catalog',
@@ -112,13 +112,13 @@ export function rtcOpenapi(origin = '') {
       } }
     },
     components: {
-      securitySchemes: { rtcPass: { type: 'http', scheme: 'bearer', bearerFormat: 'RTC service-issued TEST pass',
+      securitySchemes: { rtcPass: { type: 'http', scheme: 'bearer', bearerFormat: 'RTC service-issued test/live pass',
         description: 'Short-lived service-owned pass. Authorization: Bearer <pass>. Never place credentials in query parameters, tool arguments, reports or logs.' } },
       schemas: {
         Error: object({ ok: { const: false }, error: object({ what: string, cause: string, todo: string, technical: string, code: string }) }),
         Identity: object({ connection: string, account: string, profile: { type: 'string', enum: ['read_only','everyday','full'] },
           areas: { type: ['array','null'], items: string }, listing: { type: 'string', enum: ['catalog','compact'] },
-          mode: { const: 'test' }, allow_writes: bool }),
+          mode: { type:'string', enum:['test','live'] }, allow_writes: bool }),
         Tool: object({ name: string, description: { type: 'string', maxLength: 160 }, inputSchema: { type: 'object' },
           outputSchema: { type: 'object' }, area: string, profiles: strings, audience: strings,
           writes: bool, money: bool, destructive: bool,
@@ -132,7 +132,7 @@ export function rtcOpenapi(origin = '') {
         ] },
         Manifest: object({ rtc: { const: 1 }, server: { const: 'google-workspace-mcp' }, prefix: { const: 'workspace' }, version: string,
           areas: strings, counts: object({ tools: integer, writes: integer, money: integer }),
-          profiles: strings, listingModes: strings, modes: { type: 'array', items: { const: 'test' } }, devTools: bool,
+          profiles: strings, listingModes: strings, modes: { type: 'array', items: { type:'string', enum:['test','live'] } }, devTools: bool,
           conformance: object({ status: string }), deployment: object({ sourceRevision: { type: ['string','null'], pattern: '^[a-f0-9]{40}$' } })
         })
       }

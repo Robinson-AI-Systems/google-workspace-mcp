@@ -15,7 +15,10 @@ export function isWrite(name) {
  return !READ_ONLY_TOOL_NAMES.has(name);
 }
 export function allowedTool(name, c={}) {
- if (RTC_META.has(name)) return true; // The dispatcher rechecks the selected target's area and profile.
+ // The developer fixture creation/cleanup tools are TEST-only; ordinary
+ // Workspace operations and non-writing integration checks remain live-capable.
+ if(c.mode==='live'&&['workspace_dev_create_fixtures','workspace_dev_cleanup'].includes(name))return false;
+ if (RTC_META.has(name) return true; // The dispatcher rechecks the selected target's area and profile.
  if (Array.isArray(c.areas)&&!c.areas.includes(rtcArea(name)))return false;
  if (c.profile==='read_only'&&isWrite(name))return false;
  if (c.profile==='everyday'&&isWrite(name)&&['admin','workspace','dns','licensing','vault'].includes(rtcArea(name)))return false;
