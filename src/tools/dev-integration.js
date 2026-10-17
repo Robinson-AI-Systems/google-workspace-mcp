@@ -101,6 +101,12 @@ async function observe(name,probe,guideTo){
  }catch(e){return {name,...classifyFailure(e),fix:guideTo};}
 }
 export async function inspectGoogleIntegration(spec,clients,{describe=describeServiceAccount}={}){
+ // Public users may inspect only their own customer delegation. Never
+ // reveal the installation owner's global service-account metadata.
+ if(clients?.store&&describe===describeServiceAccount){
+   const status=clients.delegationReady===true;
+   describe=()=>({configured:status,clientId:null,scopesToAuthorize:[]});
+ }
  const request=validateIntegrationSpec(spec);
  if(!MAILBOX.test(clients?.actingAs||''))throw Error('An authenticated acting Google mailbox is required.');
  const checks=[];
