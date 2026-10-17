@@ -22,7 +22,7 @@ async function lookup(name,clients,{readsOnly=false}={}){
  return registry.handlers[name];
 }
 export const handlers={
- async workspace_get_result(args={},clients){return readStoredResult(args,clients?.connection);},
+ async workspace_get_result(args={},clients){return readStoredResult(args,clients?.connection,clients?.store?.getResult ?? undefined);},
  async workspace_search_tools(args={},clients){
    const {tools}=await catalog();
    if(args.includeUnavailable!==undefined&&typeof args.includeUnavailable!=='boolean')throw new Error('invalid_args: includeUnavailable must be boolean.');
