@@ -74,6 +74,7 @@ export function rtcOpenapi(origin = '') {
           parameter('area', { type: 'string', enum: RTC_AREAS }, 'Filter to one existing tool area.'),
           parameter('audience', { type: 'string', enum: ['owner','operator','builder'] }, 'Filter by intended audience.'),
           parameter('listing', { type: 'string', enum: ['catalog','compact'] }, 'Defaults to the pass listing setting; does not widen authority.'),
+          parameter('showUnavailable', bool, 'When true, include supported but unauthorized tools as available:false and needsReconnect:true; never grants access.'),
           parameter('limit', { type: 'integer', minimum: 1, maximum: 100, default: 10 }, 'Tools per page.'),
           parameter('page', { type: 'integer', minimum: 1, maximum: 100000, default: 1 }, 'One-based catalog page.')
         ],
@@ -84,6 +85,7 @@ export function rtcOpenapi(origin = '') {
         parameters: [nameParameter],
         get: {
           operationId: 'describeTool', summary: 'Read an authorized tool schema',
+          parameters: [parameter('showUnavailable',bool,'When true, return metadata for an unavailable capability with available:false; invocation remains forbidden.')],
           responses: responses(envelope(ref('Tool')), 'Exact registry input schema, optional output schema, and safety metadata.')
         },
         post: {
@@ -121,7 +123,7 @@ export function rtcOpenapi(origin = '') {
           mode: { type:'string', enum:['test','live'] }, allow_writes: bool }),
         Tool: object({ name: string, description: { type: 'string', maxLength: 160 }, modes: strings, inputSchema: { type: 'object' },
           outputSchema: { type: 'object' }, area: string, profiles: strings, audience: strings,
-          writes: bool, money: bool, billingRisk: bool, destructive: bool,
+          writes: bool, money: bool, billingRisk: bool, available:bool, needsReconnect:bool, reason:string, destructive: bool,
           annotations: object({ readOnlyHint: bool, destructiveHint: bool, idempotentHint: bool, openWorldHint: bool })
         }, ['name','description','inputSchema','area','profiles','audience','writes','money','destructive','annotations'], true),
         StoredResult: { oneOf: [

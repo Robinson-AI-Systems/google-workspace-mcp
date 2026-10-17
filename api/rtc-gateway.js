@@ -131,13 +131,18 @@ export function createRtcGateway(){
   };
   const limit=parsePageNumber(req.query?.limit,10,100);
   const page=parsePageNumber(req.query?.page,1,100000);
+  if(req.query?.showUnavailable!==undefined&&!['true','false'].includes(String(req.query.showUnavailable)))
+    return fail(res,400,'invalid_args','showUnavailable must be true or false.');
   if((req.query?.listing!==undefined&&!['catalog','compact'].includes(req.query.listing))||
      (area!==undefined&&!RTC_AREAS.includes(area))||
      (audience!==undefined&&!['owner','operator','builder'].includes(audience)))
     return fail(res,400,'invalid_args','Unknown listing, area or audience.');
   if(limit===null||page===null)return fail(res,400,'invalid_args','Page and limit must be bounded positive integers.');
-  const all=listedTools(registry.tools,pass,req.query?.listing||(q?'catalog':pass.listing))
-   .map(expose).filter(t=>(!q||(t.name+' '+t.description).toLowerCase().includes(q))&&(!area||t.area===area)&&(!audience||t.audience.includes(audience)));
+  const selected=req.query?.showUnavailable==='true'?registry.tools:
+    listedTools(registry.tools,pass,req.query?.listing||(q?'catalog':pass.listing));
+  const all=selected.map(t=>({...expose(t),available:allowedTool(t.name,pass),
+    ...(!allowedTool(t.name,pass)?{needsReconnect:true,
+      reason:'connection_policy_or_test_mode_restricts_capability'}:{})})).filter(t=>(!q||(t.name+' '+t.description).toLowerCase().includes(q))&&(!area||t.area===area)&&(!audience||t.audience.includes(audience)));
   const start=(page-1)*limit;
   const tools=all.slice(start,start+limit);
   return success(res,{tools,next:start+limit<all.length?String(page+1):null},pass.mode);
@@ -186,7 +191,13 @@ export function createRtcGateway(){
   }else if(req.method==='POST'&&isWrite(internal)&&!pass.allow_writes){
    return fail(res,403,'refused_by_guard','This pass is read only.');
   }
-  if(!allowedTool(internal,pass))return fail(res,403,'outside_scope','Tool is outside the pass permissions.');
+  const available=allowedTool(internal,pass);
+  if(req.method==='GET'&&req.query?.showUnavailable==='true'){
+   const item=registry.tools.find(t=>t.name===internal);
+   return success(res,{...expose(item),available,...(!available?{needsReconnect:true,
+     reason:'connection_policy_or_test_mode_restricts_capability'}:{})},pass.mode);
+  }
+  if(!available)return fail(res,403,'outside_scope','Tool is outside the pass permissions.');
   if(req.method==='GET')return success(res,expose(registry.tools.find(t=>t.name===internal)),pass.mode);
   if(req.method!=='POST')return fail(res,405,'invalid_args','Tool invocation requires POST.');
   if(Buffer.byteLength(JSON.stringify(req.body||{}))>65536)return fail(res,413,'invalid_args','Arguments too large.');
