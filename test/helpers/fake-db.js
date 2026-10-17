@@ -1,3 +1,4 @@
+import {normalizeBillingPolicy} from '../../src/rtc/billing-authority.js';
 import {passOptions} from '../../src/rtc/pass-options.js';
 import {loadKey, encryptJson, decryptJson} from '../../src/crypto.js';
 // An in-memory stand-in for src/db.js, so unit tests can run the real login
@@ -209,11 +210,11 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       return state.clients.get(clientId) || null;
     },
 
-    async createAuthCode({ code, clientId, redirectUri, codeChallenge, codeChallengeMethod, googleAccount, profile = 'full', listing = 'catalog', areas = null, ttlSeconds = 600 }) {
+    async createAuthCode({ code, clientId, redirectUri, codeChallenge, codeChallengeMethod, googleAccount, profile = 'full', listing = 'catalog', areas = null, mode = 'live', costPolicy={mode:'per_action'}, ttlSeconds = 600 }) {
       state.codes.set(code, {
         code, client_id: clientId, redirect_uri: redirectUri,
         code_challenge: codeChallenge || null, code_challenge_method: codeChallengeMethod || null,
-        google_account: googleAccount ? norm(googleAccount) : null, profile, listing, areas,
+        google_account: googleAccount ? norm(googleAccount) : null, profile, listing, areas,mode,cost_policy:normalizeBillingPolicy(costPolicy,{account:googleAccount}),
         expires_at: afterSeconds(ttlSeconds), used: false
       });
     },
@@ -225,17 +226,17 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       return snapshot;
     },
 
-    async createAccessToken({ accessToken, refreshToken, clientId, googleAccount, profile = 'full', listing = 'catalog', areas = null, ttlSeconds = 3600 * 24 * 30 }) {
+    async createAccessToken({ accessToken, refreshToken, clientId, googleAccount, profile = 'full', listing = 'catalog', areas = null, mode = null, costPolicy={mode:'per_action'}, ttlSeconds = 3600 * 24 * 30 }) {
       state.tokens.push({
         access_token: accessToken, refresh_token: refreshToken || null, client_id: clientId,
-        google_account: googleAccount ? norm(googleAccount) : null, profile, listing, areas,
+        google_account: googleAccount ? norm(googleAccount) : null, profile, listing, areas,mode,cost_policy:normalizeBillingPolicy(costPolicy,{account:googleAccount}),
         expires_at: afterSeconds(ttlSeconds), created_at: at(), last_used_at: null, revoked_at: null
       });
     },
     async getTokenByRefreshToken(refreshToken) {
       if (!refreshToken) return null;
       const rows = state.tokens.filter((t) => t.refresh_token === refreshToken && !t.revoked_at).sort((a, b) => b.created_at - a.created_at);
-      return rows[0] ? { client_id: rows[0].client_id, google_account: rows[0].google_account, profile: rows[0].profile, listing: rows[0].listing, areas: rows[0].areas } : null;
+      return rows[0] ? { client_id: rows[0].client_id, google_account: rows[0].google_account, profile: rows[0].profile, listing: rows[0].listing, areas: rows[0].areas,mode:rows[0].mode,cost_policy:rows[0].cost_policy } : null;
     },
     async getAccessToken(accessToken) {
       const row = state.tokens.find((t) => t.access_token === accessToken && t.expires_at > at() && !t.revoked_at);
@@ -250,24 +251,36 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       if (row && (!row.last_used_at || row.last_used_at.getTime() < clock() - 60 * 1000)) row.last_used_at = at();
     },
     async createRtcPass(options){
-      const {account,areas,limit,ttl,forHub,allowWrites,profile}=passOptions(options);
+      const {account,areas,limit,ttl,forHub,allowWrites,profile,mode}=passOptions(options);
       if(!state.accounts.has(account))throw new Error('Unknown connected account.');
-      if(!String(process.env.RTC_TEST_ACCOUNT_EMAILS||'').split(',').map(x=>x.trim().toLowerCase()).includes(account))throw new Error('Scratch account not authorized.');
-      if(!Number.isInteger(limit)||limit<1||limit>600)throw new Error('Invalid rate limit.');
-      if(!Number.isInteger(ttl)||ttl<1||ttl>(forHub?365*24:30*24))throw new Error('Invalid duration.');
+      if(mode==='test'&&!String(process.env.RTC_TEST_ACCOUNT_EMAILS||'').split(',')
+        .map(x=>x.trim().toLowerCase()).includes(account))throw Error('Scratch account not authorized.');
       const token='rtc_pass_'+crypto.randomBytes(32).toString('base64url');
       const hash=crypto.createHash('sha256').update(token).digest('hex'),id='pass_'+hash.slice(0,20);
-      state.rtcPasses.set(id,{id,token_hash:hash,google_account:account,areas,profile,listing:'compact',mode:'test',allow_writes:allowWrites,for_hub:forHub,rate_limit_per_minute:limit,created_at:at(),expires_at:afterSeconds(ttl*3600),revoked_at:null});
+      const cost_policy=mode==='test'?{mode:'deny'}:normalizeBillingPolicy(options.costPolicy,{account});
+      state.rtcPasses.set(id,{id,token_hash:hash,google_account:account,areas,profile,
+        listing:'compact',mode,cost_policy,allow_writes:allowWrites,for_hub:forHub,
+        rate_limit_per_minute:limit,created_at:at(),expires_at:afterSeconds(ttl*3600),revoked_at:null});
       return {token,id};
     },
     async getRtcPass(token){
       if(typeof token!=='string'||!/^rtc_pass_[A-Za-z0-9_-]{43}$/.test(token))return null;
       const hash=crypto.createHash('sha256').update(token).digest('hex');
       const row=[...state.rtcPasses.values()].find(x=>x.token_hash===hash&&!x.revoked_at&&x.expires_at>at());
-      return row&&String(process.env.RTC_TEST_ACCOUNT_EMAILS||'').split(',')
-        .some(x=>x.trim().toLowerCase()===row.google_account)?{...row}:null;
+      if(!row)return null;
+      const enrolled=String(process.env.RTC_TEST_ACCOUNT_EMAILS||'').split(',')
+        .some(x=>x.trim().toLowerCase()===row.google_account);
+      return row.mode==='live'||row.mode==='test'&&enrolled?{...row}:null;
     },
-    async rtcPassFailureCode(token){if(typeof token!=='string'||!/^rtc_pass_[A-Za-z0-9_-]{43}$/.test(token))return 'permission';const hash=crypto.createHash('sha256').update(token).digest('hex');const row=[...state.rtcPasses.values()].find(x=>x.token_hash===hash);return !row?'permission':row.revoked_at?'pass_revoked':row.expires_at<=at()?'pass_expired':'permission';},
+    async rtcPassFailureCode(token){
+      if(typeof token!=='string'||!/^rtc_pass_[A-Za-z0-9_-]{43}$/.test(token))return 'permission';
+      const hash=crypto.createHash('sha256').update(token).digest('hex');
+      const row=[...state.rtcPasses.values()].find(x=>x.token_hash===hash);
+      if(!row)return 'permission';
+      if(row.revoked_at)return 'pass_revoked';
+      if(row.expires_at<=at())return 'pass_expired';
+      return 'permission';
+    },
     async revokeRtcPass(id){const row=state.rtcPasses.get(id);if(!row||row.revoked_at)return 0;row.revoked_at=at();return 1;},
     async listRtcPasses(){return [...state.rtcPasses.values()].map(({token_hash,...rest})=>({...rest,connection_id:rest.id,kind:'pass'}));},
     async chargeRtcPass(id,limit){const key=id+':'+Math.floor(clock()/60000);const n=state.rtcLimits.get(key)||0;if(n>=limit)return false;state.rtcLimits.set(key,n+1);return true;},
