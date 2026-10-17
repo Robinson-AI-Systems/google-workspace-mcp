@@ -32,7 +32,7 @@ export function redact(value, depth = 0) {
  */
 export async function recordChange(clients, { tool, target, summary, before, after, dryRun = false }) {
   try {
-    const id = await saveChange({
+    const id = await (clients?.store?.recordChange ?? saveChange)({
       actingAs: clients?.actingAs,
       connection: clients?.connection,
       tool, target, summary,
