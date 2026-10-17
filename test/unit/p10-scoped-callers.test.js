@@ -19,7 +19,7 @@ describe('P10 explicit caller injection: independent tenant cannot discover owne
  });
  it('rejects wrong customer, subject and scope before constructing a delegated provider',()=>{
   const delegated=scopedDelegationClients({
-   customerId:'C12345678',subject:'a@example.test',
+   customerId:'C12345678',subject:'a@example.test',verifiedSubjects:['a@example.test'],
    scopes:['https://www.googleapis.com/auth/gmail.settings.basic'],
    key:{client_email:'robot@testing.iam.gserviceaccount.com',private_key:'invalid_not_used'}
   });
