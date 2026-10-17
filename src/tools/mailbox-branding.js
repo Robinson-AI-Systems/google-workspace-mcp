@@ -143,7 +143,7 @@ export const handlers = {
       return ok({ done: false, reason: 'Domain-wide delegation is not set up. Run workspace_delegation_status for the steps.' });
     }
     const user = norm(args.userEmail);
-    if(!mailboxAllowed(clients,user))return ok({done:false,reason:'outside_scope: Delegated mailbox is not in this customer's verified access.'});
+    if(!mailboxAllowed(clients,user))return ok({done:false,reason:"outside_scope: Delegated mailbox is not in this customer's verified access."});
      const gmail=delegatedGmail(clients,user);
     const report = { user, primary: null, aliases: [], skipped: [], defaultSender: null };
 

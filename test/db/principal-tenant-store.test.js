@@ -36,9 +36,9 @@ describe.skipIf(!url)('P10: separate principal-owned result, audit and rate pers
     verifiedEmail:'b@example.test',scopeList:['openid','scope.b'],
     tokens:{access_token:'access-b',refresh_token:'refresh-b'}});
   ca=await store.issuePrincipalConnection({principal_id:a,account_id:aa,client_id:'client-A',
-    resource:'https://service.test/api/mcp',profile:'full',mode:'live'});
+    resource:'https://service.test/api/mcp',profile:'full',listing:'compact',areas:null,cost_policy:{mode:'per_action'},mode:'live'});
   cb=await store.issuePrincipalConnection({principal_id:b,account_id:bb,client_id:'client-B',
-    resource:'https://service.test/api/mcp',profile:'read_only',mode:'live'});
+    resource:'https://service.test/api/mcp',profile:'read_only',listing:'compact',areas:null,cost_policy:{mode:'per_action'},mode:'live'});
   ac=store.scopedStore(await store.readPrincipalAccess(ca.accessToken));
   bc=store.scopedStore(await store.readPrincipalAccess(cb.accessToken));
  });
