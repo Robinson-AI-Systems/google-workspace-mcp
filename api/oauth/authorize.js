@@ -195,18 +195,26 @@ export default async function handler(req, res) {
   const keptAccount=String(params.google_account||'').trim().toLowerCase();
   if(!ownerGoogle){
     if(!legacyEnabled)return res.status(403).send('New passphrase sign-in is disabled. Existing bearer connections remain valid.');
-    if(!process.env.ADMIN_PASSPHRASE)return res.status(503).send('Owner passphrase is not configured.');
+    if(!process.env.ADMIN_PASSPHRASE)
+      return res.status(500).send('Server misconfigured: ADMIN_PASSPHRASE is not set.');
     const verdict=await evaluateLogin({
       ip:clientIp(req),supplied:params.passphrase,expected:process.env.ADMIN_PASSPHRASE,
       store:{recordLoginAttempt,countRecentFailedLogins,markLoginAttemptSucceeded}
     });
     if(verdict.status==='locked'){
       res.setHeader('Retry-After',String(LOCKOUT_WINDOW_MINUTES*60));
-      return res.status(429).send(renderLoginPage({error:'Too many wrong passphrases. Try again after the lockout window.',
+      return res.status(429).send(renderLoginPage({
+        error:`Too many wrong passphrases from this connection. Wait ${LOCKOUT_WINDOW_MINUTES} minutes before trying again.`,
         hidden,accounts:[],selected:keptAccount,profile:params.profile}));
     }
-    if(verdict.status!=='ok')return res.status(401).send(renderLoginPage({
-      error:'Incorrect owner passphrase.',hidden,accounts:[],selected:keptAccount,profile:params.profile}));
+    if(verdict.status==='wrong'){
+      const left=verdict.attemptsLeft>0
+        ?` ${verdict.attemptsLeft} ${verdict.attemptsLeft===1?'try':'tries'} left before a ${LOCKOUT_WINDOW_MINUTES}-minute lockout.`
+        :` The next wrong try starts a ${LOCKOUT_WINDOW_MINUTES}-minute lockout.`;
+      return res.status(401).send(renderLoginPage({
+        error:`Incorrect passphrase. Your account choice was kept.${left}`,
+        hidden,accounts:[],selected:keptAccount,profile:params.profile}));
+    }
   }
   accounts=await listGoogleAccounts(); // Only after verified Google owner proof or passphrase.
   const chosen = keptAccount;
