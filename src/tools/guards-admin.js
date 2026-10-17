@@ -299,8 +299,8 @@ export const GUARDS_ADMIN = {
   // ---------- This server's own settings (read from the database, not Google) ----------
   workspace_set_default_account: { destructive: false, verify: (a, b, after) => after?.defaultAccount === lower(a.email),
     describe: (a) => ({ target: a.email, summary: `Make ${a.email} the default Google account (used by older connections that never picked one)` }),
-    before: async () => { const { listGoogleAccounts } = await import('../db.js'); return { defaultAccount: (await listGoogleAccounts()).find((x) => x.is_default)?.email || null }; },
-    after: async () => { const { listGoogleAccounts } = await import('../db.js'); return { defaultAccount: (await listGoogleAccounts()).find((x) => x.is_default)?.email || null }; } },
+    before: async (_args, clients) => { const { listGoogleAccounts } = await import('../db.js'); const accounts=clients?.store ? await clients.store.listAccounts() : await listGoogleAccounts(); return { defaultAccount: accounts.find((x) => x.is_default||x.isDefaultAccount)?.email || null }; },
+    after: async (_args, clients) => { const { listGoogleAccounts } = await import('../db.js'); const accounts=clients?.store ? await clients.store.listAccounts() : await listGoogleAccounts(); return { defaultAccount: accounts.find((x) => x.is_default||x.isDefaultAccount)?.email || null }; } },
   workspace_set_allowed_domains: { destructive: D,
     verify: (a, b, after) => { const wanted = normalizeDomains(a.domains || []); return sameSet(list(after?.allowedDomains), wanted.length ? wanted : [domainOfEmail(a.email)]); },
     describe: (a) => {
