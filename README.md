@@ -513,11 +513,14 @@ OAuth interface. Its additional RTC 1 HTTPS doors expose
 hashed TEST read-only pass. Existing MCP tool names are unchanged; HTTPS
 uses collision-safe `workspace_` aliases.
 
-The RTC integration and shared conformance suites run in CI. The Hub
-D-4 direct/relay/Sandbox connection tests and revocation must be
-**actually verified** before claiming live Hub compatibility. See
-`DEPLOY.md` and the Phase 8 ledger. These new RTC meta/owner tools
-are additional to the historical service-category counts above.
+The RTC integration and shared conformance suites run in CI. Actual Hub
+D-4 acceptance is complete: native audited Hub read, separate local direct,
+GitHub-only encrypted relay and Vercel Sandbox direct routes passed, with
+same-pass issuer revocation and temporary-infrastructure cleanup verified.
+See the [final route evidence](docs/plan/evidence/2026-10-17-final-hub-route-acceptance.json)
+and [Phase 8 ledger](docs/plan/TASKS.md) for exact revisions, UTC results and
+retained limitations. These RTC meta/owner tools are additional to the
+historical service-category counts above.
 
 
 ### Developer integration readiness
@@ -541,7 +544,7 @@ and API-area breakdowns, and a bounded list of trusted Google Console remediatio
 links. Unsupported or unobservable authorizations remain `not_readable`. It returns observed `ready`, `missing`
 and `not_readable` findings; Admin-console-only permissions remain
 unverified until separately checked. This is a complete read-only
-integration check, not fixture creation/cleanup; all three P8-7 fixture families are now implemented with exact-ID cleanup and crash reconciliation tests. Real Google TEST acceptance and full Hub routes remain open in `docs/plan/TASKS.md`.
+integration check, not fixture creation/cleanup; all three P8-7 fixture families are now implemented with exact-ID cleanup and crash reconciliation tests. Authorized Google TEST fixture acceptance and full Hub routes are accepted in [the ledger](docs/plan/TASKS.md); documented no-resource and owner-excluded live cases retain their stated limits.
 
 
 

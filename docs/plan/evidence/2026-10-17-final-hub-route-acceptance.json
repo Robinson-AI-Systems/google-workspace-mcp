@@ -1,0 +1,187 @@
+{
+  "schema": 1,
+  "verdict": "PASSED",
+  "criterion": "D-4",
+  "relayRead": {
+    "source": "f6f916b8f2f6a596583328540593f3098dc2ff27",
+    "workspaceSource": "42afbaaf138d293d6042acd874c0fd3c32f7ce0e",
+    "sessionId": "sbx_GXiGITwTwCH12ZEc55q4kD3dmwCQ",
+    "commandId": "cmd_ad83130c8bd948ffac1caf49b729",
+    "at": "2026-10-17T01:13:27.083Z",
+    "exitCode": 0,
+    "durationMs": 22856,
+    "report": {
+      "ok": true,
+      "route": "relay",
+      "checks": [
+        "rtc_1_manifest",
+        "read_only_pass",
+        "test_mode",
+        "read_only_metadata",
+        "guarded_read"
+      ],
+      "code": "verified"
+    }
+  },
+  "relayRevocation": {
+    "at": "2026-10-17T01:14:45.484Z",
+    "exitCode": 0,
+    "route": "relay",
+    "code": "pass_revoked",
+    "sameCredential": true,
+    "durationMs": 4251
+  },
+  "issuerRevokedAt": "2026-10-17T01:14:32.929Z",
+  "nativeHubAfterCleanup": {
+    "at": "2026-10-17T01:20:17.576Z",
+    "name": "workspace_whoami",
+    "server": "google-workspace-mcp",
+    "correlationId": "cd0111cb-0498-4315-9f36-4f4cdfb49ebd",
+    "readPassed": true
+  },
+  "cleanup": {
+    "sandboxStopped": true,
+    "persistent": false,
+    "issue": 4,
+    "issueClosed": true,
+    "commentsRemaining": 0,
+    "webhookInactive": true,
+    "temporaryAutomationBypassRevoked": true,
+    "temporaryAgentTokenRevoked": true,
+    "temporaryAgentTokenHttpStatus": 401,
+    "productionServersAndBindings": "empty objects",
+    "developmentTokenEntry": "inert marker",
+    "cleanupDeployment": "B3J1S9unM1S4LmHe4rbvJqzJ8hvc (deployment ID suffix)",
+    "cleanupDeploymentState": "READY",
+    "existingHubGrantPreserved": true
+  },
+  "priorSandboxAndNativeEvidence": "PR #224 and #226; original dated audit retained",
+  "limitations": [
+    "Single actual Workspace service accepted; other fleet services retain independent obligations",
+    "Relay revocation proves exact pass_revoked envelope; upstream HTTP 401 independently verified by direct original probe"
+  ],
+  "localDirect": {
+    "source": "f6f916b8f2f6a596583328540593f3098dc2ff27",
+    "workspaceSource": "42afbaaf138d293d6042acd874c0fd3c32f7ce0e",
+    "environment": "Separate Codex local executor Node24.19.0; not Vercel Sandbox",
+    "expectedRoute": "direct",
+    "at": "2026-10-17T00:47:41.439Z",
+    "command": "node scripts/agent-check.mjs --server workspace --read-tool workspace_whoami --pass-env RTOOL_D4_TEST_PASS --expect-route direct --authorized-real-run",
+    "exitCode": 0,
+    "report": {
+      "ok": true,
+      "route": "direct",
+      "checks": [
+        "rtc_1_manifest",
+        "read_only_pass",
+        "test_mode",
+        "read_only_metadata",
+        "guarded_read"
+      ],
+      "code": "verified"
+    }
+  },
+  "localRevocation": {
+    "at": "2026-10-17T01:14:43.007Z",
+    "exitCode": 0,
+    "report": {
+      "schema": 1,
+      "server": "workspace",
+      "ok": true,
+      "revocationVerified": true,
+      "route": "direct",
+      "state": "ready",
+      "reason": "explicit_pass_revoked",
+      "httpStatus": 401,
+      "fullAcceptance": false
+    }
+  },
+  "preflight": [
+    {
+      "name": "permissions",
+      "at": "2026-10-17T01:10:56.878Z",
+      "exitCode": 0,
+      "report": {
+        "ok": true,
+        "code": "transport_verified",
+        "repositoryPrivate": true,
+        "issueRead": true,
+        "commentCreate": true,
+        "commentDelete": true,
+        "leastPrivilegeVerified": false
+      }
+    },
+    {
+      "name": "ingress",
+      "at": "2026-10-17T01:11:04.485Z",
+      "exitCode": 0,
+      "report": {
+        "ok": true,
+        "code": "signed_ingress_verified",
+        "harmlessEventIgnored": true,
+        "invalidSignatureRejected": true,
+        "rtcCalls": 0
+      }
+    }
+  ],
+  "issueCleanup": {
+    "at": "2026-10-17T01:15:27.788Z",
+    "ciphertextCommentsRemaining": 0,
+    "temporaryIssueClosed": true
+  },
+  "agentTokenRevocation": {
+    "at": "2026-10-17T01:17:00.179Z",
+    "githubTemporaryCredentialRejected": true,
+    "http": 401
+  },
+  "tokenLeastPrivilege": {
+    "verifiedInSignedInUI": true,
+    "repository": "Robinson-AI-Systems/robinsons-toolkit-relay",
+    "permissions": [
+      "Metadata read",
+      "Issues read/write"
+    ],
+    "organizationPermissions": false,
+    "existingHostedTokenPreserved": true
+  },
+  "network": {
+    "allowedHosts": [
+      "api.github.com"
+    ],
+    "directWorkspaceDenied": true,
+    "githubReachable": true,
+    "sandboxNode": "v24.21.0",
+    "localNode": "v24.19.0"
+  },
+  "workspaceAcceptance": {
+    "criterion": "GOOGLE-RTC / P8-5",
+    "hubPR": 227,
+    "hubHead": "15b0daeb4b48c7b98497725d4ecaa86cde92eb13",
+    "hubMerge": "d6211b13e19699944c4a2bd5321528379d0204c8",
+    "workspaceSource": "42afbaaf138d293d6042acd874c0fd3c32f7ce0e",
+    "newWorkspaceRuntimeChanges": false,
+    "hubCI": {
+      "run": 38990598599,
+      "allSixJobs": "success",
+      "releasePolicyRun": 38990598589,
+      "releasePolicy": "success"
+    },
+    "hubPermanentReceipt": "https://github.com/Robinson-AI-Systems/robinsons-toolkit-hub/pull/227#issuecomment-6227918377",
+    "hubPostMergeCI": {
+      "run": 38990688027,
+      "allSixJobs": "success",
+      "releasePolicyRun": 38990687974,
+      "releasePolicy": "success"
+    }
+  },
+  "completedEngineeringDisposition": [
+    {
+      "id": "P8-5",
+      "state": "EXTERNAL_ONLY",
+      "remaining": "Workspace RTC1 implementation, actual two-process shared-PG14probe conformance and deployed direct HTTP/provider acceptance are complete. Native Hub->Workspace discovery/read/durable audit accepted. No reverse discovery or Workspace engineering remains. Broader original Hub relay/Sandbox/revocation acceptance must be reconciled in Hub project.",
+      "evidence": "Hub #213/#215 immutable package f173a0aeb070f1ca52188e9acab5bcccf53d81c7; scripts/rtc-conformance-ci.mjs and rtc-workspace-conformance.mjs; test/conformance actual server/provider/SQL adapters. Actions 38779326658/job116575122533: manifest, OpenAPI, full catalog, meta, projected/oversized isolated reads, guarded audited writes, missing/read-only/expired/revoked passes, safety, budget, real OAuth refresh settings, two-instance shared counter all PASS; 1697 unit +59 actual PG +28 RTC tests pass. release-policy run38779326675 PASS. PR144 final docs head must retain green checks and review before merge.",
+      "next": "Give Hub agent the existing PR224 receipt and original D-4 criteria; reuse valid proof, finish applicable route-specific acceptance or establish contract-based nonapplicability. Do not rebuild working connection or change Workspace.",
+      "gate": "Hub-agent-owned acceptance reconciliation only. Native connection is already proved; broader routes are not inferred from it."
+    }
+  ]
+}

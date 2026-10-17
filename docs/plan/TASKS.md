@@ -1,3 +1,11 @@
+## October 17 — final Workspace acceptance complete
+
+The owner asked this agent to complete the two remaining Hub-specific tests. Actual original Hub runner acceptance is now complete in Hub PR #227: separate local direct and GitHub-only encrypted relay both passed all five checks with exit0 against the existing independent Workspace RTC service. The same new TEST/read_only/nonwriting pass was then revoked by Workspace; original direct probe verified HTTP401 `pass_revoked`, and the original encrypted relay returned the exact same denial envelope. Earlier actual Sandbox direct, native Hub discovery/read/durable audit, read-only refusal and cleanup proofs remain accepted from Hub #224/#226 and Workspace #194/#196.
+
+Sanitized exact source, UTC, command, route, exit, least-privilege and cleanup evidence: [final Hub route acceptance](evidence/2026-10-17-final-hub-route-acceptance.json). Hub executable source `f6f916b8f2f6a596583328540593f3098dc2ff27`; Workspace service source `42afbaaf138d293d6042acd874c0fd3c32f7ce0e`. The temporary Sandbox is stopped, temporary pass/PAT revoked, transport issue closed/zero comments, webhook inactive, bypass revoked, relay bindings empty and Dev credential entry inert. The standing useful Hub grant is preserved and another genuine native Hub read succeeded after cleanup.
+
+**GOOGLE-RTC PASSED; P8-5 DONE. All 29 release acceptance tasks PASSED. All 48 required roadmap subsections are complete; optional P8-6 remains ON_REQUEST and does not block completion.** No reverse Workspace-to-Hub discovery or additional Workspace runtime release is needed. The remaining documented limitations retain their original dispositions: unsupported feature retired; no-resource exact GET cases development-tested; Vault live positives owner-excluded. No additional real Google positive call is claimed from this Hub transport proof. Other Hub fleet service obligations are outside Workspace completion.
+
 ## October 15 — genuine deployed P8-8 delegated-mailbox acceptance
 
 Current October16 closeout: source42afbaa READY; encrypted-only retirement complete for2accounts with account/legacy plaintext0; catalog developer audit complete with explicit limits.28/29 acceptance tasks passed. Only broader Hub-owned route acceptance reconciliation remains pending; native Hub->Workspace discovery/read/audit is already proved. Alert Center activation is an explicit Google read/write delegation configuration choice, default off. See final released record and encrypted-cutover evidence below.
@@ -215,16 +223,7 @@ restricts only the named operation. Source completion never proves actual Google
 
 <!-- engineering-readiness:start -->
 ```json
-[
-  {
-    "id": "P8-5",
-    "state": "EXTERNAL_ONLY",
-    "remaining": "Workspace RTC1 implementation, actual two-process shared-PG14probe conformance and deployed direct HTTP/provider acceptance are complete. Native Hub->Workspace discovery/read/durable audit accepted. No reverse discovery or Workspace engineering remains. Broader original Hub relay/Sandbox/revocation acceptance must be reconciled in Hub project.",
-    "evidence": "Hub #213/#215 immutable package f173a0aeb070f1ca52188e9acab5bcccf53d81c7; scripts/rtc-conformance-ci.mjs and rtc-workspace-conformance.mjs; test/conformance actual server/provider/SQL adapters. Actions 38779326658/job116575122533: manifest, OpenAPI, full catalog, meta, projected/oversized isolated reads, guarded audited writes, missing/read-only/expired/revoked passes, safety, budget, real OAuth refresh settings, two-instance shared counter all PASS; 1697 unit +59 actual PG +28 RTC tests pass. release-policy run38779326675 PASS. PR144 final docs head must retain green checks and review before merge.",
-    "next": "Give Hub agent the existing PR224 receipt and original D-4 criteria; reuse valid proof, finish applicable route-specific acceptance or establish contract-based nonapplicability. Do not rebuild working connection or change Workspace.",
-    "gate": "Hub-agent-owned acceptance reconciliation only. Native connection is already proved; broader routes are not inferred from it."
-  }
-]
+[]
 ```
 <!-- engineering-readiness:end -->
 
@@ -260,8 +259,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "docs/plan/TASKS.md",
     "gates": "Hub discovers Workspace; no reverse discovery dependency. Native scoped/audited route accepted. Broader route-specific obligations remain Hub-agent-owned; reuse existing evidence, finish applicable original criteria or document contract-based nonapplicability. No Hub changes here.",
     "dependsOn": [],
-    "status": "PENDING",
-    "lastEvidence": "Clarification: PR194 correctly proves native Hub connection but must not imply that native reads pass separately listed relay/Sandbox/revocation requirements. Hub PR224 final hosted receipt6216311463 proves actual TEST discovery/providerread and2 durable attempt/outcome events. Hub RTC1 section1 assigns CLI/relay/SDK doors to Hub, not service servers. No Workspace runtime Hub-discovery code exists or is needed. Broader Hub acceptance has no new proof here; preserve as PENDING for Hub-agent reconciliation, with no duplicate connection implementation or Workspace release required."
+    "status": "PASSED",
+    "lastEvidence": "2026-10-17: Hub PR227 original local direct and GitHub-only encrypted relay all5/exit0; same new independent TEST pass revoked, original direct401 pass_revoked and relay denial PASS; temporary credential/Sandbox/issue/webhook/bypass/binding cleanup verified, standing Hub connection intact. Prior native Hub/Sandbox proofs retained from Hub224/226 and Workspace194/196. Exact merged Hub receipt in docs/plan/evidence/2026-10-17-final-hub-route-acceptance.json. No new Workspace runtime or reverse discovery needed."
   },
   {
     "id": "GOOGLE-DIRECT-READ",
@@ -1830,7 +1829,7 @@ is already on `main` were moved to `MERGED` or `DONE`.
 | P8-2 | DONE | retained checked merges / #194 | Original immutable connection/refresh/profile/listing/area proof and genuine deployed HTTP/pass identity/denials accepted in queue. Native scoped/audited Hub route also proved; no Hub-to-service permission shortcut. |
 | P8-3 | DONE | retained checked merges / #194 | Actual owner-form TEST pass issuance/ownership/readonly/area/refusal/revocation accepted in original queue, including runtime TEST withdrawal proof. Useful unrelated grant preserved until expiry. |
 | P8-4 | DONE | retained checked merges / #194 | Original P8-4-HTTP-CONTRACT and wire receipts PASSED: real deployed contract, independent pass identity, guard/result ownership, actual rate limits and source-specific provider read proofs. Broader Hub-only paths stay separately tracked. |
-| P8-5 | IN_PROGRESS | #34, #144, #194 | Workspace conformance14/14 and native Hub discovery/provider-read/durable-audit accepted. Broader original relay/Sandbox/whole-route revocation needs Hub-agent reconciliation; no Workspace engineering or reverse Hub discovery remains. |
+| P8-5 | DONE | #34, #144, #194; Hub #227 | Workspace conformance14/14, native Hub discovery/read/audit, separate original local direct, GitHub-only encrypted relay, Sandbox direct, same-pass revocation and cleanup accepted. Final receipt docs/plan/evidence/2026-10-17-final-hub-route-acceptance.json. |
 | P8-6 | WAITING (optional reuse) | | Published immutable core and export-specific original-service parity; does not block P8-5, RTC routing or real Hub acceptance |
 | P8-7 | DONE | #40–#48, #101–#103, #109, #144, #187 | Original fixture/cleanup/integration criteria accepted: exact-ID record/ownership/foreign-object/trash-only/preview/confirm/readback/audit source and PG proof; actual authorized Drive/Calendar/Gmail create/replay/cleanup and recovery/denial receipts PASSED. Current exact app readiness restored on READYf96 by genuine combined consent; actual three-scope and six-API/four-scope readiness remain ready after genuine saved-grant refresh, all2accounts encrypted ready. All fixtures cleaned; no recreated objects or repeat credit for inherited code. Full catalog, separate Hub route acceptance and future plaintext cutover remain open in their own cards. |
 | P8-8 | DONE | #36, #56, #58–60, #99, #110, #123, #163–166, #168 | Dated actual Console walk and153-topic correction accepted; readbacks/audience proofs retained. New actual policies-only owner overview at READY5c23755 reconciles250policies/37rules/10areas with direct both-domain audits, honest needs_attention/UNKNOWN/effective:false; original queue criteria passed. |
