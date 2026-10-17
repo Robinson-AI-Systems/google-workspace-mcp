@@ -9,6 +9,16 @@ vi.mock('../../src/db.js',async importActual=>{
  const real=await importActual();
  return Object.fromEntries(Object.keys(real).map(n=>[n,(...args)=>holder.db[n](...args)]));
 });
+vi.mock('../../src/principals/store.js',()=>({
+  legacyOwnerContext:async token=>{
+    const found=await holder.db.getAccessToken(token);
+    if(!found)return null;
+    return Object.freeze({principal_id:'00000000-0000-4000-8000-000000000001',
+      principal_kind:'legacy_owner',google_account:found.google_account,
+      profile:found.profile,listing:found.listing,areas:found.areas});
+  },
+  readPrincipalAccess:async()=>null
+}));
 vi.mock('../../src/auth/google-auth-hosted.js',()=>({
  ensureMigrated:async()=>{},
  buildHostedApiClients:async account=>({actingAs:account,gmail:{users:{getProfile:async()=>({data:{emailAddress:account}})}}})

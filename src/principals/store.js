@@ -31,7 +31,8 @@ export async function initPrincipalSchema(q=sql()){
    principal_id UUID PRIMARY KEY REFERENCES principals(id),account_id UUID NOT NULL,
    FOREIGN KEY(account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id))`;
  await q`CREATE TABLE IF NOT EXISTS principal_legacy_accounts (
-   email TEXT PRIMARY KEY REFERENCES google_accounts(email),principal_id UUID NOT NULL REFERENCES principals(id),
+   email TEXT PRIMARY KEY REFERENCES google_accounts(email) ON DELETE CASCADE,
+   principal_id UUID NOT NULL REFERENCES principals(id),
    CHECK(principal_id='00000000-0000-4000-8000-000000000001'::uuid))`;
  // The installation's existing rows belong only to the explicit owner; never
  // derive an owner from whichever public browser happens to arrive first.
