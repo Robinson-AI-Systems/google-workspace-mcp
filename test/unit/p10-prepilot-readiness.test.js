@@ -45,7 +45,7 @@ beforeEach(()=>{
  process.env.GOOGLE_OAUTH_CLIENT_ID='legacy-client';
  process.env.GOOGLE_OAUTH_CLIENT_SECRET='legacy-secret';
  process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID='different-public-client';
- process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET='different-public-secret';
+ process.env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET='different-public-secret';
  process.env.TOKEN_ENCRYPTION_KEY=Buffer.alloc(32,7).toString('base64');
  process.env.PUBLIC_SUPPORT_EMAIL='support@example.test';
  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='google-sub-a,google-sub-b';
@@ -119,7 +119,7 @@ describe('P10-6 source-derived pilot configuration, without trusting it as accep
  });
  it('flags missing/duplicated public credentials and rejects roster guesses without changing flags',()=>{
   process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID='legacy-client';
-  process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET='legacy-secret';
+  process.env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET='legacy-secret';
   process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='same-sub,same-sub';
   delete process.env.PUBLIC_SUPPORT_EMAIL;
   const out=pilotReadiness();
@@ -128,6 +128,16 @@ describe('P10-6 source-derived pilot configuration, without trusting it as accep
   expect(out.pilotRosterCount).toBe(2);
   expect(out.currentMode).toBe('off');
   expect(out.pilotAcceptancePassed).toBe(false);
+ });
+ it('refuses to call an unsafe public-prefix secret configured and never leaks its value',()=>{
+  delete process.env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET;
+  process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET='unsafe-config-visible-secret';
+  const report=pilotReadiness();
+  expect(report.configComplete).toBe(false);
+  expect(report.checks.find(c=>c.name==='Separate public Google OAuth client secret')).toMatchObject({
+   status:'action_required'
+  });
+  expect(JSON.stringify(report)).not.toContain('unsafe-config-visible-secret');
  });
  it('public switch still does not turn a local check into authorization for publication',()=>{
   process.env.PUBLIC_SIGNIN_MODE='public';

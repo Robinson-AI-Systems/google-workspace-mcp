@@ -15,7 +15,7 @@ beforeEach(()=>{
  prior={...process.env};
  process.env.PUBLIC_BASE_URL='https://mcp.example.test';
  process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID='public-client-id.apps.googleusercontent.com';
- process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET='public-secret-of-distinct-app';
+ process.env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET='public-secret-of-distinct-app';
  process.env.TOKEN_ENCRYPTION_KEY=crypto.randomBytes(32).toString('base64');
  process.env.PUBLIC_SIGNIN_MODE='pilot';
  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='google-sub-a,google-sub-b';
@@ -35,6 +35,17 @@ describe('P10 Google OIDC, no legacy fallback, provider PKCE and encrypted scope
   expect(publicGoogleClient()).toBeTruthy();
   expect(mock.clientId.id).toBe('public-client');
   expect(mock.clientId.redirect).toBe('https://mcp.example.test/api/auth/google/callback');
+ });
+ it('fails closed if only a public-prefixed or original owner OAuth secret exists',()=>{
+  delete process.env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET;
+  process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET='do-not-read-public-config';
+  process.env.GOOGLE_OAUTH_CLIENT_SECRET='legacy-owner-secret';
+  expect(()=>publicGoogleClient()).toThrow('public_google_not_configured');
+  process.env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET='server-only-secret';
+  const client=publicGoogleClient();
+  expect(client).toBeTruthy();
+  expect(mock.clientId.secret).toBe('server-only-secret');
+  expect(mock.clientId.secret).not.toBe(process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET);
  });
  it('requests only OIDC login scopes with S256 and binds state/nonce',()=>{
   const client=publicGoogleClient();

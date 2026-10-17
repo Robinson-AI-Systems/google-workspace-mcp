@@ -10,7 +10,7 @@ export const PUBLIC_SCOPE_GROUPS=Object.freeze({
  adminVerify:['https://www.googleapis.com/auth/admin.directory.user.readonly']
 });
 export function publicGoogleClient(env=process.env){
- const id=env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID,secret=env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET;
+ const id=env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID,secret=env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET;
  requireScope(typeof id==='string'&&id.length>5&&typeof secret==='string'&&secret.length>5,'public_google_not_configured');
  // The callback must be registered on a separately owned Google OAuth app.
  return new google.auth.OAuth2(id,secret,publicResource()+'/api/auth/google/callback');

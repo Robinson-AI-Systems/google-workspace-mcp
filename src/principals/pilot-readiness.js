@@ -19,9 +19,9 @@ export function pilotReadiness(env=process.env){
   const separateId=configured(env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID)&&
     (!configured(env.GOOGLE_OAUTH_CLIENT_ID)||
       env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID!==env.GOOGLE_OAUTH_CLIENT_ID);
-  const distinctSecret=configured(env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET)&&
+  const distinctSecret=configured(env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET)&&
     (!configured(env.GOOGLE_OAUTH_CLIENT_SECRET)||
-      env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET!==env.GOOGLE_OAUTH_CLIENT_SECRET);
+      env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET!==env.GOOGLE_OAUTH_CLIENT_SECRET);
   const roster=String(env.PUBLIC_PILOT_GOOGLE_SUBJECTS||'').split(',')
     .map(v=>v.trim()).filter(Boolean);
   const unique=new Set(roster);
@@ -36,7 +36,7 @@ export function pilotReadiness(env=process.env){
     noSecret('Separate public Google OAuth client ID',separateId,
       'Configure PUBLIC_GOOGLE_OAUTH_CLIENT_ID from a distinct Google OAuth client, never the owner client.'),
     noSecret('Separate public Google OAuth client secret',distinctSecret,
-      'Configure the matching PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET directly in protected environment settings.'),
+      'Configure the matching server-only GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET as a Vercel Production Secret, never as a PUBLIC_-prefixed Config.'),
     noSecret('Encrypted V2 grants',encryptionReady,
       'A 32-byte base64 TOKEN_ENCRYPTION_KEY must already exist; do not rotate the working owner key.'),
     noSecret('Original owner OAuth preserved',configured(env.GOOGLE_OAUTH_CLIENT_ID)&&
