@@ -1,0 +1,152 @@
+{
+  "status": "bounded runtime audit evidence; checked paths and symbols only; not an all-repository search",
+  "sourceBase": "33422162ac7eceb0f6c21fe36dc027808159cc3d",
+  "purpose": "Separate development-agent constraints from user-selected permission, actual Google API entitlements and technical abuse protections.",
+  "reviewedPaths": [
+    "src/tools/bulk.js",
+    "src/tools/licensing.js",
+    "src/tools/guards-admin.js",
+    "src/tools/write.js",
+    "src/rtc/pass-options.js",
+    "src/rtc/catalog.js",
+    "src/rtc/billing-authority.js",
+    "src/rtc/openapi.js",
+    "api/rtc-gateway.js",
+    "api/rtc/passes.js",
+    "api/oauth/authorize.js",
+    "api/oauth/token.js",
+    "api/mcp.js",
+    "src/oauth/connection-settings.js",
+    "src/db.js",
+    "test/unit/bulk.test.js",
+    "test/unit/rtc-https.test.js",
+    "test/unit/rtc-pass-page.test.js"
+  ],
+  "searchCommandsForImplementer": [
+    "rg -n 'independent_spending_approval_required|TEST|testAccountEnrolled|forHub|allowWrites' src api docs",
+    "rg -n 'money:|billing|cost|spend|limit|deny|refused' src/tools src/rtc src/oauth api",
+    "rg -n 'defineWrite|confirmWhen|profile|areas|allowedTool|licensed' src api",
+    "rg -n 'getRtcPass|createRtcPass|mode|cost_policy|costPolicy' src api test"
+  ],
+  "classifications": [
+    {
+      "path": "src/tools/bulk.js",
+      "symbol": "denial",
+      "trigger": "assign_license or change_license always denied despite selected user authority",
+      "classification": "developer restriction incorrectly promoted to product hard denial",
+      "disposition": "P9-2: request-bound cost warning plus user per-action/standing approval, guarded original child readback",
+      "testSeam": "test/unit/bulk.test.js"
+    },
+    {
+      "path": "src/rtc/pass-options.js",
+      "symbol": "passOptions",
+      "trigger": "forHub && allowWrites always denied; no normal-use profile or live mode",
+      "classification": "developer TEST policy improperly applied to end-user product",
+      "disposition": "P9-3: retain TEST restrictions; support explicit authenticated live profile, areas, write selection and normal credentials",
+      "testSeam": "test/unit/rtc-pass-page.test.js"
+    },
+    {
+      "path": "src/db.js",
+      "symbol": "createRtcPass/getRtcPass",
+      "trigger": "all passes require RTC_TEST_ACCOUNT_EMAILS on issuance and every access",
+      "classification": "developer TEST fixture enrollment misapplied to live credentials",
+      "disposition": "P9-3: TEST-only allowlist; live authorized account validated against connected mailboxes, mode persisted",
+      "testSeam": "test/unit/rtc-https.test.js"
+    },
+    {
+      "path": "api/rtc/passes.js",
+      "symbol": "handler",
+      "trigger": "owner form can issue only TEST identity",
+      "classification": "developer acceptance route is not normal product delegation",
+      "disposition": "P9-3: expose owner-authenticated normal-use pass choice without deleting TEST setup",
+      "testSeam": "test/unit/rtc-pass-page.test.js"
+    },
+    {
+      "path": "src/rtc/openapi.js",
+      "symbol": "rtcOpenapi",
+      "trigger": "wire schema says mode const test and only TEST credentials",
+      "classification": "outdated developer-only product claim",
+      "disposition": "P9-3: real test/live enum and consistent identity and manifest claims",
+      "testSeam": "test/unit/rtc-openapi.test.js"
+    },
+    {
+      "path": "src/rtc/catalog.js",
+      "symbol": "allowedTool",
+      "trigger": "read_only and areas refuse tools; everyday excludes certain high-impact admin areas",
+      "classification": "user-selected security boundary",
+      "disposition": "P9-1: preserve and expose explicit broader profiles; fixture mutations remain TEST-only",
+      "testSeam": "test/unit/rtc-profile.test.js"
+    },
+    {
+      "path": "src/tools/guards-admin.js",
+      "symbol": "licensing_assign_license/licensing_update_assignment",
+      "trigger": "individual license changes are guarded and warn about charges",
+      "classification": "user safety and actual provider billing consequence",
+      "disposition": "P9-1/P9-2: retain existing original handler previews, explicit confirmation, readback, audit and SDK request shape",
+      "testSeam": "test/unit/bulk.test.js"
+    },
+    {
+      "path": "src/tools/write.js",
+      "symbol": "defineWrite",
+      "trigger": "destructive calls require confirmation and are logged",
+      "classification": "user safety, not developer spending ceiling",
+      "disposition": "P9-2: only trusted narrow standing cost policy can substitute redundant parent bulk confirmation, without child guard removal",
+      "testSeam": "test/unit/bulk.test.js"
+    },
+    {
+      "path": "api/mcp.js",
+      "symbol": "buildServer",
+      "trigger": "OAuth bearer determines actual account, profiles, areas",
+      "classification": "user-selected authorization boundary",
+      "disposition": "P9-3: server-stored mode and billing policy carried into actual native client dispatch; tool arguments cannot escalate",
+      "testSeam": "test/unit/oauth-connection-settings.test.js"
+    },
+    {
+      "path": "src/oauth/connection-settings.js",
+      "symbol": "normalizeConnectionPolicy",
+      "trigger": "legacy tokens have no explicit mode; refresh must not widen scopes",
+      "classification": "security boundary plus backward compatibility",
+      "disposition": "P9-3: preserve null historical mode and exact new stored live selection/cost authority during refresh",
+      "testSeam": "test/unit/oauth-connection-settings.test.js"
+    },
+    {
+      "path": "api/oauth/authorize.js",
+      "symbol": "owner login form",
+      "trigger": "ADMIN_PASSPHRASE selects owner mailbox and profile",
+      "classification": "existing owner authentication; not a developer fixture restriction",
+      "disposition": "P9-3: preserve owner passphrase and add selected live cost consent; public user login belongs P10",
+      "testSeam": "test/unit/oauth-connection-settings.test.js"
+    },
+    {
+      "path": "src/rtc/catalog.js",
+      "symbol": "toolMetadata",
+      "trigger": "money false for license API despite possible indirect account charges",
+      "classification": "provider billing risk versus direct money-out distinction",
+      "disposition": "P9-4: retain money-out meaning and add billingRisk warning in metadata and count",
+      "testSeam": "test/unit/rtc-openapi.test.js"
+    },
+    {
+      "path": "src/tools/bulk.js",
+      "symbol": "normalizeBulkArgs",
+      "trigger": "twenty-target and exact email restriction",
+      "classification": "technical/provider request bounds and consent target protection",
+      "disposition": "P9-2: preserve target limit and exact normalized target digest; never auto expand",
+      "testSeam": "test/unit/bulk.test.js"
+    },
+    {
+      "path": "api/rtc-gateway.js",
+      "symbol": "chargeRtcPass / result handles",
+      "trigger": "bounded calls and data size per issued pass",
+      "classification": "server availability and privacy controls",
+      "disposition": "P9-3: preserve rate limits, expiry, ownership and result projection in both modes",
+      "testSeam": "test/unit/rtc-https.test.js"
+    }
+  ],
+  "nonClaims": [
+    "No actual billed Google request was made by this audit.",
+    "Other repos and the Hub are not governed by this classification.",
+    "Existing original-scope P0-P8 acceptance cannot establish P9 product acceptance.",
+    "No public multi-user login was activated; P10 remains separate.",
+    "Only files listed under reviewedPaths have been read or source-pinned in this bounded evidence."
+  ]
+}
