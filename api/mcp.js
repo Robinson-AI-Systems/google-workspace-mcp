@@ -10,6 +10,7 @@ import { buildHostedApiClients, ensureMigrated } from '../src/auth/google-auth-h
 import { getAccessToken, initSchema, touchAccessToken, connectionId, getAllowedDomains } from '../src/db.js';
 import { onceSuccessful } from '../src/once.js';
 import { listedTools, allowedTool, toolMetadata } from '../src/rtc/catalog.js';
+import {readPrincipalAccess,legacyOwnerContext} from '../src/principals/store.js';
 
 export const config = { api: { bodyParser: true } };
 
@@ -72,12 +73,31 @@ export default async function handler(req, res) {
     return;
   }
 
+  // P10-B can issue individual credentials but MUST NOT execute public tools
+  // before P10-4 verifies EVERY provider/storage/guard caller. No owner fallback.
+  if(token.startsWith('p10a_')){
+    const user=await readPrincipalAccess(token);
+    if(!user){
+      if(base)res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
+      res.status(401).json({error:'invalid_token'});return;
+    }
+    res.status(403).json({error:'public_dispatch_not_enabled',
+      error_description:'Principal tool isolation has not passed the required P10-4 gate.'});return;
+  }
+  if(token.startsWith('p10')){
+    res.status(401).json({error:'invalid_token'});return;
+  }
   const tokenRecord = await getAccessToken(token);
   if (!tokenRecord) {
     if(base)res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
     res.status(401).json({ error: 'invalid_token' });
     return;
   }
+
+  // Only a real persisted legacy bearer selects the one explicit owner
+  // principal. No cookie, URL, email suffix or supplied account id can do so.
+  const ownerContext=await legacyOwnerContext(token);
+  if(!ownerContext){res.status(401).json({error:'invalid_token'});return;}
 
   // Upgrade older deployments (one shared Google login) in place, once per
   // warm instance. The migration itself remains idempotent for cold starts.

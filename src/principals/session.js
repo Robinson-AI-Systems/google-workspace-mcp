@@ -17,10 +17,12 @@ export function requireCsrf(req,session,body={}){
 }
 export async function setSession(res,principalId){
  const {secret,csrf}=await createSession(principalId);
+ const existing=res.getHeader?.('Set-Cookie')||[];
  res.setHeader('Set-Cookie',[
+   ...(Array.isArray(existing)?existing:[existing]),
    cookie(SESSION_COOKIE,secret,'/',86400),
    cookie(CSRF_COOKIE,csrf,'/',86400)
- ]);
+ ].filter(Boolean));
  return {principalId};
 }
 export async function clearSession(req,res){

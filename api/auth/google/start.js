@@ -7,24 +7,26 @@ import {publicMode,publicResource,requireScope,mint,cookie,headers} from '../../
 import {requireSession,requireCsrf,BROWSER_COOKIE} from '../../../src/principals/session.js';
 export default async function handler(req,res){
  headers(res);
- if(req.method!=='GET'){res.status(405).json({error:'method_not_allowed'});return;}
+ if(!['GET','POST'].includes(req.method)){res.status(405).json({error:'method_not_allowed'});return;}
+ const params=req.method==='POST'?(req.body||{}):(req.query||{});
  try{
   const mode=publicMode();
-  const purpose=req.query?.purpose==='link'?'link':
-    req.query?.purpose==='mcp_authorize'?'mcp_authorize':'login';
+  const purpose=params.purpose==='link'?'link':
+    params.purpose==='mcp_authorize'?'mcp_authorize':'login';
   if(mode==='off'&&purpose!=='link'){res.status(503).json({error:'public_signin_disabled'});return;}
   let session=null;
   if(purpose==='link'){
+    requireScope(req.method==='POST','invalid_link_method');
     session=await requireSession(req);
-    requireCsrf(req,session,{csrf:req.query?.csrf});
-  }
-  const group=purpose==='link'?req.query?.group:'identity';
+    requireCsrf(req,session,params);
+  }else requireScope(req.method==='GET','invalid_start_method');
+  const group=purpose==='link'?params.group:'identity';
   requireScope(group==='identity'||Object.hasOwn(PUBLIC_SCOPE_GROUPS,group),'invalid_scope_group');
   let clientId=null,redirectUri=null,resource=null,codeChallenge=null;
   if(purpose==='mcp_authorize'){
     requireScope(mode!=='off','public_signin_disabled');
-    clientId=req.query?.client_id;redirectUri=req.query?.redirect_uri;
-    resource=req.query?.resource;codeChallenge=req.query?.code_challenge;
+    clientId=params.client_id;redirectUri=params.redirect_uri;
+    resource=params.resource;codeChallenge=params.code_challenge;
     const client=await getOAuthClient(clientId);
     requireScope(client&&client.redirect_uris.includes(redirectUri)
       &&resource===publicResource()+'/api/mcp'

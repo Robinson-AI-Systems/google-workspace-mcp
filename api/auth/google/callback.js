@@ -2,7 +2,7 @@ import {initSchema} from '../../../src/db.js';
 import {consumeTransaction,bindVerifiedIdentity,upsertLinkedAccount} from '../../../src/principals/store.js';
 import {publicGoogleClient,verifyGoogleCode,PUBLIC_SCOPE_GROUPS} from '../../../src/principals/google.js';
 import {admitted,digest,cookie,headers,requireScope} from '../../../src/principals/security.js';
-import {readCookie,publicResource} from '../../../src/principals/security.js';
+import {readCookie} from '../../../src/principals/security.js';
 import {setSession,requireSession,BROWSER_COOKIE} from '../../../src/principals/session.js';
 export default async function handler(req,res){
  headers(res);
