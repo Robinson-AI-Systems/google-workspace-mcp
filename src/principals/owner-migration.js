@@ -76,7 +76,7 @@ export async function unlinkVerifiedOwner(subjectFingerprint,q=sql()){
   'invalid_subject_fingerprint');
  const linked=await q`SELECT issuer,google_sub FROM principal_google_identities
    WHERE principal_id=${OWNER_ID}::uuid`;
- const found=linked.filter(x=>digest(x.issuer+'\\n'+x.google_sub).slice(0,32)===subjectFingerprint);
+ const found=linked.filter(x=>digest(x.issuer+'\n'+x.google_sub).slice(0,32)===subjectFingerprint);
  requireScope(found.length===1,'owner_mapping_not_found');
  const row=found[0];
  const removed=await q`DELETE FROM principal_google_identities
