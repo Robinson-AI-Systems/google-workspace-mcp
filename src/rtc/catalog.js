@@ -40,6 +40,10 @@ export function audienceFor(name){
 }
 export function toolMetadata(t){
  const writes=isWrite(t.name),destructive=Boolean(GUARDS[t.name]?.destructive)||t.name==='workspace_undo_change';
- return {...t,description:t.description.slice(0,160),area:rtcArea(t.name),profiles:writes?['everyday','full']:['read_only','everyday','full'],writes,money:false,destructive,audience:audienceFor(t.name),
+ // RTC money denotes direct funds movement (none supported here). Billing
+ // risk is separate and does not justify a developer-imposed user prohibition.
+ const billingRisk=['licensing_assign_license','licensing_update_assignment','workspace_bulk_operation'].includes(t.name);
+ const warning=billingRisk?' MAY CHANGE GOOGLE BILL; price unknown; user cost authorization required.':'';
+ return {...t,description:(t.description+warning).slice(0,160),area:rtcArea(t.name),profiles:writes?['everyday','full']:['read_only','everyday','full'],writes,money:false,billingRisk,destructive,audience:audienceFor(t.name),
  annotations:{readOnlyHint:!writes,destructiveHint:destructive,idempotentHint:!writes,openWorldHint:true}};
 }
