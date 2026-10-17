@@ -9,7 +9,7 @@ import {UNDO_ADAPTERS} from './undo-adapters.js';
 export async function prepareUndo(args,clients,lookup=getOwnedChange){
  if(!Number.isSafeInteger(args.changeId)||args.changeId<1)throw Error('Give a positive change-log entry ID.');
  if(!clients?.actingAs||!clients?.connection)throw Error('Undo requires an authenticated account and connection.');
- const entry=await lookup(args.changeId,clients.actingAs,clients.connection);
+ const entry=await (clients?.store?.getOwnedChange ?? lookup)(args.changeId,clients.actingAs,clients.connection);
  if(!entry||String(entry.acting_as).toLowerCase()!==clients.actingAs.toLowerCase()||entry.connection!==clients.connection)
    throw Error('Change not found for this account and connection.');
  if(entry.dry_run)throw Error('A preview made no change and cannot be undone.');

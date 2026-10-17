@@ -53,7 +53,7 @@ export const tools = [
 export const handlers = {
   async workspace_whoami(_args, clients) {
     const profile = await clients.gmail.users.getProfile({ userId: 'me' });
-    const accounts = await listGoogleAccounts();
+    const accounts = clients?.store ? await clients.store.listAccounts() : await listGoogleAccounts();
     const me = accounts.find((a) => a.email === clients.actingAs);
     return ok({
       actingAs: clients.actingAs,
@@ -64,19 +64,38 @@ export const handlers = {
       messagesTotal: profile.data.messagesTotal
     });
   },
-  async workspace_list_accounts() {
-    return ok(await listGoogleAccounts());
+  async workspace_list_accounts(_args,clients) {
+    return ok(clients?.store ? await clients.store.listAccounts() : await listGoogleAccounts());
   },
-  async workspace_set_default_account(args) {
+  async workspace_set_default_account(args,clients) {
+    if (clients?.store) {
+      const accounts=await clients.store.listAccounts();
+      const email=String(args.email||'').trim().toLowerCase();
+      const matches=accounts.filter(a=>a.email===email);
+      if(matches.length!==1)throw Error('outside_scope: Account not found.');
+      await clients.store.setDefault(matches[0].id);
+      return ok(await clients.store.listAccounts());
+    }
     await setDefaultGoogleAccount(args.email);
     return ok(await listGoogleAccounts());
   },
-  async workspace_remove_account(args) {
+  async workspace_remove_account(args,clients) {
     if (args.confirm !== true) return ok('Nothing removed: pass confirm: true to proceed.');
+    if(clients?.store){
+      const accounts=await clients.store.listAccounts();
+      const email=String(args.email||'').trim().toLowerCase();
+      const matches=accounts.filter(a=>a.email===email);
+      if(matches.length!==1)throw Error('outside_scope: Account not found.');
+      await clients.store.disconnectAccount(matches[0].id);
+      return ok(await clients.store.listAccounts());
+    }
     await removeGoogleAccount(args.email);
     return ok(await listGoogleAccounts());
   },
   async workspace_set_allowed_domains(args, clients) {
+    // Global domain permissions are installation-owner policy. Public users
+    // require separately verified customer delegation, never this legacy row.
+    if(clients?.store)throw Error('outside_scope: Configure verified customer delegation for this account.');
     const email = String(args.email || '').trim().toLowerCase();
     const before = await getAllowedDomains(email);
     const wanted = normalizeDomains(args.domains || []); // throws a plain message on something that is not a domain
@@ -87,7 +106,7 @@ export const handlers = {
     const logged = await recordChange(clients, { tool: 'workspace_set_allowed_domains', target: email, summary: `Allowed domains for ${email}: ${before.join(', ')} -> ${now.join(', ')}`, before: { allowedDomains: before }, after: { allowedDomains: now } });
     return ok({ done: true, account: email, allowedDomains: now, logged: logged.logged });
   },
-  async workspace_recent_changes(args) {
+  async workspace_recent_changes(args,clients) {
     const days = /^(\d+)d$/i.exec(String(args.since || '').trim());
     let since;
     if (days) since = new Date(Date.now() - Number(days[1]) * 86400000).toISOString();
@@ -96,14 +115,23 @@ export const handlers = {
       if (Number.isNaN(t.getTime())) return ok(`I could not read "${args.since}" as a date. Use a date like 2026-09-28 or a number of days like 3d.`);
       since = t.toISOString();
     } else since = new Date(Date.now() - 7 * 86400000).toISOString();
-    const rows = await listRecentChanges({ since, tool: args.tool, actingAs: args.actingAs, limit: args.limit, includeDryRuns: args.includeDryRuns === true });
+    const rows = await (clients?.store?.listChanges ?? listRecentChanges)({ since, tool: args.tool, actingAs: args.actingAs, limit: args.limit, includeDryRuns: args.includeDryRuns === true });
     return ok(rows.length ? rows : { changes: [], note: `Nothing recorded since ${since}. Only changes made through this server are listed.` });
   },
-  async workspace_list_connections() {
-    return ok(await listConnections());
+  async workspace_list_connections(_args,clients) {
+    return ok(clients?.store ? await clients.store.listConnections() : await listConnections());
   },
-  async workspace_revoke_connection(args) {
+  async workspace_revoke_connection(args,clients) {
     if (args.confirm !== true) return ok('Nothing revoked: pass confirm: true to proceed.');
+    if(clients?.store){
+      // Public connections expose opaque UUIDs, never bearer prefixes or
+      // all-principal lookup. Require the exact ID returned by the owned list.
+      const owned=await clients.store.listConnections();
+      const hit=owned.find(c=>c.id===args.tokenPrefix);
+      if(!hit)return ok('Nothing revoked: connection not found for this account.');
+      const revoked=await clients.store.revokeConnection(hit.id);
+      return ok({revoked:revoked===1,connections:await clients.store.listConnections()});
+    }
     const result = await revokeConnection(args.tokenPrefix);
     if (result.reason === 'too_short') return ok('Nothing revoked: give at least the first 8 characters of the token (see workspace_list_connections).');
     if (result.reason === 'not_found') return ok('Nothing revoked: no connection starts with that. Check workspace_list_connections.');

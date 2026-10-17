@@ -57,7 +57,12 @@ const OPEN_TO_ANYONE = (v) => /^ANYONE/i.test(String(v || ''));
 const upper = (v) => String(v ?? '').trim().toUpperCase();
 const shortText = (v) => { const t = String(v); return t.length > 60 ? `${t.slice(0, 57)}...` : t; };
 const RESOURCE_FIELDS = ['resourceId', 'resourceName', 'resourceType', 'capacity', 'buildingId', 'floorName', 'resourceEmail'];
-const matchingConnections = async (prefix) => {
+const matchingConnections = async (prefix,clients) => {
+  if(clients?.store){
+    const owned=await clients.store.listConnections();
+    return owned.filter(c=>c.id===prefix).map(c=>({connection_id:c.id,
+      client_name:c.client_id,revoked_at:c.revoked_at}));
+  }
   const { listConnections } = await import('../db.js');
   const p = String(prefix || '').slice(0, 8); // never keep more of a token than its first 8 characters
   return (await listConnections()).filter((c) => p && String(c.token_prefix || '').startsWith(p)).map((c) => pick(c, ['token_prefix', 'connection_id', 'client_name', 'google_account', 'last_used_at', 'revoked_at']));
@@ -299,8 +304,8 @@ export const GUARDS_ADMIN = {
   // ---------- This server's own settings (read from the database, not Google) ----------
   workspace_set_default_account: { destructive: false, verify: (a, b, after) => after?.defaultAccount === lower(a.email),
     describe: (a) => ({ target: a.email, summary: `Make ${a.email} the default Google account (used by older connections that never picked one)` }),
-    before: async () => { const { listGoogleAccounts } = await import('../db.js'); return { defaultAccount: (await listGoogleAccounts()).find((x) => x.is_default)?.email || null }; },
-    after: async () => { const { listGoogleAccounts } = await import('../db.js'); return { defaultAccount: (await listGoogleAccounts()).find((x) => x.is_default)?.email || null }; } },
+    before: async (_args, clients) => { const { listGoogleAccounts } = await import('../db.js'); const accounts=clients?.store ? await clients.store.listAccounts() : await listGoogleAccounts(); return { defaultAccount: accounts.find((x) => x.is_default||x.isDefaultAccount)?.email || null }; },
+    after: async (_args, clients) => { const { listGoogleAccounts } = await import('../db.js'); const accounts=clients?.store ? await clients.store.listAccounts() : await listGoogleAccounts(); return { defaultAccount: accounts.find((x) => x.is_default||x.isDefaultAccount)?.email || null }; } },
   workspace_set_allowed_domains: { destructive: D,
     verify: (a, b, after) => { const wanted = normalizeDomains(a.domains || []); return sameSet(list(after?.allowedDomains), wanted.length ? wanted : [domainOfEmail(a.email)]); },
     describe: (a) => {
@@ -309,12 +314,12 @@ export const GUARDS_ADMIN = {
       try { wanted = normalizeDomains(a.domains || []); } catch (err) { wanted = `not valid (${err.message})`; }
       return { target: lower(a.email), summary: `Change the domains the connections of ${lower(a.email)} may manage with the admin tools to ${Array.isArray(wanted) ? (wanted.length ? wanted.join(', ') : 'its own domain only') : wanted}` };
     },
-    before: async (a) => { const { getAllowedDomains } = await import('../db.js'); return { allowedDomains: await getAllowedDomains(lower(a.email)) }; },
-    after: async (a) => { const { getAllowedDomains } = await import('../db.js'); return { allowedDomains: await getAllowedDomains(lower(a.email)) }; } },
+    before: async (a,clients) => { if(clients?.store)throw Error('outside_scope: Tenant domain policy is managed through verified customer delegation.'); const { getAllowedDomains } = await import('../db.js'); return { allowedDomains: await getAllowedDomains(lower(a.email)) }; },
+    after: async (a,clients) => { if(clients?.store)throw Error('outside_scope: Tenant domain policy is managed through verified customer delegation.'); const { getAllowedDomains } = await import('../db.js'); return { allowedDomains: await getAllowedDomains(lower(a.email)) }; } },
   workspace_revoke_connection: { destructive: D,
     // The handler answers a short, unknown or ambiguous prefix with a plain sentence instead of revoking anything; that is not "confirmed".
     verify: (a, b, after, details) => typeof details === 'object' && details?.revoked > 0 && list(after?.connections).length > 0 && list(after.connections).every((c) => !!c.revoked_at),
     describe: (a) => ({ target: `${String(a.tokenPrefix || '').slice(0, 8)}...`, summary: `Switch off the Claude connection starting ${String(a.tokenPrefix || '').slice(0, 8)}: it stops working at once and cannot renew itself` }),
-    before: async (a) => ({ connections: await matchingConnections(a.tokenPrefix) }),
-    after: async (a) => ({ connections: await matchingConnections(a.tokenPrefix) }) }
+    before: async (a,clients) => ({ connections: await matchingConnections(a.tokenPrefix,clients) }),
+    after: async (a,clients) => ({ connections: await matchingConnections(a.tokenPrefix,clients) }) }
 };

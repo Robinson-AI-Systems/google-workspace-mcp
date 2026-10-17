@@ -1,0 +1,264 @@
+{
+  "version": 1,
+  "source": "src/tools/index.js",
+  "expectedModuleCount": 37,
+  "reviewedAgainst": "P10-4 section2 registry and persisted-provider caller audit",
+  "scope": "Registry module classification under a server-minted V2 principal; native MCP, RTC meta/batch, guards, result and database constructors are additionally tested by dedicated suites.",
+  "nonRegistryCritical": [
+    {
+      "path": "api/mcp.js",
+      "boundary": "V2 bearer verified by readPrincipalAccess; double-gated non-owner server dispatch"
+    },
+    {
+      "path": "src/principals/store.js",
+      "boundary": "WeakSet-minted immutable principal context, composite keys, account/client version and scoped methods"
+    },
+    {
+      "path": "src/principals/tenant-store.js",
+      "boundary": "Composite FK principal/account/connection, owned change, result and rate stores, two-process real-PG tests"
+    },
+    {
+      "path": "src/principals/clients.js",
+      "boundary": "PUBLIC Google OAuth2 only; no owner default, owner stored grant, or global delegated service key"
+    },
+    {
+      "path": "src/principals/delegation.js",
+      "boundary": "Verified actual Directory admin/customer and independently consented customer DWD; scope/subject/credential isolation"
+    },
+    {
+      "path": "src/auth/service-account.js",
+      "boundary": "Legacy owner-only service account helpers: public callers must use tenantDelegation injection"
+    },
+    {
+      "path": "src/auth/google-auth-hosted.js",
+      "boundary": "Owner-only token loader and default, public buildApiClients gets an explicit tenantDelegation fence"
+    },
+    {
+      "path": "src/tools/delegated.js",
+      "boundary": "No global fallback when clients.store is present even if tenant callback missing"
+    },
+    {
+      "path": "src/tools/guards.js",
+      "boundary": "Wrapped write guards use passed owner-specific injected clients; no cross-connection bypass"
+    },
+    {
+      "path": "src/tools/guards-admin.js",
+      "boundary": "Owner global connection listing only on legacy branch, V2 exact scoped store branch"
+    },
+    {
+      "path": "src/rtc/results.js",
+      "boundary": "Oversize page storage injects clients.store.storeResult/getResult; global result store owner-only"
+    },
+    {
+      "path": "src/tools/write.js",
+      "boundary": "Write audit flows through src/changelog.js injecting tenant scoped store"
+    },
+    {
+      "path": "src/tools/dev-run-state.js",
+      "boundary": "Developer TEST-only fixture runner globally owner-scoped and unavailable to public; no reparenting of old run IDs"
+    },
+    {
+      "path": "api/rtc-gateway.js",
+      "boundary": "Existing independently owner-issued RTC pass use remains owner-owned; public V2 uses native principal MCP bearer"
+    }
+  ],
+  "modules": [
+    {
+      "path": "src/tools/rtc-meta.js",
+      "classification": "scopedLegacy",
+      "boundary": "Original legacy DB/helper imports require explicit clients.store branch and real scoped caller/PG tests; direct owner fallback only without public store."
+    },
+    {
+      "path": "src/tools/bulk.js",
+      "classification": "scopedLegacy",
+      "boundary": "Original legacy DB/helper imports require explicit clients.store branch and real scoped caller/PG tests; direct owner fallback only without public store."
+    },
+    {
+      "path": "src/tools/undo.js",
+      "classification": "scopedLegacy",
+      "boundary": "Original legacy DB/helper imports require explicit clients.store branch and real scoped caller/PG tests; direct owner fallback only without public store."
+    },
+    {
+      "path": "src/tools/admin-overview.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/admin-console-verify.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/dev-integration.js",
+      "classification": "scopedLegacy",
+      "boundary": "Original legacy DB/helper imports require explicit clients.store branch and real scoped caller/PG tests; direct owner fallback only without public store."
+    },
+    {
+      "path": "src/tools/dev-fixtures.js",
+      "classification": "ownerTest",
+      "boundary": "Owner's original TEST fixture ledger intentionally unavailable to unrelated public user connections; no developer TEST pass inheritance."
+    },
+    {
+      "path": "src/tools/dev-calendar-snapshot.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/gmail.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/drive.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/shared-drives.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/calendar.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/sheets.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/docs.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/slides.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/forms.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/tasks.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/people.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/admin-directory.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/admin-reports.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/licensing.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/chat.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/extra-admin-apis.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/workflows.js",
+      "classification": "customerWorkflow",
+      "boundary": "Public actor cannot resolve or mutate installation owner business share IDs while normal Google-dependent parts use that actor's API clients."
+    },
+    {
+      "path": "src/tools/accounts.js",
+      "classification": "scopedLegacy",
+      "boundary": "Original legacy DB/helper imports require explicit clients.store branch and real scoped caller/PG tests; direct owner fallback only without public store."
+    },
+    {
+      "path": "src/tools/mailbox-branding.js",
+      "classification": "scopedLegacy",
+      "boundary": "Original legacy DB/helper imports require explicit clients.store branch and real scoped caller/PG tests; direct owner fallback only without public store."
+    },
+    {
+      "path": "src/tools/ops.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/policy-audit.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/postmaster.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/email-health.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/health-report.js",
+      "classification": "scopedLegacy",
+      "boundary": "Original legacy DB/helper imports require explicit clients.store branch and real scoped caller/PG tests; direct owner fallback only without public store."
+    },
+    {
+      "path": "src/tools/digest.js",
+      "classification": "scopedLegacy",
+      "boundary": "Original legacy DB/helper imports require explicit clients.store branch and real scoped caller/PG tests; direct owner fallback only without public store."
+    },
+    {
+      "path": "src/tools/inbox.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/staff.js",
+      "classification": "ownerBusiness",
+      "boundary": "Explicitly excluded from public registry: owner's static business map and global resource IDs, pending separately customer-owned configuration."
+    },
+    {
+      "path": "src/tools/business.js",
+      "classification": "ownerBusiness",
+      "boundary": "Explicitly excluded from public registry: owner's static business map and global resource IDs, pending separately customer-owned configuration."
+    },
+    {
+      "path": "src/tools/dns.js",
+      "classification": "ownerExternal",
+      "boundary": "Vercel DNS is a distinct provider; public calls cannot inherit owner Vercel API token; separate Vercel user link not in this Google bundle."
+    },
+    {
+      "path": "src/tools/business-resources.js",
+      "classification": "ownerBusiness",
+      "boundary": "Explicitly excluded from public registry: owner's static business map and global resource IDs, pending separately customer-owned configuration."
+    }
+  ],
+  "evidenceTests": [
+    "test/db/principal-tenant-store.test.js",
+    "test/db/principal-store.test.js",
+    "test/unit/p10-scoped-callers.test.js",
+    "test/unit/p10-mcp-gate.test.js",
+    "test/unit/p10-caller-matrix.test.js",
+    "test/unit/direct-mcp-http.test.js"
+  ],
+  "notClaimed": [
+    "Customer-specific owner business map and independent Vercel credentials are not implicitly provisioned; their exact tools remain discoverable but unavailable to public users until connected.",
+    "Real Google provider/customer credentials and two real client acceptance remain P10-6 external gates."
+  ]
+}

@@ -6,7 +6,8 @@ import {SCOPE_GROUPS} from '../auth/scopes.js';
 export const IDENTITY_SCOPES=Object.freeze(['openid','email','profile']);
 export const PUBLIC_SCOPE_GROUPS=Object.freeze({
  mail:SCOPE_GROUPS.gmail,files:SCOPE_GROUPS.drive,calendar:SCOPE_GROUPS.calendar,
- tasks:SCOPE_GROUPS.tasks,contacts:SCOPE_GROUPS.contacts
+ tasks:SCOPE_GROUPS.tasks,contacts:SCOPE_GROUPS.contacts,
+ adminVerify:['https://www.googleapis.com/auth/admin.directory.user.readonly']
 });
 export function publicGoogleClient(env=process.env){
  const id=env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID,secret=env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET;

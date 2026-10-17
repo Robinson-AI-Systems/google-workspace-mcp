@@ -182,8 +182,13 @@ export const handlers = {
     // Take them off the business calendar and Drive folder that workflow_add_staff_member shared with them.
     try {
       const primary = email || await mailboxOf(admin, args.userKey);
-      const biz = Object.values(BUSINESSES).find((b) => b.domain === String(primary).split('@')[1]);
-      if (!biz || (!biz.calendarId && !biz.driveFolderId)) steps.push({ step: 'remove_business_shares', status: 'skipped', note: 'No business calendar or folder is set up for their domain.' });
+      // These IDs are configured specifically for the installation owner's
+      // businesses. A newly authenticated Google principal cannot inherit
+      // that mapping merely because an email domain happens to match.
+      const biz = clients?.store ? null :
+        Object.values(BUSINESSES).find((b) => b.domain === String(primary).split('@')[1]);
+      if (clients?.store) steps.push({ step: 'remove_business_shares', status: 'skipped', note: 'No independently authorized customer-owned business share configuration is linked to this principal; the installation owner\'s private calendar and Drive IDs are not used.' });
+      else if (!biz || (!biz.calendarId && !biz.driveFolderId)) steps.push({ step: 'remove_business_shares', status: 'skipped', note: 'No business calendar or folder is set up for their domain.' });
       else if (!mailboxAllowed(clients, primary)) steps.push({ step: 'remove_business_shares', status: 'skipped', note: `${primary} is outside the domains this connection is limited to, so the business calendar and folder shares were not touched. Use crossDomain: true if you really mean it.` });
       else {
         const removed = {};
@@ -267,12 +272,22 @@ export const handlers = {
     }
   },
 
-  workflow_audit_external_sharing: async (args, { drive }) => {
+  workflow_audit_external_sharing: async (args, clients) => {
+    const {drive}=clients;
+    // Tenant connection domains come only from its authenticated account;
+    // the installation owner's optional GWS_PRIMARY_DOMAIN is not authority.
+    const internalDomains=(clients?.store?clients.allowedDomains:
+      [process.env.GWS_PRIMARY_DOMAIN]).filter(Boolean).map(d=>d.toLowerCase());
     const res = await drive.files.list({ pageSize: args.maxFilesToScan || 100, fields: 'files(id, name, webViewLink, permissions)', orderBy: 'modifiedTime desc' });
     const risky = [];
     for (const file of res.data.files || []) {
       const perms = await drive.permissions.list({ fileId: file.id, fields: 'permissions(type, role, emailAddress, domain)' }).catch(() => ({ data: { permissions: [] } }));
-      const external = (perms.data.permissions || []).filter(p => p.type === 'anyone' || (p.type === 'domain' && p.domain && !p.domain.endsWith(process.env.GWS_PRIMARY_DOMAIN || '')));
+      const external=(perms.data.permissions||[]).filter(p=>{
+         if(p.type==='anyone')return true;
+         if(p.type!=='domain'||typeof p.domain!=='string')return false;
+         const domain=p.domain.toLowerCase();
+         return !internalDomains.some(d=>domain===d||domain.endsWith('.'+d));
+       });
       if (external.length > 0) {
         risky.push({ fileId: file.id, name: file.name, link: file.webViewLink, exposedTo: external });
       }

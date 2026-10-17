@@ -378,8 +378,8 @@ const CORE = {
   // ---------- This server's own sign-ins ----------
   workspace_remove_account: { destructive: D,
     describe: (a) => ({ target: a.email, summary: `Forget the saved Google sign-in for ${a.email}: every Claude connection using it stops working until it is connected again` }),
-    before: async (a) => { const { listGoogleAccounts } = await import('../db.js'); return (await listGoogleAccounts()).find((x) => x.email === String(a.email || '').trim().toLowerCase()) || { note: 'No such account is connected.' }; },
-    after: async (a) => { const { listGoogleAccounts } = await import('../db.js'); return { exists: (await listGoogleAccounts()).some((x) => x.email === String(a.email || '').trim().toLowerCase()) }; } }
+    before: async (a,clients) => { const { listGoogleAccounts } = await import('../db.js'); const accounts=clients?.store ? await clients.store.listAccounts() : await listGoogleAccounts(); return accounts.find((x) => x.email === String(a.email || '').trim().toLowerCase()) || { note: 'No such account is connected.' }; },
+    after: async (a,clients) => { const { listGoogleAccounts } = await import('../db.js'); const accounts=clients?.store ? await clients.store.listAccounts() : await listGoogleAccounts(); return { exists: accounts.some((x) => x.email === String(a.email || '').trim().toLowerCase()) }; } }
 };
 
 // The table is split by area so each part stays readable: this file (admin deletes and other destructive tools), then mail/calendar/tasks/chat, files and documents, and admin/security/server tools.

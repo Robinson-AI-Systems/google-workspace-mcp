@@ -4,6 +4,8 @@ import {neon} from '@neondatabase/serverless';
 import {sealV2,openV2} from './crypto.js';
 import {OWNER_ID,digest,mint,validUuid,validEmail,requireScope} from './security.js';
 import {normalizeConnectionPolicy} from '../oauth/connection-settings.js';
+import {initTenantSchema,makeTenantStore} from './tenant-store.js';
+import {loadCustomerDelegation} from './delegation.js';
 let conn;
 const trustedContexts=new WeakSet(); // no caller-minted frozen principal is accepted
 const sql=()=>{if(!conn){if(!process.env.DATABASE_URL)throw Error('database_unavailable');conn=neon(process.env.DATABASE_URL);}return conn;};
@@ -28,6 +30,7 @@ export async function initPrincipalSchema(q=sql()){
    status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','revoked')),
    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
    UNIQUE(issuer,google_sub),UNIQUE(id,principal_id))`;
+ await q`ALTER TABLE principal_google_accounts ADD COLUMN IF NOT EXISTS refresh_version INTEGER NOT NULL DEFAULT 0`;
  await q`CREATE TABLE IF NOT EXISTS principal_defaults (
    principal_id UUID PRIMARY KEY REFERENCES principals(id),account_id UUID NOT NULL,
    FOREIGN KEY(account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id))`;
@@ -78,6 +81,7 @@ export async function initPrincipalSchema(q=sql()){
    customer_id TEXT NOT NULL,scopes TEXT[] NOT NULL,subject_rule TEXT NOT NULL,
    credential_ciphertext TEXT NOT NULL,enabled BOOLEAN NOT NULL DEFAULT false,
    revoked_at TIMESTAMPTZ,UNIQUE(principal_id,customer_id))`;
+ await initTenantSchema(q);
 }
 export async function legacyOwnerContext(accessToken){
  if(typeof accessToken!=='string'||accessToken.startsWith('p10'))return null;
@@ -125,7 +129,7 @@ export async function getPrincipal(principalId){
 export async function findAccount(principalId,accountId){
  if(!validUuid(principalId)||!validUuid(accountId))return null;
  const q=sql();
- const rows=await q`SELECT a.id,a.principal_id,a.issuer,a.google_sub,a.email,a.label,a.scope_list,a.token_version,
+ const rows=await q`SELECT a.id,a.principal_id,a.issuer,a.google_sub,a.email,a.label,a.scope_list,a.token_version,a.refresh_version,
    a.grant_ciphertext,a.status FROM principal_google_accounts a JOIN principals p ON p.id=a.principal_id
    WHERE a.id=${accountId}::uuid AND a.principal_id=${principalId}::uuid
    AND a.status='active' AND p.status='active'`;
@@ -183,6 +187,34 @@ export async function updateLinkedGrant({principalId,accountId,version,tokens,sc
    RETURNING token_version`;
  requireScope(changed.length===1,'version_conflict');
  return changed[0].token_version;
+}
+export async function persistPrincipalGoogleRefresh(context,tokens){
+ requireScope(context&&trustedContexts.has(context)&&context.principalKind==='user',
+   'invalid_scoped_context');
+ requireScope(tokens?.access_token&&typeof tokens.access_token==='string'&&
+   Number.isFinite(tokens.expiry_date)&&tokens.expiry_date>Date.now()&&
+   validUuid(context.principalId)&&validUuid(context.accountId)&&
+   validUuid(context.connectionId),'invalid_google_refresh');
+ const {principalId,accountId,connectionId,accountVersion}=context;
+ const row=await findAccount(principalId,accountId);
+ requireScope(row&&row.token_version===accountVersion&&row.grant_ciphertext,
+   'version_conflict');
+ const prior=openV2(row.grant_ciphertext,principalId,accountId,'google-grant');
+ requireScope(prior.refresh_token,'missing_google_refresh_grant');
+ const updated={...prior,...tokens,
+   refresh_token:tokens.refresh_token||prior.refresh_token};
+ const ciphertext=sealV2(updated,principalId,accountId,'google-grant'),q=sql();
+ const result=await q`UPDATE principal_google_accounts SET
+   grant_ciphertext=${ciphertext},refresh_version=refresh_version+1,updated_at=now()
+   WHERE id=${accountId}::uuid AND principal_id=${principalId}::uuid
+   AND token_version=${accountVersion} AND refresh_version=${row.refresh_version}
+   AND status='active' AND EXISTS(
+     SELECT 1 FROM principal_connections c JOIN principals p ON p.id=c.principal_id
+     WHERE c.id=${connectionId}::uuid AND c.principal_id=${principalId}::uuid
+       AND c.account_id=${accountId}::uuid AND c.revoked_at IS NULL
+       AND c.expires_at>now() AND p.status='active')
+   RETURNING refresh_version`;
+ return result.length===1;
 }
 export async function getLinkedGrant(principalId,accountId){
  const row=await findAccount(principalId,accountId);
@@ -306,7 +338,8 @@ export async function readPrincipalAccess(token){
  if(typeof token!=='string'||!/^p10a_[A-Za-z0-9_-]{43}$/.test(token))return null;
  const q=sql();
  const rows=await q`SELECT c.id AS connection_id,c.principal_id,c.account_id,c.resource,
-   c.client_id,c.profile,c.listing,c.areas,c.mode,c.cost_policy,p.kind AS principal_kind,
+   c.client_id,c.profile,c.listing,c.areas,c.mode,c.cost_policy,
+   a.email AS account_email,a.token_version AS account_version,p.kind AS principal_kind,
    p.status AS principal_status
    FROM principal_connections c JOIN principals p ON p.id=c.principal_id
    JOIN principal_google_accounts a ON a.id=c.account_id AND a.principal_id=c.principal_id
@@ -317,7 +350,9 @@ export async function readPrincipalAccess(token){
  const context=Object.freeze({principalId:row.principal_id,principalKind:row.principal_kind,
    accountId:row.account_id,connectionId:row.connection_id,mode:settings.mode,
    profile:settings.profile,listing:settings.listing,areas:settings.areas,
-   resource:row.resource,clientId:row.client_id});
+   resource:row.resource,clientId:row.client_id,
+   accountVersion:row.account_version,actingAs:row.account_email,
+   costPolicy:Object.freeze({...settings.cost_policy})});
  trustedContexts.add(context);
  return context;
 }
@@ -391,6 +426,11 @@ export async function deletionPreview(principalId){
   next:'Account deletion needs separate irreversible confirmation and retention disclosure before launch.'};
 }
 
+export async function trustedCustomerDelegation(context){
+ requireScope(context&&trustedContexts.has(context)&&Object.isFrozen(context)&&
+  context.principalKind==='user','invalid_scoped_context');
+ return loadCustomerDelegation(context);
+}
 export function scopedStore(context){
  // Inject this wrapper into future P10-4 public clients, never call global DB
  // helpers with a caller-provided tenant. No public tool dispatch exists yet.
@@ -398,6 +438,7 @@ export function scopedStore(context){
    validUuid(context.principalId),'invalid_scoped_context');
  const principal=context.principalId;
  return Object.freeze({
+   ...makeTenantStore(context),
    listAccounts:()=>listAccounts(principal),
    getAccount:id=>findAccount(principal,id),
    getGrant:id=>getLinkedGrant(principal,id),
