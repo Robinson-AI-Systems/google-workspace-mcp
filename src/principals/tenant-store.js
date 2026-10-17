@@ -101,6 +101,7 @@ export function makeTenantStore(context) {
   const assertCurrent = async q => requireScope(await current(q), 'invalid_scoped_context');
 
   return Object.freeze({
+    async assertActive(){await assertCurrent(sql());return true;},
     async storeResult({handle, connection: _ignored, payload, ttlHours = 24}) {
       requireScope(typeof handle === 'string' && handlePattern.test(handle) &&
         positiveInt(ttlHours, 24) && payload !== undefined, 'invalid_result');

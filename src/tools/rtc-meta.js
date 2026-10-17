@@ -2,7 +2,7 @@
 // A call cannot escape a connection's profile, areas, domain guards or write guards.
 import { ok, errorResult } from './util.js';
 import { readStoredResult } from '../rtc/results.js';
-import { allowedTool, listedTools, toolMetadata, rtcArea, isWrite, RTC_META } from '../rtc/catalog.js';
+import { allowedTool, listedTools, toolMetadata, rtcArea, isWrite, RTC_META, LEGACY_OWNER_ONLY_TOOLS } from '../rtc/catalog.js';
 const schema = (props,required=[])=>({type:'object',properties:props,required});
 const str={type:'string'};
 const callSchema=schema({name:str,args:{type:'object',description:'Arguments accepted by the selected tool.',additionalProperties:true}},['name']);
@@ -36,9 +36,9 @@ export const handlers={
    // Always restrict the catalog to authorized tools before counting or paging.
    const policy=clients?.rtcPolicy||{};
    const visible=args.includeUnavailable===true?tools:listedTools(tools,policy,'catalog');
-   const matches=visible.map(t=>({...toolMetadata(t),
+   const matches=visible.map(t=>({...toolMetadata(t,policy),
      available:allowedTool(t.name,policy),
-     ...(!allowedTool(t.name,policy)?{needsReconnect:true,reason:'connection_policy_or_test_mode_restricts_capability'}:{})})).filter(t=>(!args.area||t.area===args.area)&&(!args.audience||t.audience.includes(args.audience))&&(!query||(t.name+' '+t.description).toLowerCase().includes(query)));
+     ...(!allowedTool(t.name,policy)?{needsReconnect:true,reason:policy.principalKind==='user'&&LEGACY_OWNER_ONLY_TOOLS.has(t.name)?'requires_customer_specific_setup':'connection_policy_or_test_mode_restricts_capability'}:{})})).filter(t=>(!args.area||t.area===args.area)&&(!args.audience||t.audience.includes(args.audience))&&(!query||(t.name+' '+t.description).toLowerCase().includes(query)));
    const found=matches.slice(offset,offset+limit), next=offset+found.length;
    return ok({tools:found.map(({inputSchema,...metadata})=>metadata),count:found.length,totalMatched:matches.length,offset,nextOffset:next<matches.length?next:null});
  },
@@ -51,8 +51,8 @@ export const handlers={
    if(!tool||!allowedTool(args.name,policy)&&args.includeUnavailable!==true)
      return errorResult(new Error('outside_scope: Tool not available.'));
    const available=allowedTool(args.name,policy);
-   return ok({...toolMetadata(tool),available,...(!available?{
-     needsReconnect:true,reason:'connection_policy_or_test_mode_restricts_capability'
+   return ok({...toolMetadata(tool,policy),available,...(!available?{
+     needsReconnect:true,reason:policy.principalKind==='user'&&LEGACY_OWNER_ONLY_TOOLS.has(tool.name)?'requires_customer_specific_setup':'connection_policy_or_test_mode_restricts_capability'
    }:{})});
  },
  async workspace_call(args={},clients){

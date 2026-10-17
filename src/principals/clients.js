@@ -10,6 +10,7 @@ import {requireScope} from './security.js';
 
 export async function buildPrincipalApiClients(context){
  const store=scopedStore(context); // checks private server minting WeakSet
+ await store.assertActive(); // denies revoked/expired/rotated grants before any provider client construction
  const account=await store.getAccount(context.accountId);
  requireScope(account&&account.id===context.accountId&&
   account.token_version===context.accountVersion,'outside_scope');

@@ -11,6 +11,8 @@ import { getAccessToken, initSchema, touchAccessToken, connectionId, getAllowedD
 import { onceSuccessful } from '../src/once.js';
 import { listedTools, allowedTool, toolMetadata } from '../src/rtc/catalog.js';
 import {readPrincipalAccess,legacyOwnerContext} from '../src/principals/store.js';
+import {scopedStore} from '../src/principals/store.js';
+import {buildPrincipalApiClients} from '../src/principals/clients.js';
 
 export const config = { api: { bodyParser: true } };
 
@@ -32,13 +34,13 @@ export function trustedMcpOrigin(value=process.env.PUBLIC_BASE_URL){
 const ensureSchemaReady = onceSuccessful(initSchema);
 const ensureLegacyMigration = onceSuccessful(ensureMigrated);
 
-function buildServer(googleAccount, connection, settings) {
+function buildServer(googleAccount, connection, settings, makeClients=null) {
   const server = new Server(
     { name: 'robinson-google-workspace-mcp', version: '1.0.0' },
     { capabilities: { tools: {} } }
   );
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: listedTools(registry.tools, settings).map(toolMetadata) }));
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: listedTools(registry.tools, settings).map(t=>toolMetadata(t,settings)) }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
@@ -47,10 +49,12 @@ function buildServer(googleAccount, connection, settings) {
       return { content: [{ type: 'text', text: `Unknown tool: ${name}` }], isError: true };
     }
     try {
-      const clients = await buildHostedApiClients(googleAccount);
-      clients.rtcPolicy = settings; // Server-trusted policy; never sourced from tool arguments.
-      clients.connection = connection; // which Claude connection is asking, for the change log
-      clients.allowedDomains = await getAllowedDomains(clients.actingAs); // which business domains this connection may manage (src/tools/domain-guard.js)
+      const clients=makeClients ? await makeClients() : await buildHostedApiClients(googleAccount);
+      // No owner credential or global default is reachable from the public
+      // branch: all scoped clients must be built with a server-minted context.
+      clients.rtcPolicy=settings;
+      clients.connection=connection;
+      if(!makeClients)clients.allowedDomains=await getAllowedDomains(clients.actingAs);
       return await toolHandler(args || {}, clients);
     } catch (err) {
       return errorResult(err);
@@ -58,6 +62,17 @@ function buildServer(googleAccount, connection, settings) {
   });
 
   return server;
+}
+
+// P10 acceptance runner is intentionally not connected to the HTTP entrypoint.
+// It allows the exact SDK registry to be tested using real disposable
+// principal contexts before anyone can enable the separately approved pilot.
+export function createIsolatedPrincipalServer(context){
+ scopedStore(context); // trusted mint check, not a caller assertion
+ const settings=Object.freeze({principalKind:'user',profile:context.profile,
+  listing:context.listing,areas:context.areas,mode:context.mode,
+  cost_policy:context.costPolicy});
+ return buildServer(null,context.connectionId,settings,()=>buildPrincipalApiClients(context));
 }
 
 export default async function handler(req, res) {
