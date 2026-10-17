@@ -1,0 +1,142 @@
+{
+  "schema": "P10-B source audit / P10-4 execution dependency",
+  "baseRevision": "c6f64546214946a55f7355146f68bed220b906eb",
+  "status": "P10-B principal foundation implemented, P10-4 full storage and guard isolation NOT IMPLEMENTED / must remain blocked",
+  "oldOwnerBoundaries": [
+    {
+      "source": "api/mcp.js",
+      "calls": [
+        "getAccessToken",
+        "legacyOwnerContext",
+        "touchAccessToken",
+        "buildHostedApiClients",
+        "getAllowedDomains",
+        "toolHandler"
+      ],
+      "treatment": "legacy bearer must exactly exist; public p10a_ authenticated but dispatch 403 before building any Google clients"
+    },
+    {
+      "source": "api/oauth/authorize.js",
+      "calls": [
+        "getOAuthClient",
+        "listGoogleAccounts",
+        "createAuthCode",
+        "evaluateLogin",
+        "issuePrincipalCode"
+      ],
+      "treatment": "owner mailboxes listed only after passphrase; V2 accounts enumerated only from authenticated principal"
+    },
+    {
+      "source": "api/oauth/token.js",
+      "calls": [
+        "consumeAuthCode",
+        "createAccessToken",
+        "getTokenByRefreshToken",
+        "consumePrincipalCode",
+        "rotatePrincipalRefresh"
+      ],
+      "treatment": "legacy code/token stays unchanged; V2 separate hashed one-use issue/rotation"
+    },
+    {
+      "source": "api/rtc-gateway.js",
+      "calls": [
+        "getRtcPass",
+        "buildHostedApiClients",
+        "registry.handlers"
+      ],
+      "treatment": "historical TEST and Hub grants owner-owned; no V2 RTC issuance/dispatch until P10-4"
+    },
+    {
+      "source": "src/auth/google-auth-hosted.js",
+      "calls": [
+        "getHostedAuthClient",
+        "getDefaultGoogleAccount",
+        "saveGoogleTokensFor",
+        "buildAlertCenterAuth"
+      ],
+      "treatment": "LEGACY OWNER ONLY; no public client can import this builder"
+    },
+    {
+      "source": "src/tools/rtc-meta.js",
+      "calls": [
+        "workspace_call",
+        "workspace_batch",
+        "workspace_search_tools",
+        "workspace_describe_tool"
+      ],
+      "treatment": "registries are shared but user invocation blocked until the full P10-4 guard-by-guard proof"
+    },
+    {
+      "source": "src/tools/guards.js",
+      "calls": [
+        "defineWrite",
+        "guard before/apply/after callbacks"
+      ],
+      "treatment": "must inspect each callback for legacy store imports before V2 dispatch"
+    },
+    {
+      "source": "src/db.js",
+      "calls": [
+        "getGoogleTokensFor",
+        "listGoogleAccounts",
+        "getDefaultGoogleAccount",
+        "listConnections",
+        "revokeConnection",
+        "recordChange",
+        "getOwnedChange",
+        "listBusinessResources",
+        "startDevRun",
+        "getRtcResult"
+      ],
+      "treatment": "unscoped legacy APIs must never serve a new principal; P10-4 needs injected ScopedStore and per-tenant rows"
+    },
+    {
+      "source": "src/rtc/results.js",
+      "calls": [
+        "storeRtcResult",
+        "getRtcResult"
+      ],
+      "treatment": "V2 result handles need principal/account/connection keys, not existing shared pass lookup"
+    },
+    {
+      "source": "src/tools/bulk.js",
+      "calls": [
+        "guarded child handler",
+        "report",
+        "audit"
+      ],
+      "treatment": "original bulk path retains owner behavior only; P10-4 must enforce principal, target, provider and guard provenance"
+    },
+    {
+      "source": "src/tools/dev-fixtures.js",
+      "calls": [
+        "startDevRun",
+        "reserveDevStep",
+        "recordDevObject"
+      ],
+      "treatment": "TEST-only developer resources; never expose through V2 public grant"
+    }
+  ],
+  "newScopedCalls": [
+    "src/principals/store.js scopedStore()",
+    "src/principals/google.js publicGoogleClient()/verifyGoogleCode()",
+    "src/principals/session.js requireSession()/requireCsrf()",
+    "api/auth/google/start.js",
+    "api/auth/google/callback.js",
+    "api/auth/session.js",
+    "api/auth/logout.js",
+    "api/account.js"
+  ],
+  "unverifiedP10_4": [
+    "Enumerate all direct and indirect database imports and write callback constructors with a machine-verified test matrix, not only this manual named inventory.",
+    "Implement scoped per-principal results, change/undo, business resources, dev ledgers, rates and guarded provider clients before any V2 dispatch.",
+    "Run two-process adversarial real-Postgres matrix for owner/user A/user B, foreign IDs, all actual registry tools, readbacks, revisions and cached warm instances."
+  ],
+  "trustedSources": [
+    "docs/plan/designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md sections 2/4/5",
+    "AGENTS.md",
+    "src/db.js",
+    "src/principals/store.js",
+    "api/mcp.js"
+  ]
+}
