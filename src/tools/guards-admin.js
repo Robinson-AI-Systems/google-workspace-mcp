@@ -309,8 +309,8 @@ export const GUARDS_ADMIN = {
       try { wanted = normalizeDomains(a.domains || []); } catch (err) { wanted = `not valid (${err.message})`; }
       return { target: lower(a.email), summary: `Change the domains the connections of ${lower(a.email)} may manage with the admin tools to ${Array.isArray(wanted) ? (wanted.length ? wanted.join(', ') : 'its own domain only') : wanted}` };
     },
-    before: async (a) => { const { getAllowedDomains } = await import('../db.js'); return { allowedDomains: await getAllowedDomains(lower(a.email)) }; },
-    after: async (a) => { const { getAllowedDomains } = await import('../db.js'); return { allowedDomains: await getAllowedDomains(lower(a.email)) }; } },
+    before: async (a,clients) => { if(clients?.store)throw Error('outside_scope: Tenant domain policy is managed through verified customer delegation.'); const { getAllowedDomains } = await import('../db.js'); return { allowedDomains: await getAllowedDomains(lower(a.email)) }; },
+    after: async (a,clients) => { if(clients?.store)throw Error('outside_scope: Tenant domain policy is managed through verified customer delegation.'); const { getAllowedDomains } = await import('../db.js'); return { allowedDomains: await getAllowedDomains(lower(a.email)) }; } },
   workspace_revoke_connection: { destructive: D,
     // The handler answers a short, unknown or ambiguous prefix with a plain sentence instead of revoking anything; that is not "confirmed".
     verify: (a, b, after, details) => typeof details === 'object' && details?.revoked > 0 && list(after?.connections).length > 0 && list(after.connections).every((c) => !!c.revoked_at),
