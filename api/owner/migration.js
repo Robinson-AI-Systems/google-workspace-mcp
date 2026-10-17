@@ -6,7 +6,7 @@ import {initSchema,recordLoginAttempt,countRecentFailedLogins,markLoginAttemptSu
 import {clientIp,evaluateLogin,LOCKOUT_WINDOW_MINUTES} from '../../src/oauth/login-guard.js';
 import {parseBody} from '../../src/oauth/helpers.js';
 import {createTransaction} from '../../src/principals/store.js';
-import {ownerMigrationSnapshot,legacyNewLoginEnabled} from '../../src/principals/owner-migration.js';
+import {ownerMigrationSnapshot,unlinkVerifiedOwner,legacyNewLoginEnabled} from '../../src/principals/owner-migration.js';
 import {publicGoogleClient,providerUrl} from '../../src/principals/google.js';
 import {mint,cookie,headers} from '../../src/principals/security.js';
 import {BROWSER_COOKIE} from '../../src/principals/session.js';
@@ -20,6 +20,9 @@ Google identity linking is optional. New public enrollment remains separate and 
 <button name="action" value="preview">Preview affected records</button>
 <label><input type="checkbox" name="confirm" value="yes"> I explicitly authorize linking my freshly verified Google identity as an additional owner login.</label>
 <button name="action" value="link">Verify with Google and link my owner login</button>
+<p>Recovery/rollback: preview the linked owner identities and use the exact subject fingerprint to unlink only the selected Google sign-in. Existing Google grants and agents stay active.</p>
+<label>Linked owner subject fingerprint <input type="text" name="subjectFingerprint" pattern="[a-f0-9]{32}" maxlength="32"></label>
+<button name="action" value="unlink">Unlink the selected Google owner login</button>
 </form>`;
 
 export default async function handler(req,res){
@@ -41,6 +44,11 @@ export default async function handler(req,res){
   if(verdict.status!=='ok')return res.status(401).json({error:'owner_auth_failed'});
   const snapshot=await ownerMigrationSnapshot();
   if(p.action==='preview')return res.status(200).json(snapshot);
+  if(p.action==='unlink'){
+    if(p.confirm!=='yes')return res.status(400).json({error:'explicit_owner_confirmation_required'});
+    return res.status(200).json({...await unlinkVerifiedOwner(p.subjectFingerprint),
+      snapshot:await ownerMigrationSnapshot()});
+  }
   if(p.action!=='link'||p.confirm!=='yes')return res.status(400).json({error:'explicit_owner_confirmation_required'});
   const client=publicGoogleClient(); // a distinct public Google app, never owner credentials
   const state=mint('p10st_'),nonce=mint('p10n_'),browser=mint('p10b_');
