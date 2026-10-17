@@ -9,6 +9,7 @@ import { loadKey, encryptJson, decryptJson } from './crypto.js';
 import { normalizeDomains, domainOfEmail } from './domains.js';
 import {passOptions,testAccountEnrolled} from './rtc/pass-options.js';
 import {normalizeBillingPolicy} from './rtc/billing-authority.js';
+import {initPrincipalSchema} from './principals/store.js';
 
 let sql;
 function db() {
@@ -225,8 +226,8 @@ export async function initSchema() {
     PRIMARY KEY(run_id,kind),
     CONSTRAINT dev_run_step_state CHECK (state IN ('pending','recorded'))
   )`;
-
-
+  // P10 V2 is additive. Owner OAuth and encrypted legacy bytes stay in place.
+  await initPrincipalSchema(q);
 }
 
 // ---------- Google accounts (one row per mailbox the server can act as) ----------
