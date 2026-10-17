@@ -20,8 +20,14 @@ export function relativeName(name, domain) {
 }
 
 function vercelConfig(clients) {
+  // Installation-owner Vercel credentials never belong to a separate Google
+  // principal. A future user-owned provider link may inject its own credentials.
+  if (clients?.store && !clients.vercel?.token)
+    throw Error('vercel_connection_required: Connect and authorize your own Vercel account for DNS operations.');
   const v = clients?.vercel || {};
-  return { token: v.token ?? process.env.VERCEL_API_TOKEN, teamId: v.teamId ?? process.env.VERCEL_TEAM_ID, fetch: v.fetch ?? globalThis.fetch };
+  return { token: v.token ?? (clients?.store ? null : process.env.VERCEL_API_TOKEN),
+    teamId: v.teamId ?? (clients?.store ? null : process.env.VERCEL_TEAM_ID),
+    fetch: v.fetch ?? globalThis.fetch };
 }
 
 async function call(clients, method, path, body) {
