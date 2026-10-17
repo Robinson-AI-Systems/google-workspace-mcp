@@ -48,7 +48,7 @@ describe('P10 explicit caller injection: independent tenant cannot discover owne
   expect(setDefault).toHaveBeenCalledWith('owned-A');
   await expect(accountHandlers.workspace_set_default_account({email:'foreign@example.test'},clients)).rejects.toThrow('outside_scope');
   expect(unpack(await accountHandlers.workspace_list_connections({},clients))).toEqual(await listConnections());
-  expect(unpack(await accountHandlers.workspace_revoke_connection({tokenPrefix:'not-owned',confirm:true},clients))).toMatch(/not found/);
+  expect((await accountHandlers.workspace_revoke_connection({tokenPrefix:'not-owned',confirm:true},clients)).content[0].text).toMatch(/not found/);
   expect(revokeConnection).not.toHaveBeenCalled();
   expect(unpack(await accountHandlers.workspace_revoke_connection({tokenPrefix:'a-connection',confirm:true},clients)).revoked).toBe(true);
   expect(revokeConnection).toHaveBeenCalledWith('a-connection');
