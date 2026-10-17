@@ -3,7 +3,8 @@ import {initSchema} from '../src/db.js';
 import {listAccounts,listConnections,revokeConnection,disconnectAccount,deletionPreview,
   setPrincipalDefault,requestDeletion,cancelDeletion} from '../src/principals/store.js';
 import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.js';
-import {configureCustomerDelegation,listCustomerDelegations,revokeCustomerDelegation} from '../src/principals/delegation.js';
+import {configureCustomerDelegation,listCustomerDelegations,revokeCustomerDelegation,
+  addVerifiedDelegationSubject,removeDelegationSubject} from '../src/principals/delegation.js';
 import {readCookie,headers} from '../src/principals/security.js';
 const escape=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export default async function handler(req,res){
@@ -34,6 +35,8 @@ export default async function handler(req,res){
        return res.status(200).json(receipt);
      }
      if(action==='revoke_delegation')return res.status(200).json(await revokeCustomerDelegation(principalId,body.id,body.customerId));
+     if(action==='verify_delegated_subject')return res.status(200).json(await addVerifiedDelegationSubject(principalId,body.id,body.customerId,body.subject));
+     if(action==='remove_delegated_subject')return res.status(200).json(await removeDelegationSubject(principalId,body.id,body.customerId,body.subject));
      if(action==='delete_preview')return res.status(200).json(await deletionPreview(principalId));
      if(action==='request_delete')return res.status(200).json(await requestDeletion(principalId));
      if(action==='cancel_delete')return res.status(200).json(await cancelDeletion(principalId));
@@ -62,12 +65,19 @@ export default async function handler(req,res){
      '<p>This is optional and only for administrators of their own verified Google Workspace customer. First link the separate read-only Admin Verification permission above. An existing login and its grants stay intact. Domain name or email alone never grants authority.</p>'+
      '<p>A service-account key is submitted only over this signed-in HTTPS form with CSRF protection, encrypted per account in the database, and never shown again. The Google administrator must separately authorize the selected scopes for this service account in their own Admin Console. Enter only scopes required for the intended operations. Missing configuration does not disable ordinary Google access.</p>'+
      '<ul>'+delegations.map(d=>'<li>'+escape(d.customer_id)+' · '+escape(d.subject_rule)+' · '+
+       'Verified delegated mailboxes: '+escape((d.subjects||[]).join(', ')||'(none)')+' · '+
        escape(d.scopes.join(', '))+' · '+(d.configured?'Configured':'Disabled')+
        '<form method="POST"><input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
        '<input type="hidden" name="action" value="revoke_delegation">'+
        '<input type="hidden" name="id" value="'+escape(d.account_id)+'">'+
        '<input type="hidden" name="customerId" value="'+escape(d.customer_id)+'">'+
-       '<button>Revoke this delegation locally</button></form></li>').join('')+'</ul>'+
+       '<button>Revoke this delegation locally</button></form>'+ 
+       '<form method="POST"><input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
+       '<input type="hidden" name="action" value="verify_delegated_subject">'+
+       '<input type="hidden" name="id" value="'+escape(d.account_id)+'">'+
+       '<input type="hidden" name="customerId" value="'+escape(d.customer_id)+'">'+
+       '<label>Add a mailbox independently verified by Google Directory <input name="subject" type="email" required></label>'+ 
+       '<button>Verify mailbox</button></form></li>').join('')+'</ul>'+
      '<form method="POST"><input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
        '<input type="hidden" name="action" value="setup_delegation">'+
        '<label>Owned linked account <select name="id">'+accounts.map(a=>'<option value="'+escape(a.id)+'">'+escape(a.email)+'</option>').join('')+'</select></label><p>'+ 
