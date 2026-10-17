@@ -48,6 +48,7 @@ vi.mock('../../src/principals/owner-migration.js',()=>({
     JSON.stringify(meta)!==JSON.stringify(h.proof.meta))return false;
   h.proofUsed=true;return true;
  },
+ unlinkVerifiedOwner:async()=>({unlinked:true,grantsMoved:false,connectionsRevoked:0}),
  legacyNewLoginEnabled:env=>env.LEGACY_OWNER_SIGNIN_ENABLED!=='false'
 }));
 vi.mock('../../src/principals/google.js',()=>({
