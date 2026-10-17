@@ -99,8 +99,7 @@ copy and re-encrypts it, so a wrong or lost key never locks anyone out. The
 plain copy keeps being written until card P5-2.
 
 Scope notes (`src/auth/scopes.js`): the Alert Center permission is deliberately
-absent (Google's consent screen refuses it and it would block the whole
-login), so the three `admin_*alert*` tools cannot work yet. The four Classroom
+absent from ordinary user OAuth because Google requires service-account domain-wide delegation instead. The separate owner-approved `apps.alerts` path and runtime opt-in are documented in DEPLOY.md. The four Classroom
 permissions are still requested although no tool uses Classroom (see "Known
 gaps").
 
@@ -253,7 +252,7 @@ they do not satisfy the full-catalog runner's separate read_only credential gate
 | Where | What | Card |
 | --- | --- | --- |
 | `gmail_untrash_message`, `gmail_untrash_thread`, `sheets_duplicate_sheet`, `sheets_format_cells`, `sheets_freeze_rows`, `sheets_autoresize_columns`, `sheets_sort_range`, `sheets_merge_cells`, `sheets_unmerge_cells`, `sheets_protect_range`, `domain_confirm_verification` | Change things with no `dryRun`, read-back or change-log row, and `check-writes.mjs` does not catch them because their verbs are not in its list. None deletes anything | P5-1 (finish) |
-| `admin_list_alerts`, `admin_get_alert`, `admin_delete_alert` | Cannot work: the Alert Center permission is not requested at sign-in (Google refuses it) | None; waits on Google |
+| `admin_list_alerts`, `admin_get_alert`, `admin_delete_alert` | Requires separately approved service-account DWD and runtime opt-in; user OAuth cannot authorize it | Corrected in PR194; activation evidence in `evidence/2026-10-16-alert-center-activation.json` |
 | `src/auth/scopes.js` `classroom` group | The sign-in asks for four Classroom permissions but no tool uses Classroom | Cleanup, needs every account to re-authorize if removed |
 | Read-only smoke test (`scripts/smoke-readonly.mjs`) | Does not exist yet, so tools that never worked against a real account are not yet found | P0-2 |
 | `google_accounts.tokens` | Plain copy still written next to the encrypted one | P5-2 (not before 30 days after encryption went live, 2026-10-02) |
@@ -400,3 +399,6 @@ limits; positive Alert Center still needs separate apps.alerts authorization.
 Native Hub connection is proved, but separately listed broader Hub relay/Sandbox/
 revocation checks remain pending for Hub-agent reconciliation; earlier native-only
 closure wording does not waive or prove them. No reverse discovery is required.
+
+
+Current Alert Center configuration supersedes the earlier pending authorization: explicit owner approval, saved five-scope readback, production opt-in and READY checked config redeploy completed. Original TEST list200/native empty array is genuine Google proof; exact GET remains development-tested/no-resource. See `evidence/2026-10-16-alert-center-activation.json`. No provider write test or whole-customer healthy claim.

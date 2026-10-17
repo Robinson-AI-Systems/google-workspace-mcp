@@ -2,11 +2,11 @@
 
 Prepared from retained genuine receipts and the current source casebook. This report does not rerun cleaned fixtures or relabel blocked cases as passes.
 
-Source independently observed READY live: `6ec69ce1b6cb8ffb2096774e038987cf6f5a5c4d` / `dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur`. Earlier retained reads remain bound to their original receipt revisions.
+Current source independently observed READY: `42afbaaf138d293d6042acd874c0fd3c32f7ce0e` / configuration redeploy `dpl_5cWHQLUyxqmQbsy9juFtNtew1KDd`. Earlier retained reads remain bound to their original receipt revisions.
 
-**159 verified retained handler/service reads; 2 development-tested GETs without live resources; 2 Alert Center configuration-limited cases; 1 retired unsupported operation; 2 owner-excluded live Vault cases.** Historical inventory166; active read catalog165 after retirement. These counts include service metadata, and do not prove every subcheck in composite reports is healthy.
+**160 verified retained handler/service reads; 3 development-tested GETs without live resources; 1 retired unsupported operation; 2 owner-excluded live Vault cases.** Historical inventory166; active read catalog165 after retirement. These counts include service metadata, and do not prove every subcheck in composite reports is healthy.
 
-Original P0-2 report criterion permits failures documented in the Known Bugs table. The later explicit full-catalog queue remains open; no requirement is silently removed. See [Known Bugs and provider limitations](ARCHITECTURE.md#known-bugs--genuine-acceptance-follow-up-october162026) and [P0-2](TASKS.md#p0-2--smoke-test-every-read-only-tool-against-a-real-account-m).
+Original P0-2 report criterion permits failures documented in the Known Bugs table. The developer catalog audit is complete with the explicit dispositions below; broader Hub acceptance remains separately pending. See [Known Bugs and provider limitations](ARCHITECTURE.md#known-bugs--genuine-acceptance-follow-up-october162026) and [P0-2](TASKS.md#p0-2--smoke-test-every-read-only-tool-against-a-real-account-m).
 
 | Tool | Result | Evidence or precise remaining prerequisite |
 | --- | --- | --- |
@@ -70,7 +70,7 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 | `workspace_vault_list_holds` | OWNER_EXCLUDED_LIVE | Could not verify without unneeded subscription upgrade; positive live pass excluded from completion by owner. Keep code, existing grant and synthetic proof. |
 | `workspace_vault_list_matters` | OWNER_EXCLUDED_LIVE | Could not verify without unneeded subscription upgrade; positive live pass excluded from completion by owner. Keep code, existing grant and synthetic proof. |
 | `workspace_admin_list_admin_console_notifications` | RETIRED_UNSUPPORTED | Official Directory discovery revision20261014 has neither notifications resource nor scope; pinned SDK agrees. Remove advertised tool and obsolete login scope; no sunset date invented. |
-| `workspace_admin_list_alerts` | DEVELOPMENT_TESTED_CONFIG_REQUIRED | Correct service-account/DWD apps.alerts path and actual generated-client request tested. Separate opt-in defaults off. Scope permits read/write; no new delegation authorized or live positive claimed. |
+| `workspace_admin_list_alerts` | VERIFIED | Owner-approved DWD and production opt-in activated. Original TEST identity and genuine Google list200/native empty array verified on READY42afbaa/config redeploy dpl5cWH. See alert-center-activation.json. |
 | `workspace_admin_list_asp` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
 | `workspace_admin_list_buildings` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
 | `workspace_admin_list_calendar_resources` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
@@ -105,7 +105,7 @@ Original P0-2 report criterion permits failures documented in the Known Bugs tab
 | `workspace_postmaster_list_domains` | VERIFIED_RETAINED | Genuine original TEST/read_only on READY6ec69ce v2: HTTP200, native domains[]/count0, pageSize20, no continuation; no traffic proof implied. |
 | `workspace_postmaster_list_traffic_stats` | VERIFIED_RETAINED | Original TEST/read_only on READY6ec69ce: exact owned scoped domain OWNER/VERIFIED after approved additiveTXT/Google verification; October9-15 seven-day query200/native v2 stats[]/no continuation. Missing metrics remain unknown, not healthy delivery. |
 | `workspace_admin_get_2sv_status` | VERIFIED_RETAINED | offline_source_proof_of_retained_provider_response, permanent_strict_runner, retained_strict_runner |
-| `workspace_admin_get_alert` | DEVELOPMENT_TESTED_CONFIG_REQUIRED | Same separately opted-in delegated client; actual generated GET and403 preservation tested. No Google alert invented; no paid upgrade needed. |
+| `workspace_admin_get_alert` | DEVELOPMENT_TESTED_NO_RESOURCE | DWD is now active; genuine Google list returned no alerts. Actual generated GET and403 propagation tested; no incident manufactured to obtain an ID. |
 | `workspace_admin_get_building` | VERIFIED_RETAINED | Current READYf96 required-floor exactpositive200, guarded audited create/delete and independent404; allcreatedAdminobjects cleaned. |
 | `workspace_admin_get_calendar_resource` | VERIFIED_RETAINED | retained_exact_guarded_resource_cycle |
 | `workspace_admin_get_chrome_device` | DEVELOPMENT_TESTED_NO_RESOURCE | Retained original ChromeOS inventory200/native empty. Actual SDK exact GET contract and404 preservation tested. Google30day50device trial exists but still needs enrolled device and acceptance of terms; no trial/purchase/enrollment needed for development completion. |
@@ -224,3 +224,8 @@ limits; positive Alert Center still needs separate apps.alerts authorization.
 Native Hub connection is proved, but separately listed broader Hub relay/Sandbox/
 revocation checks remain pending for Hub-agent reconciliation; earlier native-only
 closure wording does not waive or prove them. No reverse discovery is required.
+
+
+### Alert Center activation — October16 owner approval
+
+Owner approved the exact apps.alerts read/write scope on the existing robot. Google Admin saved five scopes, preserving all four existing scopes. Production-only runtime opt-in is enabled; config redeploy dpl_5cWHQLUyxqmQbsy9juFtNtew1KDd is READY on checked source42afbaa and all three aliases. Original TEST identity and real mailbox identity matched, then Google alert list returned200/native empty array. No provider mutation, key extraction, credential rotation or paid upgrade. Exact alert GET remains development-tested without a live resource. Current counts160verified/3development-tested no-resource/1retired/2owner-excluded sum to historical166. See evidence/2026-10-16-alert-center-activation.json and saved scope screenshot. Broader Hub D-4 remains pending.
