@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-16",
+  "sourceRevision": "42afbaaf138d293d6042acd874c0fd3c32f7ce0e",
+  "deploymentId": "dpl_5cWHQLUyxqmQbsy9juFtNtew1KDd",
+  "ownerApproved": true,
+  "scope": "https://www.googleapis.com/auth/apps.alerts",
+  "scopeAccess": "read_and_write",
+  "clientId": "115576530222062805971",
+  "existingScopesPreserved": [
+    "https://www.googleapis.com/auth/gmail.settings.basic",
+    "https://www.googleapis.com/auth/gmail.settings.sharing",
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/drive.file"
+  ],
+  "googleAdminSavedScopeCount": 5,
+  "scopeReadbackVerified": true,
+  "runtimeFlag": {
+    "name": "GOOGLE_ALERT_CENTER_DELEGATION_ENABLED",
+    "value": "true",
+    "target": [
+      "production"
+    ]
+  },
+  "screenshot": "workspace-alert-center-delegation-20261016.jpg",
+  "keyCreatedExtractedOrRotated": false,
+  "providerMutationsDuringTesting": 0,
+  "liveReadAcceptance": "PASS",
+  "broaderHubAcceptanceClaimed": false,
+  "deploymentState": "READY",
+  "allThreeProductionAliasesVerified": true,
+  "canonicalSourceVerified": true,
+  "originalReadOnlyTestIdentityVerified": true,
+  "genuineMailboxIdentityVerified": true,
+  "alerts": {
+    "http": 200,
+    "nativeCount": 0,
+    "pageSize": 2,
+    "exactGetLiveVerified": false,
+    "exactGetDisposition": "DEVELOPMENT_TESTED_NO_RESOURCE",
+    "noAlertCreatedForTesting": true
+  },
+  "calls": [
+    {
+      "name": "workspace_gmail_get_profile",
+      "at": "2026-10-16T23:58:47.845Z",
+      "http": 200
+    },
+    {
+      "name": "workspace_admin_list_alerts",
+      "at": "2026-10-16T23:58:48.121Z",
+      "http": 200
+    }
+  ],
+  "inventory": {
+    "historical": 166,
+    "activeReadCatalog": 165,
+    "verifiedHandlerOrServiceReads": 160,
+    "developmentTestedNoResource": 3,
+    "retiredUnsupported": 1,
+    "ownerExcludedVault": 2,
+    "fullPositiveGoogleClaimed": false
+  }
+}
