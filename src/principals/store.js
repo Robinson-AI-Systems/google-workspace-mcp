@@ -5,6 +5,7 @@ import {sealV2,openV2} from './crypto.js';
 import {OWNER_ID,digest,mint,validUuid,validEmail,requireScope} from './security.js';
 import {normalizeConnectionPolicy} from '../oauth/connection-settings.js';
 let conn;
+const trustedContexts=new WeakSet(); // no caller-minted frozen principal is accepted
 const sql=()=>{if(!conn){if(!process.env.DATABASE_URL)throw Error('database_unavailable');conn=neon(process.env.DATABASE_URL);}return conn;};
 const validSub=x=>typeof x==='string'&&x.length>=4&&x.length<=255&&/^[\x21-\x7e]+$/.test(x);
 const policy=record=>normalizeConnectionPolicy(record,{grant:'refresh_token'});
@@ -313,10 +314,12 @@ export async function readPrincipalAccess(token){
    AND c.revoked_at IS NULL AND p.status='active' AND a.status='active'`;
  if(rows.length!==1)return null;
  const row=rows[0],settings=policy(row);
- return Object.freeze({principalId:row.principal_id,principalKind:row.principal_kind,
+ const context=Object.freeze({principalId:row.principal_id,principalKind:row.principal_kind,
    accountId:row.account_id,connectionId:row.connection_id,mode:settings.mode,
    profile:settings.profile,listing:settings.listing,areas:settings.areas,
    resource:row.resource,clientId:row.client_id});
+ trustedContexts.add(context);
+ return context;
 }
 export async function rotatePrincipalRefresh(token,{clientId,resource}={}){
  if(typeof token!=='string'||!/^p10r_[A-Za-z0-9_-]{43}$/.test(token)||
@@ -391,7 +394,7 @@ export async function deletionPreview(principalId){
 export function scopedStore(context){
  // Inject this wrapper into future P10-4 public clients, never call global DB
  // helpers with a caller-provided tenant. No public tool dispatch exists yet.
- requireScope(context&&Object.isFrozen(context)&&context.principalKind==='user'&&
+ requireScope(context&&trustedContexts.has(context)&&Object.isFrozen(context)&&context.principalKind==='user'&&
    validUuid(context.principalId),'invalid_scoped_context');
  const principal=context.principalId;
  return Object.freeze({

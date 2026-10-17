@@ -83,7 +83,10 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
     redirectUri:options.redirectUri,resource:options.resource,verifier})));
   expect(one.filter(Boolean)).toHaveLength(1);
   const issued=await store.issuePrincipalConnection(one.find(Boolean));
-  expect((await store.readPrincipalAccess(issued.accessToken)).principalId).toBe(a);
+  const ctx=await store.readPrincipalAccess(issued.accessToken);
+  expect(ctx.principalId).toBe(a);
+  expect((await store.scopedStore(ctx).listAccounts()).map(x=>x.id)).toContain(aa);
+  expect(()=>store.scopedStore(Object.freeze({...ctx,principalId:b}))).toThrow('invalid_scoped_context');
   const settings={clientId:'mcp-client',resource:options.resource};
   const two=await Promise.all([1,2].map(()=>store.rotatePrincipalRefresh(issued.refreshToken,settings)));
   expect(two.filter(Boolean)).toHaveLength(1);
