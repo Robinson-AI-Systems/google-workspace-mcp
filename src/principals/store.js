@@ -242,3 +242,135 @@ export async function consumeTransaction({state,browser,purpose,principalId=null
  return {...rows[0],...openV2(rows[0].provider_verifier_ciphertext,
    rows[0].principal_id||OWNER_ID,hash,'provider-transaction')};
 }
+
+export async function issuePrincipalCode({principalId,accountId,clientId,redirectUri,resource,
+ codeChallenge,profile='read_only',listing='compact',areas=null,costPolicy={mode:'per_action'}}){
+ requireScope(validUuid(principalId)&&validUuid(accountId)&&clientId&&redirectUri&&resource&&
+  /^[A-Za-z0-9_-]{43}$/.test(codeChallenge),'invalid_grant');
+ const settings=policy({profile,listing,areas,mode:'live',cost_policy:costPolicy});
+ const code=mint('p10c_'),q=sql();
+ const rows=await q`INSERT INTO principal_oauth_codes
+  (code_hash,principal_id,account_id,client_id,redirect_uri,resource,code_challenge,
+   profile,listing,areas,cost_policy,expires_at)
+  SELECT ${digest(code)},a.principal_id,a.id,${clientId},${redirectUri},${resource},
+    ${codeChallenge},${settings.profile},${settings.listing},${settings.areas},
+    ${JSON.stringify(settings.cost_policy)}::jsonb,now()+interval '10 minutes'
+  FROM principal_google_accounts a JOIN principals p ON p.id=a.principal_id
+  WHERE a.id=${accountId}::uuid AND a.principal_id=${principalId}::uuid
+    AND a.status='active' AND p.status='active'
+  RETURNING code_hash`;
+ requireScope(rows.length===1,'outside_scope');
+ return code;
+}
+export async function consumePrincipalCode({code,clientId,redirectUri,resource,verifier}){
+ if(typeof code!=='string'||!/^p10c_[A-Za-z0-9_-]{43}$/.test(code)||
+    typeof verifier!=='string'||verifier.length<43||verifier.length>128)return null;
+ const challenge=crypto.createHash('sha256').update(verifier).digest('base64url');
+ const q=sql();
+ const rows=await q`UPDATE principal_oauth_codes SET consumed_at=now()
+   WHERE code_hash=${digest(code)} AND client_id=${clientId} AND redirect_uri=${redirectUri}
+     AND resource=${resource} AND code_challenge=${challenge} AND consumed_at IS NULL
+     AND expires_at>now() AND EXISTS(
+       SELECT 1 FROM principals p JOIN principal_google_accounts a
+        ON a.principal_id=p.id WHERE p.id=principal_oauth_codes.principal_id
+        AND a.id=principal_oauth_codes.account_id AND p.status='active' AND a.status='active')
+   RETURNING *`;
+ return rows[0]||null;
+}
+export async function issuePrincipalConnection(record){
+ requireScope(validUuid(record?.principal_id)&&validUuid(record?.account_id),'invalid_grant');
+ const settings=policy(record),id=crypto.randomUUID(),family=crypto.randomUUID();
+ const accessToken=mint('p10a_'),refreshToken=mint('p10r_'),q=sql();
+ const rows=await q`INSERT INTO principal_connections
+  (id,family,principal_id,account_id,client_id,resource,profile,listing,areas,cost_policy,mode,
+   access_hash,refresh_hash,expires_at)
+  SELECT ${id}::uuid,${family}::uuid,a.principal_id,a.id,${record.client_id},${record.resource},
+   ${settings.profile},${settings.listing},${settings.areas},
+   ${JSON.stringify(settings.cost_policy)}::jsonb,'live',
+   ${digest(accessToken)},${digest(refreshToken)},now()+interval '30 days'
+  FROM principal_google_accounts a JOIN principals p ON p.id=a.principal_id
+  WHERE a.id=${record.account_id}::uuid AND a.principal_id=${record.principal_id}::uuid
+  AND a.status='active' AND p.status='active' RETURNING id`;
+ requireScope(rows.length===1,'invalid_grant');
+ return {accessToken,refreshToken,connectionId:id};
+}
+export async function readPrincipalAccess(token){
+ if(typeof token!=='string'||!/^p10a_[A-Za-z0-9_-]{43}$/.test(token))return null;
+ const q=sql();
+ const rows=await q`SELECT c.id AS connection_id,c.principal_id,c.account_id,c.resource,
+   c.client_id,c.profile,c.listing,c.areas,c.mode,c.cost_policy,p.kind AS principal_kind,
+   p.status AS principal_status
+   FROM principal_connections c JOIN principals p ON p.id=c.principal_id
+   JOIN principal_google_accounts a ON a.id=c.account_id AND a.principal_id=c.principal_id
+   WHERE c.access_hash=${digest(token)} AND c.expires_at>now()
+   AND c.revoked_at IS NULL AND p.status='active' AND a.status='active'`;
+ return rows.length===1?Object.freeze(rows[0]):null;
+}
+export async function rotatePrincipalRefresh(token,{clientId,resource}={}){
+ if(typeof token!=='string'||!/^p10r_[A-Za-z0-9_-]{43}$/.test(token)||
+   typeof clientId!=='string'||typeof resource!=='string')return null;
+ const prior=digest(token),accessToken=mint('p10a_'),refreshToken=mint('p10r_'),q=sql();
+ const rows=await q`WITH old AS (
+   SELECT c.id,c.family,c.refresh_hash FROM principal_connections c
+   JOIN principals p ON p.id=c.principal_id
+   JOIN principal_google_accounts a ON a.id=c.account_id AND a.principal_id=c.principal_id
+   WHERE c.refresh_hash=${prior} AND c.client_id=${clientId} AND c.resource=${resource}
+    AND c.revoked_at IS NULL AND c.expires_at>now() AND p.status='active'
+    AND a.status='active' FOR UPDATE OF c
+ ), new_token AS (
+   UPDATE principal_connections c SET access_hash=${digest(accessToken)},
+     refresh_hash=${digest(refreshToken)},version=version+1
+   FROM old WHERE c.id=old.id RETURNING c.id,c.family
+ ), spent AS (
+   INSERT INTO principal_refresh_uses(refresh_hash,family)
+   SELECT old.refresh_hash,old.family FROM old JOIN new_token ON new_token.id=old.id
+   RETURNING refresh_hash
+ ) SELECT new_token.id FROM new_token JOIN spent ON true`;
+ if(rows.length===1)return {accessToken,refreshToken};
+ // A consumed refresh token replay revokes the entire family, even if a
+ // competing request just rotated it successfully on a different instance.
+ await q`UPDATE principal_connections SET revoked_at=now() WHERE family IN
+   (SELECT family FROM principal_refresh_uses WHERE refresh_hash=${prior})`;
+ return null;
+}
+export async function listConnections(principalId){
+ requireScope(validUuid(principalId));
+ const q=sql();
+ return q`SELECT id,account_id,client_id,resource,profile,listing,areas,
+   mode,version,created_at,expires_at,revoked_at FROM principal_connections
+   WHERE principal_id=${principalId}::uuid ORDER BY created_at DESC`;
+}
+export async function revokeConnection(principalId,connectionId){
+ requireScope(validUuid(principalId)&&validUuid(connectionId));
+ const q=sql();
+ const rows=await q`UPDATE principal_connections SET revoked_at=now()
+   WHERE id=${connectionId}::uuid AND principal_id=${principalId}::uuid
+   AND revoked_at IS NULL RETURNING id`;
+ return rows.length;
+}
+export async function disconnectAccount(principalId,accountId){
+ requireScope(validUuid(principalId)&&validUuid(accountId));
+ const q=sql();
+ const rows=await q`UPDATE principal_google_accounts SET status='revoked',updated_at=now()
+   WHERE id=${accountId}::uuid AND principal_id=${principalId}::uuid
+   AND status='active' RETURNING id`;
+ if(!rows.length)return 0;
+ await q`UPDATE principal_connections SET revoked_at=now()
+   WHERE principal_id=${principalId}::uuid AND account_id=${accountId}::uuid
+   AND revoked_at IS NULL`;
+ await q`DELETE FROM principal_defaults WHERE principal_id=${principalId}::uuid
+   AND account_id=${accountId}::uuid`;
+ return rows.length;
+}
+export async function deletionPreview(principalId){
+ requireScope(validUuid(principalId));
+ const q=sql();
+ const rows=await q`SELECT
+  (SELECT count(*)::int FROM principal_google_accounts WHERE principal_id=${principalId}::uuid) AS accounts,
+  (SELECT count(*)::int FROM principal_connections WHERE principal_id=${principalId}::uuid
+    AND revoked_at IS NULL) AS agent_connections,
+  (SELECT count(*)::int FROM user_sessions WHERE principal_id=${principalId}::uuid
+    AND revoked_at IS NULL) AS sessions`;
+ return {...rows[0],previewOnly:true,deleted:false,
+  next:'Account deletion needs separate irreversible confirmation and retention disclosure before launch.'};
+}
