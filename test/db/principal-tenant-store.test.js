@@ -3,6 +3,7 @@
 import crypto from 'node:crypto';
 import pg from 'pg';
 import {describe,it,expect,beforeAll,afterAll,vi} from 'vitest';
+import {spawn} from 'node:child_process';
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
 import {InMemoryTransport} from '@modelcontextprotocol/sdk/inMemory.js';
 const holder=vi.hoisted(()=>({pool:null}));
@@ -104,6 +105,62 @@ describe.skipIf(!url)('P10: separate principal-owned result, audit and rate pers
   expect((await bc.listAccounts()).map(a=>a.id)).toEqual([bb]);
  });
 
+
+
+ it('raw PostgreSQL constraints refuse a foreign connection paired with a valid user and account',async()=>{
+   const invalid=[
+     ['result',`INSERT INTO principal_result_pages(handle,principal_id,account_id,
+        connection_id,credential_version,payload,expires_at)
+        VALUES($1,$2,$3,$4,0,'{}'::jsonb,now()+interval '1 hour')`,
+        [resultHandle(),a,aa,cb.connectionId]],
+     ['audit',`INSERT INTO principal_changes(principal_id,account_id,connection_id,
+        acting_as,tool) VALUES($1,$2,$3,'a@example.test','synthetic')`,
+        [a,aa,cb.connectionId]],
+     ['rate',`INSERT INTO principal_rate_windows(principal_id,account_id,connection_id,
+        credential_version,bucket,window_start,usage)
+        VALUES($1,$2,$3,0,'synthetic',now(),1)`,
+        [a,aa,cb.connectionId]]
+   ];
+   for(const [label,query,values] of invalid){
+     let error;
+     try{await pool.query(query,values);}catch(e){error=e;}
+     expect(error?.code,label).toBe('23503');
+   }
+   expect((await ac.listChanges({limit:100})).every(x=>x.tool!=='synthetic')).toBe(true);
+ });
+ it('executes the same V2 scoped store in TWO independent Node OS processes against one disposable Postgres',async()=>{
+   const spawnWorker=payload=>new Promise((resolve,reject)=>{
+     const processWorker=spawn(process.execPath,
+       [new URL('../helpers/p10-principal-child.mjs',import.meta.url).pathname],
+       {env:{...process.env,P10_TEST_SCHEMA:schema},stdio:['pipe','pipe','pipe']});
+     let output='',stderr='';
+     processWorker.stdout.on('data',c=>{output+=c.toString();});
+     processWorker.stderr.on('data',c=>{stderr+=c.toString().slice(0,1000);});
+     processWorker.on('error',reject);
+     processWorker.on('close',code=>{
+       if(code!==0)return reject(Error('independent_worker_failed '+code+' '+stderr.slice(-800)));
+       try{resolve(JSON.parse(output.trim()));}catch{reject(Error('invalid_independent_worker_result'));}
+     });
+     processWorker.stdin.end(JSON.stringify(payload));
+   });
+   const handleA=resultHandle(),handleB=resultHandle();
+   const results=await Promise.all([
+     spawnWorker({accessToken:ca.accessToken,foreignAccountId:bb,foreignHandle:handleB,
+       ownedHandle:handleA,window:'2026-10-17T00:05:00.000Z'}),
+     spawnWorker({accessToken:cb.accessToken,foreignAccountId:aa,foreignHandle:handleA,
+       ownedHandle:handleB,window:'2026-10-17T00:05:00.000Z'})
+   ]);
+   expect(results).toEqual([
+     {own:true,foreignAccountMissing:true,foreignGrantMissing:true,foreignResultMissing:true,
+       resultWritten:true,rateAllowed:true},
+     {own:true,foreignAccountMissing:true,foreignGrantMissing:true,foreignResultMissing:true,
+       resultWritten:true,rateAllowed:true}
+   ]);
+   expect(await ac.getResult(handleA)).toMatchObject({data:{owner:a}});
+   expect(await bc.getResult(handleB)).toMatchObject({data:{owner:b}});
+   expect(await ac.getResult(handleB)).toBeNull();
+   expect(await bc.getResult(handleA)).toBeNull();
+ });
 
  it('actual native SDK and meta-dispatch share exact owner A/B boundaries with zero Google calls',async()=>{
   const env={PUBLIC_BASE_URL:process.env.PUBLIC_BASE_URL,
