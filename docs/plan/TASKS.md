@@ -1,6 +1,6 @@
 ## New roadmap — user authority and parallel multi-user sign-in
 
-Owner clarification October16,2026 Denver: development-agent spending/TEST restrictions must not become permanent product limits. Supported end-user operations need a usable consequence/approval path. Owner requested a concrete Sol5.6-ready roadmap and parallel Google sign-in that preserves the working owner login. Design is ready; implementation/public enrollment/paid tests/legacy retirement are NOT claimed or activated by this planning update. Original P0–P8 acceptance remains passed for its original scope; the newly added P9/P10 scope is unfinished.
+Owner clarification October16,2026 Denver: development-agent spending/TEST restrictions must not become permanent product limits. Supported end-user operations need a usable consequence/approval path. Owner requested a concrete Sol5.6-ready roadmap and parallel Google sign-in that preserves the working owner login. Design is approved. P9-1..P9-4 engineering is implemented in cohesive PR #201 with synthetic and real-Postgres CI; actual P9 live provider acceptance awaits an eligible deployed revision and owner-selected safe grants. P10 multi-user public enrollment and legacy retirement remain NOT implemented or activated. Original P0–P8 acceptance remains passed for its original scope; the newly added P9/P10 scope is unfinished.
 
 Authoritative execution contract: [User authority and parallel sign-in](designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). Start P9-1; follow dependencies and whole-outcome delivery groups. Do not interpret original29 passed acceptance rows as completion of the new scope. Add new source-pinned acceptance rows only when implementation exists.
 
@@ -236,31 +236,31 @@ restricts only the named operation. Source completion never proves actual Google
 [
   {
     "id": "P9-1",
-    "state": "OPEN",
-    "remaining": "Classify developer vs user/provider/security policy; complete all original acceptance in the new execution contract.",
-    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
-    "next": "section3 P9-1; no runtime removals without classification; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Source classification and unit controls completed. No new real billable or TEST fixture acceptance authorized; reconcile real runtime permissions after deployed P9 live mode.",
+    "evidence": "PR #201 head ed9ba9578381616f29341a0bdc063b84cd8064da, frozen P9 report docs/plan/evidence/p9-bundle-delivery.json, classification and focused tests; exact-head mandatory CI succeeded run #38999853714. No P9 deployed/live acceptance claimed.",
+    "next": "After P9 deployment and owner-selected disposable live read-only grant, run safe positive/read-only-negative/revocation acceptance; do not change Hub."
   },
   {
     "id": "P9-2",
-    "state": "OPEN",
-    "remaining": "Usable exact-request cost approval for bulk licensing; complete all original acceptance in the new execution contract.",
-    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
-    "next": "P9-1; guarded children and truthful prices; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Exact cost consent and guarded batch writes implemented/tested. Real paid license assignment/change NOT approved or executed; require separate explicit owner amount/unknown exposure approval and protected target before any provider mutation.",
+    "evidence": "PR #201 head ed9ba9578381616f29341a0bdc063b84cd8064da, frozen P9 report docs/plan/evidence/p9-bundle-delivery.json, classification and focused tests; exact-head mandatory CI succeeded run #38999853714. No P9 deployed/live acceptance claimed.",
+    "next": "After P9 deployment, no actual paid license mutation without independent owner approval; source acceptance only."
   },
   {
     "id": "P9-3",
-    "state": "OPEN",
-    "remaining": "Normal-use RTC grants alongside retained TEST grants; complete all original acceptance in the new execution contract.",
-    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
-    "next": "P9-1; companion Hub capability work remains independent; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "P9 live source implemented and CI tested. Real Google provider live read, scoped write refusal and disposable-grant revocation await deployment, user-selected owner grant and consent. Hub relay/Sandbox live-write proof is Hub-owned.",
+    "evidence": "PR #201 head ed9ba9578381616f29341a0bdc063b84cd8064da, frozen P9 report docs/plan/evidence/p9-bundle-delivery.json, classification and focused tests; exact-head mandatory CI succeeded run #38999853714. No P9 deployed/live acceptance claimed.",
+    "next": "After P9 deployment and owner-selected disposable live read-only grant, run safe positive/read-only-negative/revocation acceptance; do not change Hub."
   },
   {
     "id": "P9-4",
-    "state": "OPEN",
-    "remaining": "Capability/consent parity and end-user guidance; complete all original acceptance in the new execution contract.",
-    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
-    "next": "P9-2/P9-3; no hidden developer-only product denial; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Discovery/catalog/source parity implemented and CI tested. Deployed native/live catalog read-only comparison and provider entitlement confirmation still pending.",
+    "evidence": "PR #201 head ed9ba9578381616f29341a0bdc063b84cd8064da, frozen P9 report docs/plan/evidence/p9-bundle-delivery.json, classification and focused tests; exact-head mandatory CI succeeded run #38999853714. No P9 deployed/live acceptance claimed.",
+    "next": "After P9 deployment and owner-selected disposable live read-only grant, run safe positive/read-only-negative/revocation acceptance; do not change Hub."
   },
   {
     "id": "P10-1",
@@ -522,7 +522,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "priority": 2,
     "requiredRevision": "7426e266752c8e97f4b970b6f4b31ab49d81275f",
     "task": "Verify deployed guarded workspace_bulk_operation with original owner-authorized scoped TEST targets and non-production approval. Prove permitted mappings, exact provider readbacks, safe domain refusal, partial failure and cleanup; no paid license actions without independent spending approval.",
-    "procedure": "docs/plan/TASKS.md \u2014 P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md — P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Exact READY deployment and authenticated custom MCP connection; owner-approved isolated TEST targets, permission/domain limits, exact fixture IDs and operation-specific approvals; no production bulk writes or autonomous spending",
     "dependsOn": [],
     "status": "PASSED",
@@ -578,7 +578,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "28e648611cf1e4a634490630201c517dfc501d7c",
     "status": "PASSED",
     "task": "Original disposable-group full-settings preview/edit/readback/cleanup through the actual scoped custom Google service.",
-    "procedure": "docs/plan/TASKS.md \u2014 P6-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md — P6-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Checked independently READY source containing 80c0870; original approved group fixture, scoped Google permission and operation-specific edit/cleanup authorization.",
     "dependsOn": [],
     "lastEvidence": "2026-10-16UTC/Oct15Denver actual SAMEoriginal approved Rentals Admin TESTprincipal and SAMEemptygroup on independently READY3ad0250/dpl_29kFsgUoW14Zf4EHCGbNZtuuYE54. Explicitalt=json repair now returns61settingsfields with every11prior restrictive patch value matched. Actual nonempty-before preview, disabledfooter update and independent readback confirmedtrue with durable audit ID. Members[] verified; exact group deletion dryRun/confirm after.existsfalse. Adminpass final revocation confirmedtrue, subsequentwhoami401pass_revoked. SharedDrive+permission alreadyremoved/deleted. Ordinary authorized own-domain read separately corroborates DirectorynotFound; not substituted forTEST mutation proof. Original failed GET{} and eventualDirectorycreate receipts preserved, no re-create. Current originalreadpass also proves138guide topics/7pages/capabilities parity; no scopes, mail or paid users."
@@ -589,7 +589,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "28e648611cf1e4a634490630201c517dfc501d7c",
     "status": "PASSED",
     "task": "Original disposable shared-drive create, member add/change/readback/remove and empty-drive delete lifecycle; preserve exact IDs, domain limits, no production file deletion and cleanup.",
-    "procedure": "docs/plan/TASKS.md \u2014 P7-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md — P7-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Independently READY checked source including 81264c1; explicit disposable-drive/member fixture permission and eligible Google role/edition. No paid account or production file changes.",
     "dependsOn": [],
     "lastEvidence": "2026-10-15 original newly owner-confirmed Rentals24h TEST/full workspace/files/admin principal; independently READY601f2f2/dpl_5RWTksxFxY5mEGK8rqb7MrgczobY. Fresh empty shared drive created with private saved UUID, domainUsersOnly/driveMembersOnly restrictions readback confirmed. Original empty owner-created Rentals fixture group granted reader with sendNotificationEmail:false; exact returned permission ID changed to writer, both confirmed. Exact permission removal confirmed; actual full files:[] and no cursor; dryRun/delete exact drive confirmed after.existsfalse, positive durable audit receipts. No production file/user/member or existing drive changed, no paid account or outside invite. Private intents/IDs/results retained, no uncertain create retry. Empty fixture group retained only for its separate Groups Settings retest/approved deletion."
@@ -600,7 +600,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "130bcc1f8275e87c1102bae553b1aefc3b80dd0a",
     "status": "PASSED",
     "task": "Complete the already-approved dated authenticated Google Admin Console walkthrough: inventory actual in-scope pages, compare mapped paths/steps/expected results, reconcile permitted API readbacks and correct real missing coverage. Do not add a new observation-storage feature.",
-    "procedure": "docs/plan/TASKS.md \u2014 P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md — P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Authenticated read-only Google Admin Console session for the intended authorized organization/role; observe only approved scope, no policy changes. Record inaccessible/edition-specific pages honestly; an API-generated checklist alone is not the walkthrough.",
     "dependsOn": [],
     "lastEvidence": "2026-10-15Denver actual dated authenticated Rentals Console inventory across54 stored distinct routes plus initial7service/security pages, both business OUs inspected,15real missing Gemini/Directory/account sections repaired. Checked READY03e88b251b248db62571de469029925b9f65ee73/dpl_BG4rTF51DVDixKGV8GiGsb6B1g1f, original protected read_only TEST runner UTC2026-10-16T00:55:39.833Z verified153orderedunique topics/8boundedpages, complete steps/expected, capabilities parity. Full navigation walk criterion accepted with Vault denied/DLP upgrade/CAA absent/prior websession400 explicit limits; no effective-all-OU policy or PolicyAPI certificate. No Console mutation/fixture recreation."
@@ -650,6 +650,43 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [],
     "status": "PASSED",
     "lastEvidence": "2026-10-15T21:59:49.609Z direct production RTC read_only TEST requests at independently READY79ac338: workspace_where_is_setting reviewAll returned135 unique IDs in exact reviewed order across7 bounded20-entry pages, each with steps/expected and no observed-policy claim. workspace_admin_console_capabilities independently paged the same135 IDs/count. Real mailbox verify observed all5 selected topics (IMAP, delegation, forwarding, vacation, send-as); complete:true,notReadable:0. No customer-wide/foreign reads or policy writes. This closes corrected deployed navigation proof, not the full all-page/all-OU walkthrough."
+  },
+  {
+    "id": "P9-LIVE-DIRECT",
+    "priority": 2,
+    "requiredRevision": "ed9ba9578381616f29341a0bdc063b84cd8064da",
+    "task": "Perform safe READ-ONLY normal-use direct live RTC and native identity/catalog/denial/revoke acceptance, independently verifying deployed P9 revision and retaining existing useful TEST grants.",
+    "procedure": "docs/USER-AUTHORIZATION.md",
+    "gates": "Only after a READY deployment including P9 and a separately owner-issued disposable live read-only grant; no Google writes, no credential exposure, preserve TEST/Hub grants and original evidence.",
+    "dependsOn": [],
+    "status": "PENDING",
+    "lastEvidence": "PR #201 isolated fake-provider HTTPS/native write/read and real Postgres schema checks passed; NO deployed P9 direct live probe exists. Queue it until deployed and owner grants."
+  },
+  {
+    "id": "P9-LICENSE-PAID",
+    "priority": 5,
+    "requiredRevision": "ed9ba9578381616f29341a0bdc063b84cd8064da",
+    "task": "Evaluate any desired actual Google licensing assignment/change using exact preview/digest, owner-approved account, SKU, targets, charge exposure, guard readback and partial result reconciliation.",
+    "procedure": "docs/USER-AUTHORIZATION.md",
+    "gates": "No paid Google write without independent explicit user authorization, account identity, charge-risk acknowledgement and dedicated disposable target. Unknown provider pricing or user cap cannot be assumed free or enforced.",
+    "dependsOn": [
+      "P9-LIVE-DIRECT"
+    ],
+    "status": "PENDING",
+    "lastEvidence": "Source/test fake-provider Google licensing request shape and uncertain outcome tests passed; actual Google license changes NOT attempted or approved."
+  },
+  {
+    "id": "P9-HUB-LIVE",
+    "priority": 4,
+    "requiredRevision": "ed9ba9578381616f29341a0bdc063b84cd8064da",
+    "task": "Confirm Hub's independently implemented end-user live consent/relay and Sandbox handling against Workspace P9; or record Hub-owned pending dependency without widening existing TEST grants.",
+    "procedure": "docs/plan/evidence/p9-workspace-to-hub-handoff.md",
+    "gates": "Requires separate Hub approval/deployed implementation and disposable least-privilege live grant. Workspace must never discover Hub, and P8 read-only Hub acceptance remains valid.",
+    "dependsOn": [
+      "P9-LIVE-DIRECT"
+    ],
+    "status": "PENDING",
+    "lastEvidence": "Hub companion contract committed in Workspace PR #201. Prior Hub D-4 TEST/read-only direct relay acceptance was previously passed and is not reused as live-write evidence."
   }
 ]
 ```
