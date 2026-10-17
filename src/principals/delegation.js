@@ -62,7 +62,7 @@ async function verifiedAdmin({principalId,accountId}){
    await updateLinkedGrant({principalId,accountId,version:account.token_version,
      tokens:auth.credentials,scopeList:account.scope_list});
  }
- return {customerId:person.customerId,subject:account.email.toLowerCase()};
+ return {customerId:person.customerId,subject:account.email.toLowerCase(),directory:dir};
 }
 export async function configureCustomerDelegation({principalId,accountId,credentialJson,scopes}){
  requireScope(validUuid(principalId)&&validUuid(accountId),'outside_scope');
@@ -89,6 +89,10 @@ export async function configureCustomerDelegation({principalId,accountId,credent
       enabled=true,revoked_at=NULL
     RETURNING id`;
  requireScope(rows.length===1,'outside_scope');
+ await q`INSERT INTO principal_delegation_subjects(principal_id,account_id,customer_id,subject)
+   VALUES(${principalId}::uuid,${accountId}::uuid,${verified.customerId},${verified.subject})
+   ON CONFLICT(principal_id,customer_id,subject) DO UPDATE
+   SET account_id=excluded.account_id,verified_at=now()`;
  return {configured:true,customerId:verified.customerId,serviceAccount:key.client_email,
    subject:verified.subject,scopes:selected,secretStoredEncrypted:true,
    googleDelegationVerified:true};
@@ -99,6 +103,43 @@ function cryptoId(){
 }
 import {randomUUID as globalCryptoUUID} from 'node:crypto';
 
+// A mail target must be checked as a Google Directory member of the *same*
+// customer by this customer's signed-in and independently verified admin.
+// Shared domain suffixes, aliases, hd claims and user-supplied customer IDs
+// never grant delegation privileges.
+export async function addVerifiedDelegationSubject(principalId,accountId,customerId,subject){
+ requireScope(validUuid(principalId)&&validUuid(accountId)&&
+   customerPattern.test(String(customerId||''))&&validEmail(subject),'outside_scope');
+ const verified=await verifiedAdmin({principalId,accountId});
+ requireScope(verified.customerId===customerId,'customer_mismatch');
+ const target=subject.toLowerCase();
+ const result=await verified.directory.users.get({userKey:target,projection:'basic'});
+ const user=result?.data;
+ requireScope(user?.primaryEmail?.toLowerCase()===target&&user?.customerId===verified.customerId,
+  'delegated_subject_not_verified');
+ const rows=await sql()`INSERT INTO principal_delegation_subjects
+   (principal_id,account_id,customer_id,subject)
+   SELECT d.principal_id,d.account_id,d.customer_id,${target}
+     FROM principal_delegations d JOIN principals p ON p.id=d.principal_id
+     JOIN principal_google_accounts a ON a.id=d.account_id AND a.principal_id=d.principal_id
+   WHERE d.principal_id=${principalId}::uuid AND d.account_id=${accountId}::uuid
+     AND d.customer_id=${customerId} AND d.enabled=true AND d.revoked_at IS NULL
+     AND p.status='active' AND a.status='active'
+   ON CONFLICT(principal_id,customer_id,subject) DO UPDATE SET
+     verified_at=now()
+   RETURNING subject`;
+ requireScope(rows.length===1,'outside_scope');
+ return {verified:true,customerId,subject:target};
+}
+export async function removeDelegationSubject(principalId,accountId,customerId,subject){
+ requireScope(validUuid(principalId)&&validUuid(accountId)&&
+   customerPattern.test(String(customerId||''))&&validEmail(subject),'outside_scope');
+ const rows=await sql()`DELETE FROM principal_delegation_subjects WHERE
+   principal_id=${principalId}::uuid AND account_id=${accountId}::uuid
+   AND customer_id=${customerId} AND subject=${subject.toLowerCase()}
+   RETURNING subject`;
+ return {removed:rows.length===1};
+}
 export async function listCustomerDelegations(principalId){
  requireScope(validUuid(principalId),'outside_scope');
  const rows=await sql()`SELECT d.id,d.account_id,d.customer_id,d.scopes,
@@ -106,7 +147,13 @@ export async function listCustomerDelegations(principalId){
    FROM principal_delegations d JOIN principal_google_accounts a
    ON a.id=d.account_id AND a.principal_id=d.principal_id
    WHERE d.principal_id=${principalId}::uuid ORDER BY d.customer_id`;
- return rows.map(r=>({...r,configured:r.enabled&&!r.revoked_at,credentialPresent:true}));
+ const q=sql();
+ return Promise.all(rows.map(async r=>{
+   const names=await q`SELECT subject FROM principal_delegation_subjects WHERE principal_id=${principalId}::uuid
+     AND account_id=${r.account_id}::uuid AND customer_id=${r.customer_id}
+     ORDER BY subject`;
+   return {...r,subjects:names.map(n=>n.subject),configured:r.enabled&&!r.revoked_at,credentialPresent:true};
+ }));
 }
 export async function revokeCustomerDelegation(principalId,accountId,customerId){
  requireScope(validUuid(principalId)&&validUuid(accountId)&&
@@ -130,7 +177,10 @@ export async function loadCustomerDelegation(context){
  requireScope(rows.length<=1,'ambiguous_customer_delegation');
  if(!rows.length)return null;
  const r=rows[0],key=openV2(r.credential_ciphertext,principalId,accountId,'delegation:'+r.customer_id);
- return {customerId:r.customer_id,subject:r.subject_rule,scopes:r.scopes,key};
+ const verified=await sql()`SELECT subject FROM principal_delegation_subjects WHERE principal_id=${principalId}::uuid
+   AND account_id=${accountId}::uuid AND customer_id=${r.customer_id}`;
+ return {customerId:r.customer_id,subject:r.subject_rule,scopes:r.scopes,key,
+   verifiedSubjects:verified.map(v=>v.subject)};
 }
 export function scopedDelegationClients(delegation){
  // Only called with DB-read encrypted per-customer key. No global environment
@@ -140,9 +190,10 @@ export function scopedDelegationClients(delegation){
    forServices:()=>{throw Error('customer_delegation_not_configured');},
    forAlert:()=>{throw Error('customer_delegation_not_configured');}});
  const {customerId,subject,scopes,key}=delegation;
+ const authorizedSubjects=new Set(delegation.verifiedSubjects||[]);
  const authFor=(target,required)=>{
    const email=String(target||'').trim().toLowerCase();
-   requireScope(validEmail(email)&&email===subject,'customer_subject_not_verified');
+   requireScope(validEmail(email)&&authorizedSubjects.has(email),'customer_subject_not_verified');
    requireScope(required.length>0&&required.every(s=>scopes.includes(s)),'customer_delegation_scope_missing');
    requireScope(customerPattern.test(customerId),'customer_not_verified');
    return delegatedAuth(key,email,required);
