@@ -13,6 +13,7 @@ import { listedTools, allowedTool, toolMetadata } from '../src/rtc/catalog.js';
 import {readPrincipalAccess,legacyOwnerContext} from '../src/principals/store.js';
 import {scopedStore} from '../src/principals/store.js';
 import {buildPrincipalApiClients} from '../src/principals/clients.js';
+import {publicMode} from '../src/principals/security.js';
 
 export const config = { api: { bodyParser: true } };
 
@@ -96,8 +97,23 @@ export default async function handler(req, res) {
       if(base)res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
       res.status(401).json({error:'invalid_token'});return;
     }
-    res.status(403).json({error:'public_dispatch_not_enabled',
-      error_description:'Principal tool isolation has not passed the required P10-4 gate.'});return;
+    // Strict rollout: source isolation and owner-authorized pilot must BOTH
+    // be explicitly enabled. Merely configuring Google login is not an
+    // approval to execute customer tools, nor may an HTTP argument override it.
+    let allowed=false;
+    try{
+      allowed=publicMode()!=='off'&&process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED==='true';
+    }catch{/* invalid public mode always stays disabled */}
+    if(!allowed){
+      res.status(403).json({error:'public_dispatch_not_enabled',
+        error_description:'Public tool execution requires independently verified P10 tenant isolation and an authorized pilot.'});return;
+    }
+    const server=createIsolatedPrincipalServer(user);
+    const transport=new StreamableHTTPServerTransport({sessionIdGenerator:undefined});
+    res.on('close',()=>{transport.close();server.close();});
+    await server.connect(transport);
+    await transport.handleRequest(req,res,req.body);
+    return;
   }
   if(token.startsWith('p10')){
     res.status(401).json({error:'invalid_token'});return;
