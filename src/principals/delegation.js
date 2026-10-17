@@ -7,7 +7,7 @@ import {sealV2,openV2} from './crypto.js';
 import {validUuid,validEmail,requireScope} from './security.js';
 import {findAccount,getLinkedGrant,updateLinkedGrant} from './store.js';
 import {SCOPE_GROUPS} from '../auth/scopes.js';
-import {GMAIL_SETTINGS_SCOPES,CALENDAR_SCOPE,DRIVE_FILE_SCOPE,ALERT_CENTER_SCOPE} from '../auth/service-account.js';
+import {GMAIL_SETTINGS_SCOPES,CALENDAR_SCOPE,DRIVE_FILE_SCOPE,ALERT_CENTER_SCOPE} from '../auth/delegation-scopes.js';
 import {publicGoogleClient} from './google.js';
 
 let connection;
