@@ -3,6 +3,8 @@
 import crypto from 'node:crypto';
 import pg from 'pg';
 import {describe,it,expect,beforeAll,afterAll,vi} from 'vitest';
+import {Client} from '@modelcontextprotocol/sdk/client/index.js';
+import {InMemoryTransport} from '@modelcontextprotocol/sdk/inMemory.js';
 const holder=vi.hoisted(()=>({pool:null}));
 vi.mock('@neondatabase/serverless',()=>({neon:()=>async(strings,...values)=>{
  let statement=strings[0];
@@ -100,6 +102,68 @@ describe.skipIf(!url)('P10: separate principal-owned result, audit and rate pers
   await expect(ac.setDefault(bb)).rejects.toThrow('outside_scope');
   expect((await ac.listAccounts()).map(a=>a.id)).toEqual([aa]);
   expect((await bc.listAccounts()).map(a=>a.id)).toEqual([bb]);
+ });
+
+
+ it('actual native SDK and meta-dispatch share exact owner A/B boundaries with zero Google calls',async()=>{
+  const env={PUBLIC_BASE_URL:process.env.PUBLIC_BASE_URL,
+   PUBLIC_GOOGLE_OAUTH_CLIENT_ID:process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
+   PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET:process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET};
+  process.env.PUBLIC_BASE_URL='https://service.test';
+  process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID='public-test-client-id';
+  process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET='public-test-client-secret';
+  const connected=[];
+  const start=async token=>{
+    const context=await store.readPrincipalAccess(token);
+    const {createIsolatedPrincipalServer}=await import('../../api/mcp.js');
+    const server=createIsolatedPrincipalServer(context);
+    const [serverTransport,clientTransport]=InMemoryTransport.createLinkedPair();
+    const client=new Client({name:'p10-isolation-acceptance',version:'1.0.0'},{capabilities:{}});
+    await server.connect(serverTransport);
+    await client.connect(clientTransport);
+    connected.push({server,client});
+    return client;
+  };
+  const parse=r=>JSON.parse(r.content[0].text);
+  try{
+   const A=await start(ca.accessToken),B=await start(cb.accessToken);
+   const [listA,listB]=await Promise.all([A.listTools(),B.listTools()]);
+   expect(listA.tools.some(t=>t.name==='workspace_list_accounts')).toBe(true);
+   expect(listB.tools.some(t=>t.name==='workspace_search_tools')).toBe(true);
+   expect(listA.tools.some(t=>t.name==='workspace_dev_create_fixtures')).toBe(false);
+   expect(listA.tools.some(t=>t.name==='dns_list_records')).toBe(false);
+   const [a,b]=await Promise.all([
+    A.callTool({name:'workspace_list_accounts',arguments:{}}),
+    B.callTool({name:'workspace_call',arguments:{name:'workspace_list_accounts',args:{}}})
+   ]);
+   expect(parse(a).map(x=>x.id)).toEqual([aa]);
+   expect(parse(b).map(x=>x.id)).toEqual([bb]);
+   const results=await Promise.all([
+    A.callTool({name:'workspace_call',arguments:{name:'workspace_list_connections',args:{}}}),
+    B.callTool({name:'workspace_call',arguments:{name:'workspace_list_connections',args:{}}})
+   ]);
+   expect(parse(results[0]).map(x=>x.id)).toEqual([ca.connectionId]);
+   expect(parse(results[1]).map(x=>x.id)).toEqual([cb.connectionId]);
+   const denied=await A.callTool({name:'workspace_set_default_account',arguments:{email:'b@example.test'}});
+   expect(denied.isError).toBe(true);
+   const unavailable=await A.callTool({name:'workspace_describe_tool',
+     arguments:{name:'workspace_dev_list_runs',includeUnavailable:true}});
+   expect(parse(unavailable)).toMatchObject({available:false,
+     needsReconnect:true,reason:'requires_customer_specific_setup'});
+   const out=await B.callTool({name:'workspace_batch',arguments:{calls:[
+     {name:'workspace_list_accounts',args:{}},{name:'workspace_list_connections',args:{}}
+   ]}});
+   const responses=parse(out).results;
+   expect(parse(responses[0].response).map(x=>x.id)).toEqual([bb]);
+   expect(parse(responses[1].response).map(x=>x.id)).toEqual([cb.connectionId]);
+  }finally{
+   await Promise.all(connected.map(async({client,server})=>{
+    await client.close();await server.close();
+   }));
+   for(const [name,value] of Object.entries(env)){
+    if(value===undefined)delete process.env[name];else process.env[name]=value;
+   }
+  }
  });
 
  it('revocation blocks result and history reads without touching another user',async()=>{

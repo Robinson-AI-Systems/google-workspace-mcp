@@ -4,9 +4,26 @@ import {handlers as accountHandlers} from '../../src/tools/accounts.js';
 import {handlers as metaHandlers} from '../../src/tools/rtc-meta.js';
 import {scopedDelegationClients} from '../../src/principals/delegation.js';
 import {prepareUndo} from '../../src/tools/undo.js';
+import {allowedTool,listedTools,toolMetadata,LEGACY_OWNER_ONLY_TOOLS} from '../../src/rtc/catalog.js';
 
 const unpack=result=>JSON.parse(result.content[0].text);
 describe('P10 explicit caller injection: independent tenant cannot discover owner fallback',()=>{
+
+ it('never advertises owner-only provider and business tools as available to a normal user',()=>{
+  const user={principalKind:'user',profile:'full',mode:'live',areas:null,listing:'catalog'};
+  const owner={profile:'full',mode:'live',areas:null,listing:'catalog'};
+  for(const name of LEGACY_OWNER_ONLY_TOOLS){
+    expect(allowedTool(name,user)).toBe(false);
+    const metadata=toolMetadata({name,description:'Fixture',inputSchema:{}},user);
+    expect(metadata.profiles).toEqual([]);
+    expect(allowedTool(name,owner)).toBe(name==='workspace_dev_create_fixtures'||
+       name==='workspace_dev_cleanup'?false:true);
+  }
+  const catalog=[{name:'workspace_whoami',description:'identity'},
+    {name:'workspace_dev_list_runs',description:'fixture'}];
+  expect(listedTools(catalog,user).map(t=>t.name)).toEqual(['workspace_whoami']);
+ });
+
  it('constructs a tenant API client with an explicit missing-delegation fence',()=>{
   const auth={actingAs:'a@example.test'};
   const delegation=scopedDelegationClients(null);
