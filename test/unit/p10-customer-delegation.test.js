@@ -49,6 +49,8 @@ const fakeKey=JSON.stringify({type:'service_account',client_email:'robot@tenant.
 let before;
 beforeEach(()=>{
   before={...process.env};process.env.TOKEN_ENCRYPTION_KEY=crypto.randomBytes(32).toString('base64');
+  // SQL is mocked; a nonlive DSN merely satisfies the production availability guard.
+  process.env.DATABASE_URL='postgres://synthetic:synthetic@127.0.0.1:5432/p10-unit-mocked';
   process.env.GOOGLE_SERVICE_ACCOUNT_JSON='{"private_key":"installation-owner-NEVER-used"}';
   h.writes=[];h.oauthCalls=[];h.jwtCalls=[];h.responses=[];h.scopeAllowed=true;
   h.grant={access_token:'synthetic-user-grant'};
