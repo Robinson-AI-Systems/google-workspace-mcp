@@ -1,5 +1,8 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
+import {join,resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
+const root=resolve(import.meta.dirname,'../..');
 import {registry} from '../../src/tools/index.js';
 import {allowedTool,LEGACY_OWNER_ONLY_TOOLS} from '../../src/rtc/catalog.js';
 const read=path=>readFileSync(new URL('../../'+path,import.meta.url),'utf8');
@@ -14,14 +17,14 @@ describe('P10-4 machine-checked every registered tool-module storage/client boun
   expect(discovered).toHaveLength(matrix.expectedModuleCount);
   const catalog=new Set(registry.tools.map(t=>t.name));
   for(const row of matrix.modules){
-    const module=await import('../../'+row.path);
+    const module=await import(pathToFileURL(join(root,row.path)).href);
     expect(module.tools.length,row.path).toBeGreaterThan(0);
     for(const tool of module.tools)expect(catalog.has(tool.name),row.path+':'+tool.name).toBe(true);
   }
  });
  it('prevents owner business, TEST-fixture or Vercel-provider tools being exposed to unrelated public principals',async()=>{
   for(const row of matrix.modules.filter(row=>['ownerBusiness','ownerTest','ownerExternal'].includes(row.classification))){
-    const module=await import('../../'+row.path);
+    const module=await import(pathToFileURL(join(root,row.path)).href);
     for(const tool of module.tools){
       expect(LEGACY_OWNER_ONLY_TOOLS.has(tool.name),row.path+':'+tool.name).toBe(true);
       expect(allowedTool(tool.name,policy),row.path+':'+tool.name).toBe(false);
