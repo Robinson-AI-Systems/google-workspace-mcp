@@ -18,12 +18,13 @@ import { RTC_AREAS } from '../../src/rtc/catalog.js';
 import { selectedBillingPolicy } from '../../src/rtc/billing-authority.js';
 import {getPrincipal,listAccounts,issuePrincipalCode} from '../../src/principals/store.js';
 import {requireSession,requireCsrf} from '../../src/principals/session.js';
-import {publicMode,publicResource,headers} from '../../src/principals/security.js';
+import {publicMode,publicResource,headers,readCookie,cookie} from '../../src/principals/security.js';
+import {inspectOwnerLoginProof,consumeOwnerLoginProof,legacyNewLoginEnabled} from '../../src/principals/owner-migration.js';
 
 function publicSignInAvailable(){
  try{return publicMode()!=='off';}catch{return false;} // bad public config cannot lock out legacy owner
 }
-function renderLoginPage({ error, hidden, accounts, selected, profile }) {
+function renderLoginPage({ error, hidden, accounts, selected, profile, verifiedOwner=false, legacyEnabled=true }) {
   const selectedProfile = ['read_only','everyday','full'].includes(profile) ? profile : 'read_only';
   const hiddenInputs = Object.entries(hidden).map(([k, v]) => `<input type="hidden" name="${k}" value="${escapeHtml(v || '')}">`).join('\n');
   const accountField = accounts.length === 0
@@ -52,7 +53,8 @@ function renderLoginPage({ error, hidden, accounts, selected, profile }) {
   <form method="POST">
     <h1>Robinson Google Workspace MCP</h1>
     ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
-    ${publicSignInAvailable()?'<p><a href="/api/oauth/authorize?'+new URLSearchParams({...hidden,auth_method:'google'}).toString()+'" style="color:#075fca">Sign in with a separate Google account</a></p>':''}
+    ${publicSignInAvailable()?'<p><a href="/api/oauth/authorize?'+escapeHtml(new URLSearchParams({...hidden,auth_method:'google'}).toString())+'" style="color:#075fca">Sign in with a separate Google account</a></p>':''}
+    ${!verifiedOwner?'<p><a href="/api/oauth/authorize?'+escapeHtml(new URLSearchParams({...hidden,auth_method:'owner_google'}).toString())+'">Use my already-linked owner Google sign-in</a></p>':''}
     ${accountField}
     <label for="profile">Permission level</label>
     <select name="profile" id="profile">${['read_only','everyday','full'].map(value=>`<option value="${value}"${selectedProfile===value ? ' selected' : ''}>${({read_only:'Read only',everyday:'Everyday',full:'Full'})[value]}</option>`).join('')}</select>
@@ -70,8 +72,7 @@ function renderLoginPage({ error, hidden, accounts, selected, profile }) {
       <option value="standing_both">Standing approval for both license operations</option>
     </select>
     <label><input type="checkbox" name="ack_unknown_charges" value="yes"> I accept unknown account-specific charges for my selected standing authorization</label>
-    <label for="passphrase">Admin passphrase</label>
-    <input type="password" name="passphrase" id="passphrase" autofocus required>
+    ${verifiedOwner?'<p class="note">Your linked owner Google identity was verified for this authorization. Existing Google mailbox grants and billing approvals remain unchanged.</p>':legacyEnabled?'<label for="passphrase">Admin passphrase</label><input type="password" name="passphrase" id="passphrase" autofocus required>':'<p class="note">New passphrase sign-in is disabled by owner choice. Existing issued connections remain valid.</p>'}
     ${hiddenInputs}
     <button type="submit">Authorize as existing owner</button>
   </form>
@@ -87,7 +88,8 @@ export default async function handler(req, res) {
   await ensureMigrated().catch(() => {}); // best effort; the page still renders if Google is unreachable
   const params = req.method === 'GET' ? req.query : await parseBody(req);
   const { client_id, redirect_uri, state, code_challenge, code_challenge_method, response_type } = params;
-  const hidden = { client_id, redirect_uri, state, code_challenge, code_challenge_method, resource: params.resource };
+  const hidden = { client_id, redirect_uri, state, code_challenge, code_challenge_method, resource: params.resource,
+    ...(params.auth_method==='owner_google'?{auth_method:'owner_google'}:{}) };
 
   if (response_type && response_type !== 'code') {
     res.status(400).send('Only response_type=code is supported.');
@@ -154,42 +156,67 @@ export default async function handler(req, res) {
       res.writeHead(302,{Location:redirect.toString()});res.end();return;
     }catch{return res.status(403).send('Authorization rejected for this principal/account.');}
   }
-  // The public page never exposes owner account listings. Authenticate first.
-  let accounts=[]; // No owner mailbox DB query before successful passphrase.
-
+  // Existing bearer/refresh tokens are never changed by this branch.
+  // A linked Google owner proof is one-use and protocol/client/PKCE-bound.
+  let accounts=[]; // No owner mailbox query before either authentication.
+  const ownerGoogle=params.auth_method==='owner_google';
+  const ownerMeta={clientId:client_id,redirectUri:redirect_uri,
+    resource:params.resource||'',codeChallenge:code_challenge||'',
+    clientState:state||''};
+  const ownerProof=ownerGoogle?readCookie(req,'p10_owner_proof'):null;
+  if(ownerGoogle){
+    if(params.resource!==publicResource()+'/api/mcp'||params.code_challenge_method!=='S256'||
+       !/^[A-Za-z0-9_-]{43}$/.test(code_challenge||''))
+      return res.status(400).send('Linked owner sign-in requires exact resource and S256 PKCE.');
+    if(!ownerProof&&req.method==='GET'){
+      const next=new URL('/api/auth/google/start',publicResource());
+      for(const key of ['client_id','redirect_uri','resource','code_challenge','state'])
+        if(params[key])next.searchParams.set(key,params[key]);
+      next.searchParams.set('purpose','owner_login');
+      res.writeHead(302,{Location:next.toString()});res.end();return;
+    }
+    if(!await inspectOwnerLoginProof(ownerProof,ownerMeta))
+      return res.status(403).send('Owner Google proof is missing, expired or does not match this connection.');
+    if(req.method==='POST'){
+      if(!await consumeOwnerLoginProof(ownerProof,ownerMeta))
+        return res.status(403).send('Owner Google proof already consumed.');
+      res.setHeader('Set-Cookie',cookie('p10_owner_proof','','/api/oauth/authorize',0));
+    }
+  }
+  const legacyEnabled=legacyNewLoginEnabled();
   if (req.method === 'GET') {
+    if(ownerGoogle)accounts=await listGoogleAccounts();
     res.setHeader('Content-Type', 'text/html');
-    res.status(200).send(renderLoginPage({ hidden, accounts, profile: params.profile }));
+    res.status(200).send(renderLoginPage({hidden,accounts,profile:params.profile,
+      verifiedOwner:ownerGoogle,legacyEnabled}));
     return;
   }
-
   if(req.method!=='POST')return res.status(405).send('Method not allowed');
-  // POST: check passphrase, then check the chosen account is one we know.
-  if (!process.env.ADMIN_PASSPHRASE) {
-    res.status(500).send('Server misconfigured: ADMIN_PASSPHRASE is not set.');
-    return;
+  const keptAccount=String(params.google_account||'').trim().toLowerCase();
+  if(!ownerGoogle){
+    if(!legacyEnabled)return res.status(403).send('New passphrase sign-in is disabled. Existing bearer connections remain valid.');
+    if(!process.env.ADMIN_PASSPHRASE)
+      return res.status(500).send('Server misconfigured: ADMIN_PASSPHRASE is not set.');
+    const verdict=await evaluateLogin({
+      ip:clientIp(req),supplied:params.passphrase,expected:process.env.ADMIN_PASSPHRASE,
+      store:{recordLoginAttempt,countRecentFailedLogins,markLoginAttemptSucceeded}
+    });
+    if(verdict.status==='locked'){
+      res.setHeader('Retry-After',String(LOCKOUT_WINDOW_MINUTES*60));
+      return res.status(429).send(renderLoginPage({
+        error:`Too many wrong passphrases from this connection. Wait ${LOCKOUT_WINDOW_MINUTES} minutes before trying again.`,
+        hidden,accounts:[],selected:keptAccount,profile:params.profile}));
+    }
+    if(verdict.status==='wrong'){
+      const left=verdict.attemptsLeft>0
+        ?` ${verdict.attemptsLeft} ${verdict.attemptsLeft===1?'try':'tries'} left before a ${LOCKOUT_WINDOW_MINUTES}-minute lockout.`
+        :` The next wrong try starts a ${LOCKOUT_WINDOW_MINUTES}-minute lockout.`;
+      return res.status(401).send(renderLoginPage({
+        error:`Incorrect passphrase. Your account choice was kept.${left}`,
+        hidden,accounts:[],selected:keptAccount,profile:params.profile}));
+    }
   }
-  const keptAccount = String(params.google_account || '').trim().toLowerCase();
-  const verdict = await evaluateLogin({
-    ip: clientIp(req),
-    supplied: params.passphrase,
-    expected: process.env.ADMIN_PASSPHRASE,
-    store: { recordLoginAttempt, countRecentFailedLogins, markLoginAttemptSucceeded }
-  });
-  if (verdict.status === 'locked') {
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Retry-After', String(LOCKOUT_WINDOW_MINUTES * 60));
-    res.status(429).send(renderLoginPage({ error: `Too many wrong passphrases from this connection. Wait ${LOCKOUT_WINDOW_MINUTES} minutes before trying again.`, hidden, accounts: [], selected: keptAccount, profile: params.profile }));
-    return;
-  }
-  if (verdict.status === 'wrong') {
-    res.setHeader('Content-Type', 'text/html');
-    // Keep the account they picked so a passphrase typo doesn't silently flip it back to the default.
-    const left = verdict.attemptsLeft > 0 ? ` ${verdict.attemptsLeft} ${verdict.attemptsLeft === 1 ? 'try' : 'tries'} left before a ${LOCKOUT_WINDOW_MINUTES}-minute lockout.` : ` The next wrong try starts a ${LOCKOUT_WINDOW_MINUTES}-minute lockout.`;
-    res.status(401).send(renderLoginPage({ error: `Incorrect passphrase. Your account choice was kept.${left}`, hidden, accounts: [], selected: keptAccount, profile: params.profile }));
-    return;
-  }
-  accounts=await listGoogleAccounts(); // Only after owner authentication.
+  accounts=await listGoogleAccounts(); // Only after verified Google owner proof or passphrase.
   const chosen = keptAccount;
   if (!accounts.some((a) => a.email === chosen)) {
     // (passphrase check below happens first in practice; this guards a tampered form)

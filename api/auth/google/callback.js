@@ -4,6 +4,7 @@ import {publicGoogleClient,verifyGoogleCode,PUBLIC_SCOPE_GROUPS} from '../../../
 import {admitted,digest,cookie,headers,requireScope} from '../../../src/principals/security.js';
 import {readCookie} from '../../../src/principals/security.js';
 import {setSession,requireSession,BROWSER_COOKIE} from '../../../src/principals/session.js';
+import {linkVerifiedOwner,issueOwnerLoginProof} from '../../../src/principals/owner-migration.js';
 export default async function handler(req,res){
  headers(res);
  if(req.method!=='GET'){res.status(405).send('Method not allowed');return;}
@@ -24,6 +25,34 @@ export default async function handler(req,res){
   // accept unverified email/hd/client hints from request parameters.
   const verified=await verifyGoogleCode({client:publicGoogleClient(),code:req.query.code,
     verifier:tx.verifier,nonceHash:tx.nonce_hash});
+  // The owner recovery path is never a public principal enrollment or
+  // a new Google mailbox grant. Its passphrase-protected, one-use transaction
+  // authorizes linking; later login requires the linked verified issuer/sub.
+  if(tx.policy?.ownerProof==='link'){
+    requireScope(tx.purpose==='login'&&!tx.principal_id,'invalid_owner_link');
+    await linkVerifiedOwner({issuer:verified.issuer,sub:verified.sub,email:verified.email});
+    res.writeHead(302,{Location:'/api/owner/migration?linked=1'});res.end();return;
+  }
+  if(tx.policy?.ownerProof==='login'){
+    requireScope(tx.purpose==='mcp_authorize'&&!tx.principal_id,'invalid_owner_login');
+    const meta={clientId:tx.client_id,redirectUri:tx.redirect_uri,
+      resource:tx.resource,codeChallenge:tx.code_challenge,
+      clientState:tx.policy?.clientState||''};
+    const proof=await issueOwnerLoginProof(verified,meta);
+    res.setHeader('Set-Cookie',[
+      cookie(BROWSER_COOKIE,'','/api/auth/google',0),
+      cookie('p10_owner_proof',proof,'/api/oauth/authorize',300)
+    ]);
+    const next=new URL('/api/oauth/authorize',process.env.PUBLIC_BASE_URL);
+    next.searchParams.set('client_id',meta.clientId);
+    next.searchParams.set('redirect_uri',meta.redirectUri);
+    next.searchParams.set('code_challenge',meta.codeChallenge);
+    next.searchParams.set('code_challenge_method','S256');
+    next.searchParams.set('resource',meta.resource);
+    next.searchParams.set('auth_method','owner_google');
+    if(meta.clientState)next.searchParams.set('state',meta.clientState);
+    res.writeHead(302,{Location:next.toString()});res.end();return;
+  }
   let principalId;
   if(tx.purpose==='link'){
     const session=await requireSession(req);
