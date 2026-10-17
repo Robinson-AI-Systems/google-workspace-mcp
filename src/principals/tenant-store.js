@@ -27,6 +27,17 @@ export async function initTenantSchema(q = sql()) {
         FOREIGN KEY (account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id);
     END IF;
   END $`;
+  await q`CREATE TABLE IF NOT EXISTS principal_delegation_subjects (
+    principal_id UUID NOT NULL REFERENCES principals(id),
+    account_id UUID NOT NULL,
+    customer_id TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    verified_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY(principal_id,customer_id,subject),
+    FOREIGN KEY(principal_id,customer_id)
+      REFERENCES principal_delegations(principal_id,customer_id) ON DELETE CASCADE,
+    FOREIGN KEY(account_id,principal_id)
+      REFERENCES principal_google_accounts(id,principal_id))`;
   await q`CREATE TABLE IF NOT EXISTS principal_result_pages (
     handle TEXT PRIMARY KEY,
     principal_id UUID NOT NULL REFERENCES principals(id),
