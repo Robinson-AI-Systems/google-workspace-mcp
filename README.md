@@ -1,5 +1,7 @@
 # Robinson Google Workspace MCP
 
+**Next roadmap:** [P9 user authority and P10 parallel multi-user Google sign-in](docs/plan/designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). Designed, not implemented; existing owner-operated service stays usable. New user scope is tracked separately from completed original acceptance.
+
 [![ci](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/workflows/ci.yml)
 
 A Claude connector that gives Claude real, working control over your Google Workspace — not just email and calendar, but the admin side too: creating/suspending users, managing groups, adding domains and aliases, pushing Chrome policies, running security audits, and more. **a registry-verified tool catalog** across every major Google Workspace service, and it can hold sign-ins for more than one mailbox (e.g. one per business on the same Workspace), with each Claude connection bound to the one you pick.

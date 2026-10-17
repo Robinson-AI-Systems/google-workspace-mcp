@@ -1,4 +1,4 @@
-## October 17 — final Workspace acceptance complete
+## October 17 — original owner-operated Workspace acceptance complete
 
 The owner asked this agent to complete the two remaining Hub-specific tests. Actual original Hub runner acceptance is now complete in Hub PR #227: separate local direct and GitHub-only encrypted relay both passed all five checks with exit0 against the existing independent Workspace RTC service. The same new TEST/read_only/nonwriting pass was then revoked by Workspace; original direct probe verified HTTP401 `pass_revoked`, and the original encrypted relay returned the exact same denial envelope. Earlier actual Sandbox direct, native Hub discovery/read/durable audit, read-only refusal and cleanup proofs remain accepted from Hub #224/#226 and Workspace #194/#196.
 

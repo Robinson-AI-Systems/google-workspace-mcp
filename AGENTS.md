@@ -21,3 +21,7 @@ Google authorization, fixture, cleanup, CI, review and release requirement.
 
 A bundle advances approved product completion. Read SESSION-START’s ENGINEERING /
 COMPLETION distinction before treating zero new production lines as a blocker.
+
+## Owner policy correction and next roadmap — October16,2026
+
+Development-agent no-spend/temporary TEST/fixture restrictions govern implementation and testing, not a permanent ceiling on end-user capabilities. Preserve provider authorization, user-selected connection scope, account isolation, confirmations, audit/readback and technical limits; give authorized users a usable cost/permission approval path. The approved design and exact Sol5.6 execution contracts are in docs/plan/designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md, P9/P10 in TASKS. Current owner login and issued connections must keep working while the new Google login is built alongside them. No public enrollment, paid provider test, credential change or legacy-login retirement is authorized merely by this planning update.

@@ -1,8 +1,14 @@
+## New roadmap — user authority and parallel multi-user sign-in
+
+Owner clarification October16,2026 Denver: development-agent spending/TEST restrictions must not become permanent product limits. Supported end-user operations need a usable consequence/approval path. Owner requested a concrete Sol5.6-ready roadmap and parallel Google sign-in that preserves the working owner login. Design is ready; implementation/public enrollment/paid tests/legacy retirement are NOT claimed or activated by this planning update. Original P0–P8 acceptance remains passed for its original scope; the newly added P9/P10 scope is unfinished.
+
+Authoritative execution contract: [User authority and parallel sign-in](designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). Start P9-1; follow dependencies and whole-outcome delivery groups. Do not interpret original29 passed acceptance rows as completion of the new scope. Add new source-pinned acceptance rows only when implementation exists.
+
 ## Owner-requested final documentation, Git cleanup and Workspace release
 
 October17 UTC: reconcile current operational guides and historical evidence boundaries; renew the exact bounded housekeeping manifest, archive all reviewed development tips before leased removal, retain release receipts and protect open/concurrently advanced branches. There are no open product PRs or missing Workspace features. Then release the final checked Workspace main snapshot under the owner's explicit one-off release authorization. Record actual cleanup Action, exact source/live SHA and Vercel READY proof in this PR's permanent closeout comment. This is administrative closeout, not another product bundle or a repeat of accepted provider tests.
 
-## October 17 — final Workspace acceptance complete
+## October 17 — original owner-operated Workspace acceptance complete
 
 The owner asked this agent to complete the two remaining Hub-specific tests. Actual original Hub runner acceptance is now complete in Hub PR #227: separate local direct and GitHub-only encrypted relay both passed all five checks with exit0 against the existing independent Workspace RTC service. The same new TEST/read_only/nonwriting pass was then revoked by Workspace; original direct probe verified HTTP401 `pass_revoked`, and the original encrypted relay returned the exact same denial envelope. Earlier actual Sandbox direct, native Hub discovery/read/durable audit, read-only refusal and cleanup proofs remain accepted from Hub #224/#226 and Workspace #194/#196.
 
@@ -227,7 +233,85 @@ restricts only the named operation. Source completion never proves actual Google
 
 <!-- engineering-readiness:start -->
 ```json
-[]
+[
+  {
+    "id": "P9-1",
+    "state": "OPEN",
+    "remaining": "Classify developer vs user/provider/security policy; complete all original acceptance in the new execution contract.",
+    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
+    "next": "section3 P9-1; no runtime removals without classification; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+  },
+  {
+    "id": "P9-2",
+    "state": "OPEN",
+    "remaining": "Usable exact-request cost approval for bulk licensing; complete all original acceptance in the new execution contract.",
+    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
+    "next": "P9-1; guarded children and truthful prices; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+  },
+  {
+    "id": "P9-3",
+    "state": "OPEN",
+    "remaining": "Normal-use RTC grants alongside retained TEST grants; complete all original acceptance in the new execution contract.",
+    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
+    "next": "P9-1; companion Hub capability work remains independent; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+  },
+  {
+    "id": "P9-4",
+    "state": "OPEN",
+    "remaining": "Capability/consent parity and end-user guidance; complete all original acceptance in the new execution contract.",
+    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
+    "next": "P9-2/P9-3; no hidden developer-only product denial; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+  },
+  {
+    "id": "P10-1",
+    "state": "OPEN",
+    "remaining": "Principal-scoped storage and legacy compatibility; complete all original acceptance in the new execution contract.",
+    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
+    "next": "P9-1; public dispatch off; additive migration; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+  },
+  {
+    "id": "P10-2",
+    "state": "OPEN",
+    "remaining": "Google identity/login and owned grant linking; complete all original acceptance in the new execution contract.",
+    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
+    "next": "P10-1; stable verified subject and single-use transaction; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+  },
+  {
+    "id": "P10-3",
+    "state": "OPEN",
+    "remaining": "Dual MCP authorization/session/account management; complete all original acceptance in the new execution contract.",
+    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
+    "next": "P10-1/P10-2; existing owner tokens work; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+  },
+  {
+    "id": "P10-4",
+    "state": "OPEN",
+    "remaining": "Every tool/store/result/guard isolated by principal; complete all original acceptance in the new execution contract.",
+    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
+    "next": "P10-3; required real two-process PG proof before pilot; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+  },
+  {
+    "id": "P10-5",
+    "state": "OPEN",
+    "remaining": "Per-customer privileged Google capability setup; complete all original acceptance in the new execution contract.",
+    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
+    "next": "P10-4; never reuse owner global delegation; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+  },
+  {
+    "id": "P10-6",
+    "state": "OPEN",
+    "remaining": "Two-user pilot and public publication acceptance; complete all original acceptance in the new execution contract.",
+    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
+    "next": "P9-4/P10-4/P10-5; explicit real-account/publication gates; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+  },
+  {
+    "id": "P10-7",
+    "state": "OPEN",
+    "remaining": "Owner migration and optional legacy-login retirement; complete all original acceptance in the new execution contract.",
+    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
+    "next": "P10-3/P10-6; migration tooling ready, actual retirement separately chosen; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+  }
+]
 ```
 <!-- engineering-readiness:end -->
 
@@ -1843,6 +1927,18 @@ Completed before this plan (2026-09-30, Fable 5.1): multi-account support
 (PR #3), refresh-token security fix (PR #4).
 
 ---
+
+| P9-1 | TODO | owner design October16 | Classify developer vs user/provider/security policy; section3 P9-1; no runtime removals without classification. See execution contract. |
+| P9-2 | TODO | owner design October16 | Usable exact-request cost approval for bulk licensing; P9-1; guarded children and truthful prices. See execution contract. |
+| P9-3 | TODO | owner design October16 | Normal-use RTC grants alongside retained TEST grants; P9-1; companion Hub capability work remains independent. See execution contract. |
+| P9-4 | TODO | owner design October16 | Capability/consent parity and end-user guidance; P9-2/P9-3; no hidden developer-only product denial. See execution contract. |
+| P10-1 | TODO | owner design October16 | Principal-scoped storage and legacy compatibility; P9-1; public dispatch off; additive migration. See execution contract. |
+| P10-2 | TODO | owner design October16 | Google identity/login and owned grant linking; P10-1; stable verified subject and single-use transaction. See execution contract. |
+| P10-3 | TODO | owner design October16 | Dual MCP authorization/session/account management; P10-1/P10-2; existing owner tokens work. See execution contract. |
+| P10-4 | TODO | owner design October16 | Every tool/store/result/guard isolated by principal; P10-3; required real two-process PG proof before pilot. See execution contract. |
+| P10-5 | TODO | owner design October16 | Per-customer privileged Google capability setup; P10-4; never reuse owner global delegation. See execution contract. |
+| P10-6 | TODO | owner design October16 | Two-user pilot and public publication acceptance; P9-4/P10-4/P10-5; explicit real-account/publication gates. See execution contract. |
+| P10-7 | TODO | owner design October16 | Owner migration and optional legacy-login retirement; P10-3/P10-6; migration tooling ready, actual retirement separately chosen. See execution contract. |
 
 ## Audit, 2026-10-02: how much of the plan is complete
 
