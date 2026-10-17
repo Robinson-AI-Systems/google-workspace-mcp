@@ -48,9 +48,10 @@ export async function buildDigest(domain, clients, { now = Date.now(), labels = 
   } catch (err) { sections.push({ title: 'Sign-ins and admin actions', lines: [`Could not read the Reports: ${trouble(err)}`] }); problems.push('Admin Reports unavailable'); }
 
   try {
-    const rows = (await listRecentChanges({ since, includeDryRuns: false, limit: 500 })).filter((r) => domainOfEmail(r.acting_as) === domain);
+    const rows=(await (clients?.store?.listChanges ?? listRecentChanges)({since,includeDryRuns:false,
+      limit:clients?.store?100:500})).filter(r=>domainOfEmail(r.acting_as)===domain);
     sections.push({ title: 'Changes made through this server', lines: rows.length
-      ? [`${rows.length} changes: ${tally(rows.map((r) => r.tool)).slice(0, 8).map(([n, c]) => `${n} ${c}`).join(', ')}.`, ...rows.slice(0, 10).map((r) => `- ${new Date(r.at).toISOString().slice(0, 10)} ${r.acting_as || ''}: ${r.summary || r.tool}`)]
+      ? [`${rows.length} changes: ${tally(rows.map((r) => r.tool)).slice(0, 8).map(([n, c]) => `${n} ${c}`).join(', ')}.`, ...rows.slice(0, 10).map((r) => `- ${new Date(r.at??r.created_at).toISOString().slice(0, 10)} ${r.acting_as || ''}: ${r.summary || r.tool}`)]
       : ['None.'] });
   } catch (err) { sections.push({ title: 'Changes made through this server', lines: [`Could not read the change log: ${trouble(err)}`] }); }
 
