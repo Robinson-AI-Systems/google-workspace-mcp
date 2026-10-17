@@ -27,7 +27,7 @@ const response=async body=>{
   await handler({method:'POST',body},res);
   return res;
 };
-const policy={profile:'read_only',listing:'compact',areas:['mail','calendar']};
+const policy={profile:'read_only',listing:'compact',areas:['mail','calendar'],mode:null,costPolicy:{mode:'per_action'}};
 const code={code:'auth',grant_type:'authorization_code',client_id:'client-1',
   client_secret:'secret',redirect_uri:'https://client.test/oauth/callback',
   code_verifier:'good'};
@@ -46,7 +46,7 @@ beforeEach(()=>{
 describe('P8-2 single connection-policy authority',()=>{
  it('keeps exact registry areas and profile-listing field inventory together',()=>{
    expect(CONNECTION_AREAS).toEqual(RTC_AREAS);
-   expect(CONNECTION_SETTINGS_FIELDS).toEqual(['profile','listing','areas']);
+   expect(CONNECTION_SETTINGS_FIELDS).toEqual(['profile','listing','areas','mode','costPolicy']);
    expect(Object.keys(connectionPolicyToDb(policy))).toEqual(CONNECTION_SETTINGS_FIELDS);
    expect(connectionPolicyToDb(policy)).toEqual(policy);
    expect(Object.isFrozen(normalizeConnectionPolicy(policy).areas)).toBe(true);
@@ -57,10 +57,12 @@ describe('P8-2 single connection-policy authority',()=>{
      {...policy,profile:'super_admin'}, {...policy,listing:undefined},
      {...policy,listing:'all'}, {...policy,areas:undefined},
      {...policy,areas:['mail','mail']},{...policy,areas:['mail','superuser']},
-     {...policy,areas:'*'},{...policy,areas:Array(15).fill('mail')}
+     {...policy,areas:'*'},{...policy,areas:Array(15).fill('mail')},
+     {...policy,mode:'sandbox'},{...policy,costPolicy:{mode:'standing',account:'ops@example.test'}},
+     {...policy,costPolicy:{mode:'per_action',extra:true}}
    ])expect(()=>connectionPolicyToDb(corrupt)).toThrow('invalid_connection_policy');
    expect(connectionPolicyToDb({},{grant:'authorization_code'})).toEqual({
-     profile:'full',listing:'catalog',areas:null
+     profile:'full',listing:'catalog',areas:null,mode:null,costPolicy:{mode:'per_action'}
    });
    expect(()=>connectionPolicyToDb({profile:null,listing:null,areas:null},
      {grant:'authorization_code'})).toThrow('invalid_connection_policy');
@@ -69,7 +71,8 @@ describe('P8-2 single connection-policy authority',()=>{
    expect(verifyPolicyCopy(policy,{...policy})).toBe(true);
    for(const changed of [
      {...policy,profile:'full'},{...policy,listing:'catalog'},
-     {...policy,areas:null},{...policy,areas:['mail']}
+     {...policy,areas:null},{...policy,areas:['mail']},{...policy,mode:'test'},
+     {...policy,costPolicy:{mode:'deny'}}
    ])expect(()=>verifyPolicyCopy(policy,changed))
      .toThrow('connection_policy_widening_or_loss');
  });
@@ -92,6 +95,7 @@ describe('P8-2 actual OAuth issuance/refresh endpoint integration',()=>{
    expect(Object.fromEntries(CONNECTION_SETTINGS_FIELDS.map(k=>[k,holder.created[0][k]])))
       .toEqual(policy);
    expect(holder.created[0].googleAccount).toBe(storedCode.google_account);
+   expect(holder.created[0]).toMatchObject({mode:null,costPolicy:{mode:'per_action'}});
  });
  it('keeps read_only profile and restrictive areas/listing across refresh',async()=>{
    const out=await response(refresh);
@@ -125,6 +129,32 @@ describe('P8-2 actual OAuth issuance/refresh endpoint integration',()=>{
      const out=await response(code);
      expect(out.statusCode).toBe(400);
      expect(out.body.error).toBe('invalid_grant');
+     expect(holder.created).toHaveLength(0);
+   }
+ });
+ it('preserves explicit normal-user mode, exact account-bound standing authorization on issue and refresh',async()=>{
+   const standing={mode:'standing',account:'ops@example.test',operations:['assign_license'],
+     allowUnknownPrice:true,maxChargeUsd:null};
+   holder.record={...storedCode,profile:'full',areas:['admin'],mode:'live',cost_policy:standing};
+   let out=await response(code);
+   expect(out.statusCode).toBe(200);
+   expect(holder.created.at(-1)).toMatchObject({mode:'live',costPolicy:standing});
+   holder.created.length=0;
+   holder.refresh={...holder.record,client_id:'client-1'};
+   out=await response(refresh);
+   expect(out.statusCode).toBe(200);
+   expect(holder.created.at(-1)).toMatchObject({mode:'live',costPolicy:standing});
+ });
+ it('fails closed on invalid or alien account standing policies and corrupt explicit modes',async()=>{
+   for(const invalid of [
+     {...storedCode,mode:'sandbox'},
+     {...storedCode,cost_policy:{mode:'standing',account:'foreign@example.test',
+       operations:['assign_license'],allowUnknownPrice:true,maxChargeUsd:null}},
+     {...storedCode,cost_policy:{mode:'deny',maxChargeUsd:0}}
+   ]){
+     holder.record=invalid;
+     const out=await response(code);
+     expect(out.statusCode).toBe(400);
      expect(holder.created).toHaveLength(0);
    }
  });

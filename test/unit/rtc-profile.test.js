@@ -17,7 +17,8 @@ describe('RTC connection policy',()=>{
  it('keeps old explicit grants restricted while new named areas retain read-only and area refusals',async()=>{
   const {normalizeConnectionPolicy}=await import('../../src/oauth/connection-settings.js');
   const old={profile:'read_only',listing:'catalog',areas:['admin','dns']};
-  expect(normalizeConnectionPolicy(old)).toEqual(old);
+  expect(normalizeConnectionPolicy(old)).toMatchObject(old);
+  expect(normalizeConnectionPolicy(old)).toMatchObject({mode:null,costPolicy:{mode:'per_action'}});
   for(const [area,read,write] of [['chrome','chrome_resolve_policies','chrome_set_policy'],['domain','domain_list_verified','domain_confirm_verification']]){
    expect(allowedTool(read,old)).toBe(false);
    expect(allowedTool(read,{profile:'read_only',areas:[area]})).toBe(true);
