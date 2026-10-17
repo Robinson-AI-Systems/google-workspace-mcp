@@ -401,4 +401,4 @@ revocation checks remain pending for Hub-agent reconciliation; earlier native-on
 closure wording does not waive or prove them. No reverse discovery is required.
 
 
-Current Alert Center configuration supersedes the earlier pending authorization: explicit owner approval, saved five-scope readback, production opt-in and READY checked config redeploy completed. Original TEST list200/native empty array is genuine Google proof; exact GET remains development-tested/no-resource. See `evidence/2026-10-16-alert-center-activation.json`. No read/write provider test or whole-customer healthy claim.
+Current Alert Center configuration supersedes the earlier pending authorization: explicit owner approval, saved five-scope readback, production opt-in and READY checked config redeploy completed. Original TEST list200/native empty array is genuine Google proof; exact GET remains development-tested/no-resource. See `evidence/2026-10-16-alert-center-activation.json`. No provider write test or whole-customer healthy claim.

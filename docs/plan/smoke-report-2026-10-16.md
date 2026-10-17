@@ -2,11 +2,11 @@
 
 Prepared from retained genuine receipts and the current source casebook. This report does not rerun cleaned fixtures or relabel blocked cases as passes.
 
-Source independently observed READY live: `6ec69ce1b6cb8ffb2096774e038987cf6f5a5c4d` / `dpl_82VwvHV7LXLBs8DDVchQc3KYf8Ur`. Earlier retained reads remain bound to their original receipt revisions.
+Current source independently observed READY: `42afbaaf138d293d6042acd874c0fd3c32f7ce0e` / configuration redeploy `dpl_5cWHQLUyxqmQbsy9juFtNtew1KDd`. Earlier retained reads remain bound to their original receipt revisions.
 
 **160 verified retained handler/service reads; 3 development-tested GETs without live resources; 1 retired unsupported operation; 2 owner-excluded live Vault cases.** Historical inventory166; active read catalog165 after retirement. These counts include service metadata, and do not prove every subcheck in composite reports is healthy.
 
-Original P0-2 report criterion permits failures documented in the Known Bugs table. The later explicit full-catalog queue remains open; no requirement is silently removed. See [Known Bugs and provider limitations](ARCHITECTURE.md#known-bugs--genuine-acceptance-follow-up-october162026) and [P0-2](TASKS.md#p0-2--smoke-test-every-read-only-tool-against-a-real-account-m).
+Original P0-2 report criterion permits failures documented in the Known Bugs table. The developer catalog audit is complete with the explicit dispositions below; broader Hub acceptance remains separately pending. See [Known Bugs and provider limitations](ARCHITECTURE.md#known-bugs--genuine-acceptance-follow-up-october162026) and [P0-2](TASKS.md#p0-2--smoke-test-every-read-only-tool-against-a-real-account-m).
 
 | Tool | Result | Evidence or precise remaining prerequisite |
 | --- | --- | --- |
