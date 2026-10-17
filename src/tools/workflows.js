@@ -182,8 +182,13 @@ export const handlers = {
     // Take them off the business calendar and Drive folder that workflow_add_staff_member shared with them.
     try {
       const primary = email || await mailboxOf(admin, args.userKey);
-      const biz = Object.values(BUSINESSES).find((b) => b.domain === String(primary).split('@')[1]);
-      if (!biz || (!biz.calendarId && !biz.driveFolderId)) steps.push({ step: 'remove_business_shares', status: 'skipped', note: 'No business calendar or folder is set up for their domain.' });
+      // These IDs are configured specifically for the installation owner's
+      // businesses. A newly authenticated Google principal cannot inherit
+      // that mapping merely because an email domain happens to match.
+      const biz = clients?.store ? null :
+        Object.values(BUSINESSES).find((b) => b.domain === String(primary).split('@')[1]);
+      if (clients?.store) steps.push({ step: 'remove_business_shares', status: 'skipped', note: 'No independently authorized customer-owned business share configuration is linked to this principal; the installation owner\'s private calendar and Drive IDs are not used.' });
+      else if (!biz || (!biz.calendarId && !biz.driveFolderId)) steps.push({ step: 'remove_business_shares', status: 'skipped', note: 'No business calendar or folder is set up for their domain.' });
       else if (!mailboxAllowed(clients, primary)) steps.push({ step: 'remove_business_shares', status: 'skipped', note: `${primary} is outside the domains this connection is limited to, so the business calendar and folder shares were not touched. Use crossDomain: true if you really mean it.` });
       else {
         const removed = {};
