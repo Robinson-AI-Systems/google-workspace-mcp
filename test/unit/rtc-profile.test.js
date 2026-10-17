@@ -38,6 +38,8 @@ describe('RTC connection policy',()=>{
    expect(description.description).toMatch(/BILLING WARNING.*price unknown/);
   }
   expect(toolMetadata(registry.tools.find(t=>t.name==='licensing_remove_license')).billingRisk).toBe(false);
+  expect(toolMetadata(registry.tools.find(t=>t.name==='licensing_assign_license')).profiles).toEqual(['full']);
+  expect(toolMetadata(registry.tools.find(t=>t.name==='workspace_bulk_operation')).profiles).toEqual(['full']);
  });
  it('rejects live developer fixture mutation via direct listing, describe and dispatch eligibility',()=>{
   for(const name of ['workspace_dev_create_fixtures','workspace_dev_cleanup']){

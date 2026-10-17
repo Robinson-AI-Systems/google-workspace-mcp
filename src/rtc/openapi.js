@@ -119,7 +119,7 @@ export function rtcOpenapi(origin = '') {
         Identity: object({ connection: string, account: string, profile: { type: 'string', enum: ['read_only','everyday','full'] },
           areas: { type: ['array','null'], items: string }, listing: { type: 'string', enum: ['catalog','compact'] },
           mode: { type:'string', enum:['test','live'] }, allow_writes: bool }),
-        Tool: object({ name: string, description: { type: 'string', maxLength: 160 }, inputSchema: { type: 'object' },
+        Tool: object({ name: string, description: { type: 'string', maxLength: 160 }, modes: strings, inputSchema: { type: 'object' },
           outputSchema: { type: 'object' }, area: string, profiles: strings, audience: strings,
           writes: bool, money: bool, billingRisk: bool, destructive: bool,
           annotations: object({ readOnlyHint: bool, destructiveHint: bool, idempotentHint: bool, openWorldHint: bool })

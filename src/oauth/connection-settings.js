@@ -28,8 +28,10 @@ export function normalizeConnectionPolicy(source,{grant='refresh_token'}={}) {
  const areas=legacy&&!property(source,'areas')?null:source.areas;
  // Explicit new connection modes do not silently reclassify legacy owner bearer rows.
  const mode=property(source,'mode')?source.mode:null;
- const costPolicy=normalizeBillingPolicy(property(source,'cost_policy')?source.cost_policy:source.costPolicy,
-   {account:source.google_account || source.googleAccount});
+ let costPolicy;
+ try {costPolicy=normalizeBillingPolicy(property(source,'cost_policy')?source.cost_policy:source.costPolicy,
+   {account:source.google_account || source.googleAccount});}
+ catch {throw Error('invalid_connection_policy');}
  if(!CONNECTION_PROFILES.includes(profile)||!CONNECTION_LISTINGS.includes(listing)||
    ![null,'test','live'].includes(mode)||
    !(areas===null || Array.isArray(areas)&&areas.length<=CONNECTION_AREAS.length&&
