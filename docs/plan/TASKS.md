@@ -315,10 +315,11 @@ restricts only the named operation. Source completion never proves actual Google
   },
   {
     "id": "P10-7",
-    "state": "OPEN",
-    "remaining": "Owner migration and optional legacy-login retirement; complete all original acceptance in the new execution contract.",
-    "evidence": "Source baseline6b87ebb; design only, no implementation/provider acceptance claimed. Confirmed seams in contract section2.",
-    "next": "P10-3/P10-6; migration tooling ready, actual retirement separately chosen; read designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md before coding."
+    "state": "EXTERNAL_ONLY",
+    "remaining": "Owner Google identity mapping and authorized dual-login are source/real-Postgres implemented and independently reversible; actual deployed passphrase + linked-owner Google sign-ins and recovery are NOT observed. Optional legacy new-login retirement is a separate owner-specific operation and remains OFF (default LEGACY_OWNER_SIGNIN_ENABLED=true). Real post-deployment encrypted snapshot/proof and approval are required before activation.",
+    "evidence": "PR #204 planned d0246ef68c64c3789ed006fb60c35e22f3ae98b6, implementing source 3442f6ac2840f667ff3643c372e1096466accbfd; docs/plan/evidence/p10-owner-migration-bundle-delivery.json maps all 7 original criteria. GitHub source exact-head CI #39037581770 check, unit (1951), disposable db and rtc completed green; final paperwork head, required review and merge verification remain distinct.",
+    "next": "After verified reviewed main READY release and explicit owner identity/test authorization, preview exact owner accounts and old agent policies, perform fresh protected Google subject link; prove owner passphrase + Google sign-in + existing bearer simultaneously, unlink/restore and future separate optional retirement only with explicit owner request. P10-6 public pilot/consent independently queued.",
+    "gate": "Distinct PUBLIC_* Google app credentials and exact callback plus actual verified owner subject, owner-authorized protected browser flow, deployed correct source, preserved legacy and separate P10-OWNER-CONTINUITY. No public rollout, production flag change, paid/destructive provider operation or premature passphrase retirement."
   }
 ]
 ```
@@ -771,6 +772,21 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     ],
     "lastEvidence": "Source and fake SDK/real Postgres tenant configuration tests in PR #203 only; no real Customer Admin Console DWD or public OAuth app connection attempted."
   }
+  ,
+  {
+    "id": "P10-OWNER-MIGRATION-LIVE",
+    "priority": 4,
+    "requiredRevision": "3442f6ac2840f667ff3643c372e1096466accbfd",
+    "task": "After the reviewed P10-7 implementation is independently READY, prove existing passphrase and old bearer/refresh remain valid; with separately owner-authorized verified Google subject perform fresh protected link, real linked-owner MCP sign-in and exact reversible unlink, inspect encrypted-copy/connection snapshot without disclosing tokens.",
+    "procedure": "docs/PUBLIC-SIGNIN-OWNER-GUIDE.md P10-7; docs/pr-cards/P10-OWNER-MIGRATION.md",
+    "gates": "Checked deployed P10-7 source, separate PUBLIC_* Google app with registered exact callback, owner-authorized existing ADMIN_PASSPHRASE and test browser/Google subject, original owner agent continuity; no change to live flags, no public pilot, no credentials in chat, no paid/test Google mutation or legacy login retirement.",
+    "dependsOn": [
+      "P10-OWNER-CONTINUITY"
+    ],
+    "status": "PENDING",
+    "lastEvidence": "2026-10-17 source GitHub CI #39037581770 and disposable real PostgreSQL/mock Google route tests passed; NO actual real Google owner link, deployed new-owner login, provider consent, production cutoff/rollback or P10-6 publication acceptance occurred."
+  }
+
 ]
 ```
 
