@@ -107,6 +107,28 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   await holder.db.revokeRtcPass(issued.id);
   expect((await invoke('GET',{door:'whoami'},{},issued.token)).statusCode).toBe(401);
  });
+ it('rejects a revoked pass immediately',async()=>{
+  const pass=await holder.db.getRtcPass(token);
+  await holder.db.revokeRtcPass(pass.id);
+  const r=await invoke('GET',{door:'whoami'});expect(r.statusCode).toBe(401);expect(r.body.error.code).toBe('pass_revoked');
+ });
+ it('executes TEST writes through real HTTPS dispatch while preserving preview, confirmation, areas and revocation',async()=>{
+  const write=await holder.db.createRtcPass({googleAccount:'ops@example.test',allowWrites:true,confirmedAccount:'ops@example.test',areas:['mail'],hours:1});
+  let r=await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'rtc-test',dryRun:true},write.token);
+  expect(r.body.result.done).toBe(false);expect(holder.writes).toBe(0);
+  r=await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'rtc-test'},write.token);
+  expect(r.body.result).toMatchObject({done:true,confirmed:true,logged:{id:expect.any(Number)}});expect(holder.writes).toBe(1);
+  r=await invoke('POST',{tool:'workspace_gmail_delete_label'},{labelId:'Label_test'},write.token);
+  expect(r.body.result.needsConfirmation).toBe(true);expect(holder.writes).toBe(1);
+  r=await invoke('POST',{tool:'workspace_call'},{name:'workspace_drive_create_folder',args:{name:'denied'}},write.token);
+  expect(r.body.ok).toBe(false);expect(holder.writes).toBe(1);
+  r=await invoke('POST',{tool:'workspace_gmail_delete_label'},{labelId:'Label_test',confirm:true},write.token);
+  expect(r.body.result.confirmed).toBe(true);expect(holder.writes).toBe(2);
+  await holder.db.revokeRtcPass(write.id);
+  expect((await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'denied'},write.token)).statusCode).toBe(401);
+  expect(holder.writes).toBe(2);
+ });
+
  it('permits live guarded writes and discoverable areas, but keeps live dev fixtures inaccessible',async()=>{
   const issued=await holder.db.createRtcPass({googleAccount:'ops@example.test',mode:'live',
     profile:'full',areas:['mail','workspace'],allowWrites:true,confirmedAccount:'ops@example.test',hours:2});
@@ -130,27 +152,6 @@ describe('RTC HTTPS contract and pass authorization',()=>{
   await holder.db.revokeRtcPass(issued.id);
   await holder.db.revokeRtcPass(read.id);
   expect((await invoke('GET',{door:'whoami'},{},issued.token)).statusCode).toBe(401);
- });
- it('rejects a revoked pass immediately',async()=>{
-  const pass=await holder.db.getRtcPass(token);
-  await holder.db.revokeRtcPass(pass.id);
-  const r=await invoke('GET',{door:'whoami'});expect(r.statusCode).toBe(401);expect(r.body.error.code).toBe('pass_revoked');
- });
- it('executes TEST writes through real HTTPS dispatch while preserving preview, confirmation, areas and revocation',async()=>{
-  const write=await holder.db.createRtcPass({googleAccount:'ops@example.test',allowWrites:true,confirmedAccount:'ops@example.test',areas:['mail'],hours:1});
-  let r=await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'rtc-test',dryRun:true},write.token);
-  expect(r.body.result.done).toBe(false);expect(holder.writes).toBe(0);
-  r=await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'rtc-test'},write.token);
-  expect(r.body.result).toMatchObject({done:true,confirmed:true,logged:{id:expect.any(Number)}});expect(holder.writes).toBe(1);
-  r=await invoke('POST',{tool:'workspace_gmail_delete_label'},{labelId:'Label_test'},write.token);
-  expect(r.body.result.needsConfirmation).toBe(true);expect(holder.writes).toBe(1);
-  r=await invoke('POST',{tool:'workspace_call'},{name:'workspace_drive_create_folder',args:{name:'denied'}},write.token);
-  expect(r.body.ok).toBe(false);expect(holder.writes).toBe(1);
-  r=await invoke('POST',{tool:'workspace_gmail_delete_label'},{labelId:'Label_test',confirm:true},write.token);
-  expect(r.body.result.confirmed).toBe(true);expect(holder.writes).toBe(2);
-  await holder.db.revokeRtcPass(write.id);
-  expect((await invoke('POST',{tool:'workspace_gmail_create_label'},{name:'denied'},write.token)).statusCode).toBe(401);
-  expect(holder.writes).toBe(2);
  });
 
 });
