@@ -4,6 +4,7 @@ import {handlers as accountHandlers} from '../../src/tools/accounts.js';
 import {handlers as metaHandlers} from '../../src/tools/rtc-meta.js';
 import {scopedDelegationClients} from '../../src/principals/delegation.js';
 import {prepareUndo} from '../../src/tools/undo.js';
+import {delegatedGmail,delegatedServices,delegationReady} from '../../src/tools/delegated.js';
 import {allowedTool,listedTools,toolMetadata,LEGACY_OWNER_ONLY_TOOLS} from '../../src/rtc/catalog.js';
 
 const unpack=result=>JSON.parse(result.content[0].text);
@@ -24,6 +25,17 @@ describe('P10 explicit caller injection: independent tenant cannot discover owne
   expect(listedTools(catalog,user).map(t=>t.name)).toEqual(['workspace_whoami']);
  });
 
+ it('refuses all owner-delegation fallbacks when tenant client factory was omitted',()=>{
+   const tenant={store:Object.freeze({}),actingAs:'a@example.test'};
+   expect(delegationReady(tenant)).toBe(false);
+   expect(()=>delegatedGmail(tenant,'a@example.test')).toThrow('customer_delegation_not_configured');
+   expect(()=>delegatedServices(tenant,'a@example.test',[])).toThrow('customer_delegation_not_configured');
+   const owner={gmailFor:vi.fn(()=>({id:'legacy-fixture'})),
+      delegatedClientsFor:vi.fn(()=>({calendar:'legacy-fixture'})),delegationReady:true};
+   expect(delegationReady(owner)).toBe(true);
+   expect(delegatedGmail(owner,'owner@example.test')).toEqual({id:'legacy-fixture'});
+   expect(delegatedServices(owner,'owner@example.test',[])).toEqual({calendar:'legacy-fixture'});
+ });
  it('constructs a tenant API client with an explicit missing-delegation fence',()=>{
   const auth={actingAs:'a@example.test'};
   const delegation=scopedDelegationClients(null);

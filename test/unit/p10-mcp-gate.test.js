@@ -15,7 +15,7 @@ vi.mock('../../src/auth/google-auth-hosted.js',()=>({
  buildHostedApiClients:async()=>{h.googleCalls++;throw Error('V2 must never build owner Google clients');}
 }));
 vi.mock('../../src/tools/index.js',()=>({registry:{tools:[],handlers:{}}}));
-const {default:handler}=await import('../../api/mcp.js');
+const {default:handler,publicToolDispatchReady}=await import('../../api/mcp.js');
 const res=()=>{
  const x={statusCode:200,headers:{},body:null};
  x.setHeader=(k,v)=>x.headers[k]=v;
@@ -24,6 +24,15 @@ const res=()=>{
  return x;
 };
 describe('P10-B public bearer recognition never dispatches owner provider tools',()=>{
+ it('requires both the owner-authorized pilot mode and explicit checked tenant execution flag',()=>{
+   const env={PUBLIC_SIGNIN_MODE:'off',PUBLIC_P10_TOOL_EXECUTION_VERIFIED:'true'};
+   expect(publicToolDispatchReady(env)).toBe(false);
+   expect(publicToolDispatchReady({...env,PUBLIC_SIGNIN_MODE:'pilot',
+      PUBLIC_P10_TOOL_EXECUTION_VERIFIED:'false'})).toBe(false);
+   expect(publicToolDispatchReady({...env,PUBLIC_SIGNIN_MODE:'pilot'})).toBe(true);
+   expect(publicToolDispatchReady({...env,PUBLIC_SIGNIN_MODE:'public'})).toBe(true);
+   expect(publicToolDispatchReady({...env,PUBLIC_SIGNIN_MODE:'bad-mode'})).toBe(false);
+ });
  it('recognizes signed-in user bearer but fails 403 at the P10-4 isolation gate',async()=>{
   h.authenticated=true;
   const r=res();await handler({headers:{authorization:'Bearer p10a_'+'a'.repeat(43)}},r);

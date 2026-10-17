@@ -76,6 +76,11 @@ export function createIsolatedPrincipalServer(context){
  return buildServer(null,context.connectionId,settings,()=>buildPrincipalApiClients(context));
 }
 
+export function publicToolDispatchReady(env=process.env){
+  try{
+    return publicMode(env)!=='off'&&env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED==='true';
+  }catch{return false;}
+}
 export default async function handler(req, res) {
   await ensureSchemaReady();
 
@@ -100,11 +105,7 @@ export default async function handler(req, res) {
     // Strict rollout: source isolation and owner-authorized pilot must BOTH
     // be explicitly enabled. Merely configuring Google login is not an
     // approval to execute customer tools, nor may an HTTP argument override it.
-    let allowed=false;
-    try{
-      allowed=publicMode()!=='off'&&process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED==='true';
-    }catch{/* invalid public mode always stays disabled */}
-    if(!allowed){
+    if(!publicToolDispatchReady()){
       res.status(403).json({error:'public_dispatch_not_enabled',
         error_description:'Public tool execution requires independently verified P10 tenant isolation and an authorized pilot.'});return;
     }
