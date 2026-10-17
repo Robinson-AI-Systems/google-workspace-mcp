@@ -38,6 +38,13 @@ vi.mock('../../src/principals/store.js',()=>({
  issuePrincipalConnection:async()=>({accessToken:'p10a_test',refreshToken:'p10r_test'}),
  rotatePrincipalRefresh:async token=>{h.rotations++;return token==='p10r_test'?{accessToken:'p10a_new',refreshToken:'p10r_new'}:null;}
 }));
+vi.mock('../../src/principals/delegation.js',()=>({
+ listCustomerDelegations:async()=>[],
+ configureCustomerDelegation:async()=>({configured:true}),
+ revokeCustomerDelegation:async()=>({revoked:true}),
+ addVerifiedDelegationSubject:async()=>({verified:true}),
+ removeDelegationSubject:async()=>({removed:true})
+}));
 vi.mock('../../src/principals/google.js',()=>({
  PUBLIC_SCOPE_GROUPS:{mail:['scope-mail']},
  publicGoogleClient:()=>({}),
