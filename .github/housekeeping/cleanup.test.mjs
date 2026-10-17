@@ -46,3 +46,12 @@ test('real archive retains divergent tips without introducing their file trees, 
  git(['push','--atomic','--force-with-lease=refs/heads/ai/old:'+heads[0],'origin',':refs/heads/ai/old']);assert.equal(git(['ls-remote','--heads','origin','refs/heads/ai/old']),'');assert.equal(ancestor(heads[0],archive),true);
  }finally{process.chdir(prior);rmSync(dir,{recursive:true,force:true});}
 });
+
+test('October17 owner closeout permits pinned merged development namespaces, never release or protected refs',()=>{
+ const closeout={...plan,archive:'archive/housekeeping-2026-10-17',maintenanceBranch:'ai/codex/documentation-git-closeout-20261017'};
+ for(const name of ['ai/old','acceptance/old','audit/old','completion/old','docs/old','fix/old'])
+  assert.equal(validatePlan({...closeout,branches:[{...plan.branches[0],name}]},'owner/repo').archive,closeout.archive);
+ for(const name of ['main','live','release-markers/2026-10-16','archive/keep','HEAD','completion/x:main'])
+  assert.throws(()=>validatePlan({...closeout,branches:[{...plan.branches[0],name}]},'owner/repo'));
+ assert.throws(()=>validatePlan({...closeout,archive:'archive/arbitrary'},'owner/repo'));
+});
