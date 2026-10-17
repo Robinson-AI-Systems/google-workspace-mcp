@@ -3,9 +3,15 @@
 Agent entry: [AGENTS.md](../../AGENTS.md). Complete SESSION-START §§0–1 before
 selecting new implementation; preserve the existing session:finish workload check.
 
-## Completion scope — owner October16,2026
+## October 17 — final Workspace acceptance complete
 
-Hub integration is mandatory for total completion and the native Hub->Workspace discovery/read/audit connection is proved. Broader separately listed Hub relay/Sandbox/revocation acceptance stays pending for Hub-agent reconciliation; no reverse Workspace discovery or duplicate implementation. Do not change/configure/release Hub here. Vault live positives remain owner-excluded with code/grant retained. Owner removed the November1 waiting policy; actual protected encrypted-only cutover is now complete for both accounts, account and legacy plaintext0, all integrity checks clear. Catalog developer audit is complete with explicit live-resource/configuration limits; Alert Center read/write delegation is now owner-approved and activated; genuine original TEST list200/native empty array verified on checked config redeployment. Exact alert GET remains development-tested because no alerts exist. Current queue28PASSED/1Hub-ownedPENDING.
+The owner asked this agent to complete the two remaining Hub-specific tests. Actual original Hub runner acceptance is now complete in Hub PR #227: separate local direct and GitHub-only encrypted relay both passed all five checks with exit0 against the existing independent Workspace RTC service. The same new TEST/read_only/nonwriting pass was then revoked by Workspace; original direct probe verified HTTP401 `pass_revoked`, and the original encrypted relay returned the exact same denial envelope. Earlier actual Sandbox direct, native Hub discovery/read/durable audit, read-only refusal and cleanup proofs remain accepted from Hub #224/#226 and Workspace #194/#196.
+
+Sanitized exact source, UTC, command, route, exit, least-privilege and cleanup evidence: [final Hub route acceptance](evidence/2026-10-17-final-hub-route-acceptance.json). Hub executable source `f6f916b8f2f6a596583328540593f3098dc2ff27`; Workspace service source `42afbaaf138d293d6042acd874c0fd3c32f7ce0e`. The temporary Sandbox is stopped, temporary pass/PAT revoked, transport issue closed/zero comments, webhook inactive, bypass revoked, relay bindings empty and Dev credential entry inert. The standing useful Hub grant is preserved and another genuine native Hub read succeeded after cleanup.
+
+**GOOGLE-RTC PASSED; P8-5 DONE. All 29 release acceptance tasks PASSED. All 48 required roadmap subsections are complete; optional P8-6 remains ON_REQUEST and does not block completion.** No reverse Workspace-to-Hub discovery or additional Workspace runtime release is needed. The remaining documented limitations retain their original dispositions: unsupported feature retired; no-resource exact GET cases development-tested; Vault live positives owner-excluded. No additional real Google positive call is claimed from this Hub transport proof. Other Hub fleet service obligations are outside Workspace completion.
+
+Owner removed the arbitrary November1 waiting policy: encrypted-only cutover is already complete for both accounts with account/legacy plaintext0. Alert Center delegation is activated and the genuine original TEST list returned HTTP200 with an empty array; exact alert GET remains development-tested because there are no alerts.
 
 ## Session workload comes from the current owner prompt
 
