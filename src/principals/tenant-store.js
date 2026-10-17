@@ -17,6 +17,16 @@ const positiveInt = (n, max) => Number.isSafeInteger(n) && n >= 1 && n <= max;
 const handlePattern = /^rtc_result_[A-Za-z0-9_-]{32}$/;
 
 export async function initTenantSchema(q = sql()) {
+  // Existing P10-B installations have the row but not its composite
+  // owned-account relation. Additive twice-safe migration; no key is moved.
+  await q`ALTER TABLE principal_delegations ADD COLUMN IF NOT EXISTS account_id UUID`;
+  await q`DO $ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='principal_delegations_owned_account_fk'
+      AND conrelid='principal_delegations'::regclass) THEN
+      ALTER TABLE principal_delegations ADD CONSTRAINT principal_delegations_owned_account_fk
+        FOREIGN KEY (account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id);
+    END IF;
+  END $`;
   await q`CREATE TABLE IF NOT EXISTS principal_result_pages (
     handle TEXT PRIMARY KEY,
     principal_id UUID NOT NULL REFERENCES principals(id),
