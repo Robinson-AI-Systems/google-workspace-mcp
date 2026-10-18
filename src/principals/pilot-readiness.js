@@ -25,6 +25,10 @@ export function pilotReadiness(env=process.env){
   const roster=String(env.PUBLIC_PILOT_GOOGLE_SUBJECTS||'').split(',')
     .map(v=>v.trim()).filter(Boolean);
   const unique=new Set(roster);
+  const legacyRoster=String(env.PUBLIC_PILOT_LEGACY_SUBJECTS||'').split(',')
+    .map(v=>v.trim()).filter(Boolean);
+  const legacyConfigured=legacyRoster.length===1&&/^\d{10,32}$/.test(legacyRoster[0])&&unique.has(legacyRoster[0]);
+
   const tokenKey=String(env.TOKEN_ENCRYPTION_KEY||'');
   const key=Buffer.from(tokenKey,'base64');
   const encryptionReady=key.length===32&&key.toString('base64')===tokenKey;
@@ -66,6 +70,8 @@ export function pilotReadiness(env=process.env){
     toolExecutionFlagEnabled:verifiedFlag,
     legacyOwnerNewSignInEnabled:env.LEGACY_OWNER_SIGNIN_ENABLED!=='false',
     pilotRosterCount:roster.length,
+    legacyPilotIdentityOnlyConfigured:legacyConfigured,
+    legacyPilotIdentityOnlyEnabled:legacyConfigured&&mode==='pilot'&&!verifiedFlag,
     configuredItems:checks.filter(c=>c.status==='configured').length,
     checkedItems:checks.length,
     configComplete:checks.every(c=>c.status==='configured'),
