@@ -8,7 +8,7 @@ vi.mock('googleapis',()=>({google:{auth:{OAuth2:class{
  async verifyIdToken(options){mock.verified=options;return {getPayload:()=>mock.claims};}
 }}}}));
 import {publicGoogleClient,providerUrl,verifyGoogleCode} from '../../src/principals/google.js';
-import {digest,publicMode,admitted,readCookie,cookie} from '../../src/principals/security.js';
+import {digest,publicMode,admitted,legacyPilotLoginAllowed,readCookie,cookie} from '../../src/principals/security.js';
 import {sealV2,openV2} from '../../src/principals/crypto.js';
 let prior;
 beforeEach(()=>{
@@ -90,6 +90,31 @@ describe('P10 Google OIDC, no legacy fallback, provider PKCE and encrypted scope
   expect(admitted('evil-sub')).toBe(true);
   process.env.PUBLIC_SIGNIN_MODE='invalid';
   expect(()=>publicMode()).toThrow('invalid_public_mode');
+ });
+ it('requires a single separately owner-listed numeric subject for identity-only legacy coexistence',()=>{
+  const eligible='123456789012345678901';
+  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321098765432109,'+eligible;
+  expect(legacyPilotLoginAllowed(eligible)).toBe(false);
+  process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=eligible;
+  expect(legacyPilotLoginAllowed(eligible)).toBe(true);
+  expect(legacyPilotLoginAllowed('987654321098765432109')).toBe(false);
+  expect(legacyPilotLoginAllowed('nonlisted-subject')).toBe(false);
+  process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=eligible+',987654321098765432109';
+  expect(legacyPilotLoginAllowed(eligible)).toBe(false);
+  process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=eligible;
+  process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED='true';
+  expect(legacyPilotLoginAllowed(eligible)).toBe(false);
+  process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED='false';
+  process.env.PUBLIC_SIGNIN_MODE='public';
+  expect(legacyPilotLoginAllowed(eligible)).toBe(false);
+  process.env.PUBLIC_SIGNIN_MODE='off';
+  expect(legacyPilotLoginAllowed(eligible)).toBe(false);
+  process.env.PUBLIC_SIGNIN_MODE='pilot';
+  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321098765432109';
+  expect(legacyPilotLoginAllowed(eligible)).toBe(false);
+  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321098765432109,'+eligible;
+  process.env.PUBLIC_PILOT_LEGACY_SUBJECTS='an-email@example.test';
+  expect(legacyPilotLoginAllowed(eligible)).toBe(false);
  });
  it('binds AES-GCM encrypted envelopes to exact principal/account/purpose with no legacy fallback',()=>{
   const p=crypto.randomUUID(),a=crypto.randomUUID(),content={access_token:'x',refresh_token:'y'};
