@@ -52,6 +52,44 @@ export async function ownerMigrationSnapshot(q=sql()){
   dryRun:true,grantsChanged:false,connectionsRevoked:0,
   next:'Explicit owner-only Google proof is required to link an identity; existing OAuth remains available.'});
 }
+/**
+ * P10-6: owner-authenticated Google subject discovery uses this read-only
+ * assessment. The subject/email come ONLY from Google's verified ID token.
+ * Legacy grants, existing bearer/refresh and default selection never move.
+ * Never return email, Google sub, provider tokens or ciphertext in this receipt.
+ */
+export async function previewLegacyPilotMigration({issuer,sub,verifiedEmail},q=sql()){
+ requireScope(issuerOk(issuer)&&subOk(sub)&&validEmail(verifiedEmail),'invalid_verified_identity');
+ const rows=await q`SELECT a.is_default,
+   a.tokens_enc IS NOT NULL AS encrypted_grant_present,
+   (SELECT count(*)::int FROM oauth_tokens t
+     WHERE (lower(t.google_account)=lower(a.email)
+       OR (a.is_default AND t.google_account IS NULL))
+       AND t.revoked_at IS NULL AND t.expires_at>now()) AS live_owner_connections,
+   (SELECT count(*)::int FROM oauth_tokens t
+     WHERE (lower(t.google_account)=lower(a.email)
+       OR (a.is_default AND t.google_account IS NULL))
+       AND t.revoked_at IS NULL AND t.refresh_token IS NOT NULL) AS unrevoked_refresh_connections,
+   (SELECT count(*)::int FROM oauth_codes c
+     WHERE (lower(c.google_account)=lower(a.email)
+       OR (a.is_default AND c.google_account IS NULL))
+       AND c.used=false AND c.expires_at>now()) AS pending_owner_authorizations
+   FROM google_accounts a WHERE lower(a.email)=lower(${verifiedEmail}) LIMIT 1`;
+ const r=rows[0];
+ if(!r)return Object.freeze({legacyAccount:false,migrationRequired:false,
+   ownerConnectionsChanged:0,grantsChanged:false,principalCreated:false,
+   next:'No original-owner mailbox collision detected. Continue normal pilot login with the verified account.'});
+ return Object.freeze({
+   legacyAccount:true,migrationRequired:true,isDefault:!!r.is_default,
+   encryptedOwnerGrantPresent:!!r.encrypted_grant_present,
+   liveOwnerConnections:Number(r.live_owner_connections),
+   unrevokedRefreshConnections:Number(r.unrevoked_refresh_connections),
+   pendingOwnerAuthorizations:Number(r.pending_owner_authorizations),
+   ownerConnectionsChanged:0,grantsChanged:false,principalCreated:false,
+   next:'Migration BLOCKED pending exact legacy-client inventory and separately approved connection retirement or preservation plan. No automatic transfer or deletion is permitted.'
+ });
+}
+
 export async function linkVerifiedOwner({issuer,sub,email},q=sql()){
  requireScope(issuerOk(issuer)&&subOk(sub)&&validEmail(email),'invalid_verified_identity');
  // Deny any public principal's account or login subject. Never reassign.
