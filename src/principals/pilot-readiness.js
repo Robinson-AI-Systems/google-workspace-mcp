@@ -27,7 +27,7 @@ export function pilotReadiness(env=process.env){
   const unique=new Set(roster);
   const legacyRoster=String(env.PUBLIC_PILOT_LEGACY_SUBJECTS||'').split(',')
     .map(v=>v.trim()).filter(Boolean);
-  const legacyConfigured=legacyRoster.length===1&&/^\d{10,32}$/.test(legacyRoster[0])&&unique.has(legacyRoster[0]);
+  const legacyConfigured=roster.length===2&&unique.size===2&&legacyRoster.length===1&&/^\d{10,32}$/.test(legacyRoster[0])&&unique.has(legacyRoster[0]);
 
   const tokenKey=String(env.TOKEN_ENCRYPTION_KEY||'');
   const key=Buffer.from(tokenKey,'base64');
