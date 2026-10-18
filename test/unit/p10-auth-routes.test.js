@@ -3,7 +3,7 @@ import {Readable} from 'node:stream';
 import {createHash} from 'node:crypto';
 const h=vi.hoisted(()=>({
   started:null,consumed:false,accountLinks:[],codeConsumeCount:0,rotations:0,
-  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null
+  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false
 }));
 vi.mock('../../src/db.js',()=>({
  initSchema:async()=>{},getOAuthClient:async id=>id==='registered-client'?{
@@ -28,7 +28,7 @@ vi.mock('../../src/principals/store.js',()=>({
    csrf_hash:createHash('sha256').update('p10x_'+'b'.repeat(43)).digest('hex'),kind:'user'}:null,
  revokeSession:async()=>1,
  upsertLinkedAccount:async params=>{h.accountLinks.push(params);return 'account-a';},
- listAccounts:async()=>[],listConnections:async()=>[],deletionPreview:async()=>({previewOnly:true}),
+ listAccounts:async()=>[],listConnections:async()=>[],isLegacyPilotIdentityPrincipal:async()=>h.legacyPilot,deletionPreview:async()=>({previewOnly:true}),
  disconnectAccount:async()=>0,revokeConnection:async()=>0,setPrincipalDefault:async()=>null,
  requestDeletion:async()=>({pending:true}),cancelDeletion:async()=>({cancelled:true}),
  issuePrincipalCode:async()=> 'p10c_'+'c'.repeat(43),
@@ -83,7 +83,7 @@ beforeEach(()=>{
  process.env.PUBLIC_SIGNIN_MODE='pilot';
  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='pilot-subject';
  h.started=null;h.accountLinks=[];h.bindCalls=0;h.consumed=false;h.rotations=0;h.codeConsumeCount=0;
- h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;
+ h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;h.legacyPilot=false;
 });
 afterEach(()=>{process.env=env;});
 describe('P10 actual route one-use browser callback and independent principal MCP issuance',()=>{
@@ -198,6 +198,16 @@ describe('P10 actual route one-use browser callback and independent principal MC
     client_secret:'registered-secret',refresh_token:'p10r_test',resource:payload.resource});
   expect(rotated.body.access_token).toBe('p10a_new');
   expect(h.rotations).toBe(1);
+ });
+ it('identity-only legacy tester sees explanation but cannot mutate portal account settings',async()=>{
+  h.legacyPilot=true;
+  const out=res();await account(req('GET',{},sessCookie),out);
+  expect(out.statusCode).toBe(200);
+  expect(out.body).toContain('Identity-only legacy tester');
+  expect(out.body).not.toContain('Link Google mail permissions');
+  const blocked=res();await account(req('POST',{},sessCookie,
+    {action:'set_default',id:'foreign',csrf}),blocked);
+  expect(blocked).toMatchObject({statusCode:403,body:{error:'legacy_pilot_identity_only'}});
  });
  it('logout affects browser only; account listing is owned and requires CSRF for mutations',async()=>{
   const get=res();await session(req('GET',{},sessCookie),get);
