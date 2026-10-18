@@ -19,7 +19,9 @@ export function admitted(sub,env=process.env){
 // authorizes crossing the legacy-owner email reservation.
 export function legacyPilotLoginAllowed(sub,env=process.env){
  if(publicMode(env)!=='pilot'||env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED==='true')return false;
- if(typeof sub!=='string'||!/^\d{10,32}$/.test(sub)||!admitted(sub,env))return false;
+ const roster=String(env.PUBLIC_PILOT_GOOGLE_SUBJECTS||'').split(',').map(x=>x.trim()).filter(Boolean);
+ if(roster.length!==2||new Set(roster).size!==2)return false;
+ if(typeof sub!=='string'||!/^\d{10,32}$/.test(sub)||!roster.includes(sub))return false;
  const exceptions=String(env.PUBLIC_PILOT_LEGACY_SUBJECTS||'').split(',')
    .map(x=>x.trim()).filter(Boolean);
  return exceptions.length===1&&exceptions[0]===sub;
