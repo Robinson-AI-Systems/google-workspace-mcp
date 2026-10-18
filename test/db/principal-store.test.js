@@ -76,10 +76,74 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
   await expect(migration.previewLegacyPilotMigration({...identity,issuer:'forged.example.test'}))
    .rejects.toThrow('invalid_verified_identity');
  });
+ it('signs in the expressly approved legacy tester without moving legacy Google grants or owner refresh/bearers',async()=>{
+  const oldEnv={PUBLIC_SIGNIN_MODE:process.env.PUBLIC_SIGNIN_MODE,
+    PUBLIC_PILOT_GOOGLE_SUBJECTS:process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS,
+    PUBLIC_PILOT_LEGACY_SUBJECTS:process.env.PUBLIC_PILOT_LEGACY_SUBJECTS,
+    PUBLIC_P10_TOOL_EXECUTION_VERIFIED:process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED};
+  const subject='123456789012345678901',identity={issuer:'https://accounts.google.com',
+    sub:subject,verifiedEmail:'legacy-tester@example.test'};
+  const initial=(await pool.query("SELECT email,is_default,tokens_enc FROM google_accounts ORDER BY email")).rows;
+  const tokenInitial=(await pool.query(
+    "SELECT access_token,refresh_token,google_account,revoked_at FROM oauth_tokens ORDER BY access_token")).rows;
+  try{
+   process.env.PUBLIC_SIGNIN_MODE='pilot';
+   process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321098765432109,'+subject;
+   delete process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED;
+   delete process.env.PUBLIC_PILOT_LEGACY_SUBJECTS;
+   await expect(store.bindVerifiedIdentity(identity)).rejects.toThrow('reserved_identity');
+   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=subject;
+   await expect(store.bindVerifiedIdentity(identity)).rejects.toThrow('reserved_identity');
+   const pilot=await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true});
+   expect(pilot).not.toBe('00000000-0000-4000-8000-000000000001');
+   expect(await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).toBe(pilot);
+   const browser=await store.createSession(pilot);
+   expect((await store.readSession(browser.secret)).principal_id).toBe(pilot);
+   expect(await store.listAccounts(pilot)).toHaveLength(0);
+   expect(await store.isLegacyPilotIdentityPrincipal(pilot)).toBe(true);
+   expect((await pool.query('SELECT legacy_pilot_identity_only FROM principals WHERE id=$1',[pilot])).rows[0].legacy_pilot_identity_only).toBe(true);
+   await expect(store.upsertLinkedAccount({principalId:pilot,issuer:'https://accounts.google.com',
+     sub:'987654321098765432109',verifiedEmail:'fresh-account@example.test',scopeList:[],
+     tokens:{access_token:'foreign-token'}})).rejects.toThrow('legacy_pilot_identity_only');
+   await expect(store.upsertLinkedAccount({principalId:pilot,issuer:identity.issuer,
+     sub:subject,verifiedEmail:identity.verifiedEmail,scopeList:[],
+     tokens:{access_token:'old-grant-no'}})).rejects.toThrow('legacy_pilot_identity_only');
+   process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED='true';
+   await expect(store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).rejects.toThrow('reserved_identity');
+   process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED='false';
+   process.env.PUBLIC_SIGNIN_MODE='public';
+   await expect(store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).rejects.toThrow('reserved_identity');
+   process.env.PUBLIC_SIGNIN_MODE='pilot';
+   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS='987654321098765432109';
+   await expect(store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).rejects.toThrow('reserved_identity');
+   expect((await pool.query("SELECT email,is_default,tokens_enc FROM google_accounts ORDER BY email")).rows)
+     .toEqual(initial);
+   expect((await pool.query(
+     "SELECT access_token,refresh_token,google_account,revoked_at FROM oauth_tokens ORDER BY access_token")).rows)
+     .toEqual(tokenInitial);
+   expect((await db.getTokenByRefreshToken('legacy-test-mcp-refresh')).client_id).toBe('test-original-client');
+   expect((await store.legacyOwnerContext('legacy-test-bearer')).principal_kind).toBe('legacy_owner');
+   expect((await pool.query("SELECT count(*)::int AS n FROM principal_google_accounts WHERE principal_id=$1",[pilot])).rows[0].n).toBe(0);
+   // The original owner may later remove this legacy mailbox. The pilot's
+   // identity-only authorization boundary must not disappear with that row.
+   await pool.query('DELETE FROM google_accounts WHERE email=$1',[identity.verifiedEmail]);
+   expect(await store.isLegacyPilotIdentityPrincipal(pilot)).toBe(true);
+   await expect(store.upsertLinkedAccount({principalId:pilot,issuer:identity.issuer,
+     sub:'222222222222222222222',verifiedEmail:'fresh-account@example.test',
+     scopeList:[],tokens:{access_token:'must-never-persist'}}))
+     .rejects.toThrow('legacy_pilot_identity_only');
+  }finally{
+   for(const [key,value] of Object.entries(oldEnv)){
+    if(value===undefined)delete process.env[key];else process.env[key]=value;
+   }
+  }
+ });
  it('verifies stable Google subject, reserves owner and blocks foreign account use',async()=>{
   a=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',sub:'subject-aaa1',verifiedEmail:'a@example.test'});
   b=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',sub:'subject-bbb2',verifiedEmail:'b@example.test'});
   expect(a).not.toBe(b);
+  expect(await store.isLegacyPilotIdentityPrincipal(a)).toBe(false);
+  expect(await store.isLegacyPilotIdentityPrincipal(b)).toBe(false);
   expect(await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',sub:'subject-aaa1',verifiedEmail:'a@example.test'})).toBe(a);
   await expect(store.bindVerifiedIdentity({issuer:'https://accounts.google.com',sub:'owner-xxxx',verifiedEmail:'owner@example.test'})).rejects.toThrow('reserved_identity');
   aa=await store.upsertLinkedAccount({principalId:a,issuer:'https://accounts.google.com',sub:'subject-aaa1',

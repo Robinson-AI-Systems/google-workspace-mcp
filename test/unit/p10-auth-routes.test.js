@@ -3,7 +3,7 @@ import {Readable} from 'node:stream';
 import {createHash} from 'node:crypto';
 const h=vi.hoisted(()=>({
   started:null,consumed:false,accountLinks:[],codeConsumeCount:0,rotations:0,
-  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null
+  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false,lastIdentity:null
 }));
 vi.mock('../../src/db.js',()=>({
  initSchema:async()=>{},getOAuthClient:async id=>id==='registered-client'?{
@@ -21,14 +21,14 @@ vi.mock('../../src/principals/store.js',()=>({
      principal_id:h.started.principalId,policy:h.started.policy,verifier:h.started.verifier,
      client_id:h.started.clientId,redirect_uri:h.started.redirectUri,resource:h.started.resource,code_challenge:h.started.codeChallenge};
  },
- bindVerifiedIdentity:async identity=>{h.bindCalls++;if(h.bindFailure)throw Error(h.bindFailure);return '33333333-3333-4333-8333-333333333333';},
+ bindVerifiedIdentity:async identity=>{h.bindCalls++;h.lastIdentity=identity;if(h.bindFailure)throw Error(h.bindFailure);return '33333333-3333-4333-8333-333333333333';},
  createSession:async()=>({secret:'p10s_'+'a'.repeat(43),csrf:'p10x_'+'b'.repeat(43)}),
  readSession:async secret=>secret==='p10s_'+'a'.repeat(43)?{
    principal_id:'33333333-3333-4333-8333-333333333333',
    csrf_hash:createHash('sha256').update('p10x_'+'b'.repeat(43)).digest('hex'),kind:'user'}:null,
  revokeSession:async()=>1,
  upsertLinkedAccount:async params=>{h.accountLinks.push(params);return 'account-a';},
- listAccounts:async()=>[],listConnections:async()=>[],deletionPreview:async()=>({previewOnly:true}),
+ listAccounts:async()=>[],listConnections:async()=>[],isLegacyPilotIdentityPrincipal:async()=>h.legacyPilot,deletionPreview:async()=>({previewOnly:true}),
  disconnectAccount:async()=>0,revokeConnection:async()=>0,setPrincipalDefault:async()=>null,
  requestDeletion:async()=>({pending:true}),cancelDeletion:async()=>({cancelled:true}),
  issuePrincipalCode:async()=> 'p10c_'+'c'.repeat(43),
@@ -83,7 +83,7 @@ beforeEach(()=>{
  process.env.PUBLIC_SIGNIN_MODE='pilot';
  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='pilot-subject';
  h.started=null;h.accountLinks=[];h.bindCalls=0;h.consumed=false;h.rotations=0;h.codeConsumeCount=0;
- h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;
+ h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;h.legacyPilot=false;h.lastIdentity=null;
 });
 afterEach(()=>{process.env=env;});
 describe('P10 actual route one-use browser callback and independent principal MCP issuance',()=>{
@@ -101,6 +101,7 @@ describe('P10 actual route one-use browser callback and independent principal MC
   const good=res();await callback(req('GET',{state,code:'google-code'},'p10_google_browser='+browser),good);
   expect(good.statusCode).toBe(302);expect(h.bindCalls).toBe(1);
   expect(String(good.headers.Location)).toBe('/api/account');
+  expect(h.lastIdentity.identityOnlyPilot).toBe(true);
   expect(JSON.stringify(good.headers['Set-Cookie'])).toContain('p10_session');
   const repeated=res();await callback(req('GET',{state,code:'google-code'},'p10_google_browser='+browser),repeated);
   expect(repeated.statusCode).toBe(400);expect(h.bindCalls).toBe(1);
@@ -154,6 +155,15 @@ describe('P10 actual route one-use browser callback and independent principal MC
    expect(JSON.stringify(warn.mock.calls)).not.toMatch(/secret|user@example.test|private-code/);
   }finally{warn.mockRestore();}
  });
+ it('refuses identity-only legacy tester Google scope consent before generating OAuth state',async()=>{
+  h.legacyPilot=true;
+  const out=res();
+  await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',csrf}),out);
+  expect(out.statusCode).toBe(400);
+  expect(out.body).toEqual({error:'invalid_authorization_start'});
+  expect(h.started).toBeNull();
+  expect(h.accountLinks).toHaveLength(0);
+ });
  it('link requires same-origin CSRF and bound session and cannot claim owner global mailboxes',async()=>{
   const missing=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail'}),missing);
   expect(missing.statusCode).toBe(400);expect(h.started).toBeNull();
@@ -172,6 +182,7 @@ describe('P10 actual route one-use browser callback and independent principal MC
   const out=res();
   await callback(req('GET',{state:h.started.state,code:'google'},'p10_google_browser='+h.started.browser),out);
   expect(out.statusCode).toBe(302);
+  expect(h.lastIdentity.identityOnlyPilot).toBe(false);
   const u=new URL(out.headers.Location);
   expect(u.pathname).toBe('/api/oauth/authorize');
   expect(u.searchParams.get('state')).toBe('original-client-state');
@@ -198,6 +209,16 @@ describe('P10 actual route one-use browser callback and independent principal MC
     client_secret:'registered-secret',refresh_token:'p10r_test',resource:payload.resource});
   expect(rotated.body.access_token).toBe('p10a_new');
   expect(h.rotations).toBe(1);
+ });
+ it('identity-only legacy tester sees explanation but cannot mutate portal account settings',async()=>{
+  h.legacyPilot=true;
+  const out=res();await account(req('GET',{},sessCookie),out);
+  expect(out.statusCode).toBe(200);
+  expect(out.body).toContain('Identity-only legacy tester');
+  expect(out.body).not.toContain('Link Google mail permissions');
+  const blocked=res();await account(req('POST',{},sessCookie,
+    {action:'set_default',id:'foreign',csrf}),blocked);
+  expect(blocked).toMatchObject({statusCode:403,body:{error:'legacy_pilot_identity_only'}});
  });
  it('logout affects browser only; account listing is owned and requires CSRF for mutations',async()=>{
   const get=res();await session(req('GET',{},sessCookie),get);

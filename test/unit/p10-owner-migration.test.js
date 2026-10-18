@@ -16,6 +16,7 @@ vi.mock('../../src/oauth/login-guard.js',()=>({
  evaluateLogin:async()=>({status:h.auth})
 }));
 vi.mock('../../src/principals/store.js',()=>({
+ isLegacyPilotIdentityPrincipal:async()=>false,
  createTransaction:async p=>{h.tx=p;h.used=false;return true;},
  consumeTransaction:async({state,browser,purpose})=>{
   if(h.used||!h.tx||h.tx.state!==state||h.tx.browser!==browser||h.tx.purpose!==purpose)return null;

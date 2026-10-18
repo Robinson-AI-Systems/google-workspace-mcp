@@ -120,7 +120,7 @@ export default async function handler(req,res){
     requireScope(admitted(verified.sub),'public_signin_not_admitted');
     phase='principal_bind';
     principalId=await bindVerifiedIdentity({issuer:verified.issuer,sub:verified.sub,
-      verifiedEmail:verified.email});
+      verifiedEmail:verified.email,identityOnlyPilot:tx.purpose==='login'});
     phase='session_creation';
     await setSession(res,principalId);
   }
