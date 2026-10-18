@@ -117,6 +117,26 @@ describe('P10-6 source-derived pilot configuration, without trusting it as accep
     expect(serialized).not.toContain(secret);
   }
  });
+ it('sanitizes the exact legacy identity-only tester configuration and turns off when tools or public login are enabled',()=>{
+  const subject='123456789012345678901';
+  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321098765432109,'+subject;
+  process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=subject;
+  process.env.PUBLIC_SIGNIN_MODE='pilot';
+  const r=pilotReadiness();
+  expect(r.legacyPilotIdentityOnlyConfigured).toBe(true);
+  expect(r.legacyPilotIdentityOnlyEnabled).toBe(true);
+  expect(JSON.stringify(r)).not.toContain(subject);
+  process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED='true';
+  expect(pilotReadiness().legacyPilotIdentityOnlyEnabled).toBe(false);
+  delete process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED;
+  process.env.PUBLIC_SIGNIN_MODE='public';
+  expect(pilotReadiness().legacyPilotIdentityOnlyEnabled).toBe(false);
+  process.env.PUBLIC_SIGNIN_MODE='pilot';
+  process.env.PUBLIC_PILOT_LEGACY_SUBJECTS='another@example.test';
+  expect(pilotReadiness().legacyPilotIdentityOnlyConfigured).toBe(false);
+  process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=subject+','+subject;
+  expect(pilotReadiness().legacyPilotIdentityOnlyConfigured).toBe(false);
+ });
  it('flags missing/duplicated public credentials and rejects roster guesses without changing flags',()=>{
   process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID='legacy-client';
   process.env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET='legacy-secret';
