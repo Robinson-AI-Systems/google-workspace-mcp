@@ -41,6 +41,41 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
   expect(await store.legacyOwnerContext('unknown')).toBeNull();
   expect((await db.getRtcPass(pass.token)).mode).toBe('test');
  });
+ it('previews previously approved legacy testing mailbox without mutating live owner grants or connections',async()=>{
+  const migration=await import('../../src/principals/owner-migration.js');
+  const identity={issuer:'https://accounts.google.com',sub:'historical-test-sub-0001',
+   verifiedEmail:'legacy-tester@example.test'};
+  await db.saveGoogleTokensFor(identity.verifiedEmail,
+   {access_token:'legacy-test-access',refresh_token:'legacy-test-refresh'});
+  await db.createAccessToken({accessToken:'legacy-test-bearer',refreshToken:'legacy-test-mcp-refresh',
+   clientId:'test-original-client',googleAccount:identity.verifiedEmail,profile:'read_only'});
+  const before=(await pool.query(
+   "SELECT email,is_default,tokens_enc FROM google_accounts WHERE email='legacy-tester@example.test'")).rows;
+  const tokenBefore=(await pool.query(
+   "SELECT access_token,refresh_token,revoked_at FROM oauth_tokens WHERE access_token='legacy-test-bearer'")).rows;
+  expect(before).toHaveLength(1);expect(before[0].is_default).toBe(false);
+  const impact=await migration.previewLegacyPilotMigration(identity);
+  expect(impact).toMatchObject({legacyAccount:true,migrationRequired:true,isDefault:false,
+   encryptedOwnerGrantPresent:true,liveOwnerConnections:1,unrevokedRefreshConnections:1,
+   pendingOwnerAuthorizations:0,ownerConnectionsChanged:0,grantsChanged:false,principalCreated:false});
+  expect(JSON.stringify(impact)).not.toContain(identity.verifiedEmail);
+  expect(JSON.stringify(impact)).not.toContain(identity.sub);
+  const defaultImpact=await migration.previewLegacyPilotMigration({...identity,verifiedEmail:'owner@example.test'});
+  expect(defaultImpact.legacyAccount).toBe(true);
+  expect(defaultImpact.isDefault).toBe(true);
+  expect(defaultImpact.liveOwnerConnections).toBeGreaterThanOrEqual(1);
+  const independent=await migration.previewLegacyPilotMigration({...identity,verifiedEmail:'unconnected@example.test'});
+  expect(independent).toMatchObject({legacyAccount:false,migrationRequired:false});
+  expect((await pool.query(
+   "SELECT email,is_default,tokens_enc FROM google_accounts WHERE email='legacy-tester@example.test'")).rows)
+   .toEqual(before);
+  expect((await pool.query(
+   "SELECT access_token,refresh_token,revoked_at FROM oauth_tokens WHERE access_token='legacy-test-bearer'")).rows)
+   .toEqual(tokenBefore);
+  expect((await pool.query("SELECT count(*)::int AS n FROM principal_google_identities WHERE google_sub='historical-test-sub-0001'")).rows[0].n).toBe(0);
+  await expect(migration.previewLegacyPilotMigration({...identity,issuer:'forged.example.test'}))
+   .rejects.toThrow('invalid_verified_identity');
+ });
  it('verifies stable Google subject, reserves owner and blocks foreign account use',async()=>{
   a=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',sub:'subject-aaa1',verifiedEmail:'a@example.test'});
   b=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',sub:'subject-bbb2',verifiedEmail:'b@example.test'});
