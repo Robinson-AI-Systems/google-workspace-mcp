@@ -14,6 +14,16 @@ export function admitted(sub,env=process.env){
  const m=publicMode(env);
  return m==='public'||m==='pilot'&&String(env.PUBLIC_PILOT_GOOGLE_SUBJECTS||'').split(',').map(x=>x.trim()).includes(sub);
 }
+// A single separately owner-approved previously connected TEST mailbox may
+// coexist as a *browser identity only*. The public pilot roster alone never
+// authorizes crossing the legacy-owner email reservation.
+export function legacyPilotLoginAllowed(sub,env=process.env){
+ if(publicMode(env)!=='pilot'||env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED==='true')return false;
+ if(typeof sub!=='string'||!/^\\d{10,32}$/.test(sub)||!admitted(sub,env))return false;
+ const exceptions=String(env.PUBLIC_PILOT_LEGACY_SUBJECTS||'').split(',')
+   .map(x=>x.trim()).filter(Boolean);
+ return exceptions.length===1&&exceptions[0]===sub;
+}
 export const cookie=(name,value,path='/',ttl=3600)=>name+'='+encodeURIComponent(value)+'; Path='+path+'; Max-Age='+ttl+'; HttpOnly; Secure; SameSite=Lax';
 export const readCookie=(req,name)=>{
  const a=String(req?.headers?.cookie||'').split(';').map(x=>x.trim()).filter(x=>x.startsWith(name+'='));
