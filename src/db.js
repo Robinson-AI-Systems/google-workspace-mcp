@@ -22,7 +22,45 @@ function db() {
   return sql;
 }
 
-export async function initSchema() {
+// Serverless cold starts can concurrently execute IF NOT EXISTS DDL on different
+// instances. PostgreSQL may still reject a racing CREATE with a duplicate
+// internal catalog key (23505) or duplicate DDL object (42P07/42710/42701).
+// Re-run only the additive schema setup; never retry a caller's Google/user write.
+let initializationInFlight = null;
+const RETRYABLE_DDL_CODES = new Set(['42P07', '42710', '42701']);
+const RETRYABLE_CATALOG_KEYS = new Set([
+  'pg_type_typname_nsp_index',
+  'pg_class_relname_nsp_index'
+]);
+function isConcurrentSchemaDdl(error) {
+  const source = error?.sourceError || error;
+  const code = source?.code || error?.code;
+  if (RETRYABLE_DDL_CODES.has(code)) return true;
+  const constraint = source?.constraint || error?.constraint;
+  return code === '23505' && RETRYABLE_CATALOG_KEYS.has(constraint);
+}
+async function initializeSchemaWithRetry() {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      return await initializeSchemaSteps();
+    } catch (error) {
+      if (attempt === 4 || !isConcurrentSchemaDdl(error)) throw error;
+      // Bounded, non-transactional restart is safe because all DDL below is
+      // additive/idempotent, with existing owner/token rows preserved.
+      await new Promise(resolve => setTimeout(resolve, 30 * 2 ** attempt));
+    }
+  }
+}
+export function initSchema() {
+  if (!initializationInFlight) {
+    initializationInFlight = initializeSchemaWithRetry().finally(() => {
+      // A failed initialization must not permanently poison warm instances.
+      initializationInFlight = null;
+    });
+  }
+  return initializationInFlight;
+}
+async function initializeSchemaSteps() {
   const q = db();
   await q`
     CREATE TABLE IF NOT EXISTS google_auth (
