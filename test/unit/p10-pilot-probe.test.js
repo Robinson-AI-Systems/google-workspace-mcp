@@ -1,6 +1,6 @@
 import {describe,it,expect,vi,beforeEach,afterEach} from 'vitest';
 const s=vi.hoisted(()=>({tx:null,used:false,bound:0,stored:0,session:0,owner:0,
-  sub:'verified-subject-345',email:'tester@example.test'}));
+  sub:'verified-subject-345',email:'tester@example.test',legacy:false,previewCalls:0,previewArgs:null}));
 vi.mock('../../src/db.js',()=>({initSchema:async()=>{}}));
 vi.mock('../../src/principals/store.js',()=>({
  consumeTransaction:async({state,browser,purpose})=>{
@@ -24,6 +24,14 @@ vi.mock('../../src/principals/session.js',()=>({
  requireSession:async()=>null
 }));
 vi.mock('../../src/principals/owner-migration.js',()=>({
+ previewLegacyPilotMigration:async args=>{
+  s.previewCalls++;s.previewArgs=args;
+  return s.legacy?{legacyAccount:true,migrationRequired:true,
+   isDefault:false,encryptedOwnerGrantPresent:true,
+   liveOwnerConnections:11,unrevokedRefreshConnections:11,
+   pendingOwnerAuthorizations:0,ownerConnectionsChanged:0,grantsChanged:false,principalCreated:false}:
+  {legacyAccount:false,migrationRequired:false,ownerConnectionsChanged:0,grantsChanged:false,principalCreated:false};
+ },
  linkVerifiedOwner:async()=>{s.owner++;return true;},
  issueOwnerLoginProof:async()=>{s.owner++;return 'proof';}
 }));
@@ -49,7 +57,7 @@ beforeEach(()=>{
  process.env.PUBLIC_SIGNIN_MODE='off';
  s.tx={state:'good-state',browser:'safe-browser',purpose:'login',policy:{pilotProbe:true}};
  s.used=false;s.bound=0;s.stored=0;s.session=0;s.owner=0;
- s.sub='verified-subject-345';s.email='tester@example.test';
+ s.sub='verified-subject-345';s.email='tester@example.test';s.legacy=false;s.previewCalls=0;s.previewArgs=null;
 });
 afterEach(()=>{process.env=before;});
 describe('P10-6 protected verified OIDC subject preview is never public enrollment',()=>{
@@ -59,12 +67,30 @@ describe('P10-6 protected verified OIDC subject preview is never public enrollme
   expect(out.body).toContain('verified-subject-345');
   expect(out.body).toContain('tester@example.test');
   expect(out.body).toContain('PUBLIC_PILOT_GOOGLE_SUBJECTS');
+  expect(out.body).toContain('No legacy owner mailbox conflict detected');
+  expect(s.previewCalls).toBe(1);
+  expect(s.previewArgs).toEqual({issuer:'https://accounts.google.com',
+   sub:'verified-subject-345',verifiedEmail:'tester@example.test'});
   expect(out.body).not.toContain('SHOULD-NOT-RENDER');
   expect(out.body).not.toContain('NOT-AN-AGENT-GRANT');
   expect(out.headers['Cache-Control']).toBe('no-store');
   expect(out.headers['Content-Security-Policy']).toContain("default-src 'none'");
   expect([s.bound,s.stored,s.session,s.owner]).toEqual([0,0,0,0]);
   expect(process.env.PUBLIC_SIGNIN_MODE).toBe('off');
+ });
+ it('shows protected legacy owner testing-account impact without moving its grants',async()=>{
+  s.legacy=true;
+  const out=res();await callback(request(),out);
+  expect(out.statusCode).toBe(200);
+  expect(out.body).toContain('Legacy testing-account migration impact (read only)');
+  expect(out.body).toContain('Active owner MCP access tokens: 11');
+  expect(out.body).toContain('Unrevoked owner refresh-capable connections: 11');
+  expect(out.body).toContain('Original default mailbox: No');
+  expect(out.body).toContain('No accounts, grants or connections were changed');
+  expect(out.body).not.toContain('SHOULD-NOT-RENDER');
+  expect(out.body).not.toContain('NOT-AN-AGENT-GRANT');
+  expect([s.bound,s.stored,s.session,s.owner]).toEqual([0,0,0,0]);
+  expect(s.previewCalls).toBe(1);
  });
  it('one-use state plus bound browser rejects second and foreign attempts',async()=>{
   const foreign=res();await callback(request('foreign'),foreign);

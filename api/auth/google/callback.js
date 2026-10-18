@@ -4,7 +4,7 @@ import {publicGoogleClient,verifyGoogleCode,PUBLIC_SCOPE_GROUPS} from '../../../
 import {admitted,digest,cookie,headers,requireScope} from '../../../src/principals/security.js';
 import {readCookie} from '../../../src/principals/security.js';
 import {setSession,requireSession,BROWSER_COOKIE} from '../../../src/principals/session.js';
-import {linkVerifiedOwner,issueOwnerLoginProof} from '../../../src/principals/owner-migration.js';
+import {linkVerifiedOwner,issueOwnerLoginProof,previewLegacyPilotMigration} from '../../../src/principals/owner-migration.js';
 // Audit only fixed callback phases and approved denial codes. Never log provider
 // exception messages: Google SDK errors may carry a code, account or token.
 const SAFE_DENIAL_CODES=new Set([
@@ -45,6 +45,7 @@ export default async function handler(req,res){
     phase='identity_probe';
     requireScope(tx.purpose==='login'&&!tx.principal_id&&!tx.policy?.ownerProof,
       'invalid_pilot_subject_proof');
+    const migration=await previewLegacyPilotMigration({issuer:verified.issuer,sub:verified.sub,verifiedEmail:verified.email});
     const safe=x=>String(x).replace(/[&<>"']/g,c=>({
       '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
     }[c]));
@@ -58,6 +59,18 @@ export default async function handler(req,res){
       '<p>Verify you used the intended disposable Google tester. This identifier is not a Google access token.</p>'+
       '<p>Verified account: '+safe(verified.email)+'</p>'+
       '<p>Google subject ID to configure privately: <code>'+safe(verified.sub)+'</code></p>'+
+      (migration.legacyAccount
+        ? '<section><h2>Legacy testing-account migration impact (read only)</h2>'+
+          '<p>This verified mailbox is already connected to the original owner MCP. '+
+          'Public pilot sign-in is safely reserved until an approved migration.</p>'+
+          '<p>Original default mailbox: '+(migration.isDefault?'Yes':'No')+'</p>'+
+          '<p>Original encrypted Google grant present: '+(migration.encryptedOwnerGrantPresent?'Yes':'No')+'</p>'+
+          '<p>Active owner MCP access tokens: '+migration.liveOwnerConnections+'</p>'+
+          '<p>Unrevoked owner refresh-capable connections: '+migration.unrevokedRefreshConnections+'</p>'+
+          '<p>Pending owner authorizations: '+migration.pendingOwnerAuthorizations+'</p>'+
+          '<p><strong>No accounts, grants or connections were changed.</strong> '+
+          'Do not remove this mailbox or disable its old connections without an approved migration plan.</p></section>'
+        : '<p>No legacy owner mailbox conflict detected for this verified Google identity.</p>')+
       '<p>Put the subject ID in PUBLIC_PILOT_GOOGLE_SUBJECTS through the protected deployment settings. '+
       'Do not paste it into chat, source control or issue comments. Pilot mode remains OFF until separately approved.</p>'+
       '</main>');return;
