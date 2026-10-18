@@ -1,0 +1,402 @@
+{
+  "schema": "workspace-production-acceptance-continuation-v1",
+  "observedOn": "2026-10-18",
+  "source": "17beedb22d6f7e71db1c265a54b13166619b181f",
+  "mainAtStart": "c9dd7b2925809113807c7b72a44dbcf934fcf513",
+  "deployment": {
+    "id": "dpl_9UuaTjCzT2QGNVUJvKRHpDESN54p",
+    "state": "READY",
+    "origin": "https://google-workspace-mcp-chris-projects-de6cd1bf.vercel.app",
+    "independentProof": "Vercel get_project/list_deployments metadata and actual HTTPS /api/contract source match"
+  },
+  "http": {
+    "observedAt": "2026-10-18T19:53:15.209863+00:00",
+    "requests": [
+      {
+        "method": "GET",
+        "path": "/",
+        "status": 200,
+        "bytes": 2285,
+        "headers": {
+          "cache-control": "no-store, max-age=0",
+          "content-type": "text/html; charset=utf-8",
+          "x-robots-tag": "noindex"
+        },
+        "owner_email_occurrences": 0
+      },
+      {
+        "method": "HEAD",
+        "path": "/",
+        "status": 200,
+        "bytes": 0,
+        "headers": {
+          "cache-control": "no-store, max-age=0",
+          "content-type": "text/html; charset=utf-8",
+          "x-robots-tag": "noindex"
+        },
+        "owner_email_occurrences": 0
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "status": 405,
+        "bytes": 18,
+        "headers": {
+          "allow": "GET, HEAD",
+          "cache-control": "no-store, max-age=0",
+          "content-type": "text/plain; charset=utf-8",
+          "x-robots-tag": "noindex"
+        },
+        "owner_email_occurrences": 0
+      },
+      {
+        "method": "GET",
+        "path": "/api/account",
+        "status": 403,
+        "bytes": 36,
+        "headers": {
+          "cache-control": "no-store",
+          "content-type": "application/json; charset=utf-8",
+          "x-robots-tag": "noindex"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/privacy",
+        "status": 200,
+        "bytes": 3014,
+        "headers": {
+          "cache-control": "no-store, max-age=0",
+          "content-type": "text/html; charset=utf-8",
+          "x-robots-tag": "noindex"
+        }
+      },
+      {
+        "method": "HEAD",
+        "path": "/api/privacy",
+        "status": 200,
+        "bytes": 0,
+        "headers": {
+          "cache-control": "no-store, max-age=0",
+          "content-type": "text/html; charset=utf-8",
+          "x-robots-tag": "noindex"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/support",
+        "status": 200,
+        "bytes": 1228,
+        "headers": {
+          "cache-control": "no-store, max-age=0",
+          "content-type": "text/html; charset=utf-8",
+          "x-robots-tag": "noindex"
+        }
+      },
+      {
+        "method": "HEAD",
+        "path": "/api/support",
+        "status": 200,
+        "bytes": 0,
+        "headers": {
+          "cache-control": "no-store, max-age=0",
+          "content-type": "text/html; charset=utf-8",
+          "x-robots-tag": "noindex"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/data-deletion",
+        "status": 200,
+        "bytes": 1683,
+        "headers": {
+          "cache-control": "no-store, max-age=0",
+          "content-type": "text/html; charset=utf-8",
+          "x-robots-tag": "noindex"
+        }
+      },
+      {
+        "method": "HEAD",
+        "path": "/api/data-deletion",
+        "status": 200,
+        "bytes": 0,
+        "headers": {
+          "cache-control": "no-store, max-age=0",
+          "content-type": "text/html; charset=utf-8",
+          "x-robots-tag": "noindex"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/contract",
+        "status": 200,
+        "bytes": 556,
+        "headers": {
+          "cache-control": "no-store",
+          "content-type": "application/json; charset=utf-8",
+          "x-robots-tag": "noindex"
+        },
+        "contract": {
+          "rtc": 1,
+          "server": "google-workspace-mcp",
+          "prefix": "workspace",
+          "version": "1.0.0",
+          "areas": [
+            "mail",
+            "files",
+            "calendar",
+            "tasks",
+            "chat",
+            "admin",
+            "workspace",
+            "workflows",
+            "dns",
+            "people",
+            "business",
+            "identity",
+            "datatransfer",
+            "licensing",
+            "chrome",
+            "domain"
+          ],
+          "counts": {
+            "tools": 381,
+            "writes": 212,
+            "money": 0,
+            "billingRisk": 3
+          },
+          "profiles": [
+            "read_only",
+            "everyday",
+            "full"
+          ],
+          "listingModes": [
+            "catalog",
+            "compact"
+          ],
+          "modes": [
+            "test",
+            "live"
+          ],
+          "devTools": true,
+          "conformance": {
+            "status": "pending_real_D4_acceptance"
+          },
+          "deployment": {
+            "sourceRevision": "17beedb22d6f7e71db1c265a54b13166619b181f"
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/auth/google/callback",
+        "status": 400,
+        "bytes": 23,
+        "headers": {
+          "cache-control": "no-store",
+          "content-type": "text/html; charset=utf-8",
+          "x-robots-tag": "noindex"
+        },
+        "unissued_state_refused": true
+      }
+    ]
+  },
+  "ownerReadiness": {
+    "transport": "Cloud Browser secure browserAuth; credential values never exposed",
+    "authenticated": true,
+    "configComplete": true,
+    "configuredItems": 9,
+    "checkedItems": 9,
+    "currentMode": "pilot",
+    "pilotRosterCount": 2,
+    "toolExecutionFlagEnabled": false,
+    "legacyOwnerNewSignInEnabled": true,
+    "legacyPilotIdentityOnlyEnabled": true,
+    "pilotAcceptancePassed": false,
+    "publicPublicationApproved": false,
+    "limitations": "Configuration presence/different values and roster uniqueness only; separate Google Cloud project, client/secret validity, Console test-user registration and roster OIDC provenance remain independently unverified by this report."
+  },
+  "nativeOwner": {
+    "whoamiGmailMatches": true,
+    "originalAccounts": 2,
+    "originalDefaultPreserved": true,
+    "freshServiceRefreshExchangeProved": false
+  },
+  "databaseAggregate": {
+    "readOnlySelect": true,
+    "userPrincipals": 2,
+    "verifiedUserIdentities": 2,
+    "activeSessions": 1,
+    "userGoogleAccounts": 0,
+    "userAgentConnections": 0,
+    "legacyGoogleAccounts": 2,
+    "legacyOwnerMappings": 2,
+    "legacyUnexpiredUnrevokedAccess": 17,
+    "legacyRefreshCapable": 17,
+    "overlappingGrants": 0,
+    "activeRtcPasses": 0,
+    "activeLiveRtcPasses": 0
+  },
+  "licensing": {
+    "singleDryRun": {
+      "done": false,
+      "dryRun": true,
+      "logged": true
+    },
+    "singleWithoutConfirmation": {
+      "done": false,
+      "needsConfirmation": true
+    },
+    "bulkDryRun": {
+      "done": false,
+      "dryRun": true,
+      "logged": true,
+      "preview": 1,
+      "confirmed": 0,
+      "priceEstimate": null,
+      "estimateStatus": "unknown",
+      "unknownOrUnboundedExposure": true,
+      "exactDigestReturned": true
+    },
+    "providerWritePerformed": false,
+    "limitations": "Preview audit rows were intentionally written by normal service guards. No license or Google data changed. Initial malformed bulk args were rejected then corrected from the actual schema. No paid provider receipt claimed."
+  },
+  "hub": {
+    "rtc": 0,
+    "mode": "test",
+    "upstreamEnabled": false,
+    "authorizedTargets": 0,
+    "liveAcceptance": false
+  },
+  "domain": {
+    "selectedByOwner": "workspace.robinsonaisystems.com",
+    "projectDomainPresent": false,
+    "authoritativeNameservers": [
+      "launch1.spaceship.net",
+      "launch2.spaceship.net"
+    ],
+    "currentDnsRecords": [],
+    "vercelRecommendedCname": "f99774aaf7af8941.vercel-dns-017.com.",
+    "recommendationNeedsRecheckAtAttachment": true,
+    "googleVerificationObserved": {
+      "actingAccount": "existing Rentals connection",
+      "rootVerified": false,
+      "wwwVerified": false,
+      "doesNotEstablishOtherAccountsStatus": true
+    },
+    "changesPerformed": false,
+    "websiteConcurrentWork": "Owner reports another agent improving/moving apex website; no apex project or DNS change made"
+  },
+  "googleBrowser": {
+    "startReachedActualGoogleAccountChooser": true,
+    "requestedScopes": [
+      "openid",
+      "email",
+      "profile"
+    ],
+    "pkce": "S256",
+    "secureAccountChoice": "declined",
+    "freshLoginCompleted": false,
+    "noRetryAfterDecline": true,
+    "ownerGuidance": "Owner requested clear purpose/account/password-versus-owner-passphrase/scope/expected-result guidance before any further prompt. No further sign-in prompt until that guidance and owner continuation."
+  },
+  "runtime": {
+    "schemaRepairDeployed": false,
+    "observation": "24h runtime error API returned DEP0169 warnings only, last old deployment. This does not test the undeployed schema repair or establish rare failures eliminated."
+  },
+  "acceptance": {
+    "total": 40,
+    "passed": 29,
+    "pending": 11,
+    "newFullTaskPasses": 0,
+    "originalTaskCriteriaUnchanged": true
+  },
+  "taskEvidence": {
+    "P10-ANONYMOUS-HOMEPAGE-PRIVACY": "2026-10-18 checked READY source 17beedb: actual Python HTTPS GET / 200 with zero owner mailbox occurrences and no private account/label/default/count UI; HEAD / 200 with 0 bytes; POST / 405, Allow GET, HEAD. All return no-store/noindex. Browser and HTTP unauthenticated /api/account both 403. Existing owner native whoami matches and account list retains two originals. Secure browser passphrase readiness POST succeeded. Full authenticated owner OAuth/account-management continuation has not been exercised; original criterion remains PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json.",
+    "P10-OWNER-CONTINUITY": "2026-10-18 READY 17beedb: native whoami genuinely matches Rentals Gmail and workspace_list_accounts preserves both originals/default. Aggregate production SELECT: 17 unrevoked unexpired access rows, all refresh-capable; 2 owner mappings; no overlapping public grants. Owner passphrase readiness POST succeeded. No old bearer refresh replay or original Hub TEST identity/denial receipt: original shared rotating checkpoint belongs to its serialized coordinating runner and no active RTC pass exists. Hub adapter has upstreamEnabled=false/authorizedTargets=0. Original task remains PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json.",
+    "P10-VERIFY-GOOGLE": "2026-10-18 owner-authenticated production readiness confirms PUBLIC_GOOGLE_OAUTH_CLIENT_ID and server-only GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET settings present/different from owner values, two roster entries; separate Cloud project, matching secret and Console testers still need independent verification, pilot mode, legacy owner enabled, execution OFF. Actual Google browser start reached account chooser requesting only openid/email/profile and S256; subsequent secure account choice declined, so no fresh A/B login or consent witnessed. Production SQL retains two verified user principals, one active session, zero user Google links/connections. Unissued-state callback HTTP400 is only a narrow real denial, not nonce/CSRF/replay/own-scope acceptance. PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json.",
+    "P10-6-OWNER-SUBJECT-PROBE": "2026-10-18 canonical browser protected readiness POST actually authenticated with existing owner passphrase and returned configComplete=true, checks 9/9, roster 2, currentMode=pilot, execution false, legacy owner enabled and identity-only coexistence enabled. Secret/public client configuration is present; old missing-client statements are superseded. No new one-use Google subject discovery receipt or full before/after no-mutation probe was executed; original criterion stays PENDING. No IDs/secrets recorded. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json.",
+    "P10-6-PUBLIC-DISCLOSURE": "2026-10-18 READY17beedb real public GET/HEAD for homepage/privacy/support/deletion return 200; all HEAD bodies 0. Protected owner readiness config 9/9; authenticated user portal still untested. Owner selected workspace.robinsonaisystems.com for preparation; no DNS/project-domain/canonical/Google credential changes. Authoritative DNS is Spaceship; project-specific recommended CNAME recorded in evidence. Google domain workflow reports unverified for connected Rentals account ONLY, not a claim about all accounts. Final operator policy, project-owner Search Console and Google brand/scope verification remain pending. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json.",
+    "P9-LICENSE-PAID": "2026-10-18 connected deployed custom Workspace licensing_assign_license dryRun returns done=false/dryRun=true and an audit receipt; confirm=false returns needsConfirmation=true, no change. Guarded bulk assign_license dryRun returns priceEstimate=null, estimateStatus=unknown, unknownOrUnboundedExposure=true, exact requestDigest, one preview/zero confirmed. One malformed initial bulk request rejected unknown top-level field; corrected schema succeeded. These are real service guards/previews, NOT paid Google assignment/provider or exact billing-readback proof. No paid authorization or Google write attempted; PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json.",
+    "P9-HUB-LIVE": "2026-10-18 genuine connected Hub namespace read shows hub TEST/RTC0 only, upstreamEnabled=false, authorizedTargets=0. No separate disposable live pass exists in Workspace. Preserve earlier original Hub TEST acceptance; this is not live relay/Sandbox proof. Separate Hub deployed generic connection/consent capability and its own disposable grant remain necessary; direct Workspace remains independent. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json."
+  },
+  "remainingTasks": [
+    {
+      "id": "P10-ANONYMOUS-HOMEPAGE-PRIVACY",
+      "status": "PENDING",
+      "prerequisite": "Authenticated owner OAuth and account-management UI continuation, in addition to passing anonymous HTTP checks.",
+      "attemptedRemedy": "Secure owner report and native reads succeeded; browser /api/account has no session.",
+      "nextAction": "Complete the existing protected owner OAuth/account-management path with authorized credentials; retain HTTP receipts."
+    },
+    {
+      "id": "P10-OWNER-CONTINUITY",
+      "status": "PENDING",
+      "prerequisite": "Original bearer/refresh replay and original Hub TEST identity/denial.",
+      "attemptedRemedy": "Native owner identity/list and aggregate preservation proved; shared checkpoint explicitly single-runner; Hub has zero targets and no active pass.",
+      "nextAction": "Coordinate original runner fresh bearer/refresh and source-pinned Hub TEST receipt without overwriting/revoking original grants."
+    },
+    {
+      "id": "P9-LIVE-DIRECT",
+      "status": "PENDING",
+      "prerequisite": "Separately owner-issued disposable live read_only RTC grant and dedicated protected runner.",
+      "attemptedRemedy": "Verified P9 in serving ancestry and zero active live RTC passes via aggregate SQL; existing owner native tool connection is not a disposable live pass.",
+      "nextAction": "Issue least-privilege read-only grant through protected owner route and securely enroll its own runner, then perform read/native comparison/denial/refresh/revoke without touching originals."
+    },
+    {
+      "id": "P10-6-OWNER-SUBJECT-PROBE",
+      "status": "PENDING",
+      "prerequisite": "One-use owner-protected Google subject discovery receipts for both testers and no-mutation before/after.",
+      "attemptedRemedy": "Authenticated readiness 9/9 verified; general sign-in was paused by declined account choice; no new subject probe claimed.",
+      "nextAction": "Complete original protected no-enrollment tester verification with browser credentials and aggregate snapshots."
+    },
+    {
+      "id": "P10-6-PUBLIC-DISCLOSURE",
+      "status": "PENDING",
+      "prerequisite": "Authenticated portal, approved final disclosures, owned-domain HTTPS and Google project-owner verification.",
+      "attemptedRemedy": "Public GET/HEAD all passed; owner selected hostname; exact Vercel/authoritative DNS inspected; account-specific Site Verification unverified.",
+      "nextAction": "Approve/coordinate service-domain attachment and external Spaceship DNS, complete Google project-owner browser verification and review final policy before canonical/public changes."
+    },
+    {
+      "id": "P10-VERIFY-GOOGLE",
+      "status": "PENDING",
+      "prerequisite": "Fresh witnessed Google A/B browser login and negative/own-scope/logout/cleanup matrix.",
+      "attemptedRemedy": "Protected readiness confirms config and historical two verified users; actual Google account chooser reached; secure user account choice declined, respected without retry.",
+      "nextAction": "Resume only when owner chooses to continue Google browser authentication; use original two identities and preserve identity-only restrictions."
+    },
+    {
+      "id": "P10-MCP-PILOT",
+      "status": "PENDING",
+      "prerequisite": "P10-VERIFY-GOOGLE, real principal scope/isolation acceptance, two independent clients and separately approved Stage 2 activation.",
+      "attemptedRemedy": "Execution flag false confirmed by authenticated production report; no user linked account or MCP connections in real SQL. Identity-only legacy tester cannot silently be promoted.",
+      "nextAction": "Finish original prerequisites and obtain exact approved activation/migration path before enabling anything; then test real A/B MCP clients/read/denial/revoke."
+    },
+    {
+      "id": "P10-OWNER-MIGRATION-LIVE",
+      "status": "PENDING",
+      "prerequisite": "Authorized existing-owner Google proof, protected preview/link/dual-login/unlink and original refresh continuation.",
+      "attemptedRemedy": "Deployment includes source; passphrase readiness succeeds; shared checkpoint ownership and no new Google browser sign-in preserved.",
+      "nextAction": "Use protected existing owner browser migration after its actual Google identity confirmation; preview and compare original connection snapshot before reversible mapping."
+    },
+    {
+      "id": "P9-HUB-LIVE",
+      "status": "PENDING",
+      "prerequisite": "Independent deployed generic Hub live relay/Sandbox capability and separate least-privilege grant; P9-LIVE-DIRECT.",
+      "attemptedRemedy": "Actual Hub namespace response TEST/RTC0, upstream disabled and zero authorized targets; original historical TEST proof retained.",
+      "nextAction": "Hub project must supply independently deployed authorized live target and receipt; coordinate its runner. Direct Workspace does not wait for Hub."
+    },
+    {
+      "id": "P10-CUSTOMER-DELEGATION",
+      "status": "PENDING",
+      "prerequisite": "Distinct real customer administrator/customer DWD authority, key and scopes.",
+      "attemptedRemedy": "Owner explicitly has no additional customer administrator; original tenant cannot stand in. Source/real-DB proof remains preserved.",
+      "nextAction": "Keep pending until a genuinely independent authorized customer admin supplies consent via protected portal; no fake identity, credential request in chat or paid license."
+    },
+    {
+      "id": "P9-LICENSE-PAID",
+      "status": "PENDING",
+      "prerequisite": "P9-LIVE-DIRECT and exact separate account/SKU/target/billing-risk approval for actual paid operation.",
+      "attemptedRemedy": "Real service single and bulk no-change previews and no-confirm refusal succeeded; unknown price explicitly disclosed; one malformed preview request refused then corrected.",
+      "nextAction": "Retain safe preview/guard proof; do no paid write until independently authorized exact target/unknown billing exposure and reconcile real provider readback."
+    }
+  ]
+}

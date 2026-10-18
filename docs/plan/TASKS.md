@@ -311,7 +311,7 @@ restricts only the named operation. Source completion never proves actual Google
     "state": "OPEN",
     "remaining": "Two-user pilot and public publication acceptance; complete all original acceptance in the new execution contract.",
     "evidence": "P9-1..4, P10-1..5 and P10-7 source are now merged; P10-6 genuine provider/two-user custom MCP pilot/publication proof remains unperformed. Owner granted a narrowly scoped non-billable two-user pilot on 2026-10-17, recorded in issue #205; credentials, public activation and release not approved by that statement.",
-    "next": "First create/configure separate PUBLIC Google OAuth app and two authorized disposable verified test subjects, preserve owner credentials; then independently authorize the checked current-main release and perform original owner/Hub continuity followed by two-user pilot under the existing acceptance queue. Public enrollment, admin/customer delegation, paid provider actions and legacy-login retirement still need their own gates."
+    "next": "Production readiness confirms nine configured items, including different public-client credential values and two unique roster entries; it does not verify separate Cloud-project ownership, matching client secret, Console test-user registration or roster OIDC provenance. Keep that independent Google prerequisite pending until project-specific/protected-flow evidence verifies it. The observed identity-only pilot is active and Stage 2 execution is OFF. Continue original protected A/B browser, bearer/refresh, owner OAuth/account-management and MCP acceptance. Google browser account selection was declined in the current runner; retain that pause. Independently deploy the reviewed schema reliability repair through the normal release policy; it does not unlock missing external identities/consent. Prepare owner-selected workspace.robinsonaisystems.com without changing the existing canonical callback or owner grants. Public launch, policy approval, Google verification, customer admin and paid tests retain separate gates."
   },
   {
     "id": "P10-7",
@@ -532,7 +532,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "priority": 2,
     "requiredRevision": "7426e266752c8e97f4b970b6f4b31ab49d81275f",
     "task": "Verify deployed guarded workspace_bulk_operation with original owner-authorized scoped TEST targets and non-production approval. Prove permitted mappings, exact provider readbacks, safe domain refusal, partial failure and cleanup; no paid license actions without independent spending approval.",
-    "procedure": "docs/plan/TASKS.md — P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md \u2014 P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Exact READY deployment and authenticated custom MCP connection; owner-approved isolated TEST targets, permission/domain limits, exact fixture IDs and operation-specific approvals; no production bulk writes or autonomous spending",
     "dependsOn": [],
     "status": "PASSED",
@@ -588,7 +588,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "28e648611cf1e4a634490630201c517dfc501d7c",
     "status": "PASSED",
     "task": "Original disposable-group full-settings preview/edit/readback/cleanup through the actual scoped custom Google service.",
-    "procedure": "docs/plan/TASKS.md — P6-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md \u2014 P6-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Checked independently READY source containing 80c0870; original approved group fixture, scoped Google permission and operation-specific edit/cleanup authorization.",
     "dependsOn": [],
     "lastEvidence": "2026-10-16UTC/Oct15Denver actual SAMEoriginal approved Rentals Admin TESTprincipal and SAMEemptygroup on independently READY3ad0250/dpl_29kFsgUoW14Zf4EHCGbNZtuuYE54. Explicitalt=json repair now returns61settingsfields with every11prior restrictive patch value matched. Actual nonempty-before preview, disabledfooter update and independent readback confirmedtrue with durable audit ID. Members[] verified; exact group deletion dryRun/confirm after.existsfalse. Adminpass final revocation confirmedtrue, subsequentwhoami401pass_revoked. SharedDrive+permission alreadyremoved/deleted. Ordinary authorized own-domain read separately corroborates DirectorynotFound; not substituted forTEST mutation proof. Original failed GET{} and eventualDirectorycreate receipts preserved, no re-create. Current originalreadpass also proves138guide topics/7pages/capabilities parity; no scopes, mail or paid users."
@@ -599,7 +599,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "28e648611cf1e4a634490630201c517dfc501d7c",
     "status": "PASSED",
     "task": "Original disposable shared-drive create, member add/change/readback/remove and empty-drive delete lifecycle; preserve exact IDs, domain limits, no production file deletion and cleanup.",
-    "procedure": "docs/plan/TASKS.md — P7-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md \u2014 P7-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Independently READY checked source including 81264c1; explicit disposable-drive/member fixture permission and eligible Google role/edition. No paid account or production file changes.",
     "dependsOn": [],
     "lastEvidence": "2026-10-15 original newly owner-confirmed Rentals24h TEST/full workspace/files/admin principal; independently READY601f2f2/dpl_5RWTksxFxY5mEGK8rqb7MrgczobY. Fresh empty shared drive created with private saved UUID, domainUsersOnly/driveMembersOnly restrictions readback confirmed. Original empty owner-created Rentals fixture group granted reader with sendNotificationEmail:false; exact returned permission ID changed to writer, both confirmed. Exact permission removal confirmed; actual full files:[] and no cursor; dryRun/delete exact drive confirmed after.existsfalse, positive durable audit receipts. No production file/user/member or existing drive changed, no paid account or outside invite. Private intents/IDs/results retained, no uncertain create retry. Empty fixture group retained only for its separate Groups Settings retest/approved deletion."
@@ -610,7 +610,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "130bcc1f8275e87c1102bae553b1aefc3b80dd0a",
     "status": "PASSED",
     "task": "Complete the already-approved dated authenticated Google Admin Console walkthrough: inventory actual in-scope pages, compare mapped paths/steps/expected results, reconcile permitted API readbacks and correct real missing coverage. Do not add a new observation-storage feature.",
-    "procedure": "docs/plan/TASKS.md — P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md \u2014 P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Authenticated read-only Google Admin Console session for the intended authorized organization/role; observe only approved scope, no policy changes. Record inaccessible/edition-specific pages honestly; an API-generated checklist alone is not the walkthrough.",
     "dependsOn": [],
     "lastEvidence": "2026-10-15Denver actual dated authenticated Rentals Console inventory across54 stored distinct routes plus initial7service/security pages, both business OUs inspected,15real missing Gemini/Directory/account sections repaired. Checked READY03e88b251b248db62571de469029925b9f65ee73/dpl_BG4rTF51DVDixKGV8GiGsb6B1g1f, original protected read_only TEST runner UTC2026-10-16T00:55:39.833Z verified153orderedunique topics/8boundedpages, complete steps/expected, capabilities parity. Full navigation walk criterion accepted with Vault denied/DLP upgrade/CAA absent/prior websession400 explicit limits; no effective-all-OU policy or PolicyAPI certificate. No Console mutation/fixture recreation."
@@ -687,7 +687,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P9-LIVE-DIRECT"
     ],
     "status": "PENDING",
-    "lastEvidence": "Source/test fake-provider Google licensing request shape and uncertain outcome tests passed; actual Google license changes NOT attempted or approved.",
+    "lastEvidence": "2026-10-18 connected deployed custom Workspace licensing_assign_license dryRun returns done=false/dryRun=true and an audit receipt; confirm=false returns needsConfirmation=true, no change. Guarded bulk assign_license dryRun returns priceEstimate=null, estimateStatus=unknown, unknownOrUnboundedExposure=true, exact requestDigest, one preview/zero confirmed. One malformed initial bulk request rejected unknown top-level field; corrected schema succeeded. These are real service guards/previews, NOT paid Google assignment/provider or exact billing-readback proof. No paid authorization or Google write attempted; PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json.",
     "subsections": [
       "P9-2"
     ]
@@ -703,7 +703,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P9-LIVE-DIRECT"
     ],
     "status": "PENDING",
-    "lastEvidence": "Hub companion contract committed in Workspace PR #201. Prior Hub D-4 TEST/read-only direct relay acceptance was previously passed and is not reused as live-write evidence.",
+    "lastEvidence": "2026-10-18 genuine connected Hub namespace read shows hub TEST/RTC0 only, upstreamEnabled=false, authorizedTargets=0. No separate disposable live pass exists in Workspace. Preserve earlier original Hub TEST acceptance; this is not live relay/Sandbox proof. Separate Hub deployed generic connection/consent capability and its own disposable grant remain necessary; direct Workspace remains independent. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json.",
     "subsections": [
       "P9-3"
     ]
@@ -721,7 +721,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P10-1",
       "P10-3"
     ],
-    "lastEvidence": "2026-10-17 P10-B is independently Vercel READY on eece407e5f8e2a2094793355e9a5ca086567e5c1 (deployment dpl_BCtAah6AeA5pWwwCnZLdZLPHz5sy). Existing owner MCP cloud connection actually returned expected Rentals whoami and a read-only two-account owner list; no credentials or mutation. This is only a partial native owner continuity observation: the original Hub-owned RTC TEST identity/denials, signed original bearer/refresh matrix and source-specific receipt are NOT fully verified. Hub cloud connection separately reports TEST/no writes, but namespace has no Workspace target. Task remains PENDING. 2026-10-18: production READY at 17beedb; connected legacy owner Workspace adapter successfully returned account-consistent whoami and connected status. This does NOT prove original bearer/refresh replay, Hub TEST route/denials or all owner accounts; PENDING. See docs/plan/evidence/2026-10-18-p10-live-http-readback.json."
+    "lastEvidence": "2026-10-18 READY 17beedb: native whoami genuinely matches Rentals Gmail and workspace_list_accounts preserves both originals/default. Aggregate production SELECT: 17 unrevoked unexpired access rows, all refresh-capable; 2 owner mappings; no overlapping public grants. Owner passphrase readiness POST succeeded. No old bearer refresh replay or original Hub TEST identity/denial receipt: original shared rotating checkpoint belongs to its serialized coordinating runner and no active RTC pass exists. Hub adapter has upstreamEnabled=false/authorizedTargets=0. Original task remains PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json."
   },
   {
     "id": "P10-VERIFY-GOOGLE",
@@ -737,7 +737,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-2"
     ],
-    "lastEvidence": "Google SDK mock and 2-principal SQL source tests passed CI #39002582767. Owner authorized one non-billable two-user pilot once a separate Google OAuth app is configured (issue #205, 2026-10-17). Vercel production environment still has no PUBLIC_GOOGLE_OAUTH_CLIENT_ID or PUBLIC_GOOGLE_OAUTH_CLIENT_SECRET; no actual browser Google login, approved real subjects or provider acceptance executed. Remains PENDING."
+    "lastEvidence": "2026-10-18 owner-authenticated production readiness confirms PUBLIC_GOOGLE_OAUTH_CLIENT_ID and server-only GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET settings present/different from owner values, two roster entries; separate Cloud project, matching secret and Console testers still need independent verification, pilot mode, legacy owner enabled, execution OFF. Actual Google browser start reached account chooser requesting only openid/email/profile and S256; subsequent secure account choice declined, so no fresh A/B login or consent witnessed. Production SQL retains two verified user principals, one active session, zero user Google links/connections. Unissued-state callback HTTP400 is only a narrow real denial, not nonce/CSRF/replay/own-scope acceptance. PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json."
   },
   {
     "id": "P10-MCP-PILOT",
@@ -771,8 +771,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P10-5"
     ],
     "lastEvidence": "Source and fake SDK/real Postgres tenant configuration tests in PR #203 only; no real Customer Admin Console DWD or public OAuth app connection attempted."
-  }
-  ,
+  },
   {
     "id": "P10-OWNER-MIGRATION-LIVE",
     "priority": 4,
@@ -798,9 +797,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-3"
     ],
-    "lastEvidence": "Security fix source 57ed0f87e3a109f5eeda9faac3d2159e0808b105 merged in PR #206 at main e9ef3ad57d0c8e55e258bf3ce7e51f6513155203. CI #39044406126 check, unit, db, rtc and aggregate test all green; Daily live policy #39044406118 passed. Vercel production remained eece407e5f8e2a2094793355e9a5ca086567e5c1 at inspection; no post-release anonymous production privacy readback yet. 2026-10-18: independently READY 17beedb: canonical unauthenticated GET / HTTP200 with no installation mailbox/account/default/connection count in HTML; cache-control no-store and x-robots-tag noindex. GET /api/account correctly 403 invalid_session_or_scope without session. HEAD/bodyless, unsupported POST and authenticated owner continuance were not executed, so PENDING. See docs/plan/evidence/2026-10-18-p10-live-http-readback.json."
-  }
-,
+    "lastEvidence": "2026-10-18 checked READY source 17beedb: actual Python HTTPS GET / 200 with zero owner mailbox occurrences and no private account/label/default/count UI; HEAD / 200 with 0 bytes; POST / 405, Allow GET, HEAD. All return no-store/noindex. Browser and HTTP unauthenticated /api/account both 403. Existing owner native whoami matches and account list retains two originals. Secure browser passphrase readiness POST succeeded. Full authenticated owner OAuth/account-management continuation has not been exercised; original criterion remains PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json."
+  },
   {
     "id": "P10-6-PUBLIC-DISCLOSURE",
     "priority": 3,
@@ -813,7 +811,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-6"
     ],
-    "lastEvidence": "PR #208 source 4a9c6a929fab6931caea95f3af94fc9ed6a7173d includes public prelaunch information and synthetic route tests. No live serving revision, reviewed final privacy policy, verified custom domain or approved public consent claim. 2026-10-18: independently READY 17beedb public GET /, /api/privacy, /api/support and /api/data-deletion each HTTP200, disclosing prelaunch limitations and reachable support; no secret or legacy account on public homepage. Final operator-approved privacy/retention, verified owned hostname/Google consent and authenticated portal remain unproved; PENDING. See docs/plan/evidence/2026-10-18-p10-live-http-readback.json."
+    "lastEvidence": "2026-10-18 READY17beedb real public GET/HEAD for homepage/privacy/support/deletion return 200; all HEAD bodies 0. Protected owner readiness config 9/9; authenticated user portal still untested. Owner selected workspace.robinsonaisystems.com for preparation; no DNS/project-domain/canonical/Google credential changes. Authoritative DNS is Spaceship; project-specific recommended CNAME recorded in evidence. Google domain workflow reports unverified for connected Rentals account ONLY, not a claim about all accounts. Final operator policy, project-owner Search Console and Google brand/scope verification remain pending. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json."
   },
   {
     "id": "P10-6-OWNER-SUBJECT-PROBE",
@@ -829,10 +827,9 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-6"
     ],
-    "lastEvidence": "PR #208 source 4a9c6a929fab6931caea95f3af94fc9ed6a7173d mock SDK and protected route tests only. Public Google client missing and no authentic user OIDC subject/independent owner proof yet. 2026-10-18: independently READY 17beedb GET /api/owner/pilot-readiness HTTP200 yielded passphrase form, not protected readiness or subject information. Vercel non-decrypted metadata confirms separate OAuth client setting, Secret type, protected pilot roster and legacy-subject exception variable exist; no P10 tool-execution activation variable. No new owner-authenticated form submission, verified Google A/B subject or zero-mutation provider receipt; PENDING. See docs/plan/evidence/2026-10-18-p10-live-http-readback.json."
+    "lastEvidence": "2026-10-18 canonical browser protected readiness POST actually authenticated with existing owner passphrase and returned configComplete=true, checks 9/9, roster 2, currentMode=pilot, execution false, legacy owner enabled and identity-only coexistence enabled. Secret/public client configuration is present; old missing-client statements are superseded. No new one-use Google subject discovery receipt or full before/after no-mutation probe was executed; original criterion stays PENDING. No IDs/secrets recorded. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json."
   }
 ]
-
 ```
 
 <!-- release-acceptance:end -->

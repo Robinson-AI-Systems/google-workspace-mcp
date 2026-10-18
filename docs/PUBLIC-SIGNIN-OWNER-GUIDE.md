@@ -1,5 +1,48 @@
 # Parallel Google sign-in: P10-B owner setup and user safety
 
+## October 18 observed state and owned-domain preparation
+
+Canonical production remains the existing Vercel alias. An actual secure owner-passphrase
+readiness submission returned all nine configuration checks present, pilot roster two,
+identity-only pilot enabled, legacy owner sign-in enabled and Stage 2 tool execution OFF.
+The report checks presence/different credential values and roster uniqueness; it does not
+verify the separate Google Cloud project, matching client secret, Console test-user list
+or roster subject provenance. Keep independent verification of those prerequisites open;
+historical stored identities and reaching an account chooser do not replace that proof.
+This supersedes historical missing-client setup statements; it is not full pilot acceptance.
+The separate server-only secret is `GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET`.
+
+The owner selected **workspace.robinsonaisystems.com** for preparation, separately from
+the apex website being changed by another agent. No project-domain attachment, DNS,
+canonical resource, OAuth redirect or credential change has been performed.
+Vercel's project-specific configuration read recommends a CNAME for `workspace` to
+`f99774aaf7af8941.vercel-dns-017.com.`; recheck this recommendation when attaching the
+hostname. The authoritative nameservers are Spaceship's `launch1.spaceship.net` and
+`launch2.spaceship.net`; a Vercel DNS write would not change that authoritative zone.
+Preserve all existing apex, www, MX and TXT records and coordinate with the website agent.
+
+The controlled transition must first attach only the selected service hostname, establish
+its exact authoritative DNS and valid HTTPS, and verify Google domain ownership with an
+account that is an Owner/Editor of the separate OAuth project. A real Site Verification
+read reported root/www unverified for the connected Rentals account only; another
+account's ownership remains unknown. Vercel verification does not establish Google ownership.
+Then review the exact homepage/privacy/support/deletion URLs and proposed callback
+`https://workspace.robinsonaisystems.com/api/auth/google/callback` in the separate Google
+application. Retain the existing working pilot callback and owner application. Do not
+change `PUBLIC_BASE_URL` or the MCP resource until registered-client/resource compatibility,
+old bearer/refresh behavior, browser cookies, protected Origin checks and rollback have
+been checked and the production configuration transition is authorized. Existing clients
+and all seventeen original owner access records must remain usable; never revoke them
+as migration cleanup. Deployment still follows the independent checked release policy.
+
+Before general publication Google requires the applicable brand/domain/scope review;
+restricted scopes may also require an external security assessment unless an exception
+applies. No paid review is authorized. Reviewed official guidance:
+[OAuth production policy](https://developers.google.com/identity/verification/authentication-policy-compliance)
+and [restricted-scope verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification).
+The current public policy remains prelaunch information requiring the operator's final
+privacy, retention and support review. Do not claim public or Google approval.
+
 The existing owner login, its `GOOGLE_OAUTH_CLIENT_ID/SECRET`, encrypted existing Google grants, owner `ADMIN_PASSPHRASE`, and existing custom MCP/Hub TEST connections are retained. The new **public** Google sign-in requires a **different Google Cloud OAuth client/consent screen/project**, using `PUBLIC_GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET`. The exact redirect to register on that separate client is `<PUBLIC_BASE_URL>/api/auth/google/callback`. On Vercel Production, set the public client ID as **Config** and the server-only GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET as **Secret**. Never store the new OAuth secret under a PUBLIC_-prefixed variable or save it as Config. Do not edit or substitute the owner application's OAuth credentials or authorize production rollout from development.
 
 ## Owner decision — October 17, 2026: Hub is optional for standalone Stage 1
