@@ -670,7 +670,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Only after a READY deployment including P9 and a separately owner-issued disposable live read-only grant; no Google writes, no credential exposure, preserve TEST/Hub grants and original evidence.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "PR #201 isolated fake-provider HTTPS/native write/read and real Postgres schema checks passed; NO deployed P9 direct live probe exists. Queue it until deployed and owner grants.",
+    "lastEvidence": "PR #201 isolated fake-provider HTTPS/native write/read and real Postgres schema checks passed; NO deployed P9 direct live probe exists. Queue it until deployed and owner grants. 2026-10-18: independently READY production at 17beedb and real unauthenticated /api/contract plus /api/openapi.json GET 200 show test/live source-supported modes, 381 advertised tools and 3 billing-risk flags. Still no user-scoped live pass, Google live read, scope/denial or revoke; PENDING. See docs/plan/evidence/2026-10-18-p10-live-http-readback.json.",
     "subsections": [
       "P9-3",
       "P9-4"
@@ -721,7 +721,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P10-1",
       "P10-3"
     ],
-    "lastEvidence": "2026-10-17 P10-B is independently Vercel READY on eece407e5f8e2a2094793355e9a5ca086567e5c1 (deployment dpl_BCtAah6AeA5pWwwCnZLdZLPHz5sy). Existing owner MCP cloud connection actually returned expected Rentals whoami and a read-only two-account owner list; no credentials or mutation. This is only a partial native owner continuity observation: the original Hub-owned RTC TEST identity/denials, signed original bearer/refresh matrix and source-specific receipt are NOT fully verified. Hub cloud connection separately reports TEST/no writes, but namespace has no Workspace target. Task remains PENDING."
+    "lastEvidence": "2026-10-17 P10-B is independently Vercel READY on eece407e5f8e2a2094793355e9a5ca086567e5c1 (deployment dpl_BCtAah6AeA5pWwwCnZLdZLPHz5sy). Existing owner MCP cloud connection actually returned expected Rentals whoami and a read-only two-account owner list; no credentials or mutation. This is only a partial native owner continuity observation: the original Hub-owned RTC TEST identity/denials, signed original bearer/refresh matrix and source-specific receipt are NOT fully verified. Hub cloud connection separately reports TEST/no writes, but namespace has no Workspace target. Task remains PENDING. 2026-10-18: production READY at 17beedb; connected legacy owner Workspace adapter successfully returned account-consistent whoami and connected status. This does NOT prove original bearer/refresh replay, Hub TEST route/denials or all owner accounts; PENDING. See docs/plan/evidence/2026-10-18-p10-live-http-readback.json."
   },
   {
     "id": "P10-VERIFY-GOOGLE",
@@ -798,7 +798,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-3"
     ],
-    "lastEvidence": "Security fix source 57ed0f87e3a109f5eeda9faac3d2159e0808b105 merged in PR #206 at main e9ef3ad57d0c8e55e258bf3ce7e51f6513155203. CI #39044406126 check, unit, db, rtc and aggregate test all green; Daily live policy #39044406118 passed. Vercel production remained eece407e5f8e2a2094793355e9a5ca086567e5c1 at inspection; no post-release anonymous production privacy readback yet."
+    "lastEvidence": "Security fix source 57ed0f87e3a109f5eeda9faac3d2159e0808b105 merged in PR #206 at main e9ef3ad57d0c8e55e258bf3ce7e51f6513155203. CI #39044406126 check, unit, db, rtc and aggregate test all green; Daily live policy #39044406118 passed. Vercel production remained eece407e5f8e2a2094793355e9a5ca086567e5c1 at inspection; no post-release anonymous production privacy readback yet. 2026-10-18: independently READY 17beedb: canonical unauthenticated GET / HTTP200 with no installation mailbox/account/default/connection count in HTML; cache-control no-store and x-robots-tag noindex. GET /api/account correctly 403 invalid_session_or_scope without session. HEAD/bodyless, unsupported POST and authenticated owner continuance were not executed, so PENDING. See docs/plan/evidence/2026-10-18-p10-live-http-readback.json."
   }
 ,
   {
@@ -813,7 +813,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-6"
     ],
-    "lastEvidence": "PR #208 source 4a9c6a929fab6931caea95f3af94fc9ed6a7173d includes public prelaunch information and synthetic route tests. No live serving revision, reviewed final privacy policy, verified custom domain or approved public consent claim."
+    "lastEvidence": "PR #208 source 4a9c6a929fab6931caea95f3af94fc9ed6a7173d includes public prelaunch information and synthetic route tests. No live serving revision, reviewed final privacy policy, verified custom domain or approved public consent claim. 2026-10-18: independently READY 17beedb public GET /, /api/privacy, /api/support and /api/data-deletion each HTTP200, disclosing prelaunch limitations and reachable support; no secret or legacy account on public homepage. Final operator-approved privacy/retention, verified owned hostname/Google consent and authenticated portal remain unproved; PENDING. See docs/plan/evidence/2026-10-18-p10-live-http-readback.json."
   },
   {
     "id": "P10-6-OWNER-SUBJECT-PROBE",
@@ -829,7 +829,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-6"
     ],
-    "lastEvidence": "PR #208 source 4a9c6a929fab6931caea95f3af94fc9ed6a7173d mock SDK and protected route tests only. Public Google client missing and no authentic user OIDC subject/independent owner proof yet."
+    "lastEvidence": "PR #208 source 4a9c6a929fab6931caea95f3af94fc9ed6a7173d mock SDK and protected route tests only. Public Google client missing and no authentic user OIDC subject/independent owner proof yet. 2026-10-18: independently READY 17beedb GET /api/owner/pilot-readiness HTTP200 yielded passphrase form, not protected readiness or subject information. Vercel non-decrypted metadata confirms separate OAuth client setting, Secret type, protected pilot roster and legacy-subject exception variable exist; no P10 tool-execution activation variable. No new owner-authenticated form submission, verified Google A/B subject or zero-mutation provider receipt; PENDING. See docs/plan/evidence/2026-10-18-p10-live-http-readback.json."
   }
 ]
 

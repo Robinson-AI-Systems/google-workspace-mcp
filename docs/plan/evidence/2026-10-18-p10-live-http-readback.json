@@ -1,0 +1,100 @@
+{
+  "schema": "workspace-live-acceptance-observation-v1",
+  "observedOn": "2026-10-18",
+  "reviewedRepository": "Robinson-AI-Systems/google-workspace-mcp",
+  "head": "17beedb22d6f7e71db1c265a54b13166619b181f",
+  "live": "17beedb22d6f7e71db1c265a54b13166619b181f",
+  "production": {
+    "deploymentId": "dpl_9UuaTjCzT2QGNVUJvKRHpDESN54p",
+    "ready": true,
+    "source": "17beedb22d6f7e71db1c265a54b13166619b181f",
+    "alias": "https://google-workspace-mcp-chris-projects-de6cd1bf.vercel.app",
+    "provenance": "Vercel deployment inspection, GitHub live...main compare and unauthenticated /api/contract sourceRevision readback"
+  },
+  "observations": [
+    {
+      "id": "PUBLIC-HOME-GET",
+      "method": "GET",
+      "path": "/",
+      "http": 200,
+      "observedUtc": "2026-10-18T16:32:58Z",
+      "result": "Prelaunch service purpose, scoped authorization, owner-free public navigation and no original owner mailbox/account/default/connection count in rendered HTML; no-store/noindex/security headers observed."
+    },
+    {
+      "id": "PUBLIC-PRIVACY-GET",
+      "method": "GET",
+      "path": "/api/privacy",
+      "http": 200,
+      "observedUtc": "2026-10-18T16:33:01Z",
+      "result": "Discloses optional Google scopes, encryption/token metadata, client sharing and limitations on retention/deletion; explicitly still prelaunch and requiring operator review."
+    },
+    {
+      "id": "PUBLIC-SUPPORT-GET",
+      "method": "GET",
+      "path": "/api/support",
+      "http": 200,
+      "observedUtc": "2026-10-18T16:33:04Z",
+      "result": "Operator contact page reachable; no OAuth bearer or client secret displayed."
+    },
+    {
+      "id": "PUBLIC-DELETE-GET",
+      "method": "GET",
+      "path": "/api/data-deletion",
+      "http": 200,
+      "observedUtc": "2026-10-18T16:33:07Z",
+      "result": "Describes local disconnect, recoverable deletion and inability to guarantee provider-side revocation or irreversible erasure."
+    },
+    {
+      "id": "PROTECTED-PILOT-READINESS-GET",
+      "method": "GET",
+      "path": "/api/owner/pilot-readiness",
+      "http": 200,
+      "result": "Unauthenticated visit rendered owner-passphrase form only, not sanitized readiness report or protected subject/secret."
+    },
+    {
+      "id": "UNAUTHENTICATED-ACCOUNT-GET",
+      "method": "GET",
+      "path": "/api/account",
+      "http": 403,
+      "result": "invalid_session_or_scope with no account/credential response."
+    },
+    {
+      "id": "PUBLIC-RTC-CONTRACT-GET",
+      "method": "GET",
+      "path": "/api/contract",
+      "http": 200,
+      "result": "rtc:1, modes:test/live, 381 tools, 212 writes, 3 billingRisk and exact deployed 40-character source; public contract does not establish authenticated P9 live provider operation or Hub conformance."
+    },
+    {
+      "id": "PUBLIC-OPENAPI-GET",
+      "method": "GET",
+      "path": "/api/openapi.json",
+      "http": 200,
+      "result": "OpenAPI 3.1 documents independent RTC test/live service passes and selected profile/provider-entitlement limits."
+    },
+    {
+      "id": "EXISTING-OWNER-CONNECTION",
+      "method": "MCP connected read",
+      "result": "Original separately authenticated owner Workspace adapter returned a successful account-consistent whoami and connection status; no Google mutations, pass issuance, bearer/refresh/replay or Hub probe."
+    },
+    {
+      "id": "VERCEL-CONFIG-METADATA",
+      "method": "read-only Vercel environment metadata",
+      "result": "Production separate Google OAuth client ID/Secret and two protected pilot-subject list variable names present; pilot legacy exception variable present; P10 tool-execution activation flag absent; values were not decrypted or recorded."
+    }
+  ],
+  "taskDisposition": {
+    "P10-ANONYMOUS-HOMEPAGE-PRIVACY": "PENDING; missing actual HEAD/bodyless, unsupported POST refusal and authenticated owner continuity at this source; GET privacy guard observed.",
+    "P10-6-PUBLIC-DISCLOSURE": "PENDING; four public GETs observed, but final owner privacy/retention/support review, owned verified domain, Google console/consent alignment and authenticated portal remain.",
+    "P10-6-OWNER-SUBJECT-PROBE": "PENDING; protected form GET observed; this was not a fresh owner-authenticated one-use Google subject verification or negative/replay evidence.",
+    "P10-OWNER-CONTINUITY": "PENDING; successful connected owner whoami is partial only; existing signed bearer/refresh and original Hub TEST denial matrix not exercised.",
+    "P9-LIVE-DIRECT": "PENDING; public contract/OpenAPI parity observed, but no service-issued scoped live read-only grant, actual provider read/area denial/revoke."
+  },
+  "limitations": [
+    "GET-only external fetch mechanism; HTTP HEAD and POST not executed.",
+    "No credentials, Google account data, OAuth secrets or subject IDs retrieved or changed.",
+    "No new Google provider writes, paid license assignment, live RTC pass, Hub relay or cross-principal dispatch.",
+    "Google account-portal 403 without session is an expected denial, not an authenticated portal pass.",
+    "PR source/CI not an external provider acceptance pass; no original queue status moved to PASSED."
+  ]
+}
