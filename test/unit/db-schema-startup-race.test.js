@@ -9,7 +9,7 @@ vi.mock('@neondatabase/serverless',()=>({
   neon:()=>async(parts,...values)=>{
     const statement=parts.join('?');
     fake.statements.push(statement);
-    if(fake.collisionCount>0&&new RegExp('CREATE TABLE IF NOT EXISTS '+fake.at+'\\\\b').test(statement)){
+    if(fake.collisionCount>0&&statement.includes('CREATE TABLE IF NOT EXISTS '+fake.at+' (')){
       fake.collisionCount--;
       const inner=Object.assign(new Error('sanitized database failure'),
         {code:fake.code,constraint:fake.constraint});
