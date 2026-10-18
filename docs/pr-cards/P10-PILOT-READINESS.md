@@ -105,3 +105,14 @@ This is a **targeted P10-6 incident repair**, not another new batch subsection, 
 5. Update the owner guide/configuration and existing acceptance handoff accurately. No production credentials, account data, owner grants or environment variables are changed in the implementation PR. Real A/B browser acceptance remains OPEN. Setting the separate exact-subject Production switch and deploying it require the repository's independent approval/release gates; no off-cycle release follows merely from this source change.
 
 **Work boundary:** `src/principals/security.js`, `src/principals/store.js`, `api/auth/google/callback.js`, `src/principals/pilot-readiness.js`, existing P10 unit/real-Postgres tests and owner guidance. Not a complete legacy account transfer; no customer OAuth tool execution, provider writes, new provider, spending, or production mutation.
+
+
+## October 18 completion acceptance continuation
+
+Continue original P9/P10 acceptance on independently READY production `17beedb22d6f7e71db1c265a54b13166619b181f`, preserving all original criteria and 17 existing owner access records. This is incremental acceptance maintenance, zero engineering bundles. HTTP and protected readiness observations already executed before this recovery commit are recorded honestly, not represented as a pre-execution plan.
+
+- Record genuine production GET/HEAD/POST, anonymous account denial and owner-authenticated sanitized readiness; retain authenticated owner OAuth/account-management gaps.
+- Reconcile the stale missing-public-client statements against actual authenticated configuration, without exposing secrets or claiming A/B provider acceptance.
+- Recheck read-only native owner identity/account list, aggregate isolation and Hub capability; do not take over the shared rotating developer checkpoint.
+- Prepare owner-selected `workspace.robinsonaisystems.com` using actual Vercel DNS recommendations and Google verification requirements; leave DNS, OAuth redirect/canonical resource and credentials unchanged pending coordinated transition. The owner reports another agent is changing the apex website.
+- Preserve all eleven pending task IDs and original criteria. No full PASS until its complete original proof exists. Publish sanitized evidence and a criterion-level permanent checkpoint; no off-cycle release or Stage 2 activation.
