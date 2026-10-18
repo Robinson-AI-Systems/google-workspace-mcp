@@ -93,9 +93,10 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    delete process.env.PUBLIC_PILOT_LEGACY_SUBJECTS;
    await expect(store.bindVerifiedIdentity(identity)).rejects.toThrow('reserved_identity');
    process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=subject;
-   const pilot=await store.bindVerifiedIdentity(identity);
+   await expect(store.bindVerifiedIdentity(identity)).rejects.toThrow('reserved_identity');
+   const pilot=await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true});
    expect(pilot).not.toBe('00000000-0000-4000-8000-000000000001');
-   expect(await store.bindVerifiedIdentity(identity)).toBe(pilot);
+   expect(await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).toBe(pilot);
    const browser=await store.createSession(pilot);
    expect((await store.readSession(browser.secret)).principal_id).toBe(pilot);
    expect(await store.listAccounts(pilot)).toHaveLength(0);
@@ -107,13 +108,13 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
      sub:subject,verifiedEmail:identity.verifiedEmail,scopeList:[],
      tokens:{access_token:'old-grant-no'}})).rejects.toThrow('legacy_pilot_identity_only');
    process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED='true';
-   await expect(store.bindVerifiedIdentity(identity)).rejects.toThrow('reserved_identity');
+   await expect(store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).rejects.toThrow('reserved_identity');
    process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED='false';
    process.env.PUBLIC_SIGNIN_MODE='public';
-   await expect(store.bindVerifiedIdentity(identity)).rejects.toThrow('reserved_identity');
+   await expect(store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).rejects.toThrow('reserved_identity');
    process.env.PUBLIC_SIGNIN_MODE='pilot';
    process.env.PUBLIC_PILOT_LEGACY_SUBJECTS='987654321098765432109';
-   await expect(store.bindVerifiedIdentity(identity)).rejects.toThrow('reserved_identity');
+   await expect(store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).rejects.toThrow('reserved_identity');
    expect((await pool.query("SELECT email,is_default,tokens_enc FROM google_accounts ORDER BY email")).rows)
      .toEqual(initial);
    expect((await pool.query(
