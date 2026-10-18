@@ -101,6 +101,7 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    expect((await store.readSession(browser.secret)).principal_id).toBe(pilot);
    expect(await store.listAccounts(pilot)).toHaveLength(0);
    expect(await store.isLegacyPilotIdentityPrincipal(pilot)).toBe(true);
+   expect((await pool.query('SELECT legacy_pilot_identity_only FROM principals WHERE id=$1',[pilot])).rows[0].legacy_pilot_identity_only).toBe(true);
    await expect(store.upsertLinkedAccount({principalId:pilot,issuer:'https://accounts.google.com',
      sub:'987654321098765432109',verifiedEmail:'fresh-account@example.test',scopeList:[],
      tokens:{access_token:'foreign-token'}})).rejects.toThrow('legacy_pilot_identity_only');
@@ -123,6 +124,14 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    expect((await db.getTokenByRefreshToken('legacy-test-mcp-refresh')).client_id).toBe('test-original-client');
    expect((await store.legacyOwnerContext('legacy-test-bearer')).principal_kind).toBe('legacy_owner');
    expect((await pool.query("SELECT count(*)::int AS n FROM principal_google_accounts WHERE principal_id=$1",[pilot])).rows[0].n).toBe(0);
+   // The original owner may later remove this legacy mailbox. The pilot's
+   // identity-only authorization boundary must not disappear with that row.
+   await pool.query('DELETE FROM google_accounts WHERE email=$1',[identity.verifiedEmail]);
+   expect(await store.isLegacyPilotIdentityPrincipal(pilot)).toBe(true);
+   await expect(store.upsertLinkedAccount({principalId:pilot,issuer:identity.issuer,
+     sub:'222222222222222222222',verifiedEmail:'fresh-account@example.test',
+     scopeList:[],tokens:{access_token:'must-never-persist'}}))
+     .rejects.toThrow('legacy_pilot_identity_only');
   }finally{
    for(const [key,value] of Object.entries(oldEnv)){
     if(value===undefined)delete process.env[key];else process.env[key]=value;
@@ -133,6 +142,8 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
   a=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',sub:'subject-aaa1',verifiedEmail:'a@example.test'});
   b=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',sub:'subject-bbb2',verifiedEmail:'b@example.test'});
   expect(a).not.toBe(b);
+  expect(await store.isLegacyPilotIdentityPrincipal(a)).toBe(false);
+  expect(await store.isLegacyPilotIdentityPrincipal(b)).toBe(false);
   expect(await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',sub:'subject-aaa1',verifiedEmail:'a@example.test'})).toBe(a);
   await expect(store.bindVerifiedIdentity({issuer:'https://accounts.google.com',sub:'owner-xxxx',verifiedEmail:'owner@example.test'})).rejects.toThrow('reserved_identity');
   aa=await store.upsertLinkedAccount({principalId:a,issuer:'https://accounts.google.com',sub:'subject-aaa1',
