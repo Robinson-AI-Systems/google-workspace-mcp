@@ -5,6 +5,10 @@
 Canonical production remains the existing Vercel alias. An actual secure owner-passphrase
 readiness submission returned all nine configuration checks present, pilot roster two,
 identity-only pilot enabled, legacy owner sign-in enabled and Stage 2 tool execution OFF.
+The report checks presence/different credential values and roster uniqueness; it does not
+verify the separate Google Cloud project, matching client secret, Console test-user list
+or roster subject provenance. Keep independent verification of those prerequisites open;
+historical stored identities and reaching an account chooser do not replace that proof.
 This supersedes historical missing-client setup statements; it is not full pilot acceptance.
 The separate server-only secret is `GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET`.
 
