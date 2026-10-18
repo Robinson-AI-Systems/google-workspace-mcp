@@ -155,6 +155,15 @@ describe('P10 actual route one-use browser callback and independent principal MC
    expect(JSON.stringify(warn.mock.calls)).not.toMatch(/secret|user@example.test|private-code/);
   }finally{warn.mockRestore();}
  });
+ it('refuses identity-only legacy tester Google scope consent before generating OAuth state',async()=>{
+  h.legacyPilot=true;
+  const out=res();
+  await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',csrf}),out);
+  expect(out.statusCode).toBe(400);
+  expect(out.body).toEqual({error:'invalid_authorization_start'});
+  expect(h.started).toBeNull();
+  expect(h.accountLinks).toHaveLength(0);
+ });
  it('link requires same-origin CSRF and bound session and cannot claim owner global mailboxes',async()=>{
   const missing=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail'}),missing);
   expect(missing.statusCode).toBe(400);expect(h.started).toBeNull();
