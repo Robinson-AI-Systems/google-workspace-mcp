@@ -1,7 +1,7 @@
 // User-owned account portal. No global owner mailbox/connection listing.
 import {initSchema} from '../src/db.js';
 import {listAccounts,listConnections,revokeConnection,disconnectAccount,deletionPreview,
-  setPrincipalDefault,requestDeletion,cancelDeletion} from '../src/principals/store.js';
+  setPrincipalDefault,requestDeletion,cancelDeletion,isLegacyPilotIdentityPrincipal} from '../src/principals/store.js';
 import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.js';
 import {configureCustomerDelegation,listCustomerDelegations,revokeCustomerDelegation,
   addVerifiedDelegationSubject,removeDelegationSubject} from '../src/principals/delegation.js';
@@ -44,6 +44,7 @@ export default async function handler(req,res){
    }
    const accounts=await listAccounts(principalId),connections=await listConnections(principalId),
      delegations=await listCustomerDelegations(principalId);
+   const identityOnly=await isLegacyPilotIdentityPrincipal(principalId);
    const csrf=readCookie(req,CSRF_COOKIE)||'';
    if(!csrf)return res.status(401).send('Session CSRF state missing.');
    res.setHeader('Content-Type','text/html; charset=utf-8');
@@ -63,7 +64,9 @@ export default async function handler(req,res){
      '<h2>Google connections</h2><ul>'+accounts.map(a=>'<li>'+escape(a.label||a.email)+' · '+
        escape(a.scope_list.join(', '))+' · '+(a.is_default?'Default':'Linked')+
        form('set_default',a.id,'Make default')+form('disconnect_account',a.id,'Disconnect locally')+'</li>').join('')+'</ul>'+
-     '<h2>Link an account / add permissions</h2>'+links+
+     (identityOnly
+       ? '<h2>Identity-only legacy tester</h2><p>This verified pilot login is intentionally separate from your original owner MCP. Existing Google connections stay with the original owner. This pilot identity cannot link Google data or issue MCP tool connections until a separately approved migration.</p>'
+       : '<h2>Link an account / add permissions</h2>'+links)+
      '<h2>Customer administrator delegation</h2>'+
      '<p>This is optional and only for administrators of their own verified Google Workspace customer. First link the separate read-only Admin Verification permission above. An existing login and its grants stay intact. Domain name or email alone never grants authority.</p>'+
      '<p>A service-account key is submitted only over this signed-in HTTPS form with CSRF protection, encrypted per account in the database, and never shown again. The Google administrator must separately authorize the selected scopes for this service account in their own Admin Console. Enter only scopes required for the intended operations. Missing configuration does not disable ordinary Google access.</p>'+
