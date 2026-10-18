@@ -126,6 +126,11 @@ describe('P10-6 source-derived pilot configuration, without trusting it as accep
   expect(r.legacyPilotIdentityOnlyConfigured).toBe(true);
   expect(r.legacyPilotIdentityOnlyEnabled).toBe(true);
   expect(JSON.stringify(r)).not.toContain(subject);
+  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS=subject;
+  expect(pilotReadiness().legacyPilotIdentityOnlyEnabled).toBe(false);
+  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS=subject+',987654321098765432109,555555555555555555555';
+  expect(pilotReadiness().legacyPilotIdentityOnlyConfigured).toBe(false);
+  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321098765432109,'+subject;
   process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED='true';
   expect(pilotReadiness().legacyPilotIdentityOnlyEnabled).toBe(false);
   delete process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED;
