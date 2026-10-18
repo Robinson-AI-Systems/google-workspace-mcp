@@ -2,7 +2,7 @@
 import crypto from 'node:crypto';
 import {neon} from '@neondatabase/serverless';
 import {sealV2,openV2} from './crypto.js';
-import {OWNER_ID,digest,mint,validUuid,validEmail,requireScope} from './security.js';
+import {OWNER_ID,digest,mint,validUuid,validEmail,requireScope,legacyPilotLoginAllowed} from './security.js';
 import {normalizeConnectionPolicy} from '../oauth/connection-settings.js';
 import {initTenantSchema,makeTenantStore} from './tenant-store.js';
 import {loadCustomerDelegation} from './delegation.js';
@@ -106,7 +106,7 @@ export async function bindVerifiedIdentity({issuer,sub,verifiedEmail}){
  requireScope(['accounts.google.com','https://accounts.google.com'].includes(issuer)&&validSub(sub)&&validEmail(verifiedEmail),'invalid_identity');
  const q=sql();
  const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
- requireScope(reserved.length===0,'reserved_identity');
+ requireScope(reserved.length===0||legacyPilotLoginAllowed(sub),'reserved_identity');
  const old=await getVerifiedPrincipal(issuer,sub);
  if(old)return old;
  const id=crypto.randomUUID();
@@ -146,10 +146,22 @@ export async function listAccounts(principalId){
    WHERE a.principal_id=${principalId}::uuid AND a.status='active'
    ORDER BY is_default DESC,a.created_at ASC`;
 }
+// The legacy tester's new user principal has no owner mailbox authority. This
+// persistent email-reservation check blocks linking *any* Google account to
+// that pilot identity, even if configuration flags change after session minting.
+export async function isLegacyPilotIdentityPrincipal(principalId){
+ requireScope(validUuid(principalId),'invalid_identity');
+ const rows=await sql()`SELECT 1 FROM principal_google_identities i
+   JOIN principals p ON p.id=i.principal_id AND p.kind='user'
+   JOIN google_accounts owner ON lower(owner.email)=lower(i.verified_email)
+   WHERE i.principal_id=${principalId}::uuid LIMIT 1`;
+ return rows.length>0;
+}
 export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,scopeList,tokens}){
  requireScope(validUuid(principalId)&&validSub(sub)&&validEmail(verifiedEmail)&&
    Array.isArray(scopeList)&&scopeList.every(x=>typeof x==='string')&&tokens?.access_token,'invalid_link');
  const q=sql();
+ requireScope(!await isLegacyPilotIdentityPrincipal(principalId),'legacy_pilot_identity_only');
  const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
  requireScope(!reserved.length,'reserved_identity');
  const foreign=await q`SELECT id FROM principal_google_accounts
