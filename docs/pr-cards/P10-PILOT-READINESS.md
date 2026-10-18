@@ -64,3 +64,16 @@ Stage 1 acceptance criteria before and after `PUBLIC_SIGNIN_MODE=pilot`:
 5. Stage 2 tool execution, all real provider writes, public sign-in, customer-wide delegation, legacy owner sign-in retirement and off-schedule source releases are **not** authorized. Do not mark `P10-OWNER-CONTINUITY`, `P10-VERIFY-GOOGLE`, or `P10-MCP-PILOT` PASSED merely because Stage 1 mode is active.
 
 This is a maintenance/decision-alignment correction, not an invented roadmap subsection or completed implementation bundle; source functionality remains unchanged.
+
+
+## P10-6 incident maintenance plan — 2026-10-17: real invited tester callback refusal
+
+This is a **targeted P10-6 incident repair**, not another new batch subsection, duplicate roadmap or claim of fully passed two-user external acceptance. The owner's two-user identity-only pilot is already active on serving Git revision `c0f407ecafc17f07a6fe3502996b7e269c5497ba`. One independently verified browser user has passed, and a second approved, newly verified Google subject receives the common OAuth callback error. Preserve live pilot admission boundaries, original owner login, Google grant isolation and the current execution-disabled flag.
+
+**Frozen incident acceptance criteria before code changes:**
+1. Record only *allowlisted error classifications and fixed processing phases* for failed server-side Google callbacks, never raw exceptions, provider error responses, state/nonce/cookies, token data, private subject IDs, verified email addresses, account IDs or client metadata.
+2. Preserve one-use browser/state cookie matching, signed Google issuer/audience/nonce validation, exact pilot subject admission, original-owner reserved-email protections and generic outward HTTP 400 errors without identity enumeration.
+3. Cover actual route behavior in unit tests: invalid browser cookie, unapproved subject, original-owner reserved principal, and unexpected provider/store errors cannot expose values; successful independent user still gets a session, replay still fails.
+4. Verify exact-head typecheck and focused/full CI and review before merging. Do not mark a real second-user provider pass based on tests or logs. A separate owner-approved checked production release is required before collecting new production failure classifications; the current pilot configuration and serving `live` remain unchanged by this code PR.
+
+**Planned changes:** `api/auth/google/callback.js` and its existing route unit tests; no schema, OAuth scope, login policy, provider account or environment update. Small incident maintenance; zero roadmap bundles claimed.

@@ -3,7 +3,7 @@ import {Readable} from 'node:stream';
 import {createHash} from 'node:crypto';
 const h=vi.hoisted(()=>({
   started:null,consumed:false,accountLinks:[],codeConsumeCount:0,rotations:0,
-  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0
+  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null
 }));
 vi.mock('../../src/db.js',()=>({
  initSchema:async()=>{},getOAuthClient:async id=>id==='registered-client'?{
@@ -21,7 +21,7 @@ vi.mock('../../src/principals/store.js',()=>({
      principal_id:h.started.principalId,policy:h.started.policy,verifier:h.started.verifier,
      client_id:h.started.clientId,redirect_uri:h.started.redirectUri,resource:h.started.resource,code_challenge:h.started.codeChallenge};
  },
- bindVerifiedIdentity:async identity=>{h.bindCalls++;return '33333333-3333-4333-8333-333333333333';},
+ bindVerifiedIdentity:async identity=>{h.bindCalls++;if(h.bindFailure)throw Error(h.bindFailure);return '33333333-3333-4333-8333-333333333333';},
  createSession:async()=>({secret:'p10s_'+'a'.repeat(43),csrf:'p10x_'+'b'.repeat(43)}),
  readSession:async secret=>secret==='p10s_'+'a'.repeat(43)?{
    principal_id:'33333333-3333-4333-8333-333333333333',
@@ -49,9 +49,9 @@ vi.mock('../../src/principals/google.js',()=>({
  PUBLIC_SCOPE_GROUPS:{mail:['scope-mail']},
  publicGoogleClient:()=>({}),
  providerUrl:({state})=>'https://accounts.google.com/o/oauth2?state='+state,
- verifyGoogleCode:async({nonceHash})=>({issuer:'https://accounts.google.com',sub:h.verifiedSub,
+ verifyGoogleCode:async({nonceHash})=>{if(h.googleFailure)throw Error(h.googleFailure);return {issuer:'https://accounts.google.com',sub:h.verifiedSub,
    email:'user@example.test',scopeList:['scope-mail'],
-   tokens:{access_token:'google-access',id_token:'validated-google-jwt',refresh_token:'google-refresh'}})
+   tokens:{access_token:'google-access',id_token:'validated-google-jwt',refresh_token:'google-refresh'}};}
 }));
 const {default:start}=await import('../../api/auth/google/start.js');
 const {default:callback}=await import('../../api/auth/google/callback.js');
@@ -83,7 +83,7 @@ beforeEach(()=>{
  process.env.PUBLIC_SIGNIN_MODE='pilot';
  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='pilot-subject';
  h.started=null;h.accountLinks=[];h.bindCalls=0;h.consumed=false;h.rotations=0;h.codeConsumeCount=0;
- h.verifiedSub='pilot-subject';
+ h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;
 });
 afterEach(()=>{process.env=env;});
 describe('P10 actual route one-use browser callback and independent principal MCP issuance',()=>{
@@ -110,6 +110,49 @@ describe('P10 actual route one-use browser callback and independent principal MC
   h.verifiedSub='not-enrolled';
   const out=res();await callback(req('GET',{state:h.started.state,code:'google'},'p10_google_browser='+h.started.browser),out);
   expect(out.statusCode).toBe(400);expect(h.bindCalls).toBe(0);
+ });
+ it('callback diagnostics classify admission and reserved-owner failures without identities',async()=>{
+  const warn=vi.spyOn(console,'warn').mockImplementation(()=>{});
+  try{
+   const first=res();await start(req(),first);
+   h.verifiedSub='unlisted-test-subject';
+   const rejected=res();await callback(req('GET',{state:h.started.state,code:'google-secret-code'},
+     'p10_google_browser='+h.started.browser),rejected);
+   expect(rejected.statusCode).toBe(400);
+   expect(warn).toHaveBeenLastCalledWith('p10_google_callback_denied',
+     {phase:'pilot_admission',code:'public_signin_not_admitted'});
+   expect(h.bindCalls).toBe(0);
+
+   const second=res();await start(req(),second);
+   h.verifiedSub='pilot-subject';h.bindFailure='reserved_identity';
+   const reserved=res();await callback(req('GET',{state:h.started.state,code:'google-secret-code'},
+     'p10_google_browser='+h.started.browser),reserved);
+   expect(reserved.statusCode).toBe(400);
+   expect(warn).toHaveBeenLastCalledWith('p10_google_callback_denied',
+     {phase:'principal_bind',code:'reserved_identity'});
+   expect(JSON.stringify(warn.mock.calls)).not.toMatch(/unlisted-test-subject|user@example.test|google-secret-code/);
+  }finally{warn.mockRestore();}
+ });
+ it('callback never logs raw provider or persistence exceptions',async()=>{
+  const warn=vi.spyOn(console,'warn').mockImplementation(()=>{});
+  try{
+   const first=res();await start(req(),first);
+   h.googleFailure='provider secret token and user@example.test';
+   const out=res();await callback(req('GET',{state:h.started.state,code:'private-code'},
+     'p10_google_browser='+h.started.browser),out);
+   expect(out.statusCode).toBe(400);
+   expect(warn).toHaveBeenLastCalledWith('p10_google_callback_denied',
+     {phase:'provider_verification',code:'unclassified'});
+
+   const second=res();await start(req(),second);
+   h.googleFailure=null;h.bindFailure='secret db user@example.test';
+   const denied=res();await callback(req('GET',{state:h.started.state,code:'private-code'},
+     'p10_google_browser='+h.started.browser),denied);
+   expect(denied.statusCode).toBe(400);
+   expect(warn).toHaveBeenLastCalledWith('p10_google_callback_denied',
+     {phase:'principal_bind',code:'unclassified'});
+   expect(JSON.stringify(warn.mock.calls)).not.toMatch(/secret|user@example.test|private-code/);
+  }finally{warn.mockRestore();}
  });
  it('link requires same-origin CSRF and bound session and cannot claim owner global mailboxes',async()=>{
   const missing=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail'}),missing);

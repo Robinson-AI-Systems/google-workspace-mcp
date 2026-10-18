@@ -5,20 +5,32 @@ import {admitted,digest,cookie,headers,requireScope} from '../../../src/principa
 import {readCookie} from '../../../src/principals/security.js';
 import {setSession,requireSession,BROWSER_COOKIE} from '../../../src/principals/session.js';
 import {linkVerifiedOwner,issueOwnerLoginProof} from '../../../src/principals/owner-migration.js';
+// Audit only fixed callback phases and approved denial codes. Never log provider
+// exception messages: Google SDK errors may carry a code, account or token.
+const SAFE_DENIAL_CODES=new Set([
+ 'invalid_state','consent_declined','invalid_verified_identity','identity_token_missing',
+ 'public_signin_not_admitted','reserved_identity','invalid_identity',
+ 'invalid_owner_link','invalid_owner_login','invalid_pilot_subject_proof',
+ 'principal_mismatch','grant_scope_missing','identity_owned_elsewhere',
+ 'session_required','invalid_grant','version_conflict','outside_scope'
+]);
 export default async function handler(req,res){
  headers(res);
  if(req.method!=='GET'){res.status(405).send('Method not allowed');return;}
  const browser=readCookie(req,BROWSER_COOKIE),state=req.query?.state;
  res.setHeader('Set-Cookie',cookie(BROWSER_COOKIE,'','/api/auth/google',0));
  if(typeof state!=='string'||!browser){res.status(400).send('Invalid Google sign-in.');return;}
+ let phase='schema';
  try{
   await initSchema();
+  phase='transaction';
   let tx=null;
   for(const purpose of ['login','link','mcp_authorize']){
     tx=await consumeTransaction({state,browser,purpose});
     if(tx)break;
   }
   requireScope(tx,'invalid_state');
+  phase='provider_verification';
   if(req.query?.error || typeof req.query?.code!=='string' || !req.query.code)
     throw Error('consent_declined');
   // Google SDK verifies signature/audience/expiry; compare nonce hash, never
@@ -30,6 +42,7 @@ export default async function handler(req,res){
   // enrollment is OFF. Reveal only the stable verified subject to that browser.
   // Never mint a principal, store grants, expose a Google token or enable tools.
   if(tx.policy?.pilotProbe===true){
+    phase='identity_probe';
     requireScope(tx.purpose==='login'&&!tx.principal_id&&!tx.policy?.ownerProof,
       'invalid_pilot_subject_proof');
     const safe=x=>String(x).replace(/[&<>"']/g,c=>({
@@ -53,11 +66,13 @@ export default async function handler(req,res){
   // a new Google mailbox grant. Its passphrase-protected, one-use transaction
   // authorizes linking; later login requires the linked verified issuer/sub.
   if(tx.policy?.ownerProof==='link'){
+    phase='owner_link';
     requireScope(tx.purpose==='login'&&!tx.principal_id,'invalid_owner_link');
     await linkVerifiedOwner({issuer:verified.issuer,sub:verified.sub,email:verified.email});
     res.writeHead(302,{Location:'/api/owner/migration?linked=1'});res.end();return;
   }
   if(tx.policy?.ownerProof==='login'){
+    phase='owner_login';
     requireScope(tx.purpose==='mcp_authorize'&&!tx.principal_id,'invalid_owner_login');
     const meta={clientId:tx.client_id,redirectUri:tx.redirect_uri,
       resource:tx.resource,codeChallenge:tx.code_challenge,
@@ -79,6 +94,7 @@ export default async function handler(req,res){
   }
   let principalId;
   if(tx.purpose==='link'){
+    phase='account_link';
     const session=await requireSession(req);
     requireScope(session.principal_id===tx.principal_id,'principal_mismatch');
     const scopes=tx.policy?.group&&PUBLIC_SCOPE_GROUPS[tx.policy.group];
@@ -87,9 +103,12 @@ export default async function handler(req,res){
       sub:verified.sub,verifiedEmail:verified.email,scopeList:verified.scopeList,tokens:verified.tokens});
     principalId=session.principal_id;
   }else {
+    phase='pilot_admission';
     requireScope(admitted(verified.sub),'public_signin_not_admitted');
+    phase='principal_bind';
     principalId=await bindVerifiedIdentity({issuer:verified.issuer,sub:verified.sub,
       verifiedEmail:verified.email});
+    phase='session_creation';
     await setSession(res,principalId);
   }
   // Only protocol/client metadata (never Google token or service credentials)
@@ -106,8 +125,13 @@ export default async function handler(req,res){
     res.writeHead(302,{Location:next.toString()});res.end();return;
   }
   res.writeHead(302,{Location:'/api/account'});res.end();
- }catch{
-  // A consumed state may not be retried. Never expose provider tokens/errors.
+ }catch(error){
+  // These fixed, low-cardinality fields enable triage without identifiers.
+  // Deliberately do not serialize an SDK/SQL error, request or user identity.
+  const message=typeof error?.message==='string'?error.message:null;
+  const code=SAFE_DENIAL_CODES.has(message)?message:'unclassified';
+  console.warn('p10_google_callback_denied',{phase,code});
+  // A consumed state may not be retried; never expose the internal reason.
   res.status(400).send('Sign-in or account-link verification failed; restart the protected flow.');
  }
 }
