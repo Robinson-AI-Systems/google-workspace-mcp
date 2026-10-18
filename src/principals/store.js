@@ -102,11 +102,11 @@ export async function getVerifiedPrincipal(issuer,sub){
    WHERE i.issuer=${issuer} AND i.google_sub=${sub}`;
  return rows.length===1&&rows[0].status==='active'?rows[0].principal_id:null;
 }
-export async function bindVerifiedIdentity({issuer,sub,verifiedEmail}){
+export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnlyPilot=false}){
  requireScope(['accounts.google.com','https://accounts.google.com'].includes(issuer)&&validSub(sub)&&validEmail(verifiedEmail),'invalid_identity');
  const q=sql();
  const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
- requireScope(reserved.length===0||legacyPilotLoginAllowed(sub),'reserved_identity');
+ requireScope(reserved.length===0||(identityOnlyPilot===true&&legacyPilotLoginAllowed(sub)),'reserved_identity');
  const old=await getVerifiedPrincipal(issuer,sub);
  if(old)return old;
  const id=crypto.randomUUID();
