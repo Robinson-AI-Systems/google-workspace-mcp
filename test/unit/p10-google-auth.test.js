@@ -98,6 +98,13 @@ describe('P10 Google OIDC, no legacy fallback, provider PKCE and encrypted scope
   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=eligible;
   expect(legacyPilotLoginAllowed(eligible)).toBe(true);
   expect(legacyPilotLoginAllowed('987654321098765432109')).toBe(false);
+  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS=eligible;
+  expect(legacyPilotLoginAllowed(eligible)).toBe(false);
+  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321098765432109,'+eligible+',555555555555555555555';
+  expect(legacyPilotLoginAllowed(eligible)).toBe(false);
+  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS=eligible+','+eligible;
+  expect(legacyPilotLoginAllowed(eligible)).toBe(false);
+  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321098765432109,'+eligible;
   expect(legacyPilotLoginAllowed('nonlisted-subject')).toBe(false);
   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=eligible+',987654321098765432109';
   expect(legacyPilotLoginAllowed(eligible)).toBe(false);
