@@ -13,7 +13,9 @@ export default async function handler(req,res){
  try{
    await initSchema();
    const session=await requireSession(req),principalId=session.principal_id;
+   const identityOnly=await isLegacyPilotIdentityPrincipal(principalId);
    if(req.method==='POST'){
+     if(identityOnly)return res.status(403).json({error:'legacy_pilot_identity_only'});
      const body=req.body&&typeof req.body==='object'?req.body:{};
      requireCsrf(req,session,body);
      const action=body.action;
@@ -44,7 +46,6 @@ export default async function handler(req,res){
    }
    const accounts=await listAccounts(principalId),connections=await listConnections(principalId),
      delegations=await listCustomerDelegations(principalId);
-   const identityOnly=await isLegacyPilotIdentityPrincipal(principalId);
    const csrf=readCookie(req,CSRF_COOKIE)||'';
    if(!csrf)return res.status(401).send('Session CSRF state missing.');
    res.setHeader('Content-Type','text/html; charset=utf-8');
