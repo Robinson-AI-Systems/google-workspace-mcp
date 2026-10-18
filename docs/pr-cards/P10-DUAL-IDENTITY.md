@@ -74,3 +74,17 @@ This is a newly found defect against the original P10-3 owner-mailbox privacy cr
 4. Add an actual handler regression test for anonymous GET/HEAD/POST and an explicit source-level import/owner-inventory guard; full exact-head CI and reviews before merge. Deployed anonymous reachability/privacy remains a separate source-pinned post-release check.
 
 **Delivery scope:** Public-homepage-only security repair and regression tests; no public pilot activation, production change, credentials, Google mutation or bundle-credit claim. GitHub-only remote session uses required exact-head Actions for tests not executable in its unprovisioned local runner.
+
+
+## October 18 — independently observed production cold-start DDL race (incident maintenance)
+
+**Evidence before implementation:** Vercel's 7-day production error clusters showed two `NeonDbError` `23505` failures, specifically catalog constraint `pg_type_typname_nsp_index`, during `initSchema` / `initPrincipalSchema` on Oct 15 and Oct 17. The failed DDL attempted concurrently to establish `google_token_storage` or `principals`, despite `CREATE TABLE IF NOT EXISTS`. Serverless requests can enter the additive schema initializer simultaneously in different Vercel instances. This is a current reliability defect, not reopened P10 feature engineering and not a new roadmap subsection.
+
+**Frozen repair acceptance (before source changes):**
+
+1. A concurrent startup's narrow, recognizable PostgreSQL catalog-DDL collision must not produce an avoidable HTTP failure: retry the **entire additive initializer** a strictly bounded number of times after the other initializer can finish. Cover the observed `23505` system-catalog index only and relevant duplicate DDL races; never broadly retry provider actions, user writes, arbitrary `23505` or authentication failures.
+2. Multiple callers in a single Vercel process must share one in-progress initializer. A failure must clear that shared state so later requests retry; successful return never depends on a stale promise across subsequent isolated test/schema runs.
+3. Existing tables, original owner OAuth/RTC bearers, encrypted Google grants, pilot sessions, scope isolation, and migrations remain unchanged. Do not suppress an actual broken DDL, duplicate user data, or an unauthorized schema mutation. Read-only regression tests prove transient collision recovery, concurrent single-flight, bounded exhaustion, and unrelated SQL failures surfacing.
+4. Run source syntax, focused tests and all required exact-head CI (including disposable real PostgreSQL), review, and normal PR merge before considering checked deployment. Production release follows the existing independent policy; post-release evaluate the runtime error clusters and original owner/native continuity. No production SQL rewrite, external Google action or manual release is authorized by this repair alone.
+
+**Scope:** `src/db.js`, a focused `test/unit` initializer concurrency regression, and the existing card/handoff. This is security/reliability maintenance and earns zero P9/P10 batch subsections or completion bundles; pending original provider acceptance is not upgraded.
