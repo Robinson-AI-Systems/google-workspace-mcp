@@ -5,11 +5,15 @@ import {createTransaction,isLegacyPilotIdentityPrincipal,canLegacyPilotStartFres
 import {publicGoogleClient,providerUrl,PUBLIC_SCOPE_GROUPS} from '../../../src/principals/google.js';
 import {publicMode,publicResource,requireScope,mint,cookie,headers} from '../../../src/principals/security.js';
 import {requireSession,requireCsrf,BROWSER_COOKIE} from '../../../src/principals/session.js';
+import {redirectCanonicalGet} from '../../../src/principals/canonical-entry.js';
 export default async function handler(req,res){
  headers(res);
  if(!['GET','POST'].includes(req.method)){res.status(405).json({error:'method_not_allowed'});return;}
  const params=req.method==='POST'?(req.body||{}):(req.query||{});
  try{
+  // Google returns to PUBLIC_BASE_URL. Redirect before issuing a host-only
+  // browser cookie or storing one-use OAuth state on an alternate hostname.
+  if(redirectCanonicalGet(req,res,'/api/auth/google/start',true))return;
   const mode=publicMode();
   const ownerLogin=params.purpose==='owner_login';
   const purpose=params.purpose==='link'?'link':
