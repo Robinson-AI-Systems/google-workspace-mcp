@@ -64,11 +64,18 @@ export function validateIntegrationSpec(input={}){
  return out;
 }
 const guide=(url,summary)=>({url,steps:[{n:1,action:'Open',target:url},{n:2,action:'Verify',target:summary}],expected:'Confirm in Google Console; no setting changed automatically.'});
-function classifyFailure(e){
+export function classifyFailure(e){
  const code=Number(e?.response?.status||e?.code)||0;
- const reason=String(e?.response?.data?.error?.errors?.[0]?.reason||'');
+ const problem=e?.response?.data?.error||{};
+ const reason=String(problem.errors?.[0]?.reason||problem.status||'');
+ const message=String(problem.message||e?.message||'');
  if(code===404)return {status:'missing',reason:'resource_not_found'};
- if(reason==='accessNotConfigured'||reason==='SERVICE_DISABLED'||reason==='accessNotConfigured')return {status:'missing',reason:'api_not_enabled'};
+ if(/accessNotConfigured|SERVICE_DISABLED/i.test(reason)||
+   /API has not been used in project|API.*(disabled|not enabled)/i.test(message))
+   return {status:'missing',reason:'api_not_enabled'};
+ if((code===401||code===403)&&(/insufficientPermissions|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(reason)||
+   /insufficient (authentication )?scopes/i.test(message)))
+   return {status:'not_readable',reason:'oauth_consent_missing'};
  if(code===401||code===403)return {status:'not_readable',reason:'scope_or_access_denied'};
  return {status:'not_readable',reason:'google_probe_failed'};
 }
@@ -123,7 +130,10 @@ export async function inspectGoogleIntegration(spec,clients,{describe=describeSe
      if(!verifiedApiProbe(api,response,clients.actingAs))
        throw Error('The provider did not prove a correctly shaped API result for the acting account.');
      return response;
-   },guide(item.url,'Enable '+item.label+' API and verify consent for this mailbox.'));
+   },guide(item.url,'Verify '+item.label+' API and OAuth consent for this mailbox.'));
+   if(info.reason==='oauth_consent_missing')info.fix=guide(
+     'https://developers.google.com/identity/protocols/oauth2/scopes',
+     'Open the Workspace account portal and approve a comprehensive Google consent, or the exact needed service. Enabling an API alone cannot add user OAuth permissions.');
    checks.push({kind:'api',...info});
  }
  if(request.oauthScopes.length){
