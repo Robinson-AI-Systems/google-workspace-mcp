@@ -8,6 +8,7 @@
 // Claude receives, so one Claude project can be "Appliance Rentals" and
 // another "AI Systems" without either seeing the other's inbox.
 import { randomToken, parseBody } from '../../src/oauth/helpers.js';
+import { PRODUCT_DISPLAY_NAME, PROVIDER_DISCLOSURE } from '../../src/branding.js';
 import {
   getOAuthClient, createAuthCode, initSchema, listGoogleAccounts,
   recordLoginAttempt, countRecentFailedLogins, markLoginAttemptSucceeded
@@ -51,7 +52,7 @@ function renderLoginPage({ error, hidden, accounts, selected, profile, verifiedO
 </style></head>
 <body>
   <form method="POST">
-    <h1>Robinson Google Workspace MCP</h1>
+    <h1>${escapeHtml(PRODUCT_DISPLAY_NAME)}</h1><p>${escapeHtml(PROVIDER_DISCLOSURE)}</p>
     ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
     ${publicSignInAvailable()?'<p><a href="/api/oauth/authorize?'+escapeHtml(new URLSearchParams({...hidden,auth_method:'google'}).toString())+'" style="color:#075fca">Sign in with a separate Google account</a></p>':''}
     ${!verifiedOwner?'<p><a href="/api/oauth/authorize?'+escapeHtml(new URLSearchParams({...hidden,auth_method:'owner_google'}).toString())+'">Use my already-linked owner Google sign-in</a></p>':''}
