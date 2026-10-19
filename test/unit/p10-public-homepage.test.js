@@ -1,6 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import homepage from '../../api/index.js';
+import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../../src/branding.js';
 
 const response=()=>{
   const out={statusCode:200,headers:{},body:null,ended:false};
@@ -22,7 +23,9 @@ describe('P10 anonymous root entrypoint respects legacy-owner account privacy',(
     homepage({method:'GET',query:{email:privateMarker},accounts:[{email:privateMarker}]},out);
     expect(out.statusCode).toBe(200);
     expect(out.ended).toBe(true);
-    expect(out.body).toContain('Robinson Google Workspace MCP');
+    expect(out.body).toContain(PRODUCT_DISPLAY_NAME);
+    expect(out.body).toContain(PROVIDER_DISCLOSURE);
+    expect(out.body).toContain('trademark of Google LLC');
     expect(out.body).toContain('/api/account');
     expect(out.body).toContain('/api/mcp');
     expect(out.body).not.toContain(privateMarker);
