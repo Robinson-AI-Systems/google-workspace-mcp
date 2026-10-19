@@ -194,6 +194,11 @@ export const GUARDS_FILES = {
       if (a.removeFromCurrentParents === false) return true;
       return !(before?.parents || []).some((p) => p !== a.newParentFolderId && now.includes(p));
     } },
+  drive_trash_file: { destructive: true,
+    describe: (a) => ({ target: a.fileId, summary: `Move Drive file ${a.fileId} into recoverable trash` }),
+    before: (a, { drive }) => driveFile(drive, a.fileId, 'id,name,mimeType,trashed'),
+    after: (a, { drive }) => driveFile(drive, a.fileId, 'id,name,mimeType,trashed'),
+    verify: (a, before, after) => before?.trashed === false && after?.trashed === true },
   drive_restore_from_trash: { destructive: false,
     describe: (a) => ({ target: a.fileId, summary: `Restore the Drive file ${a.fileId} from the trash` }),
     before: (a, { drive }) => driveFile(drive, a.fileId, 'id,name,trashed'),
