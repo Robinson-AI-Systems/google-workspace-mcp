@@ -166,6 +166,19 @@ describe('P10 actual route one-use browser callback and independent principal MC
   expect(h.started).toBeNull();
   expect(h.accountLinks).toHaveLength(0);
  });
+ it('does not offer fresh consent merely because a DIFFERENT pilot subject is globally allowed',async()=>{
+   h.legacyPilot=true;h.freshConsent=false;
+   const otherSubject='123456789012345678901';
+   process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321012345678901,'+otherSubject;
+   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=otherSubject;
+   process.env.PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED='true';
+   const portal=res();await account(req('GET',{},sessCookie),portal);
+   expect(portal.statusCode).toBe(200);
+   expect(portal.body).toContain('Identity-only legacy tester');
+   expect(portal.body).not.toContain('Link Google mail permissions');
+   const blocked=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',csrf}),blocked);
+   expect(blocked.statusCode).toBe(400);expect(h.started).toBeNull();
+ });
  it('fresh legacy tester scope consent requires independent opt-in, CSRF, one-use browser-bound Google flow',async()=>{
    h.legacyPilot=true;h.freshConsent=true;
    const historical='123456789012345678901';

@@ -33,10 +33,6 @@ export function legacyPilotFreshConsentAllowed(sub,env=process.env){
  return env.PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED==='true'&&
    legacyPilotLoginAllowed(sub,env);
 }
-export function legacyPilotFreshConsentConfigured(env=process.env){
- const subjects=String(env.PUBLIC_PILOT_LEGACY_SUBJECTS||'').split(',').map(x=>x.trim()).filter(Boolean);
- return subjects.length===1&&legacyPilotFreshConsentAllowed(subjects[0],env);
-}
 export const cookie=(name,value,path='/',ttl=3600)=>name+'='+encodeURIComponent(value)+'; Path='+path+'; Max-Age='+ttl+'; HttpOnly; Secure; SameSite=Lax';
 export const readCookie=(req,name)=>{
  const a=String(req?.headers?.cookie||'').split(';').map(x=>x.trim()).filter(x=>x.startsWith(name+'='));

@@ -168,6 +168,11 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    expect(await store.listAccounts(user)).toHaveLength(0);
    process.env.PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED='true';
    expect(await store.canLegacyPilotStartFreshConsent(user)).toBe(true);
+   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS='987654321012345678901';
+   // Global config may target another subject; THIS stored pilot user is not eligible.
+   expect(await store.canLegacyPilotStartFreshConsent(user)).toBe(false);
+   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=sub;
+   expect(await store.canLegacyPilotStartFreshConsent(user)).toBe(true);
    await expect(store.upsertLinkedAccount({...args,sub:'999999999999999999999'}))
      .rejects.toThrow('legacy_pilot_identity_only');
    await expect(store.upsertLinkedAccount({...args,verifiedEmail:'another@example.test'}))

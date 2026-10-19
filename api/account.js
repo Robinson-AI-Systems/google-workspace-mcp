@@ -1,11 +1,12 @@
 // User-owned account portal. No global owner mailbox/connection listing.
 import {initSchema} from '../src/db.js';
 import {listAccounts,listConnections,revokeConnection,disconnectAccount,deletionPreview,
-  setPrincipalDefault,requestDeletion,cancelDeletion,isLegacyPilotIdentityPrincipal} from '../src/principals/store.js';
+  setPrincipalDefault,requestDeletion,cancelDeletion,isLegacyPilotIdentityPrincipal,
+  canLegacyPilotStartFreshConsent} from '../src/principals/store.js';
 import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.js';
 import {configureCustomerDelegation,listCustomerDelegations,revokeCustomerDelegation,
   addVerifiedDelegationSubject,removeDelegationSubject} from '../src/principals/delegation.js';
-import {readCookie,headers,legacyPilotFreshConsentConfigured} from '../src/principals/security.js';
+import {readCookie,headers} from '../src/principals/security.js';
 const escape=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export default async function handler(req,res){
  headers(res);
@@ -14,7 +15,7 @@ export default async function handler(req,res){
    await initSchema();
    const session=await requireSession(req),principalId=session.principal_id;
    const identityOnly=await isLegacyPilotIdentityPrincipal(principalId);
-   const freshConsentAvailable=identityOnly&&legacyPilotFreshConsentConfigured();
+   const freshConsentAvailable=identityOnly&&await canLegacyPilotStartFreshConsent(principalId);
    if(req.method==='POST'){
      if(identityOnly)return res.status(403).json({error:'legacy_pilot_identity_only'});
      const body=req.body&&typeof req.body==='object'?req.body:{};
