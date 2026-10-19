@@ -1,0 +1,52 @@
+{
+  "kind": "P10-6 genuinely deployed production Stage2 pilot activation / partial external acceptance",
+  "date": "2026-10-19",
+  "sourceSha": "076f888a7287c219797d508b4aa6a98f9b60a148",
+  "deployment": {
+    "id": "dpl_4cyDJoqYbY7ZR3rHEps6xHLKLLQn",
+    "state": "READY",
+    "branch": "live",
+    "twoHostAliases": "READY and identical deployment/source",
+    "canonicalOrigin": "https://google-workspace-mcp-chris-projects-de6cd1bf.vercel.app",
+    "customAlias": "https://workspace.robinsonaisystems.com"
+  },
+  "checks": [
+    "check",
+    "unit",
+    "db (actual disposable PostgreSQL)",
+    "rtc",
+    "test",
+    "release-policy"
+  ],
+  "configuration": {
+    "publicSignInMode": "pilot (pre-existing, roster two Google-verified subjects)",
+    "publicToolDispatch": "PUBLIC_P10_TOOL_EXECUTION_VERIFIED=true; production encrypted env, observed after fresh verified deploy",
+    "publicEnrollment": "not enabled",
+    "ownerLegacyAccess": "preserved",
+    "noCredentialOrProviderScopeChanges": true
+  },
+  "ownerProviderContinuity": {
+    "actualGoogleIdentityMatch": true,
+    "originalLinkedOwnerAccounts": 2,
+    "actualGmailLabelReadCount": 19
+  },
+  "readOnlyProductionDatabase": {
+    "activeIsolatedPilotUserPrincipals": 2,
+    "independentlyLinkedEncryptedUserGoogleGrants": 1,
+    "issuedV2NativeMcpAgentConnections": 0,
+    "activeOriginalOwnerAccessRecords": 17
+  },
+  "actualExternalAcceptance": {
+    "mobileChromeAliasToCanonicalSignedInPortal": "PASS, owner screenshot before Stage2 activation",
+    "newUserNativeMcpClientAuthorization": "PENDING, no genuine OAuth client completed",
+    "secondTesterIndependentGoogleGrant": "PENDING, must be user-consented",
+    "twoExternalRealProviderReads": "PENDING",
+    "crossPrincipalBrowserAndMcpDenial": "PENDING",
+    "newClientRefreshAndRevocation": "PENDING",
+    "originalOwnerBearerRefreshRunner": "PENDING"
+  },
+  "scope": "No Gmail writes, paid licensing, customer DWD, public enrollment, legacy owner token refresh/revocation, secret disclosure or fabricated client grants.",
+  "rollback": "Restore PUBLIC_P10_TOOL_EXECUTION_VERIFIED absent/false on Production; make independently checked source-pinned production redeploy; verify both aliases and original owner connection.",
+  "ledger": "Authoritative 32 PASS / 8 PENDING unchanged; no full P10 row certified by Stage2 deployment alone.",
+  "provenance": "Owner's explicit continuation request and sanitized GitHub issue #205 operational comments. P10-4 real Postgres/source suite CI passed, not substituted for actual V2 client."
+}
