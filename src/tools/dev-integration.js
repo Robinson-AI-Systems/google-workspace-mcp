@@ -77,6 +77,10 @@ export function classifyFailure(e){
    /insufficient (authentication )?scopes/i.test(message)))
    return {status:'not_readable',reason:'oauth_consent_missing'};
  if(code===401||code===403)return {status:'not_readable',reason:'scope_or_access_denied'};
+ // An invalid disposable fixture ID is a real provider argument failure, not
+ // evidence that the API, Google grant or integrated client is broken.
+ if(code===400&&(/Invalid task list ID|Invalid tasklist ID|invalid.*tasklist/i.test(message)))
+   return {status:'missing',reason:'invalid_provider_resource'};
  return {status:'not_readable',reason:'google_probe_failed'};
 }
 

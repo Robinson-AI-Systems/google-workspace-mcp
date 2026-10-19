@@ -8,6 +8,16 @@ describe('RTC result handles',()=>{
    expect(projectFields({user:{name:'A',email:'b'},id:5},'user.name,id')).toEqual({user:{name:'A'},id:5});
    expect(()=>projectFields({a:1},'__proto__.polluted')).toThrow();
  });
+ it('never erases a plain authorization refusal or treats absent fields as successful {}',async()=>{
+   expect(()=>projectFields({groups:[]},'noSuchField')).toThrow(/none of the requested fields exist/);
+   expect(()=>projectFields('Refused: outside allowed domain','group.name')).toThrow(/fields require/);
+   const denied=await shapeReadResult(ok('Refused: outside allowed domain. Nothing was read.'),{
+     toolName:'admin_get_group_settings',fields:'whoCanPostMessage'},'owner');
+   expect(denied.isError).toBe(true);
+   expect(denied.content[0].text).toMatch(/^Refused:/);
+   await expect(shapeReadResult(ok({groups:[]}),{fields:'nonexistent'},'owner'))
+     .rejects.toThrow(/none of the requested fields exist/);
+ });
  it('merges selected sibling fields by list position without losing prior fields',()=>{
    const original={entries:[{id:'a',status:'observed',private:'omit'},
      {id:'b',status:'outside_scope',private:'omit'}]};

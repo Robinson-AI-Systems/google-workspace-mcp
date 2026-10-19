@@ -34,6 +34,8 @@ describe('P10 full direct-user Google scope consent',()=>{
    .toEqual({status:'missing',reason:'api_not_enabled'});
   expect(classifyFailure(provider('forbidden','Workspace administrator permission required')))
    .toEqual({status:'not_readable',reason:'scope_or_access_denied'});
+  const invalid={response:{status:400,data:{error:{message:'Invalid task list ID'}}}};
+  expect(classifyFailure(invalid)).toEqual({status:'missing',reason:'invalid_provider_resource'});
  });
 });
 

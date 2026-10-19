@@ -19,6 +19,8 @@ const CROSS_DOMAIN_FIELD = { type: 'boolean', description: 'Set to true only whe
 // Reports API "all" queries and customer-wide usage reports may expose activity
 // from other businesses even when no outside email appears in the arguments.
 // An opaque Google user ID is not proof of membership in the allowed domain.
+const UNFILTERABLE_CUSTOMER_READS=new Set(['admin_get_customer_info']);
+const DOMAIN_DEFAULT_LISTS=new Set(['admin_list_users','admin_list_groups']);
 const reportsNeedOrganizationConsent = (name, args) =>
   name.startsWith('reports_') && (name === 'reports_usage_customer' ||
     !domainOfEmail(args.userKey));
@@ -51,12 +53,26 @@ export function applyDomainGuard(registry) {
   registry.tools = registry.tools.map((tool) => {
     if (!TOOL_FAMILY.test(tool.name) && !DOMAIN_SCOPED_DRIVE_MEMBERSHIP.has(tool.name)) return tool;
     const props = tool.inputSchema?.properties || {};
-    const aimed = DOMAIN_SCOPED_DRIVE_MEMBERSHIP.has(tool.name) || tool.name.startsWith('reports_') || [...EMAIL_ARGS, ...EMAIL_LIST_ARGS, ...DOMAIN_ARGS].some((a) => a in props);
+    const aimed = DOMAIN_SCOPED_DRIVE_MEMBERSHIP.has(tool.name) ||
+      UNFILTERABLE_CUSTOMER_READS.has(tool.name) || tool.name.startsWith('reports_') ||
+      [...EMAIL_ARGS, ...EMAIL_LIST_ARGS, ...DOMAIN_ARGS].some((a) => a in props);
     if (!aimed) return tool;
     const inner = registry.handlers[tool.name];
     const wrapper = async (args = {}, clients) => {
       const { crossDomain, ...rest } = args;
       if (crossDomain !== true && Array.isArray(clients?.allowedDomains)) {
+        // Customer-wide Directory endpoints have no domain filter. Never
+        // silently disclose other business domains from a restricted client.
+        if (UNFILTERABLE_CUSTOMER_READS.has(tool.name))
+          return ok('Refused: customer-wide account details may include other business domains. Nothing was read. Ask the owner and explicitly use crossDomain: true for this Workspace customer.');
+        // Google Directory list without a domain uses my_customer (ALL domains).
+        // Pin normal reads to the selected connection domain. The explicit
+        // crossDomain flag restores the provider's full-customer capability.
+        if (DOMAIN_DEFAULT_LISTS.has(tool.name) && !String(rest.domain||'').trim()) {
+          if (!clients.allowedDomains.length)
+            return ok('Refused: this connection has no verified allowed domain for Directory listing. Nothing was read.');
+          rest.domain=clients.allowedDomains[0];
+        }
         if (reportsNeedOrganizationConsent(tool.name, rest)) {
           return ok('Refused: This Reports request can include activity from other business domains. Nothing was read. Use an email in an allowed domain, or ask the owner before using crossDomain: true for the customer-wide report.');
         }

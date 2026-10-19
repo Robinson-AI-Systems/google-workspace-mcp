@@ -209,3 +209,53 @@ describe('P7-1 shared-drive and existing Drive member caller authorization', () 
    }
  });
 });
+
+describe('P10 live customer-domain list and field-projection regressions',()=>{
+ it('defaults allowed-domain Directory group and user lists to the principal domain, not my_customer',async()=>{
+   const {clients,calls}=rentals();
+   const groups=await registry.handlers.admin_list_groups({},clients);
+   const users=await registry.handlers.admin_list_users({},clients);
+   expect(groups.isError).not.toBe(true);
+   expect(users.isError).not.toBe(true);
+   expect(calls.find(x=>x.path==='admin.groups.list')?.args?.[0])
+     .toMatchObject({domain:'rentals.test'});
+   expect(calls.find(x=>x.path==='admin.users.list')?.args?.[0])
+     .toMatchObject({domain:'rentals.test'});
+   expect(calls.filter(x=>x.path==='admin.groups.list'||x.path==='admin.users.list')
+     .every(x=>x.args[0].customer===undefined)).toBe(true);
+ });
+ it('does not silently accept other-domain list requests; explicit opt-in retains real customer-wide reads',async()=>{
+   const {clients,calls}=rentals();
+   const denied=await registry.handlers.admin_list_groups({domain:'ai-systems.test'},clients);
+   expect(text(denied)).toMatch(/^Refused:/);
+   expect(calls).toHaveLength(0);
+   const opted=await registry.handlers.admin_list_groups({crossDomain:true},clients);
+   expect(opted.isError).not.toBe(true);
+   const query=calls.find(x=>x.path==='admin.groups.list');
+   expect(query.args[0]).toMatchObject({customer:'my_customer'});
+   expect(query.args[0].domain).toBeUndefined();
+   expect(JSON.stringify(calls)).not.toContain('crossDomain');
+ });
+ it('refuses unfilterable customer-wide Admin info, but supports explicit cross-domain owner choice',async()=>{
+   const {clients,calls}=rentals();
+   const blocked=await registry.handlers.admin_get_customer_info({},clients);
+   expect(text(blocked)).toMatch(/^Refused:/);
+   expect(calls).toHaveLength(0);
+   const filtered=await registry.handlers.admin_get_customer_info({fields:'customerDomain'},clients);
+   expect(filtered.isError).toBe(true);
+   expect(text(filtered)).toMatch(/^Refused:/);
+   expect(text(filtered)).not.toBe('{}');
+   expect(calls).toHaveLength(0);
+   await registry.handlers.admin_get_customer_info({crossDomain:true},clients);
+   expect(calls.find(c=>c.path==='admin.customers.get')).toBeTruthy();
+ });
+ it('returns a visible refusal, not {} success, when fields filter targets a blocked foreign group',async()=>{
+   const {clients,calls}=rentals();
+   const denied=await registry.handlers.admin_get_group_settings({
+     groupEmail:'other@ai-systems.test',fields:'whoCanPostMessage'},clients);
+   expect(denied.isError).toBe(true);
+   expect(text(denied)).toMatch(/^Refused:/);
+   expect(text(denied)).not.toBe('{}');
+   expect(calls).toHaveLength(0);
+ });
+});
