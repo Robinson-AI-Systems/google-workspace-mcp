@@ -63,3 +63,31 @@ describe('Readable result and recoverable Drive safety for the new consent rollo
   expect(JSON.parse(preview.content[0].text)).toMatchObject({done:false,dryRun:true});
  });
 });
+
+
+describe('Bounded real-provider creation and lookup responses',()=>{
+ it('does not return huge Slides provider creates in a change receipt',async()=>{
+  const {handlers}=await import('../../src/tools/slides.js');
+  const fakeSlide={presentationId:'temporary-presentation',title:'Pilot scratch',
+    slides:[{note:'sensitive detail '.repeat(25000)}]};
+  const slides={presentations:{create:async()=>({data:fakeSlide})}};
+  const result=await handlers.slides_create_presentation({title:'Pilot scratch'},{slides});
+  expect(JSON.parse(result.content[0].text)).toEqual({
+    presentationId:'temporary-presentation',title:'Pilot scratch'});
+  expect(result.content[0].text.length).toBeLessThan(500);
+ });
+ it('keeps Drive list pagination and essentials but omits long default owner/avatar/link fields',async()=>{
+  const {handlers}=await import('../../src/tools/drive.js');
+  let called;
+  const drive={files:{list:async args=>{
+    called=args;return {data:{nextPageToken:'more',files:[{id:'folder',name:'Scratch'}]}};
+  }}};
+  const result=await handlers.drive_list_files({maxResults:10},{drive});
+  const data=JSON.parse(result.content[0].text);
+  expect(data.nextPageToken).toBe('more');
+  expect(data.files[0].id).toBe('folder');
+  expect(called.pageSize).toBe(10);
+  expect(called.fields).toContain('nextPageToken');
+  expect(called.fields).not.toMatch(/owners|webViewLink/);
+ });
+});
