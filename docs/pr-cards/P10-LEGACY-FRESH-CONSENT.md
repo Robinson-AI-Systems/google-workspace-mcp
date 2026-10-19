@@ -42,3 +42,7 @@ This is a guarded implementation contribution to the **existing** P10-6 two-user
 ## Execution limits
 
 No local checkout or outbound GitHub network is available in this session's shell. Plan is committed through the connected GitHub API before production edits. The standard local `npm run session:bundle` / `session:prepare` commands cannot be run against a local repo; required tests will instead be verified with repository exact-head GitHub Actions. Delivery/accounting must be described honestly and no bundle credited absent the original live acceptance.
+
+## Source delivery / acceptance separation
+
+The guarded source contribution is implemented as `8cd13baf18e199a1595dc04fa2ba4e145b6a4e67`, with exact-head `check`, `unit`, `db`, `rtc`, `test` and `release-policy` all passing prior to this record. Codex P1 principal-specific portal eligibility finding was corrected and its review thread resolved. Evidence and original four-criterion mapping: `docs/plan/evidence/p10-legacy-fresh-consent-engineering.json`. Actual production lines: **80 added, 12 removed**; the P10-6 subsection remains **unfinished**, so this earns **zero complete original subsections and zero bundles**. No live new OAuth grant, Google consent, two-client acceptance or production activation has occurred. The delivery artifact reports `CONTINUE`, not `SUBSTANTIAL`.
