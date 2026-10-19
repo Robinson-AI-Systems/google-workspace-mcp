@@ -171,7 +171,7 @@ export function checkVerification(items, domain) {
 
 const searchPresence = async (args, { siteVerification }) => {
   const domain = stripWww(args.domain);
-  if (!domain || !domain.includes('.')) return ok('Give the website domain, e.g. example.com.');
+  if (!domain || !domain.includes('.')) throw Error('invalid_args: Give the website domain, e.g. example.com.');
   let res;
   try {
     res=await siteVerification.webResource.list({});
@@ -180,15 +180,25 @@ const searchPresence = async (args, { siteVerification }) => {
     // proof that a domain is unverified, and should not stop the owner from
     // receiving useful manual Search Console instructions.
     const status=Number(error?.response?.status||error?.code);
-    const reasons=error?.response?.data?.error?.errors||[];
-    const missingScope=status===403&&(
-      reasons.some(e=>e?.reason==='insufficientPermissions')||
-      /insufficient (authentication )?scopes/i.test(String(error?.message||'')));
-    if(!missingScope)throw error;
+    const body=error?.response?.data?.error||{};
+    const reasons=body.errors||[];
+    const problem=String(body.message||error?.message||'');
+    const scopeMissing=status===403&&(
+      reasons.some(e=>/^(insufficientPermissions|ACCESS_TOKEN_SCOPE_INSUFFICIENT)$/.test(e?.reason||''))||
+      /insufficient (authentication )?scopes/i.test(problem));
+    const apiDisabled=status===403&&(
+      reasons.some(e=>/^(accessNotConfigured|SERVICE_DISABLED)$/.test(e?.reason||''))||
+      /(?:Site Verification API|Google Site Verification API).*?(?:has not been used in project|disabled|not enabled)/i.test(problem));
+    if(!scopeMissing&&!apiDisabled)throw error;
+    // A missing OAuth scope or disabled API is an UNKNOWN readback, never
+    // authoritative evidence that the owner has failed domain verification.
     return ok({
-      domain,status:'WARN',readable:false,reason:'site_verification_scope_unavailable',
+      domain,status:'WARN',readable:false,reason:scopeMissing?'site_verification_scope_unavailable':'site_verification_api_not_enabled',
       verified:{root:{name:domain,verified:null},www:{name:'www.'+domain,verified:null}},
-      searchConsole:'The connected Google account cannot read Site Verification. Open https://search.google.com/search-console while signed in as the intended owner to check existing verified properties. If the owner approves Site Verification read access, reconnect this Google account through its normal OAuth consent process; this check cannot grant that permission. Do not add or change DNS records based on this unknown result.',
+      searchConsole:(scopeMissing
+        ?'Site Verification user OAuth consent is missing. Open the signed-in Workspace account portal and approve the requested scope; simply enabling the API does not grant consent.'
+        :'Site Verification API is disabled in the Google Cloud project behind this consent; a project operator must enable it in the Google APIs Library.')+
+        ' Open https://search.google.com/search-console as the intended owner for the actual verified properties. Do not add or change DNS records based on this unknown result.',
       businessProfile:'Google Business Profile is separate. Open https://business.google.com while signed in as the account that should own the listing; inspect or claim the business there.',
       note:'Verification status is UNKNOWN, not failed. This is a Google account permission limitation; no DNS, Search Console or Business Profile settings were changed.'
     });
