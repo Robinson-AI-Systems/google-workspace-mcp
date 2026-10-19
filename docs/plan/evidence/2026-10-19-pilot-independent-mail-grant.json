@@ -1,0 +1,47 @@
+{
+  "kind": "P10-6 existing-second-tester fresh Google mail consent — partial real production acceptance",
+  "observedDate": "2026-10-19",
+  "deployed": {
+    "sourceSha": "be0999f50af0fe4b8a9f5ae0a7ecfa714206c490",
+    "deploymentId": "dpl_AwcyPUuYAQtZMMVUbMS3h8dMLytx",
+    "ready": true,
+    "canonicalConfiguredOrigin": "https://google-workspace-mcp-chris-projects-de6cd1bf.vercel.app",
+    "alternateOwnedAlias": "https://workspace.robinsonaisystems.com"
+  },
+  "observations": [
+    {
+      "method": "user-operated Google consent",
+      "result": "Owner reported successful Link Google mail permissions from the approved pilot account using canonical origin."
+    },
+    {
+      "method": "read-only Neon production aggregate query",
+      "result": {
+        "activeUserOwnedGoogleLinks": 1,
+        "independentlyConsentedHistoricalPilotPrincipals": 1,
+        "originalOwnerGoogleAccounts": 2,
+        "activeOriginalOwnerAccessTokens": 17
+      },
+      "safeQuery": "SELECT aggregate COUNTs from principal_google_accounts, principals, google_accounts and active oauth_tokens; no principal/email IDs, secrets or provider bodies returned."
+    },
+    {
+      "method": "previously connected original owner custom Workspace adapter",
+      "result": "workspace_whoami matched the Google account and Gmail identity; workspace_list_accounts still returned two accounts. No other principal's bearer used."
+    }
+  ],
+  "pending": [
+    "Authentic original owner bearer/refresh replay with its authorized existing runner",
+    "Two Google subjects' independent browser/provider sign-in plus adverse cases and cleanup",
+    "Two real direct MCP clients with authorized provider reads and denial/revoke/reconnect",
+    "Stage2 tool dispatch separately authorized, checked deployed, and independently accepted",
+    "Public operator disclosures, legal/privacy review and publication decision"
+  ],
+  "status": "PARTIAL_ONLY; existing P10-VERIFY-GOOGLE, P10-MCP-PILOT, P10-OWNER-CONTINUITY and P10-6 criteria remain PENDING",
+  "noChanges": [
+    "No SQL mutation",
+    "No Google write",
+    "No credential/token access or rotation",
+    "No Production environment edits",
+    "No source release",
+    "No Stage2/public enrollment"
+  ]
+}
