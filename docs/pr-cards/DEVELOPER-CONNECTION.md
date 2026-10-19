@@ -214,3 +214,14 @@ accounting command establishes owner substantiality by itself. Coherent new serv
 audit and owned recovery behavior plus the actual integration boundary justify the
 combined workload. Test/harness/generated/docs and inherited fixture code receive
 zero production credit. Deployed/provider/Hub acceptance remains separately gated.
+
+## October 18 — secure LIVE read-only issuance completion repair
+
+The P9-LIVE-DIRECT native portion has genuine proof in PR218, but the existing encrypted issuance handler/store/runner accepts only TEST mode. The ordinary live-pass form exposes its one-time credential only to the browser, so this runner cannot complete live RTC acceptance without an unsafe credential copy. Reuse the existing atomic encrypted issuance boundary rather than introducing another endpoint, database table or roadmap phase. This is a targeted completion-enabling repair, not a full subsection/bundle.
+
+Frozen acceptance before code:
+1. Preserve default TEST request/24-hour policy and existing callers; explicit LIVE requests are one-hour read_only, exact connected mailbox/areas, no Hub, no writes and billing denied. Live uses genuine account ownership, never TEST enrollment.
+2. Display the exact immutable mode/account/areas/duration and restrictions before existing owner passphrase authentication. No credential is issued at start, anonymous GET or poll; strict Origin/lockout/registered RSA-client boundaries remain.
+3. Atomically insert exactly one pass and its runner-only RSA ciphertext; concurrent/repeated approvals, altered mode/options, unknown mailbox and failed ciphertext persistence cannot leave duplicate/orphan grants. Preserve all old grants.
+4. The private runner explicitly selects mode, pins source/account/areas/profile/write policy and verifies the live/test identity before writing a new mode0600 file. It must not print credentials, reuse a checkpoint for a changed mode or silently widen authority.
+5. Run focused handler/runner checks, full check/unit, exact-head database/RTC CI and review before merge. Production LIVE issuance/acceptance still requires owner approval and checked release; no Stage2/canonical change, Google write, paid action or original-grant modification.
