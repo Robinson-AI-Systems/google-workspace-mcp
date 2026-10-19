@@ -24,7 +24,6 @@ describe('historical test account fresh Google consent is separately owner gated
    {PUBLIC_PILOT_GOOGLE_SUBJECTS:sub},
    {PUBLIC_PILOT_GOOGLE_SUBJECTS:sub+','+sub},
    {PUBLIC_PILOT_LEGACY_SUBJECTS:sub+',987654321012345678901'},
-   {PUBLIC_PILOT_LEGACY_SUBJECTS:'987654321012345678901'},
    {PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED:'false'}
   ];
   for(const patch of variants){
@@ -32,5 +31,14 @@ describe('historical test account fresh Google consent is separately owner gated
    expect(legacyPilotFreshConsentAllowed(sub,env)).toBe(false);
    expect(legacyPilotFreshConsentConfigured(env)).toBe(false);
   }
+ });
+ it('switching the configured exception to the other tester does not authorize the original subject',()=>{
+  const switched={...base(),PUBLIC_PILOT_LEGACY_SUBJECTS:'987654321012345678901'};
+  // This is a syntactically valid, DIFFERENT operator-selected exception;
+  // the database ownership check must still prove which enrolled principal
+  // was originally marked identity-only before permitting a new link.
+  expect(legacyPilotFreshConsentConfigured(switched)).toBe(true);
+  expect(legacyPilotFreshConsentAllowed(sub,switched)).toBe(false);
+  expect(legacyPilotFreshConsentAllowed('987654321012345678901',switched)).toBe(true);
  });
 });
