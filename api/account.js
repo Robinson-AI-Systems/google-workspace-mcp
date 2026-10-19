@@ -55,16 +55,22 @@ export default async function handler(req,res){
        // account revocation. This is this principal's own independent Google
        // grant from the PUBLIC OAuth client, never the legacy owner client.
        // The local stop must work even when Google is temporarily unreachable.
-       let providerRevoked=false;
+       // Stop local account/client dispatch before any external provider
+       // network request. A slow/failing Google revocation cannot leave the
+       // owner's native agent access active while the request waits.
+       let token=null;
        try {
          const grant=await getLinkedGrant(principalId,body.id);
-         const token=grant?.refresh_token||grant?.access_token;
-         if(token){
+         token=grant?.refresh_token||grant?.access_token||null;
+       }catch{ /* local revocation still proceeds */ }
+       const disconnected=await disconnectAccount(principalId,body.id);
+       let providerRevoked=false;
+       if(disconnected>0&&token){
+         try {
            await publicGoogleClient().revokeToken(token);
            providerRevoked=true;
-         }
-       }catch{ /* never expose Google tokens, provider errors or owner identity */ }
-       const disconnected=await disconnectAccount(principalId,body.id);
+         }catch{ /* Google revocation is unverified: report precisely */ }
+       }
        return res.status(200).json({godMode:false,disconnected,
          agentConnectionsRevoked:disconnected>0,providerRevoked,
          note:providerRevoked
