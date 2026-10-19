@@ -259,3 +259,32 @@ describe('P10 live customer-domain list and field-projection regressions',()=>{
    expect(calls).toHaveLength(0);
  });
 });
+
+
+describe('P10 real customer-wide overview composition regression',()=>{
+ it('refuses restricted organization reads without opt-in and makes no upstream Google request',async()=>{
+  const {clients,calls}=rentals();
+  const out=JSON.parse(text(await registry.handlers.workspace_admin_overview({sections:['organization']},clients)));
+  expect(out.items.organization).toMatchObject({status:'not_readable'});
+  expect(out.items.organization.reason).toMatch(/other business domains|customer-wide/i);
+  expect(calls.filter(c=>c.path==='admin.customers.get')).toHaveLength(0);
+ });
+ it('forwards explicit consent to the guarded Directory customer child but does not widen the original client',async()=>{
+  const {clients,calls,when}=rentals();
+  when('admin.customers.get').resolves({data:{id:'customer-1',customerDomain:'rentals.test'}});
+  const before=clients.crossDomain;
+  const output=JSON.parse(text(await registry.handlers.workspace_admin_overview({crossDomain:true,sections:['organization']},clients)));
+  expect(output.items.organization).toMatchObject({status:'ok'});
+  expect(calls.filter(c=>c.path==='admin.customers.get')).toHaveLength(1);
+  expect(JSON.stringify(calls)).not.toContain('crossDomain');
+  expect(clients.crossDomain).toBe(before);
+ });
+ it('explains that a user cannot reuse the installation owner policy baseline with broad read consent',async()=>{
+  const {clients,calls}=rentals();
+  clients.rtcPolicy={...clients.rtcPolicy,principalKind:'user',profile:'full'};
+  const output=JSON.parse(text(await registry.handlers.workspace_admin_overview({crossDomain:true,sections:['policies']},clients)));
+  expect(output.items.policies).toMatchObject({status:'not_readable'});
+  expect(output.items.policies.reason).toMatch(/owner-specific policy baseline|not configured for this customer/i);
+  expect(calls).toEqual([]);
+ });
+});
