@@ -263,7 +263,8 @@ describe('P10 actual route one-use browser callback and independent principal MC
   expect(get).toMatchObject({statusCode:200,body:{authenticated:true,linkedAccounts:[]}});
   const unauth=res();await account(req(),unauth);expect(unauth.statusCode).toBe(403);
   const read=res();await account(req('GET',{},sessCookie),read);
-  expect(read.statusCode).toBe(200);expect(read.body).toContain('My Google Workspace MCP');
+  expect(read.statusCode).toBe(200);expect(read.body).toContain('Workspace MCP by Robinson AI Systems');
+  expect(read.body).toContain('Not created, operated, sponsored or endorsed by Google LLC.');
   const mutate=res();await account(req('POST',{},sessCookie,{action:'disconnect_account',id:'foreign'}),mutate);
   expect(mutate.statusCode).toBe(403);
   const log=res();await logout(req('POST',{},sessCookie,{csrf}),log);
