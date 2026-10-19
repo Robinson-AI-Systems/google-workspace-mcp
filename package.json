@@ -1,7 +1,7 @@
 {
   "name": "robinson-google-workspace-mcp",
   "version": "2.0.0",
-  "description": "Standalone MCP server giving Claude full control of Google Workspace: Gmail, Drive, Calendar, Sheets, Docs, Slides, Forms, Tasks, Contacts, Chat, plus complete Admin SDK (users, groups, domains, aliases, org units, devices, roles, security, reports, licensing) across multiple domains.",
+  "description": "Independently hosted remote MCP server for Google Workspace APIs, operated by Robinson AI Systems. Supports authorized compatible MCP clients with scoped accounts, delegated permissions and guarded Google operations; not affiliated with Google LLC.",
   "type": "module",
   "main": "api/mcp.js",
   "scripts": {
