@@ -36,3 +36,30 @@ describe('P10 full direct-user Google scope consent',()=>{
    .toEqual({status:'not_readable',reason:'scope_or_access_denied'});
  });
 });
+
+describe('Readable result and recoverable Drive safety for the new consent rollout',()=>{
+ it('a valid empty Google Doc has an explicit empty marker, not an indistinguishable empty MCP output',async()=>{
+  const {handlers}=await import('../../src/tools/docs.js');
+  const docs={documents:{get:async()=>({data:{documentId:'test-doc',body:{content:[]}}})}};
+  const out=await handlers.docs_get_text({documentId:'test-doc'},{docs});
+  expect(JSON.parse(out.content[0].text)).toEqual({documentId:'test-doc',text:'',empty:true});
+  docs.documents.get=async()=>({data:{documentId:'test-doc',body:{content:[{paragraph:{elements:[{textRun:{content:'Hi'}}]}}]}}});
+  const nonempty=await handlers.docs_get_text({documentId:'test-doc'},{docs});
+  expect(JSON.parse(nonempty.content[0].text)).toMatchObject({text:'Hi',empty:false});
+ });
+ it('trash uses recoverable Google Drive update and remains guarded by explicit confirmation',async()=>{
+  const {GUARDS}=await import('../../src/tools/guards.js');
+  const {registry}=await import('../../src/tools/index.js');
+  const tool=registry.tools.find(t=>t.name==='drive_trash_file');
+  expect(GUARDS.drive_trash_file.destructive).toBe(true);
+  expect(tool.inputSchema.properties).toHaveProperty('confirm');
+  expect(tool.inputSchema.properties).toHaveProperty('dryRun');
+  expect(tool.name).toBe('drive_trash_file');
+  const dryClient={drive:{files:{
+   get:async()=>({data:{id:'temporary-folder',name:'Scratch',trashed:false}}),
+   update:async()=>{throw Error('a preview must not mutate Google');}
+  }},store:{recordChange:async()=>({logged:true,id:1})}};
+  const preview=await registry.handlers.drive_trash_file({fileId:'temporary-folder',dryRun:true},dryClient);
+  expect(JSON.parse(preview.content[0].text)).toMatchObject({done:false,dryRun:true});
+ });
+});
