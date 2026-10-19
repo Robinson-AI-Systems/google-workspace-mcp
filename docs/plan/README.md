@@ -1,5 +1,11 @@
 # Robinson Google Workspace MCP: implementation plan
 
+## October 19 — Stage 2 pilot live; genuine new-user MCP acceptance remains pending
+
+The owner authorized a two-user Stage 2 pilot execution check. Production `PUBLIC_P10_TOOL_EXECUTION_VERIFIED=true` and unchanged `PUBLIC_SIGNIN_MODE=pilot` are in a newly deployed independently READY Vercel revision `076f888a7287c219797d508b4aa6a98f9b60a148` (`dpl_4cyDJoqYbY7ZR3rHEps6xHLKLLQn`). The two original approved subjects remain the only pilot users; existing owner access is preserved. Read-only production inspection observes two principals, one independent encrypted user Google grant, **zero new-user native MCP client connections**, two original owner accounts and 17 live owner access records. Original owner identity and actual Gmail label read succeeded post-redeployment.
+
+No real new-user native client Google read, cross-principal denial, refresh/revoke, or second user's independent provider consent has occurred. The next test is an explicit user-owned OAuth connection from two genuinely independent supported clients to `https://google-workspace-mcp-chris-projects-de6cd1bf.vercel.app/api/mcp`, choosing `read_only` for this nonwriting acceptance. Stage 2 itself is not read-only enforcement. Public enrollment, paid action, customer DWD, provider writes and legacy owner retirement are unauthorized. Hub live onboarding is not a server completion criterion. Historical prior Stage2 OFF guidance is superseded; see the current [operator guide](../PUBLIC-SIGNIN-OWNER-GUIDE.md), [P10 acceptance checklist](P10-PILOT-CHECKLIST.md), and [sanitized source/deployment receipt](evidence/2026-10-19-stage2-pilot-activation.json). The original acceptance ledger is unchanged at **32 PASSED / 8 PENDING**.
+
 Agent entry: [AGENTS.md](../../AGENTS.md). Complete SESSION-START §§0–1 before
 selecting new implementation; preserve the existing session:finish workload check.
 

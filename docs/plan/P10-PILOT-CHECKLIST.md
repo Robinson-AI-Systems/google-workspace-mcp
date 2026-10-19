@@ -1,5 +1,15 @@
 # P10-6 — safe Google Console setup and two-user pilot preflight
 
+## October 19 — verified Stage 2 two-user native MCP pilot execution enabled (supersedes earlier OFF status)
+
+**Current deployed state:** Owner requested the formerly pending two-user functional MCP pilot; Production-only `PUBLIC_P10_TOOL_EXECUTION_VERIFIED=true` is configured and its new exact-source Vercel deployment `dpl_4cyDJoqYbY7ZR3rHEps6xHLKLLQn` is independently READY at `076f888a7287c219797d508b4aa6a98f9b60a148` on both `workspace.robinsonaisystems.com` and the canonical registered Vercel origin. All six required exact-source GitHub Actions checks passed. `PUBLIC_SIGNIN_MODE=pilot` is unchanged: only the preapproved two Google subjects can sign in. No public enrollment, provider scope, paid entitlement, customer DWD or original owner credential was changed. Separate safe user authorization and action confirmation still apply; **Stage 2 does not force every authorized end-user connection to read_only**. Select `read_only` for acceptance clients and do not perform writes during the current approved test.
+
+**Genuine acceptance evidence and limits:** Fresh owner-connected Google identity and Gmail list read succeeded after this redeploy, with two owner accounts and 17 existing active owner records preserved. Read-only production SQL confirms two verified pilot users and one independently linked encrypted V2 Google account; **zero real new-user MCP agent connections** have yet been issued. The second pilot tester still must consent to their own relevant Google scopes. Two independent remote MCP client OAuth connection/read/foreign-denial/refresh/revoke trials and original owner bearer/refresh test remain PENDING. The registered **MCP OAuth resource and issuer** are still `https://google-workspace-mcp-chris-projects-de6cd1bf.vercel.app/api/mcp` (not the vanity-domain equivalent); use that URL with direct supported MCP clients, allowing user-controlled OAuth and `read_only` selection. A production flag and synthetic/real-Postgres tests never substitute for actual external provider/client proof.
+
+**Rollback and records:** Remove/set the Production execution gate to false, redeploy the unchanged checked `live` revision under the authorized release process, verify alias/READY/source and original owner direct read. Full sanitized Stage 2 receipt: [evidence](evidence/2026-10-19-stage2-pilot-activation.json). Original pending acceptance remains **32 PASSED / 8 PENDING**; Hub LIVE onboarding remains Hub-owned and is not a Workspace completion criterion. The October 18 Stage2 OFF directions below are retained as historical preactivation notes, not current state.
+
+
+
 This is an operator procedure for the **existing** P10-6 acceptance card, not new product scope. The owner approved one non-billable two-user sign-in pilot on October 17, 2026. That did **not** approve a manual release, public launch, paid service, broader Google scopes, production writes, or retirement of the existing owner sign-in. The existing owner Google OAuth app is never modified or reused.
 
 ## Google Console: distinct public application
