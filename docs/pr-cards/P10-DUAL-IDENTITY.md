@@ -88,3 +88,7 @@ This is a newly found defect against the original P10-3 owner-mailbox privacy cr
 4. Run source syntax, focused tests and all required exact-head CI (including disposable real PostgreSQL), review, and normal PR merge before considering checked deployment. Production release follows the existing independent policy; post-release evaluate the runtime error clusters and original owner/native continuity. No production SQL rewrite, external Google action or manual release is authorized by this repair alone.
 
 **Scope:** `src/db.js`, a focused `test/unit` initializer concurrency regression, and the existing card/handoff. This is security/reliability maintenance and earns zero P9/P10 batch subsections or completion bundles; pending original provider acceptance is not upgraded.
+
+## October 18 real production privacy and owner-continuation acceptance
+
+Original queue task P10-ANONYMOUS-HOMEPAGE-PRIVACY now PASSED on independently checked READY `0c2fa5b`. Fresh GET/HEAD/POST passed; protected existing-owner native OAuth and private PKCE/RSA exchange, account/default listing, real Google read, scoped denial, refresh and connection revocation all worked. Both disposable access rows are denied after cleanup and all17 original records/native access remain preserved. Exact sanitized proof is `docs/plan/evidence/2026-10-18-disposable-owner-native.json`. This closes the original privacy correction acceptance, not P10-OWNER-CONTINUITY, the P9 RTC matrix, P10-6, a new subsection or a whole completion bundle. Historical frozen implementation plan remains unchanged.
