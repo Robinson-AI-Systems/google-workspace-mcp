@@ -38,15 +38,20 @@ function merge(dst,part){
 }
 export function projectFields(data,fields){
  if(!fields)return data;
+ // A plain refusal or provider diagnostic is not an object to project.
+ // Never turn one into an apparently successful empty {} response.
+ if(!data||typeof data!=='object')
+   throw new Error('invalid_args: fields require an object or list result, not a text response');
  const names=Array.isArray(fields)?fields:String(fields).split(',');
  if(names.length>30)throw new Error('invalid_args: too many fields');
- let projected={};
+ let projected={},matched=false;
  for(const name of names){
   const parts=String(name).trim().split('.');
   if(parts.some(x=>!x||x==='__proto__'||x==='constructor'||x==='prototype')||parts.length>12)throw new Error('invalid_args: bad field path');
   const fragment=pick(data,parts);
-  if(fragment!==undefined)projected=merge(projected,fragment);
+  if(fragment!==undefined){ projected=merge(projected,fragment);matched=true; }
  }
+ if(!matched)throw new Error('invalid_args: none of the requested fields exist in this result');
  return projected;
 }
 export function resultCount(v){
@@ -58,6 +63,8 @@ export async function shapeReadResult(output,args,connection,store=storeRtcResul
  if(output?.isError||!output?.content?.[0]||output.content[0].type!=='text')return output;
  const raw=output.content[0].text;
  let data;try{data=JSON.parse(raw)}catch{data=raw}
+ if(args?.fields && typeof data==='string' && /^Refused:/i.test(data))
+   return {...output,isError:true}; // preserve the actual authorization denial
  if(args?.fields)data=projectFields(data,args.fields);
  const full=typeof data==='string'?data:JSON.stringify(data);
  const bytes=Buffer.byteLength(full,'utf8');
