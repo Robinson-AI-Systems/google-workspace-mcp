@@ -84,7 +84,7 @@ export function manifest(){
  return {rtc:1,server:'google-workspace-mcp',prefix:'workspace',version:'1.0.0',
   areas:RTC_AREAS,counts:{tools:metadata.length,writes:metadata.filter(t=>t.writes).length,money:0,billingRisk:metadata.filter(t=>t.billingRisk).length},
   profiles:['read_only','everyday','full'],listingModes:['catalog','compact'],modes:['test','live'],
-  devTools:true,conformance:{status:'pending_real_D4_acceptance'},
+  devTools:true, // RTC 1 capability, not a Hub-owned enrollment/relay acceptance status.
   deployment:{sourceRevision:/^[a-f0-9]{40}$/.test(process.env.VERCEL_GIT_COMMIT_SHA||'')?process.env.VERCEL_GIT_COMMIT_SHA:null}};
 }
 export function openapi(){ return rtcOpenapi(process.env.PUBLIC_BASE_URL); }

@@ -550,7 +550,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "priority": 2,
     "requiredRevision": "7426e266752c8e97f4b970b6f4b31ab49d81275f",
     "task": "Verify deployed guarded workspace_bulk_operation with original owner-authorized scoped TEST targets and non-production approval. Prove permitted mappings, exact provider readbacks, safe domain refusal, partial failure and cleanup; no paid license actions without independent spending approval.",
-    "procedure": "docs/plan/TASKS.md \u2014 P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md — P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Exact READY deployment and authenticated custom MCP connection; owner-approved isolated TEST targets, permission/domain limits, exact fixture IDs and operation-specific approvals; no production bulk writes or autonomous spending",
     "dependsOn": [],
     "status": "PASSED",
@@ -606,7 +606,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "28e648611cf1e4a634490630201c517dfc501d7c",
     "status": "PASSED",
     "task": "Original disposable-group full-settings preview/edit/readback/cleanup through the actual scoped custom Google service.",
-    "procedure": "docs/plan/TASKS.md \u2014 P6-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md — P6-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Checked independently READY source containing 80c0870; original approved group fixture, scoped Google permission and operation-specific edit/cleanup authorization.",
     "dependsOn": [],
     "lastEvidence": "2026-10-16UTC/Oct15Denver actual SAMEoriginal approved Rentals Admin TESTprincipal and SAMEemptygroup on independently READY3ad0250/dpl_29kFsgUoW14Zf4EHCGbNZtuuYE54. Explicitalt=json repair now returns61settingsfields with every11prior restrictive patch value matched. Actual nonempty-before preview, disabledfooter update and independent readback confirmedtrue with durable audit ID. Members[] verified; exact group deletion dryRun/confirm after.existsfalse. Adminpass final revocation confirmedtrue, subsequentwhoami401pass_revoked. SharedDrive+permission alreadyremoved/deleted. Ordinary authorized own-domain read separately corroborates DirectorynotFound; not substituted forTEST mutation proof. Original failed GET{} and eventualDirectorycreate receipts preserved, no re-create. Current originalreadpass also proves138guide topics/7pages/capabilities parity; no scopes, mail or paid users."
@@ -617,7 +617,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "28e648611cf1e4a634490630201c517dfc501d7c",
     "status": "PASSED",
     "task": "Original disposable shared-drive create, member add/change/readback/remove and empty-drive delete lifecycle; preserve exact IDs, domain limits, no production file deletion and cleanup.",
-    "procedure": "docs/plan/TASKS.md \u2014 P7-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md — P7-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Independently READY checked source including 81264c1; explicit disposable-drive/member fixture permission and eligible Google role/edition. No paid account or production file changes.",
     "dependsOn": [],
     "lastEvidence": "2026-10-15 original newly owner-confirmed Rentals24h TEST/full workspace/files/admin principal; independently READY601f2f2/dpl_5RWTksxFxY5mEGK8rqb7MrgczobY. Fresh empty shared drive created with private saved UUID, domainUsersOnly/driveMembersOnly restrictions readback confirmed. Original empty owner-created Rentals fixture group granted reader with sendNotificationEmail:false; exact returned permission ID changed to writer, both confirmed. Exact permission removal confirmed; actual full files:[] and no cursor; dryRun/delete exact drive confirmed after.existsfalse, positive durable audit receipts. No production file/user/member or existing drive changed, no paid account or outside invite. Private intents/IDs/results retained, no uncertain create retry. Empty fixture group retained only for its separate Groups Settings retest/approved deletion."
@@ -628,7 +628,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "130bcc1f8275e87c1102bae553b1aefc3b80dd0a",
     "status": "PASSED",
     "task": "Complete the already-approved dated authenticated Google Admin Console walkthrough: inventory actual in-scope pages, compare mapped paths/steps/expected results, reconcile permitted API readbacks and correct real missing coverage. Do not add a new observation-storage feature.",
-    "procedure": "docs/plan/TASKS.md \u2014 P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md — P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Authenticated read-only Google Admin Console session for the intended authorized organization/role; observe only approved scope, no policy changes. Record inaccessible/edition-specific pages honestly; an API-generated checklist alone is not the walkthrough.",
     "dependsOn": [],
     "lastEvidence": "2026-10-15Denver actual dated authenticated Rentals Console inventory across54 stored distinct routes plus initial7service/security pages, both business OUs inspected,15real missing Gemini/Directory/account sections repaired. Checked READY03e88b251b248db62571de469029925b9f65ee73/dpl_BG4rTF51DVDixKGV8GiGsb6B1g1f, original protected read_only TEST runner UTC2026-10-16T00:55:39.833Z verified153orderedunique topics/8boundedpages, complete steps/expected, capabilities parity. Full navigation walk criterion accepted with Vault denied/DLP upgrade/CAA absent/prior websession400 explicit limits; no effective-all-OU policy or PolicyAPI certificate. No Console mutation/fixture recreation."
@@ -714,14 +714,14 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "id": "P9-HUB-LIVE",
     "priority": 4,
     "requiredRevision": "ed9ba9578381616f29341a0bdc063b84cd8064da",
-    "task": "Confirm Hub's independently implemented end-user live consent/relay and Sandbox handling against Workspace P9; or record Hub-owned pending dependency without widening existing TEST grants.",
-    "procedure": "docs/plan/evidence/p9-workspace-to-hub-handoff.md",
-    "gates": "Requires separate Hub approval/deployed implementation and disposable least-privilege live grant. Workspace must never discover Hub, and P8 read-only Hub acceptance remains valid.",
+    "task": "Provider-only RTC 1 compatibility: prove independently served manifest/canonical source, standalone MCP and prefixed HTTP doors, scoped bounded paginated search/describe/call/batch/result, policy/refresh/reauth/denial/revocation, real LIVE harmless provider read, and two-instance shared-PostgreSQL conformance. Actual Hub LIVE discovery/consent/relay/Sandbox is owned by Hub and is not a Workspace completion requirement. Historical row ID retained for traceability.",
+    "procedure": "docs/HUB-COMPATIBILITY.md; docs/plan/evidence/2026-10-18-live-rtc-acceptance.json; scripts/rtc-conformance-ci.mjs; scripts/rtc-workspace-conformance.mjs",
+    "gates": "RTC 1 conformance to reviewed Hub main 43eed4658527f32c9fca9666b0d31ecf8894b22d. Preserve original Workspace owner direct bearer and OAuth continuity as independent P10 criteria. Existing Hub TEST evidence retained but neither Hub LIVE enrollment nor a separate Hub pass is required here. No Hub project edit, Google write, new pass, production flag or unscheduled release.",
     "dependsOn": [
       "P9-LIVE-DIRECT"
     ],
-    "status": "PENDING",
-    "lastEvidence": "2026-10-18 genuine connected Hub namespace read shows hub TEST/RTC0 only, upstreamEnabled=false, authorizedTargets=0. No separate disposable live pass exists in Workspace. Preserve earlier original Hub TEST acceptance; this is not live relay/Sandbox proof. Separate Hub deployed generic connection/consent capability and its own disposable grant remain necessary; direct Workspace remains independent. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json.",
+    "status": "PASSED",
+    "lastEvidence": "Owner clarified Oct19,2026: Workspace only provides compliant standalone RTC1; Hub alone owns runtime Hub discovery/enrollment/connection. Reuse actual deployed Vercel READY `912e4fb330608de1fa45639eb656f3faea9fd733` and direct LIVE (mode live/read-only) Google identity/19 labels, exact area/write/broker/batch denials, and exact revocation401 from `docs/plan/evidence/2026-10-18-live-rtc-acceptance.json` (P9-LIVE-DIRECT). Genuine native OAuth/refresh/revocation read evidence in PR218. Original Hub TEST/D4 source/relay/revocation PASS preserved `docs/plan/evidence/2026-10-17-final-hub-route-acceptance.json`, not relabeled LIVE. Actual independent two-process Workspace+fake Google+shared real PostgreSQL RTC1 `manifest,manifest.openapi,catalog,meta,reads,writes,passes,passes.read_only,passes.expired,passes.revoked,safety,budget,oauth.refresh_settings,limits.two_instance` all PASS at CI Actions 39246612402 rtc job118039966463, original shipped source 912e4fb ancestor of main. Optional OAuth-native Hub onboarding is not mandatory RTC1. Hub foundation currently federation not_configured; not a Workspace defect or acceptance blocker. No Hub LIVE routed call claimed.",
     "subsections": [
       "P9-3"
     ]
@@ -730,16 +730,16 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "id": "P10-OWNER-CONTINUITY",
     "priority": 2,
     "requiredRevision": "681932972526ac3ea943666abcb8955ac25eb742",
-    "task": "On a READY deployment including P10 B, recheck existing owner's registered native MCP bearer/read-only account list and RTC Hub TEST identity/denials without reissuing or revoking existing grants.",
+    "task": "On independently READY Workspace deployment including P10 B, prove original owner's registered standalone native MCP bearer identity/account access, exact original bearer/refresh preservation and direct RTC TEST pass identity/read-only denial without issuance/revocation of useful existing grants; compare original credential inventory. Hub-owned relay/discovery/enrollment checks are not part of Workspace owner-continuity completion.",
     "procedure": "docs/PUBLIC-SIGNIN-OWNER-GUIDE.md",
-    "gates": "Requires deployment ancestry, original owner account's already-authorized read-only resources and original pass ownership; no new paid/provider write or owner credential changes.",
+    "gates": "Original owner authorized account/read-only resource and original bearer/refresh or disposable approved pass ownership, independently READY source and exact controlled non-destructive proof. Native `workspace_whoami` and account listing alone do not substitute original bearer/refresh and RTC guard checks; no Hub LIVE/TEST prerequisite, credential rotation, provider write, or billing.",
     "dependsOn": [],
     "status": "PENDING",
     "subsections": [
       "P10-1",
       "P10-3"
     ],
-    "lastEvidence": "2026-10-18 READY 17beedb: native whoami genuinely matches Rentals Gmail and workspace_list_accounts preserves both originals/default. Aggregate production SELECT: 17 unrevoked unexpired access rows, all refresh-capable; 2 owner mappings; no overlapping public grants. Owner passphrase readiness POST succeeded. No old bearer refresh replay or original Hub TEST identity/denial receipt: original shared rotating checkpoint belongs to its serialized coordinating runner and no active RTC pass exists. Hub adapter has upstreamEnabled=false/authorizedTargets=0. Original task remains PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json. October18 Denver continuation: genuine owner-approved disposable native OAuth read_only mail/workspace read, area/write/broker/batch denial, refresh and revoke all passed on READY0c2fa5b; all17 originals remain active. This does not replace separate LIVE RTC issuance/HTTP acceptance or original rotating-runner/Hub TEST proof. See docs/plan/evidence/2026-10-18-disposable-owner-native.json."
+    "lastEvidence": "2026-10-18 READY17beedb: genuine owner whoami/Gmail and two original account mappings/default; protected readiness POST succeeded; 17 original unexpired access/refresh-capable records, no public grant overlap. Evidence: docs/plan/evidence/2026-10-18-production-http-owner-continuation.json. READY0c2fa5b: separate owner-approved native OAuth read_only mail/workspace, scope/write/broker/batch denials, refresh/revocation all passed; original 17 records unchanged (docs/plan/evidence/2026-10-18-disposable-owner-native.json). ORIGINAL owner bearer/refresh replay and original direct RTC TEST pass identity/read-only refusal still PENDING; no suitable active pass or verified rotating-runner ownership. Owner Oct19 removed Hub discovery/relay/Sandbox from Workspace scope; historical Hub TEST proof remains but never stands for original bearer or Hub LIVE."
   },
   {
     "id": "P10-VERIFY-GOOGLE",
@@ -815,7 +815,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-3"
     ],
-    "lastEvidence": "2026-10-19 00:21\u201300:25 UTC (October18 Denver): independently READY dpl_3XbuZT2Co8CF49mZAXxQmkJfh6F1 serves 0c2fa5b. Fresh production GET200 contains no owner mailbox; HEAD200/zero bytes; POST405/Allow GET,HEAD; no-store retained. Owner-approved existing-owner OAuth form successfully authorized one disposable Rentals read_only mail/workspace connection through private PKCE/RSA exchange. Actual account list retained both originals/default, Google whoami matched, labels19 matched existing native count; refresh200 retained denials. Existing owner connection management revoked only the two disposable same-refresh access rows; both401 and refresh400 invalid_grant. Original17 remain active and existing native whoami still works. Full original privacy/owner-continuation criterion PASSED. See docs/plan/evidence/2026-10-18-disposable-owner-native.json."
+    "lastEvidence": "2026-10-19 00:21–00:25 UTC (October18 Denver): independently READY dpl_3XbuZT2Co8CF49mZAXxQmkJfh6F1 serves 0c2fa5b. Fresh production GET200 contains no owner mailbox; HEAD200/zero bytes; POST405/Allow GET,HEAD; no-store retained. Owner-approved existing-owner OAuth form successfully authorized one disposable Rentals read_only mail/workspace connection through private PKCE/RSA exchange. Actual account list retained both originals/default, Google whoami matched, labels19 matched existing native count; refresh200 retained denials. Existing owner connection management revoked only the two disposable same-refresh access rows; both401 and refresh400 invalid_grant. Original17 remain active and existing native whoami still works. Full original privacy/owner-continuation criterion PASSED. See docs/plan/evidence/2026-10-18-disposable-owner-native.json."
   },
   {
     "id": "P10-6-PUBLIC-DISCLOSURE",

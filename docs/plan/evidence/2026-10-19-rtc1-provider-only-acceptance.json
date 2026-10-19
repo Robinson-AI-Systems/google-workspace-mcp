@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "ownerDecision": "2026-10-19 provider-only RTC1 completion for Workspace, live Hub discovery/onboarding to Hub repo",
+  "hubSpecification": {
+    "commit": "43eed4658527f32c9fca9666b0d31ecf8894b22d",
+    "source": "docs/CONTRACT.md; docs/HUB-CONNECTION-SPEC.md",
+    "version": 1,
+    "oauthNativeTransport": "optional, not RTC1 prerequisite"
+  },
+  "workspaceProduction": {
+    "source": "912e4fb330608de1fa45639eb656f3faea9fd733",
+    "vercel": "dpl_CzB9vFjjysCvVKPUPby4Uuk4Srmq",
+    "state": "READY",
+    "verified": true
+  },
+  "serviceConformance": {
+    "source": "12c0647b1a7ea1b284e14807b3b5ffc4ed680d2f",
+    "ciRun": "39246612402",
+    "ciRtcJob": "118039966463",
+    "checks": "manifest manifest.openapi catalog meta reads writes passes passes.read_only passes.expired passes.revoked safety budget oauth.refresh_settings limits.two_instance",
+    "result": "PASS",
+    "implementation": "actual Workspace HTTP/OAuth with fake Google, two server processes and real shared disposable PostgreSQL"
+  },
+  "directLive": {
+    "sourceEvidence": "docs/plan/evidence/2026-10-18-live-rtc-acceptance.json",
+    "acceptedTask": "P9-LIVE-DIRECT",
+    "result": "PASS",
+    "details": "Owner-approved real LIVE read-only Google identity + 19 label read; scope/write/broker/batch denial; own disposable pass revoked with 401; 17 original usable owner access records kept. No LIVE Hub routing occurred."
+  },
+  "existingTestRoute": {
+    "sourceEvidence": "docs/plan/evidence/2026-10-17-final-hub-route-acceptance.json",
+    "acceptedTask": "GOOGLE-RTC",
+    "result": "PASS",
+    "scope": "historical TEST relay/Sandbox, not LIVE Hub"
+  },
+  "workspaceProviderAcceptance": {
+    "historicalId": "P9-HUB-LIVE",
+    "disposition": "PASSED",
+    "scope": "RTC 1 provider conformance only",
+    "superseded": "require actual Hub LIVE enrollment/relay as Workspace completion",
+    "evidenceReused": true
+  },
+  "hubOwnedAcceptance": {
+    "status": "NOT_CLAIMED",
+    "requirements": "Hub live dynamic discovery, user consent, enrollment, per-caller isolation and routing; no Workspace acceptance"
+  },
+  "protections": {
+    "newProductionCredential": false,
+    "manualRelease": false,
+    "GoogleWrites": 0,
+    "billing": 0,
+    "modeSwitch": false,
+    "stage2": false,
+    "ownerCredentialChange": false
+  },
+  "sourceManifestCorrection": "Remove optional conformance.status pending_real_D4_acceptance (Hub state, not RTC1 field); this correction reaches production only at next checked authorized release."
+}
