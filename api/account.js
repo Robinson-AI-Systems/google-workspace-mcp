@@ -5,7 +5,7 @@ import {listAccounts,listConnections,revokeConnection,disconnectAccount,deletion
 import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.js';
 import {configureCustomerDelegation,listCustomerDelegations,revokeCustomerDelegation,
   addVerifiedDelegationSubject,removeDelegationSubject} from '../src/principals/delegation.js';
-import {readCookie,headers} from '../src/principals/security.js';
+import {readCookie,headers,legacyPilotFreshConsentConfigured} from '../src/principals/security.js';
 const escape=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export default async function handler(req,res){
  headers(res);
@@ -14,6 +14,7 @@ export default async function handler(req,res){
    await initSchema();
    const session=await requireSession(req),principalId=session.principal_id;
    const identityOnly=await isLegacyPilotIdentityPrincipal(principalId);
+   const freshConsentAvailable=identityOnly&&legacyPilotFreshConsentConfigured();
    if(req.method==='POST'){
      if(identityOnly)return res.status(403).json({error:'legacy_pilot_identity_only'});
      const body=req.body&&typeof req.body==='object'?req.body:{};
@@ -65,9 +66,10 @@ export default async function handler(req,res){
      '<h2>Google connections</h2><ul>'+accounts.map(a=>'<li>'+escape(a.label||a.email)+' · '+
        escape(a.scope_list.join(', '))+' · '+(a.is_default?'Default':'Linked')+
        form('set_default',a.id,'Make default')+form('disconnect_account',a.id,'Disconnect locally')+'</li>').join('')+'</ul>'+
-     (identityOnly
-       ? '<h2>Identity-only legacy tester</h2><p>This verified pilot login is intentionally separate from your original owner MCP. Existing Google connections stay with the original owner. This pilot identity cannot link Google data or issue MCP tool connections until a separately approved migration.</p>'
-       : '<h2>Link an account / add permissions</h2>'+links)+
+     (identityOnly&&!freshConsentAvailable
+       ? '<h2>Identity-only legacy tester</h2><p>This verified pilot login is intentionally separate from your original owner MCP. Existing Google connections stay with the original owner. This pilot identity cannot link Google data or issue MCP tool connections until a separately approved fresh consent.</p>'
+       : '<h2>Link an account / add permissions</h2>'+
+         (freshConsentAvailable?'<p>You may now independently consent for your own Google account. This does not transfer, share or revoke original owner grants. Agent tool execution remains separately disabled until verified.</p>':'')+links)+
      '<h2>Customer administrator delegation</h2>'+
      '<p>This is optional and only for administrators of their own verified Google Workspace customer. First link the separate read-only Admin Verification permission above. An existing login and its grants stay intact. Domain name or email alone never grants authority.</p>'+
      '<p>A service-account key is submitted only over this signed-in HTTPS form with CSRF protection, encrypted per account in the database, and never shown again. The Google administrator must separately authorize the selected scopes for this service account in their own Admin Console. Enter only scopes required for the intended operations. Missing configuration does not disable ordinary Google access.</p>'+
