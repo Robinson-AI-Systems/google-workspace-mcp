@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { rtcOpenapi } from '../../src/rtc/openapi.js';
+import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../../src/branding.js';
 import { readFileSync } from 'node:fs';
 const spec=rtcOpenapi('https://workspace.example.test');
 const methods=['get','post','put','patch','delete'];
 const operations=Object.entries(spec.paths).flatMap(([path,item])=>methods.filter(method=>item[method]).map(method=>({path,method,...item[method]})));
 describe('P8-4 complete generic OpenAPI document',()=>{
+ it('separates recognizable independent operator branding from stable RTC protocol identifiers',()=>{
+  expect(spec.info.title).toBe(PRODUCT_DISPLAY_NAME);
+  expect(spec.info.description).toContain(PROVIDER_DISCLOSURE);
+  expect(spec.components.schemas.Manifest.properties.server.const).toBe('google-workspace-mcp');
+ });
  it('documents every checked-in RTC rewrite with eight unique generic operations, no provider schema explosion',()=>{
   const config=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url),'utf8'));
   const expected=config.rewrites.filter(r=>r.destination.startsWith('/api/rtc-gateway')).map(r=>r.source.replace(':tool','{name}').replace(':result','{handle}'));
