@@ -1,0 +1,156 @@
+{
+  "at": "2026-10-19T03:11:36.051Z",
+  "revision": "912e4fb330608de1fa45639eb656f3faea9fd733",
+  "deployment": "dpl_CzB9vFjjysCvVKPUPby4Uuk4Srmq",
+  "checks": [
+    {
+      "name": "identity",
+      "status": 200,
+      "ok": true,
+      "mode": "live",
+      "connection": "pass_05d0f96b4ca00c4319b7",
+      "account": "ops@robinsonappliancerentals.com",
+      "profile": "read_only",
+      "areas": [
+        "mail",
+        "workspace"
+      ],
+      "listing": "compact",
+      "allow_writes": false
+    },
+    {
+      "name": "catalog",
+      "status": 200,
+      "ok": true,
+      "mode": "live",
+      "count": 44,
+      "writeDispatchers": [
+        "workspace_call"
+      ],
+      "directWrites": 0,
+      "areas": [
+        "workspace",
+        "mail"
+      ]
+    },
+    {
+      "name": "google_identity",
+      "status": 200,
+      "ok": true,
+      "mode": "live",
+      "matches": true,
+      "actingAs": "ops@robinsonappliancerentals.com",
+      "gmailReports": "ops@robinsonappliancerentals.com"
+    },
+    {
+      "name": "gmail_labels",
+      "status": 200,
+      "ok": true,
+      "mode": "live",
+      "count": 19,
+      "sha256": "3b5f55a801d1b93ff7a1fd890a84c8abc9807af173bfb44d9b96484f35cf39a8"
+    },
+    {
+      "name": "files_scope",
+      "status": 403,
+      "ok": false,
+      "code": "outside_scope"
+    },
+    {
+      "name": "write",
+      "status": 403,
+      "ok": false,
+      "code": "refused_by_guard"
+    },
+    {
+      "name": "broker_write",
+      "status": 403,
+      "ok": false,
+      "code": "refused_by_guard"
+    },
+    {
+      "name": "batch_write",
+      "status": 403,
+      "ok": false,
+      "code": "refused_by_guard"
+    }
+  ],
+  "policy": {
+    "connection_id": "pass_05d0f96b4ca00c4319b7",
+    "kind": "pass",
+    "google_account": "ops@robinsonappliancerentals.com",
+    "profile": "read_only",
+    "listing": "compact",
+    "areas": [
+      "mail",
+      "workspace"
+    ],
+    "mode": "live",
+    "cost_policy": {
+      "mode": "deny"
+    },
+    "allow_writes": false,
+    "for_hub": false,
+    "rate_limit_per_minute": 120,
+    "created_at": "2026-10-19T03:10:12.684Z",
+    "expires_at": "2026-10-19T04:10:12.684Z",
+    "revoked_at": "2026-10-19T03:12:09.793Z"
+  },
+  "preservation": {
+    "originalRecords": 32,
+    "allOriginalRecordsPreserved": true,
+    "usableOriginalsAfter": 17,
+    "nativeLabelsAfter": 19,
+    "nativeIdentityMatches": true
+  },
+  "nativeRtcExactLabelsMatch": true,
+  "acceptanceTask": "P9-LIVE-DIRECT",
+  "status": "PASSED",
+  "requiredRevision": "ed9ba9578381616f29341a0bdc063b84cd8064da",
+  "requiredRevisionAncestorVerified": true,
+  "release": {
+    "authorization": "Owner explicitly approved checked-main one-off release and separately one disposable LIVE read-only pass; secure owner passphrase approval submitted.",
+    "branch": "live",
+    "receipt": "release-markers/owner-2026-10-18-912e4fb",
+    "state": "READY",
+    "canonicalSourceVerifiedByIssuerBeforeStartAndPoll": true,
+    "dailyReceiptPreserved": true
+  },
+  "revocation": {
+    "revoked": 1,
+    "checks": [
+      {
+        "path": "/api/whoami",
+        "status": 401,
+        "code": "pass_revoked"
+      },
+      {
+        "path": "/api/tools?listing=catalog",
+        "status": 401,
+        "code": "pass_revoked"
+      },
+      {
+        "path": "/api/tools/workspace_gmail_list_labels",
+        "status": 401,
+        "code": "pass_revoked"
+      }
+    ]
+  },
+  "nativeCounterpart": {
+    "evidence": "docs/plan/evidence/2026-10-18-disposable-owner-native.json",
+    "pr": 218,
+    "proof": "Real disposable native OAuth identity, catalog, read, scope/write/broker/batch denial, refresh policy preservation, exact revocation and original-grant continuity. Current established native identity/read rechecked after LIVE revocation.",
+    "rtcRefresh": "Not applicable: fixed-expiry RTC passes have no OAuth refresh flow."
+  },
+  "boundaries": {
+    "googleWrites": 0,
+    "paidOperations": 0,
+    "hubAccess": false,
+    "stage2Activated": false,
+    "credentialsPublished": false,
+    "scope": "Existing owner-operated direct connection acceptance only; no public multi-user execution or Hub live acceptance."
+  },
+  "runnerCorrection": "Initial probe used an unprefixed Gmail name and got HTTP404 not_found before provider execution; corrected to the catalog-advertised workspace_gmail_list_labels alias. The completed run uses proper aliases for both reads and denials.",
+  "catalogExplanation": "44 permitted entries, mail/workspace only. workspace_call is the single writes=true dispatcher; its exact selected target is independently guarded. No direct write tool is listed.",
+  "cleanup": "Disposable pass revoked; identity/catalog/read all returned 401 pass_revoked. Private handoff/key/pass material removed after verified denial."
+}
