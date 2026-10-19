@@ -17,6 +17,7 @@ export const tools = [
   { name: 'drive_copy_file', description: 'Copy a Drive file', inputSchema: { type: 'object', properties: { fileId: { type: 'string' }, name: { type: 'string' }, parentFolderId: { type: 'string' } }, required: ['fileId'] } },
   { name: 'drive_rename_file', description: 'Rename a Drive file or folder', inputSchema: { type: 'object', properties: { fileId: { type: 'string' }, newName: { type: 'string' } }, required: ['fileId', 'newName'] } },
   { name: 'drive_move_file', description: 'Move a Drive file to a different folder', inputSchema: { type: 'object', properties: { fileId: { type: 'string' }, newParentFolderId: { type: 'string' }, removeFromCurrentParents: { type: 'boolean', default: true } }, required: ['fileId', 'newParentFolderId'] } },
+  { name: 'drive_trash_file', description: 'Move a Drive file to the recoverable trash (use instead of permanent deletion when possible)', inputSchema: { type: 'object', properties: { fileId: { type: 'string' } }, required: ['fileId'] } },
   { name: 'drive_delete_file', description: 'Permanently delete a Drive file (skips trash)', inputSchema: { type: 'object', properties: { fileId: { type: 'string' } }, required: ['fileId'] } },
   { name: 'drive_list_trash', description: 'List files currently in Drive trash', inputSchema: { type: 'object', properties: { maxResults: { type: 'number', default: 20 } } } },
   { name: 'drive_restore_from_trash', description: 'Restore a file from Drive trash', inputSchema: { type: 'object', properties: { fileId: { type: 'string' } }, required: ['fileId'] } },
@@ -110,6 +111,10 @@ export const handlers = {
     const file = await drive.files.get({ supportsAllDrives: true, fileId: args.fileId, fields: 'parents' });
     const removeParents = args.removeFromCurrentParents !== false ? (file.data.parents || []).join(',') : undefined;
     const res = await drive.files.update({ supportsAllDrives: true, fileId: args.fileId, addParents: args.newParentFolderId, removeParents, requestBody: {} });
+    return ok(res.data);
+  },
+  drive_trash_file: async (args, { drive }) => {
+    const res = await drive.files.update({ fileId: args.fileId, supportsAllDrives: true, requestBody: { trashed: true }, fields: 'id,name,trashed' });
     return ok(res.data);
   },
   drive_delete_file: async (args, { drive }) => {
