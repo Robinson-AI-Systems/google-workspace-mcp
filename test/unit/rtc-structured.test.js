@@ -78,6 +78,19 @@ describe('P2-7 Site Verification scope-denial typed output regression',()=>{
    expect(attached.structuredContent.searchConsole).toContain('search.google.com');
    expect(attached.structuredContent.note).toContain('UNKNOWN');
  });
+ it('treats malformed domain input as typed UNKNOWN without touching Google or claiming verification',async()=>{
+   const clients={siteVerification:{webResource:{list:async()=>{throw Error('do not call provider');}}}};
+   for(const domain of ['', 'not-a-domain']){
+     const result=await opsHandlers.workflow_search_presence_check({domain},clients);
+     const attached=attachStructuredResult(name,result);
+     expect(attached.isError).not.toBe(true);
+     expect(attached.structuredContent).toMatchObject({
+       status:'WARN',readable:false,reason:'invalid_domain',
+       verified:{root:{verified:null},www:{verified:null}}
+     });
+     expect(attached.structuredContent.note).toContain('UNKNOWN');
+   }
+ });
  it('keeps a provider-verified boolean result readable and unchanged',()=>{
    const success={...base,readable:true,status:'PASS',reason:undefined,
      verified:{root:{name:'example.test',verified:true},www:{name:'www.example.test',verified:true}}};
