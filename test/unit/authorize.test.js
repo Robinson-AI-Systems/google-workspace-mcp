@@ -63,7 +63,7 @@ describe('passphrase page lockout', () => {
       expect(res.body).toContain(`<option value="${profile||'read_only'}" selected>`);
       expect(res.body).not.toContain('type="hidden" name="profile"');
       expect(res.body).not.toContain('ops@example.test');
-    expect(res.body).not.toMatch(/<option[^>]*>AI Systems<\/option>/);
+      expect(res.body).not.toMatch(/<option[^>]*>AI Systems<\/option>/);
       expect(res.body).not.toContain('Appliance Rentals');
     }
     const failed=await login({passphrase:'wrong',profile:'full'});expect(failed.body).toContain('<option value="full" selected>');
