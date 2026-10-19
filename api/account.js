@@ -3,12 +3,12 @@ import {initSchema} from '../src/db.js';
 import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../src/branding.js';
 import {listAccounts,listConnections,revokeConnection,disconnectAccount,deletionPreview,
   setPrincipalDefault,requestDeletion,cancelDeletion,isLegacyPilotIdentityPrincipal,
-  canLegacyPilotStartFreshConsent} from '../src/principals/store.js';
+  canLegacyPilotStartFreshConsent,getLinkedGrant} from '../src/principals/store.js';
 import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.js';
 import {configureCustomerDelegation,listCustomerDelegations,revokeCustomerDelegation,
   addVerifiedDelegationSubject,removeDelegationSubject} from '../src/principals/delegation.js';
-import {readCookie,headers} from '../src/principals/security.js';
-import {PUBLIC_SCOPE_GROUPS} from '../src/principals/google.js';
+import {readCookie,headers,publicMode,requireScope} from '../src/principals/security.js';
+import {PUBLIC_SCOPE_GROUPS,publicGoogleClient} from '../src/principals/google.js';
 import {redirectCanonicalGet} from '../src/principals/canonical-entry.js';
 const escape=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export default async function handler(req,res){
@@ -46,6 +46,37 @@ export default async function handler(req,res){
        return res.status(200).json({disconnected:await disconnectAccount(principalId,body.id),
          note:'Local account and agent connections disabled. Google provider revocation not claimed.'});
      }
+     if(action==='disable_god_mode'){
+       requireScope(body.confirm===true||body.confirm==='true','owner_confirmation_required');
+       const owned=(await listAccounts(principalId)).find(a=>a.id===body.id);
+       requireScope(owned&&PUBLIC_SCOPE_GROUPS.complete.every(scope=>owned.scope_list.includes(scope)),
+         'god_mode_not_enabled');
+       // Best-effort provider-side revocation is never equated with local
+       // account revocation. This is this principal's own independent Google
+       // grant from the PUBLIC OAuth client, never the legacy owner client.
+       // The local stop must work even when Google is temporarily unreachable.
+       // Stop local account/client dispatch before any external provider
+       // network request. A slow/failing Google revocation cannot leave the
+       // owner's native agent access active while the request waits.
+       let token=null;
+       try {
+         const grant=await getLinkedGrant(principalId,body.id);
+         token=grant?.refresh_token||grant?.access_token||null;
+       }catch{ /* local revocation still proceeds */ }
+       const disconnected=await disconnectAccount(principalId,body.id);
+       let providerRevoked=false;
+       if(disconnected>0&&token){
+         try {
+           await publicGoogleClient().revokeToken(token);
+           providerRevoked=true;
+         }catch{ /* Google revocation is unverified: report precisely */ }
+       }
+       return res.status(200).json({godMode:false,disconnected,
+         agentConnectionsRevoked:disconnected>0,providerRevoked,
+         note:providerRevoked
+           ?'Google app permission revocation was confirmed. This account and its agents are also disabled locally. To resume, authorize only the services you choose and reconnect your agent.'
+           :'Account and agent access are stopped locally. Google provider-wide authorization could not be confirmed revoked. Review your Google Account third-party access settings to revoke this app at Google, then reauthorize only the services you choose.'});
+     }
      if(action==='set_default'){
        return res.status(200).json({defaultAccountId:await setPrincipalDefault(principalId,body.id)});
      }
@@ -72,16 +103,40 @@ export default async function handler(req,res){
    const form=(action,id,label)=>'<form method="POST"><input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
       '<input type="hidden" name="action" value="'+escape(action)+'">'+
       '<input type="hidden" name="id" value="'+escape(id)+'"><button>'+escape(label)+'</button></form>';
-   const formLink=(group,label)=>'<form action="/api/auth/google/start" method="POST">'+
-     '<input type="hidden" name="purpose" value="link"><input type="hidden" name="group" value="'+escape(group)+'">'+
-     '<input type="hidden" name="csrf" value="'+escape(csrf)+'"><button>'+escape(label)+'</button></form>';
-   const fullConsent='<h3>Comprehensive Google authorization</h3>'+
-     '<p>Request all '+PUBLIC_SCOPE_GROUPS.complete.length+' direct-user OAuth permissions for supported services in one Google consent. This includes powerful admin-related capabilities. Review Google\'s permission screen; Google may reject restricted scopes without verified app approval or the necessary administrator role. It does not grant customer-specific delegation, Alert Center service-account rights or paid licenses. Granting permissions changes no Google files or messages. Replacing your account grant may require reconnecting existing agents to receive a fresh credential; the original owner connection is separate.</p>'+
-     formLink('complete','Authorize all supported Google services together');
-   const links='<details><summary>Or authorize permissions by individual service</summary>'+
-     Object.keys(PUBLIC_SCOPE_GROUPS).filter(g=>g!=='complete')
-       .map(g=>formLink(g,'Authorize '+g+' permissions ('+PUBLIC_SCOPE_GROUPS[g].length+')')).join('')+
-     '</details>';
+   // Pilot accepts broad Google scopes in one pass. Ordinary customers begin
+   // with a single service, and may optionally request broader Google consent.
+   // This is still the user's actual Google consent, not a bypass of OAuth.
+   const mode=publicMode();
+   const services=Object.keys(PUBLIC_SCOPE_GROUPS).filter(group=>group!=='complete');
+   const authorizeForm=pilot=>'<form action="/api/auth/google/start" method="POST">'+
+     '<input type="hidden" name="purpose" value="link">'+
+     '<input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
+     '<label>Google service <select name="group">'+
+     services.map(group=>'<option value="'+escape(group)+'">'+escape(group)+'</option>').join('')+
+     '</select></label>'+
+     '<p><label><input type="checkbox" name="godMode" value="true"'+(pilot?' checked':'')+'>'+
+     ' <strong>God mode — request all supported Google permissions together</strong></label></p>'+
+     '<p>God mode asks Google for all '+PUBLIC_SCOPE_GROUPS.complete.length+
+     ' direct-user OAuth permissions this MCP supports, including powerful administrator-related permissions. '+
+     'Google still requires your consent and may require restricted-scope verification, a real admin role, separate customer delegation or paid licensing. '+
+     'You can turn off God mode later; doing so locally disconnects this Google grant and its connected agents. '+
+     'You can revoke the Google permission at Google when turning it off, and separately check or remove the app from your Google Account third-party access settings if the provider cannot confirm revocation.</p>'+
+     '<button>Continue to Google consent</button></form>';
+   const disableGodMode=a=>'<form method="POST">'+
+     '<input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
+     '<input type="hidden" name="action" value="disable_god_mode">'+
+     '<input type="hidden" name="id" value="'+escape(a.id)+'">'+
+     '<label><input type="checkbox" name="confirm" value="true" required>'+
+     ' I understand this revokes the broad provider authorization where Google permits, stops this account locally, revokes its agent connections, '+
+     'and requires new selected-service consent to continue. Google may require manual third-party access removal if revocation fails.</label>'+
+     '<button>Turn off God mode</button></form>';
+   const consentChoice=mode==='pilot'
+     ? '<h3>Approved pilot: comprehensive Google acceptance setup</h3>'+
+       '<p>For the approved development testers, God mode starts checked so all supported scopes can be requested together before live testing. Uncheck it for one service only. Google must still approve each requested scope.</p>'+
+       authorizeForm(true)
+     : '<h3>Authorize Google permissions as needed</h3>'+
+       '<p>Select the service you want. God mode is optional and off by default. You can enable it at any time to request all supported direct-user permissions at once.</p>'+
+       authorizeForm(false);
    const html='<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
      '<title>My Workspace connections</title><main style="max-width:720px;margin:auto;font:16px/1.5 system-ui;padding:1rem">'+
      '<h1>'+escape(PRODUCT_DISPLAY_NAME)+'</h1><p>'+escape(PROVIDER_DISCLOSURE)+'</p><p>Only this authenticated principal’s accounts and agent connections appear here.</p>'+
@@ -90,11 +145,14 @@ export default async function handler(req,res){
      '<a href="/api/data-deletion">local disconnection and deletion limits</a>. Google controls which requested permissions you approve.</p>'+
      '<h2>Google connections</h2><ul>'+accounts.map(a=>'<li>'+escape(a.label||a.email)+' · '+
        escape(a.scope_list.join(', '))+' · '+(a.is_default?'Default':'Linked')+
-       form('set_default',a.id,'Make default')+form('disconnect_account',a.id,'Disconnect locally')+'</li>').join('')+'</ul>'+
+       form('set_default',a.id,'Make default')+
+       (PUBLIC_SCOPE_GROUPS.complete.every(scope=>a.scope_list.includes(scope))
+         ? ' · God mode active locally'+disableGodMode(a)
+         : form('disconnect_account',a.id,'Disconnect locally'))+'</li>').join('')+'</ul>'+
      (identityOnly&&!freshConsentAvailable
        ? '<h2>Identity-only legacy tester</h2><p>This verified pilot login is intentionally separate from your original owner MCP. Existing Google connections stay with the original owner. This pilot identity cannot link Google data or issue MCP tool connections until a separately approved fresh consent.</p>'
        : '<h2>Link an account / add permissions</h2>'+
-         (freshConsentAvailable?'<p>You may now independently consent for your own Google account. This does not transfer, share or revoke original owner grants.</p>':'')+fullConsent+links)+
+         (freshConsentAvailable?'<p>You may now independently consent for your own Google account. This does not transfer, share or revoke original owner grants.</p>':'')+consentChoice)+
      '<h2>Customer administrator delegation</h2>'+
      '<p>This is optional and only for administrators of their own verified Google Workspace customer. First link the separate read-only Admin Verification permission above. An existing login and its grants stay intact. Domain name or email alone never grants authority.</p>'+
      '<p>A service-account key is submitted only over this signed-in HTTPS form with CSRF protection, encrypted per account in the database, and never shown again. The Google administrator must separately authorize the selected scopes for this service account in their own Admin Console. Enter only scopes required for the intended operations. Missing configuration does not disable ordinary Google access.</p>'+

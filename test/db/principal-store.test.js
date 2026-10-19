@@ -255,13 +255,38 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
   expect(await store.revokeSession(secret.secret)).toBe(1);
   expect(await store.readSession(secret.secret)).toBeNull();
  });
- it('disconnects the chosen account without touching a foreign principal',async()=>{
+ it('turns off broad Google access, revokes the exact account agent and safely relinks the same Google subject narrowly',async()=>{
   expect(await store.disconnectAccount(b,aa)).toBe(0);
   expect(await store.deletionPreview(a)).toMatchObject({previewOnly:true,deleted:false});
   expect(await store.requestDeletion(a)).toMatchObject({pending:true,irreversible:false});
   expect(await store.cancelDeletion(a)).toMatchObject({cancelled:true,deleted:false});
+  const current=await store.findAccount(a,aa);
+  const verifier=crypto.randomBytes(48).toString('base64url');
+  const challenge=crypto.createHash('sha256').update(verifier).digest('base64url');
+  const credentials={principalId:a,accountId:aa,clientId:'godmode-test-agent',
+    redirectUri:'https://client.test/godmode-callback',
+    resource:'https://service.test/api/mcp',codeChallenge:challenge,profile:'full'};
+  const code=await store.issuePrincipalCode(credentials);
+  const verified=await store.consumePrincipalCode({code,clientId:credentials.clientId,
+    redirectUri:credentials.redirectUri,resource:credentials.resource,verifier});
+  expect(verified).toBeTruthy();
+  const issued=await store.issuePrincipalConnection(verified);
+  expect((await store.readPrincipalAccess(issued.accessToken)).principalId).toBe(a);
   expect(await store.disconnectAccount(a,aa)).toBe(1);
   expect(await store.findAccount(a,aa)).toBeNull();
+  expect(await store.readPrincipalAccess(issued.accessToken)).toBeNull();
+  expect(await store.rotatePrincipalRefresh(issued.refreshToken,{clientId:credentials.clientId,resource:credentials.resource})).toBeNull();
+  expect(await store.findAccount(b,bb)).not.toBeNull();
+
+  const restored=await store.upsertLinkedAccount({
+    principalId:a,issuer:'https://accounts.google.com',sub:'subject-aaa1',
+    verifiedEmail:'a@example.test',scopeList:['scope-selected-only'],
+    tokens:{access_token:'new-narrow-consented-token',refresh_token:'new-independent-refresh'}});
+  expect(restored).toBe(aa); // stable owned account ID; no duplicate unique-subject collision
+  expect((await store.findAccount(a,aa)).token_version).toBeGreaterThan(current.token_version);
+  expect((await store.listAccounts(a))[0].scope_list).toEqual(['scope-selected-only']);
+  expect((await store.getLinkedGrant(a,aa)).refresh_token).toBe('new-independent-refresh');
+  expect(await store.readPrincipalAccess(issued.accessToken)).toBeNull(); // never resurrect old agent family
   expect(await store.findAccount(b,bb)).not.toBeNull();
  });
 });

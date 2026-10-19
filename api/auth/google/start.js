@@ -25,7 +25,11 @@ export default async function handler(req,res){
     session=await requireSession(req);
     requireCsrf(req,session,params);
   }else requireScope(req.method==='GET','invalid_start_method');
-  const group=purpose==='link'?params.group:'identity';
+  // A user's explicit checkbox requests all supported Google scopes in one
+  // normal provider consent. An unchecked box cannot upgrade the selected
+  // single-service request; this is independent of native agent Full profile.
+  const group=purpose==='link'&&params.godMode==='true'?'complete':
+    purpose==='link'?params.group:'identity';
   requireScope(group==='identity'||Object.hasOwn(PUBLIC_SCOPE_GROUPS,group),'invalid_scope_group');
   let clientId=null,redirectUri=null,resource=null,codeChallenge=null;
   if(purpose==='mcp_authorize'){

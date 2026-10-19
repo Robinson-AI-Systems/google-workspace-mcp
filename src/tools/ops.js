@@ -171,7 +171,15 @@ export function checkVerification(items, domain) {
 
 const searchPresence = async (args, { siteVerification }) => {
   const domain = stripWww(args.domain);
-  if (!domain || !domain.includes('.')) return ok('Give the website domain, e.g. example.com.');
+  if (!domain || !domain.includes('.')) {
+    const target=domain||'(missing)';
+    return ok({domain:target,status:'WARN',readable:false,reason:'invalid_domain',
+      verified:{root:{name:target,verified:null},
+        www:{name:domain?'www.'+domain:'(missing)',verified:null}},
+      searchConsole:'Give the website domain, e.g. example.com, then check the Google-owned Site Verification permission for that account.',
+      businessProfile:'Google Business Profile is separate from Search Console.',
+      note:'No Google verification call was made. Domain is invalid, so verification remains UNKNOWN.'});
+  }
   let res;
   try {
     res=await siteVerification.webResource.list({});

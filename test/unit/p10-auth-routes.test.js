@@ -3,7 +3,8 @@ import {Readable} from 'node:stream';
 import {createHash} from 'node:crypto';
 const h=vi.hoisted(()=>({
   started:null,consumed:false,accountLinks:[],codeConsumeCount:0,rotations:0,
-  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false,freshConsent:false,lastIdentity:null
+  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false,freshConsent:false,lastIdentity:null,
+  linkedAccounts:[],disconnects:[],providerRevokeTokens:[],providerRevokeError:false
 }));
 vi.mock('../../src/db.js',()=>({
  initSchema:async()=>{},getOAuthClient:async id=>id==='registered-client'?{
@@ -28,10 +29,12 @@ vi.mock('../../src/principals/store.js',()=>({
    csrf_hash:createHash('sha256').update('p10x_'+'b'.repeat(43)).digest('hex'),kind:'user'}:null,
  revokeSession:async()=>1,
  upsertLinkedAccount:async params=>{h.accountLinks.push(params);return 'account-a';},
- listAccounts:async()=>[],listConnections:async()=>[],isLegacyPilotIdentityPrincipal:async()=>h.legacyPilot,
+ listAccounts:async()=>h.linkedAccounts,listConnections:async()=>[],isLegacyPilotIdentityPrincipal:async()=>h.legacyPilot,
  canLegacyPilotStartFreshConsent:async()=>h.freshConsent,
  deletionPreview:async()=>({previewOnly:true}),
- disconnectAccount:async()=>0,revokeConnection:async()=>0,setPrincipalDefault:async()=>null,
+ disconnectAccount:async(id,account)=>{h.disconnects.push({id,account});return h.linkedAccounts.some(a=>a.id===account)?1:0;},
+ getLinkedGrant:async(id,account)=>h.linkedAccounts.some(a=>a.id===account)?{refresh_token:'user-owned-google-refresh'}:null,
+ revokeConnection:async()=>0,setPrincipalDefault:async()=>null,
  requestDeletion:async()=>({pending:true}),cancelDeletion:async()=>({cancelled:true}),
  issuePrincipalCode:async()=> 'p10c_'+'c'.repeat(43),
  consumePrincipalCode:async({code,verifier})=>{h.codeConsumeCount++;return code==='p10c_'+'c'.repeat(43)&&verifier==='valid-verifier'
@@ -49,7 +52,7 @@ vi.mock('../../src/principals/delegation.js',()=>({
 }));
 vi.mock('../../src/principals/google.js',()=>({
  PUBLIC_SCOPE_GROUPS:{mail:['scope-mail'],complete:['scope-mail','scope-chat','scope-admin']},
- publicGoogleClient:()=>({}),
+ publicGoogleClient:()=>({revokeToken:async token=>{h.providerRevokeTokens.push(token);if(h.providerRevokeError)throw Error('no token details');}}),
  providerUrl:({state})=>'https://accounts.google.com/o/oauth2?state='+state,
  verifyGoogleCode:async({nonceHash})=>{if(h.googleFailure)throw Error(h.googleFailure);return {issuer:'https://accounts.google.com',sub:h.verifiedSub,
    email:'user@example.test',scopeList:['scope-mail'],
@@ -86,6 +89,7 @@ beforeEach(()=>{
  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='pilot-subject';
  h.started=null;h.accountLinks=[];h.bindCalls=0;h.consumed=false;h.rotations=0;h.codeConsumeCount=0;
  h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;h.legacyPilot=false;h.freshConsent=false;h.lastIdentity=null;
+ h.linkedAccounts=[];h.disconnects=[];h.providerRevokeTokens=[];h.providerRevokeError=false;
 });
 afterEach(()=>{process.env=env;});
 describe('P10 actual route one-use browser callback and independent principal MCP issuance',()=>{
@@ -202,14 +206,63 @@ describe('P10 actual route one-use browser callback and independent principal MC
      'p10_google_browser='+h.started.browser+'; '+sessCookie),replay);
    expect(replay.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(1);
  });
+ it('pilot preselects God mode and public onboarding keeps it optional and off by default',async()=>{
+   const pilot=res();await account(req('GET',{},sessCookie),pilot);
+   expect(pilot.statusCode).toBe(200);
+   expect(pilot.body).toContain('Approved pilot: comprehensive Google acceptance setup');
+   expect(pilot.body).toContain('name="godMode" value="true" checked');
+   const all=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',godMode:'true',csrf}),all);
+   expect(all.statusCode).toBe(302);expect(h.started.policy.group).toBe('complete');
+   const ordinary=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',csrf}),ordinary);
+   expect(ordinary.statusCode).toBe(302);expect(h.started.policy.group).toBe('mail');
+
+   process.env.PUBLIC_SIGNIN_MODE='public';
+   const publicPage=res();await account(req('GET',{},sessCookie),publicPage);
+   expect(publicPage.statusCode).toBe(200);
+   expect(publicPage.body).toContain('Authorize Google permissions as needed');
+   expect(publicPage.body).toContain('name="godMode" value="true"');
+   expect(publicPage.body).not.toContain('name="godMode" value="true" checked');
+   const optional=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',godMode:'true',csrf}),optional);
+   expect(optional.statusCode).toBe(302);expect(h.started.policy.group).toBe('complete');
+ });
+ it('turning God mode off requires own account + separate checkbox confirmation and immediately disables local client access',async()=>{
+   h.linkedAccounts=[{id:'44444444-4444-4444-8444-444444444444',email:'pilot@example.test',
+     scope_list:['scope-mail','scope-chat','scope-admin'],is_default:true}];
+   const page=res();await account(req('GET',{},sessCookie),page);
+   expect(page.body).toContain('Turn off God mode');
+   expect(page.body).toContain('God mode active locally');
+   const noConfirm=res();await account(req('POST',{},sessCookie,{action:'disable_god_mode',id:h.linkedAccounts[0].id,csrf}),noConfirm);
+   expect(noConfirm.statusCode).toBe(403);
+   expect(h.disconnects).toEqual([]);expect(h.providerRevokeTokens).toEqual([]);
+   const foreign=res();await account(req('POST',{},sessCookie,{action:'disable_god_mode',
+     id:'55555555-5555-4555-8555-555555555555',confirm:'true',csrf}),foreign);
+   expect(foreign.statusCode).toBe(403);expect(h.disconnects).toEqual([]);
+   const good=res();await account(req('POST',{},sessCookie,{action:'disable_god_mode',id:h.linkedAccounts[0].id,confirm:'true',csrf}),good);
+   expect(good.statusCode).toBe(200);
+   expect(good.body).toMatchObject({godMode:false,disconnected:1,agentConnectionsRevoked:true,providerRevoked:true});
+   expect(h.providerRevokeTokens).toEqual(['user-owned-google-refresh']);
+   expect(h.disconnects).toHaveLength(1);
+ });
+ it('provider revocation failure never leaves an active local God-mode agent connection or claims Google success',async()=>{
+   h.linkedAccounts=[{id:'44444444-4444-4444-8444-444444444444',
+     scope_list:['scope-mail','scope-chat','scope-admin'],email:'pilot@example.test',is_default:false}];
+   h.providerRevokeError=true;
+   const out=res();await account(req('POST',{},sessCookie,{action:'disable_god_mode',
+     id:h.linkedAccounts[0].id,confirm:'true',csrf}),out);
+   expect(out.statusCode).toBe(200);
+   expect(out.body).toMatchObject({godMode:false,disconnected:1,agentConnectionsRevoked:true,providerRevoked:false});
+   expect(out.body.note).toContain('could not be confirmed');
+   expect(JSON.stringify(out.body)).not.toContain('user-owned-google-refresh');
+   expect(h.disconnects).toHaveLength(1);
+ });
  it('comprehensive user consent stays CSRF-bound, scoped and requires Google to approve every selected permission',async()=>{
   const portal=res();await account(req('GET',{},sessCookie),portal);
   expect(portal.statusCode).toBe(200);
-  expect(portal.body).toContain('Authorize all supported Google services together');
-  expect(portal.body).toContain('name="group" value="complete"');
-  const withoutCsrf=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'complete'}),withoutCsrf);
+  expect(portal.body).toContain('God mode — request all supported Google permissions together');
+  expect(portal.body).toContain('name="godMode" value="true" checked');
+  const withoutCsrf=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',godMode:'true'}),withoutCsrf);
   expect(withoutCsrf.statusCode).toBe(400);expect(h.started).toBeNull();
-  const okStart=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'complete',csrf}),okStart);
+  const okStart=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',godMode:'true',csrf}),okStart);
   expect(okStart.statusCode).toBe(302);expect(h.started.policy.group).toBe('complete');
   const wrongBrowser=res();await callback(req('GET',{state:h.started.state,code:'provider-code'},
     'p10_google_browser=foreign; '+sessCookie),wrongBrowser);

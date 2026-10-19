@@ -48,7 +48,7 @@ const inDrive = (args) => (args.driveId ? { corpora: 'drive', driveId: args.driv
 
 export const handlers = {
   drive_list_files: async (args, { drive }) => {
-    const res = await drive.files.list({ supportsAllDrives: true, includeItemsFromAllDrives: true, ...inDrive(args), q: args.query, pageSize: args.maxResults || 20, pageToken: args.pageToken, orderBy: args.orderBy, fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime, owners, webViewLink, parents)' });
+    const res = await drive.files.list({ supportsAllDrives: true, includeItemsFromAllDrives: true, ...inDrive(args), q: args.query, pageSize: args.maxResults || 20, pageToken: args.pageToken, orderBy: args.orderBy, fields: 'nextPageToken, files(id, name, mimeType, size, modifiedTime, parents)' });
     // Google may omit an empty files array. Keep the wrapper's response
     // shape usable by applications and by exact-provider acceptance.
     return ok({ ...res.data, files: res.data.files || [] });

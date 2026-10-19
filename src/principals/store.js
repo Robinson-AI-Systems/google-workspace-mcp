@@ -224,10 +224,26 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
    if(historical)await recordLegacyFreshConsent(principalId,rows[0].id);
    return rows[0].id;
  }
- const same=await q`SELECT id FROM principal_google_accounts
-   WHERE issuer=${issuer} AND google_sub=${sub}
-   AND principal_id=${principalId}::uuid AND status='active'`;
+ const same=await q`SELECT id,status,token_version FROM principal_google_accounts
+   WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id=${principalId}::uuid`;
  requireScope(same.length===1,'identity_owned_elsewhere');
+ if(same[0].status==='revoked'){
+   // Provider OAuth links are uniquely keyed by issuer/subject; a user who
+   // turns off God mode must be able to reauthorize that SAME Google identity
+   // with a fresh, narrower provider grant. Old V2 agents remain revoked and
+   // cannot become valid again: advance the credential version, and never
+   // reactivate an owner or foreign principal's account.
+   const fresh=sealV2(tokens,principalId,same[0].id,'google-grant');
+   const revived=await q`UPDATE principal_google_accounts SET status='active',
+     grant_ciphertext=${fresh},scope_list=${scopeList},
+     token_version=token_version+1,refresh_version=refresh_version+1,updated_at=now()
+     WHERE id=${same[0].id}::uuid AND principal_id=${principalId}::uuid
+       AND status='revoked' AND token_version=${same[0].token_version}
+     RETURNING id`;
+   requireScope(revived.length===1,'version_conflict');
+   if(historical)await recordLegacyFreshConsent(principalId,revived[0].id);
+   return revived[0].id;
+ }
  const record=await findAccount(principalId,same[0].id);
  await updateLinkedGrant({principalId,accountId:record.id,version:record.token_version,tokens,scopeList});
  if(historical)await recordLegacyFreshConsent(principalId,record.id);
