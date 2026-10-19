@@ -49,22 +49,32 @@ describe('encrypted TEST pass issuance',()=>{
   await f.begin();f.row().client_id='rtc-pass:other';expect((await f.approve()).statusCode).toBe(410);
   const g=fixture();await g.begin();g.deps.store.issue=async()=>{throw Error('PRIVATE_DIAGNOSTIC');};const res=await g.approve();expect(res.statusCode).toBe(503);expect(JSON.stringify(res.data)).not.toContain('PRIVATE');
  });
+ it('makes LIVE issuance explicit and immutable, showing its exact one-hour nonwriting policy before approval',async()=>{
+  const f=fixture();expect((await f.begin({...start,mode:'live'})).statusCode).toBe(201);
+  expect(JSON.parse(f.row().challenge)).toEqual({account,areas:['chrome','domain'],mode:'live'});
+  const page=await f.invoke({method:'GET',headers:{host:'service.example'},query:{state:f.row().state}});
+  expect(page.data).toContain('Create encrypted read-only LIVE pass');expect(page.data).toContain('1 hour; read-only');expect(page.data).toContain('Billing denied');expect(f.issues()).toBe(0);
+  expect((await f.approve({body:{state:f.row().state,passphrase:owner,mode:'test'}})).statusCode).toBe(400);expect(f.issues()).toBe(0);
+  expect((await f.approve()).statusCode).toBe(200);expect(f.issues()).toBe(1);
+  expect((await f.approve()).statusCode).toBe(409);expect(f.issues()).toBe(1);
+  expect((await f.begin({...start,mode:'production'})).statusCode).toBe(400);
+ });
  it('keeps ciphertext delivery bound to the original polling secret',async()=>{
   const f=fixture();await f.begin();expect((await f.invoke({method:'GET',query:{state:f.row().state},headers:{authorization:'Bearer '+'z'.repeat(43)}})).statusCode).toBe(410);
   const request={method:'GET',query:{state:f.row().state},headers:{authorization:'Bearer '+'p'.repeat(43)}};
   expect((await f.invoke(request)).statusCode).toBe(202);await f.approve();const a=await f.invoke(request),b=await f.invoke(request);
   expect(a.statusCode).toBe(200);expect(b.data).toEqual(a.data);expect(a.data).not.toHaveProperty('token');expect(JSON.stringify(a.data)).not.toContain(f.token);
  });
- it('runs registration, owner form, RSA delivery and exact identity verification into a private file with no token in output',async()=>{
+ it.each(['test','live'])('runs %s registration, owner approval, RSA delivery and exact identity verification into a private file',async mode=>{
   const f=fixture(),dir=await mkdtemp(join(tmpdir(),'encrypted-test-pass-'));await chmod(dir,0o700);
-  const revision='a'.repeat(40),env={RTC_ORIGIN:origin,RTC_EXPECTED_REVISION:revision,RTC_EXPECTED_ACCOUNT:account,RTC_APPROVED_AREAS:'chrome,domain',RTC_HANDOFF_FILE:join(dir,'handoff'),RTC_PASS_OUTPUT_FILE:join(dir,'pass')};
-  let registered=0;
+  const revision='a'.repeat(40),env={RTC_ORIGIN:origin,RTC_EXPECTED_REVISION:revision,RTC_EXPECTED_ACCOUNT:account,RTC_APPROVED_AREAS:'chrome,domain',RTC_PASS_MODE:mode,RTC_HANDOFF_FILE:join(dir,'handoff'),RTC_PASS_OUTPUT_FILE:join(dir,'pass')};
+  let registered=0,wrongMode=false;
   const fetcher=async(url,init)=>{
    const u=new URL(url);let r;
    if(u.pathname==='/api/contract')r={statusCode:200,data:{deployment:{sourceRevision:revision}}};
    else if(u.pathname==='/api/oauth/register'){registered++;r={statusCode:201,data:{client_id:start.client_id}};}
    else if(u.pathname==='/api/whoami'){
-    expect(init.headers.authorization).toBe('Bearer '+f.token);r={statusCode:200,data:{result:{connection:'pass_'+digest(f.token).slice(0,20),account,areas:['domain','chrome'],profile:'read_only',mode:'test',allow_writes:false}}};
+    expect(init.headers.authorization).toBe('Bearer '+f.token);r={statusCode:200,data:{result:{connection:'pass_'+digest(f.token).slice(0,20),account,areas:['domain','chrome'],profile:'read_only',mode:wrongMode?(mode==='live'?'test':'live'):mode,allow_writes:false}}};
    }else r=await f.invoke({method:init.method,headers:init.headers,body:init.body?JSON.parse(init.body):undefined,query:Object.fromEntries(u.searchParams)});
    return {status:r.statusCode,text:async()=>JSON.stringify(r.data)};
   };
@@ -72,8 +82,12 @@ describe('encrypted TEST pass issuance',()=>{
    const begin=await issueEncryptedTestPass({action:'start',env,fetcher});expect(begin.status).toBe('awaiting_owner_approval');
    await expect(issueEncryptedTestPass({action:'start',env,fetcher})).rejects.toThrow('existing_checkpoint');expect(registered).toBe(1);
    expect(await issueEncryptedTestPass({action:'poll',env,fetcher})).toEqual({status:'awaiting_owner_approval'});
-   await f.approve();const connected=await issueEncryptedTestPass({action:'poll',env,fetcher});
-   expect(connected.status).toBe('connected_encrypted_test_pass');expect(JSON.stringify(connected)).not.toContain(f.token);
+   await f.approve();wrongMode=true;
+   await expect(issueEncryptedTestPass({action:'poll',env,fetcher})).rejects.toThrow('exact_identity_unverified');
+   await expect(stat(env.RTC_PASS_OUTPUT_FILE)).rejects.toThrow();wrongMode=false;
+   const connected=await issueEncryptedTestPass({action:'poll',env,fetcher});
+   expect(connected.status).toBe(mode==='live'?'connected_encrypted_live_pass':'connected_encrypted_test_pass');expect(JSON.stringify(connected)).not.toContain(f.token);
+   await expect(issueEncryptedTestPass({action:'poll',env:{...env,RTC_PASS_MODE:mode==='live'?'test':'live'},fetcher})).rejects.toThrow('checkpoint_mismatch');
    expect(await readFile(env.RTC_PASS_OUTPUT_FILE,'utf8')).toBe(f.token);expect((await stat(env.RTC_PASS_OUTPUT_FILE)).mode&0o077).toBe(0);
    await expect(issueEncryptedTestPass({action:'poll',env:{...env,RTC_APPROVED_AREAS:'admin'},fetcher})).rejects.toThrow('checkpoint_mismatch');
   }finally{await rm(dir,{recursive:true,force:true});}
