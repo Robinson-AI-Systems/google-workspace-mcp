@@ -55,7 +55,7 @@ it.each(['test','live'])('rolls back %s issuance when ciphertext persistence fai
  const row=await begin(mode==='live'?{challenge:JSON.stringify({account,areas:['chrome','domain'],mode})}:{}),before=(await query('SELECT count(*)::int AS n FROM rtc_passes'))[0].n;
  await query("CREATE FUNCTION refuse_issue() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic failure'; END $$");
  await query("CREATE TRIGGER refuse_issue BEFORE UPDATE ON developer_oauth_handoffs FOR EACH ROW WHEN(NEW.status='authorized') EXECUTE FUNCTION refuse_issue()");
- try{await expect(store.issue(row)).rejects.toThrow('synthetic failure');}finally{await query('DROP TRIGGER refuse_issue ON developer_oauth_handoffs');}
+ try{await expect(store.issue(row)).rejects.toThrow('synthetic failure');}finally{await query('DROP TRIGGER refuse_issue ON developer_oauth_handoffs');await query('DROP FUNCTION refuse_issue()');}
  expect((await query('SELECT count(*)::int AS n FROM rtc_passes'))[0].n).toBe(before);expect((await store.find(row.state)).status).toBe('pending');
  expect(await store.issue(row)).toBe(true);
 });
