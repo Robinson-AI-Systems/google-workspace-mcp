@@ -1,0 +1,161 @@
+{
+  "auditedOn": "2026-10-19",
+  "baseRevision": "be0999f50af0fe4b8a9f5ae0a7ecfa714206c490",
+  "status": "IN_PROGRESS: exact listed paths examined; full 135-file JS repository and tests/docs/database migrations not exhaustively audited",
+  "priorEvidence": "docs/plan/evidence/user-authority-classification.json",
+  "existingCorrections": [
+    {
+      "paths": [
+        "src/tools/bulk.js",
+        "src/rtc/billing-authority.js"
+      ],
+      "formerProblem": "blanket developer-only refusal on billable bulk license actions",
+      "classification": "developer-only control had leaked into product; previously corrected in P9-2",
+      "currentBehavior": "request-bound approval or explicitly delegated standing account billing policy; guarded child reads/audits retained",
+      "realAcceptance": "P9-LICENSE-PAID still PENDING; no paid provider write authorized"
+    },
+    {
+      "paths": [
+        "src/rtc/pass-options.js",
+        "src/db.js",
+        "api/rtc/passes.js",
+        "src/rtc/openapi.js"
+      ],
+      "formerProblem": "production user authorization mistakenly equated with TEST fixture account and read-only Hub pass",
+      "classification": "developer-only restriction had leaked into product; previously corrected in P9-3",
+      "currentBehavior": "explicit TEST and genuinely user-authorized LIVE profiles, own account, expiry, area and write choice; Hub optional",
+      "realAcceptance": "P9-LIVE-DIRECT/P9-HUB-LIVE are already queued PASSED as narrow provider service proofs, but actual external Hub routing is Hub-owned"
+    }
+  ],
+  "newlyRemediated": [
+    {
+      "path": "api/google/callback.js",
+      "old": "Google enrollment success suggested an Appliance Rentals account for future developer tests",
+      "classification": "developer-operational guidance leaked into an end-user-facing owner connection success response",
+      "fix": "remove preferred test account, state independent operator/compatibility and actual Google delegated permission boundaries; preserve OAuth nonce/HTML escaping",
+      "tests": [
+        "test/unit/google-owner-consent.test.js protected OAuth state/callback and denied state",
+        "new direct assertion for operator branding and absence of developer-account instructions",
+        "new HTML escaping fixture"
+      ],
+      "status": "SOURCE_CHANGED; exact-head CI/review/deployment separately gated"
+    },
+    {
+      "paths": [
+        "api/google/authorize.js",
+        "api/oauth/authorize.js",
+        "api/index.js",
+        "api/account.js",
+        "api/rtc/passes.js",
+        "src/principals/public-information.js",
+        "api/mcp.js",
+        "src/rtc/openapi.js"
+      ],
+      "old": "inconsistent old developer/project operator naming and unclear Google provider independence",
+      "classification": "product presentation defect, not an access-control restriction",
+      "fix": "central first-party human display name and trademark attribution, preserve stable technical identifiers and access boundaries",
+      "tests": [
+        "test/unit/direct-mcp-http.test.js",
+        "test/unit/p10-public-homepage.test.js",
+        "test/unit/rtc-openapi.test.js",
+        "test/unit/google-owner-consent.test.js"
+      ],
+      "status": "SOURCE_CHANGED; client/platform acceptance separately pending"
+    }
+  ],
+  "validPoliciesObserved": [
+    {
+      "paths": [
+        "src/rtc/catalog.js",
+        "src/rtc/pass-options.js",
+        "api/rtc-gateway.js"
+      ],
+      "classification": "legitimate user-chosen profile/area and technical request budgets; TEST-only developer fixtures explicitly segregated",
+      "keep": "read-only classification, TTL, account ownership, per-user scope and refusal"
+    },
+    {
+      "paths": [
+        "src/principals/store.js",
+        "src/principals/tenant-store.js",
+        "src/principals/delegation.js",
+        "src/principals/clients.js"
+      ],
+      "classification": "principal and customer resource boundaries / Google independently verified delegated authority",
+      "keep": "scoped data, encrypted grants, provider-verified identities and customer delegation checks"
+    },
+    {
+      "paths": [
+        "src/principals/security.js",
+        "src/principals/owner-migration.js",
+        "src/principals/pilot-readiness.js",
+        "api/mcp.js"
+      ],
+      "classification": "pilot Stage 2 and legacy-owner access controls are deployment/verified-isolation gates, not blanket finished-product denial",
+      "keep": "public and owner sign-in isolation until separately approved live two-client tests; no forced migration"
+    },
+    {
+      "paths": [
+        "api/google/authorize.js",
+        "api/google/callback.js"
+      ],
+      "classification": "legacy owner credential required for original owner mailbox enrollment, with a separate user-owned public Google link flow in api/auth/google/start.js",
+      "keep": "owner passphrase, per-browser verified state, CSRF and independently owned public consent"
+    },
+    {
+      "paths": [
+        "src/tools/guards.js",
+        "src/tools/bulk.js",
+        "src/rtc/billing-authority.js"
+      ],
+      "classification": "user/provider/financial and destructive-operation safeguards",
+      "keep": "exact account/SKU identity, request preview/readback/audit, cost authorization, Google API enforcement"
+    }
+  ],
+  "inspectedAdditionalPaths": [
+    "src/tools/index.js",
+    "src/tools/guards.js",
+    "src/tools/bulk.js",
+    "src/rtc/catalog.js",
+    "src/rtc/pass-options.js",
+    "src/principals/store.js",
+    "src/principals/tenant-store.js",
+    "src/principals/delegation.js",
+    "src/principals/owner-migration.js",
+    "src/principals/clients.js",
+    "src/principals/google.js",
+    "src/principals/security.js",
+    "src/principals/pilot-readiness.js",
+    "api/google/authorize.js",
+    "api/google/callback.js",
+    "api/mcp.js",
+    "api/oauth/authorize.js",
+    "api/oauth/register.js",
+    "api/oauth/token.js",
+    "api/rtc-gateway.js",
+    "api/rtc/passes.js",
+    "src/rtc/openapi.js",
+    "src/principals/public-information.js",
+    "api/account.js",
+    "api/index.js",
+    "test/unit/google-owner-consent.test.js",
+    "test/unit/authorize.test.js",
+    "test/unit/p10-auth-routes.test.js",
+    "test/unit/direct-mcp-http.test.js",
+    "test/unit/p10-public-homepage.test.js",
+    "test/unit/rtc-openapi.test.js"
+  ],
+  "futureAudit": [
+    "Full registry and per-tool Google SDK positive/write/denial coverage rather than relying on a scoped sample",
+    "Every database schema/default/migration and owner-vs-customer account status transition",
+    "Developer/release feature flags and app/client adapter error handling",
+    "All tests/fixtures/CI contract and acceptance documentation",
+    "Real supported desktop/mobile native MCP initialization and provider read/write/revoke/reconnect",
+    "Actual P10 two-user isolation and publication readiness"
+  ],
+  "caveats": [
+    "A test's positive fake provider read is not a real Google read",
+    "No paid write or real public enrollment was authorized",
+    "No tool was disabled or permission check removed to achieve these corrections",
+    "Actual Hub discovery/relay is a Hub responsibility, not a Workspace completion gate"
+  ]
+}

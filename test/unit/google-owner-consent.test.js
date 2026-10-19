@@ -2,7 +2,8 @@ import {describe,it,expect,vi,beforeEach} from 'vitest';
 import {Readable} from 'node:stream';
 import {createFakeDb} from '../helpers/fake-db.js';
 import {startGoogleSetup,verifyGoogleSetup} from '../../src/oauth/google-setup-state.js';
-const holder=vi.hoisted(()=>({db:null,grants:0,connected:0,account:null,purpose:null}));
+import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../../src/branding.js';
+const holder=vi.hoisted(()=>({db:null,grants:0,connected:0,account:null,purpose:null,returnedEmail:'ops@robinsonappliancerentals.com'}));
 vi.mock('../../src/db.js',async actual=>{
  const real=await actual();
  return Object.fromEntries(Object.keys(real).map(name=>[name,(...args)=>holder.db[name](...args)]));
@@ -13,7 +14,7 @@ vi.mock('../../src/auth/google-auth-hosted.js',()=>({
   return 'https://accounts.google.test/consent?state='+encodeURIComponent(state);
  },
  handleGoogleCallback:async()=>{
-  holder.connected++;return 'ops@robinsonappliancerentals.com';
+  holder.connected++;return holder.returnedEmail;
  }
 }));
 const {default:authorize}=await import('../../api/google/authorize.js');
@@ -40,6 +41,7 @@ function continuation(res){
 }
 beforeEach(()=>{
  holder.db=createFakeDb();holder.grants=0;holder.connected=0;holder.account=null;
+ holder.returnedEmail='ops@robinsonappliancerentals.com';
  process.env.PUBLIC_BASE_URL=origin;
  process.env.ADMIN_PASSPHRASE=passphrase;
  process.env.TOKEN_ENCRYPTION_KEY=Buffer.alloc(32,7).toString('base64');
@@ -158,6 +160,8 @@ describe('protected owner-initiated Google setup',()=>{
   const page=response();await authorize({method:'GET',headers:{host:'workspace.example.test'},query:{}},page);
   expect(page.statusCode).toBe(200);
   expect(page.body).toContain('Service owner passphrase');
+  expect(page.body).toContain(PRODUCT_DISPLAY_NAME);
+  expect(page.body).toContain(PROVIDER_DISCLOSURE);
   expect(page.headers['Referrer-Policy']).toBe('same-origin');
   expect(holder.grants).toBe(0);
   const wrong=await submit({passphrase:'incorrect'});
@@ -204,7 +208,26 @@ describe('protected owner-initiated Google setup',()=>{
   const okay=response();await callback({method:'GET',query:{state,code:'real-code'},headers:{cookie}},okay);
   expect(okay.statusCode).toBe(200);expect(holder.connected).toBe(1);
   expect(okay.body).toContain('ops@robinsonappliancerentals.com');
+  expect(okay.body).toContain(PRODUCT_DISPLAY_NAME);
+  expect(okay.body).toContain(PROVIDER_DISCLOSURE);
+  expect(okay.body).not.toContain('Future developer tests');
+  expect(okay.body).not.toContain('prefer the Appliance Rentals account');
+  expect(okay.body).toContain('return to your supported MCP client');
+  expect(okay.headers['Cache-Control']).toBe('no-store');
   expect(okay.headers['Set-Cookie']).toMatch(/Max-Age=0/);
+ });
+ it('escapes the real Google callback response without imposing development-account guidance',async()=>{
+  holder.returnedEmail='<script>mailbox</script>@example.test';
+  const granted=await submit({passphrase,account:'ops@example.test'});
+  const u=continuation(granted);
+  const okay=response();await callback({method:'GET',query:{state:u.searchParams.get('state'),code:'one-use'},
+   headers:{cookie:granted.headers['Set-Cookie'].split(';')[0]}},okay);
+  expect(okay.statusCode).toBe(200);
+  expect(okay.body).not.toContain('<script>');
+  expect(okay.body).toContain('&lt;script&gt;mailbox&lt;/script&gt;@example.test');
+  expect(okay.body).toContain(PRODUCT_DISPLAY_NAME);
+  expect(okay.body).not.toContain('developer tests');
+  expect(holder.connected).toBe(1);
  });
  it('rejects fully attacker-chosen state AND cookie without a server-issued signature',async()=>{
   const nonce='A'.repeat(32);

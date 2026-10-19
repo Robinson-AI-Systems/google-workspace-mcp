@@ -1,5 +1,6 @@
 // User-owned account portal. No global owner mailbox/connection listing.
 import {initSchema} from '../src/db.js';
+import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../src/branding.js';
 import {listAccounts,listConnections,revokeConnection,disconnectAccount,deletionPreview,
   setPrincipalDefault,requestDeletion,cancelDeletion,isLegacyPilotIdentityPrincipal,
   canLegacyPilotStartFreshConsent} from '../src/principals/store.js';
@@ -60,7 +61,7 @@ export default async function handler(req,res){
        '<button>Link Google '+group+' permissions</button></form>').join('');
    const html='<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
      '<title>My Workspace connections</title><main style="max-width:720px;margin:auto;font:16px/1.5 system-ui;padding:1rem">'+
-     '<h1>My Google Workspace MCP</h1><p>Only this authenticated principal’s accounts and agent connections appear here.</p>'+
+     '<h1>'+escape(PRODUCT_DISPLAY_NAME)+'</h1><p>'+escape(PROVIDER_DISCLOSURE)+'</p><p>Only this authenticated principal’s accounts and agent connections appear here.</p>'+
      '<p>Before linking mail, files or administrator scopes, review how Google data is used by your selected agent: '+
      '<a href="/api/privacy">privacy and data use</a>, <a href="/api/support">support</a> and '+
      '<a href="/api/data-deletion">local disconnection and deletion limits</a>. Google controls which requested permissions you approve.</p>'+

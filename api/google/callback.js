@@ -1,6 +1,7 @@
 // Google will only return a mailbox to the owner browser that started
 // a fresh passphrase-protected setup. Never exchange unsolicited OAuth codes.
 import {handleGoogleCallback} from '../../src/auth/google-auth-hosted.js';
+import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../../src/branding.js';
 import {initSchema} from '../../src/db.js';
 import {verifyGoogleSetup,clearGoogleSetupCookie} from '../../src/oauth/google-setup-state.js';
 const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -30,7 +31,7 @@ export default async function handler(req,res){
   await initSchema();
   const email=await handleGoogleCallback(req.query.code,{label:verified.label||undefined});
   res.setHeader('Content-Type','text/html; charset=utf-8');
-  res.status(200).send(`<!doctype html><html><body style="font-family:system-ui,sans-serif;text-align:center;padding:4rem"><h2>Connected: ${escapeHtml(email)}</h2><p>This custom Google Workspace MCP can now act as that mailbox with its granted permissions.</p><p>You can close this tab. Future developer tests should prefer the Appliance Rentals account.</p></body></html>`);
+  res.status(200).send(`<!doctype html><html><body style="font-family:system-ui,sans-serif;text-align:center;padding:4rem"><h2>Connected: ${escapeHtml(email)}</h2><p>${escapeHtml(PRODUCT_DISPLAY_NAME)}</p><p>${escapeHtml(PROVIDER_DISCLOSURE)}</p><p>This account can be used by the connector only within Google-granted permissions and its authorized connection policy.</p><p>You can close this tab and return to your supported MCP client.</p></body></html>`);
  }catch{
   res.status(503).send('Google authorization could not be verified and saved. Check OAuth configuration or the Google consent error, then restart account setup.');
  }
