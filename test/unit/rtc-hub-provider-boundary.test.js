@@ -18,6 +18,14 @@ describe('Hub-neutral RTC 1 provider compatibility (not Hub enrollment acceptanc
   // A Hub relay's acceptance state is not a truthful provider capability
   // and is not a required RTC1 manifest field.
   expect(c).not.toHaveProperty('conformance');
+  const openapi=rtcOpenapi('https://workspace.example.test');
+  const schema=openapi.components.schemas.Manifest;
+  // The RTC1 public manifest and its required OpenAPI fields must stay
+  // byte-for-byte aligned; removing a Hub-owned status must not leave a
+  // stale required property in a generated client contract.
+  expect(schema).not.toHaveProperty('properties.conformance');
+  expect([...schema.required].sort()).toEqual(Object.keys(c).sort());
+  expect(Object.keys(schema.properties).sort()).toEqual(Object.keys(c).sort());
  });
  it('preserves direct MCP and prefixed HTTPS discovery doors without needing the Hub',()=>{
   const routes=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url),'utf8'));
