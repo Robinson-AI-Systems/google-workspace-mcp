@@ -1,5 +1,9 @@
 # Agent entry — Robinson Google Workspace MCP
 
+## Universal Hub compatibility (owner-approved shared contract)
+
+Before changing RTC discovery, MCP transport, OAuth/provider consent, scoped meta-tools, tool pagination, or provider errors, follow [docs/HUB-COMPATIBILITY.md](docs/HUB-COMPATIBILITY.md), which links the canonical Hub contract. Hub discovers and connects to this **standalone** server; the server never calls Hub or installs bespoke Hub adapters. The agent and user plan, and Hub retains a small fixed gateway tool menu. This is a documentation-adoption instruction, **not** permission to change deployed auth or production data.
+
 ## End-user product authority versus developer operating limits — owner decision 2026-10-16
 
 Read [docs/END-USER-AUTHORITY.md](docs/END-USER-AUTHORITY.md). Rules restricting **our coding/acceptance agents** (autonomous $0 spend, no unauthorized LIVE/production work, special owner permission and release constraints) do **not** restrict the product's fully authorized end users or their coding agents. Build the complete feasible provider capability; show financial/security/destructive notices, honor provider scope and user-chosen delegation policies, and permit actual execution. No developer restriction may silently become a permanent "guide-only" or outright refusal in the product. This clarification does not waive development authorization, CI, review or release gates.
