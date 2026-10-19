@@ -3,12 +3,12 @@ import {initSchema} from '../src/db.js';
 import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../src/branding.js';
 import {listAccounts,listConnections,revokeConnection,disconnectAccount,deletionPreview,
   setPrincipalDefault,requestDeletion,cancelDeletion,isLegacyPilotIdentityPrincipal,
-  canLegacyPilotStartFreshConsent} from '../src/principals/store.js';
+  canLegacyPilotStartFreshConsent,getLinkedGrant} from '../src/principals/store.js';
 import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.js';
 import {configureCustomerDelegation,listCustomerDelegations,revokeCustomerDelegation,
   addVerifiedDelegationSubject,removeDelegationSubject} from '../src/principals/delegation.js';
 import {readCookie,headers,publicMode,requireScope} from '../src/principals/security.js';
-import {PUBLIC_SCOPE_GROUPS} from '../src/principals/google.js';
+import {PUBLIC_SCOPE_GROUPS,publicGoogleClient} from '../src/principals/google.js';
 import {redirectCanonicalGet} from '../src/principals/canonical-entry.js';
 const escape=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export default async function handler(req,res){
@@ -51,10 +51,25 @@ export default async function handler(req,res){
        const owned=(await listAccounts(principalId)).find(a=>a.id===body.id);
        requireScope(owned&&PUBLIC_SCOPE_GROUPS.complete.every(scope=>owned.scope_list.includes(scope)),
          'god_mode_not_enabled');
+       // Best-effort provider-side revocation is never equated with local
+       // account revocation. This is this principal's own independent Google
+       // grant from the PUBLIC OAuth client, never the legacy owner client.
+       // The local stop must work even when Google is temporarily unreachable.
+       let providerRevoked=false;
+       try {
+         const grant=await getLinkedGrant(principalId,body.id);
+         const token=grant?.refresh_token||grant?.access_token;
+         if(token){
+           await publicGoogleClient().revokeToken(token);
+           providerRevoked=true;
+         }
+       }catch{ /* never expose Google tokens, provider errors or owner identity */ }
        const disconnected=await disconnectAccount(principalId,body.id);
        return res.status(200).json({godMode:false,disconnected,
-         agentConnectionsRevoked:disconnected>0,
-         note:'Account Google access is stopped locally, including its agent connections. Reauthorize selected Google services and reconnect agents if desired. Google provider consent is not claimed revoked; the user can separately revoke this app in their Google Account third-party settings.'});
+         agentConnectionsRevoked:disconnected>0,providerRevoked,
+         note:providerRevoked
+           ?'Google app permission revocation was confirmed. This account and its agents are also disabled locally. To resume, authorize only the services you choose and reconnect your agent.'
+           :'Account and agent access are stopped locally. Google provider-wide authorization could not be confirmed revoked. Review your Google Account third-party access settings to revoke this app at Google, then reauthorize only the services you choose.'});
      }
      if(action==='set_default'){
        return res.status(200).json({defaultAccountId:await setPrincipalDefault(principalId,body.id)});
@@ -99,15 +114,15 @@ export default async function handler(req,res){
      ' direct-user OAuth permissions this MCP supports, including powerful administrator-related permissions. '+
      'Google still requires your consent and may require restricted-scope verification, a real admin role, separate customer delegation or paid licensing. '+
      'You can turn off God mode later; doing so locally disconnects this Google grant and its connected agents. '+
-     'Google provider authorization can be revoked separately from your Google Account third-party access settings.</p>'+
+     'You can revoke the Google permission at Google when turning it off, and separately check or remove the app from your Google Account third-party access settings if the provider cannot confirm revocation.</p>'+
      '<button>Continue to Google consent</button></form>';
    const disableGodMode=a=>'<form method="POST">'+
      '<input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
      '<input type="hidden" name="action" value="disable_god_mode">'+
      '<input type="hidden" name="id" value="'+escape(a.id)+'">'+
      '<label><input type="checkbox" name="confirm" value="true" required>'+
-     ' I understand this stops access locally for this account, revokes its agent connections, '+
-     'and requires a new selected-service Google consent to continue. Google-side app authorization is separate.</label>'+
+     ' I understand this revokes the broad provider authorization where Google permits, stops this account locally, revokes its agent connections, '+
+     'and requires new selected-service consent to continue. Google may require manual third-party access removal if revocation fails.</label>'+
      '<button>Turn off God mode</button></form>';
    const consentChoice=mode==='pilot'
      ? '<h3>Approved pilot: comprehensive Google acceptance setup</h3>'+
