@@ -29,3 +29,9 @@ A per-action digest binds arguments; it is not cryptographic proof the human gra
 ## After execution
 
 Inspect every target's result, exact Google readback, confirmation status and audit receipt. If a provider request has an uncertain outcome, reconcile first; do not retry a potentially applied operation automatically. Read-only/area/domain/Google API refusals are real security or provider boundaries. A green HTTP status by itself does not prove a requested Google change completed.
+
+## Encrypted read-only runner issuance
+
+The reviewed encrypted issuance path `/api/developer/test-pass-issue` also supports an explicit `mode: live` request. Its historical path/export names are retained for compatibility. TEST remains the default, with its original 24-hour/enrollment rules. LIVE is one hour, read-only, exact selected mailbox/areas, 120 calls/minute, no Hub, no writes and billing denied. These fixed bounds describe this disposable runner helper; the ordinary owner pass form still supports the product's complete live profiles and chosen policies.
+
+Use `scripts/issue-encrypted-test-pass.mjs start|poll` in a private directory, with protected `RTC_ORIGIN`, `RTC_EXPECTED_REVISION`, `RTC_EXPECTED_ACCOUNT`, `RTC_APPROVED_AREAS`, `RTC_HANDOFF_FILE`, `RTC_PASS_OUTPUT_FILE`, and explicit `RTC_PASS_MODE=live`. The owner sees the immutable LIVE scope and one-hour expiry before submitting this service's owner passphrase. Only the registered RSA/poll-secret-owning runner retrieves ciphertext; no plaintext pass appears in the browser or chat. The runner verifies exact source/account/mode/profile/areas/write refusal before a new mode0600 output file. Failed/duplicate approval cannot mint an orphan or second pass. No provider operation runs automatically. Verify actual read/denial/revocation independently; source tests are not live acceptance. Release and individual live-pass approval remain required before production use.

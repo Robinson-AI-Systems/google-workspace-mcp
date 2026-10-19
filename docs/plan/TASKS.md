@@ -4,6 +4,10 @@ Owner clarification October16,2026 Denver: development-agent spending/TEST restr
 
 Authoritative execution contract: [User authority and parallel sign-in](designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). Follow current engineering-readiness and acceptance rows in dependency order; do not repeat already-merged implementation. Do not interpret original29 passed acceptance rows as completion of the new scope. Add new source-pinned acceptance rows only when implementation exists.
 
+## October 18 — encrypted live RTC runner completion repair
+
+P9-LIVE-DIRECT's next real prerequisite exposed a concrete runner gap: encrypted issuance accepted only TEST despite provider/runtime support for live passes. The existing handler, atomic SQL store and private runner now accept explicit LIVE with immutable one-hour/read-only/exact-account-and-areas/no-Hub/no-writes/deny-billing policy. TEST defaults and old grants are preserved. Frozen maintenance scope: `docs/pr-cards/DEVELOPER-CONNECTION.md`, October18 plan commit60a9135. Source validation/review/deployment and real owner-approved LIVE gateway acceptance remain distinct. P9-LIVE-DIRECT stays PENDING; no new queue row/phase, completed subsection or bundle is claimed. No production credentials/flags changed.
+
 ## October 18 — disposable native owner acceptance
 
 Checked production, main and live remain `0c2fa5b63d65866ac2c24f17a715512119d912ac`; Vercel independently reports READY `dpl_3XbuZT2Co8CF49mZAXxQmkJfh6F1`. The approved manual release is complete (earlier release-gap statements are historical). New real owner-approved native OAuth, account-management and privacy proof passes **P10-ANONYMOUS-HOMEPAGE-PRIVACY**: queue **30 PASSED / 10 PENDING**. [Sanitized evidence](evidence/2026-10-18-disposable-owner-native.json) records real Google read, permission denials, refresh and cleanup. Only the disposable connection's two same-refresh access rows were revoked; all 17 original owner access records remain active and the established connector still reads. No full subsection/bundle claimed.

@@ -51,11 +51,29 @@ it('refuses expired, altered, unenrolled and unknown-mailbox requests without is
  const unknown=await begin({challenge:JSON.stringify({account:'unknown@example.test',areas:['chrome']})});process.env.RTC_TEST_ACCOUNT_EMAILS=account+',unknown@example.test';expect(await store.issue(unknown)).toBe(false);process.env.RTC_TEST_ACCOUNT_EMAILS=account;
  expect((await query('SELECT count(*)::int AS n FROM rtc_passes'))[0].n).toBe(before);
 });
-it('rolls back the pass insert when saving ciphertext fails, leaving the pending request recoverable without an orphan credential',async()=>{
- const row=await begin(),before=(await query('SELECT count(*)::int AS n FROM rtc_passes'))[0].n;
+it.each(['test','live'])('rolls back %s issuance when ciphertext persistence fails without an orphan credential',async mode=>{
+ const row=await begin(mode==='live'?{challenge:JSON.stringify({account,areas:['chrome','domain'],mode})}:{}),before=(await query('SELECT count(*)::int AS n FROM rtc_passes'))[0].n;
  await query("CREATE FUNCTION refuse_issue() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic failure'; END $$");
  await query("CREATE TRIGGER refuse_issue BEFORE UPDATE ON developer_oauth_handoffs FOR EACH ROW WHEN(NEW.status='authorized') EXECUTE FUNCTION refuse_issue()");
- try{await expect(store.issue(row)).rejects.toThrow('synthetic failure');}finally{await query('DROP TRIGGER refuse_issue ON developer_oauth_handoffs');}
+ try{await expect(store.issue(row)).rejects.toThrow('synthetic failure');}finally{await query('DROP TRIGGER refuse_issue ON developer_oauth_handoffs');await query('DROP FUNCTION refuse_issue()');}
  expect((await query('SELECT count(*)::int AS n FROM rtc_passes'))[0].n).toBe(before);expect((await store.find(row.state)).status).toBe('pending');
  expect(await store.issue(row)).toBe(true);
+});
+
+it('issues LIVE without TEST enrollment, atomically pins one-hour read-only deny-billing scope and refuses duplicates',async()=>{
+ const prior=await query('SELECT * FROM rtc_passes ORDER BY id');
+ const old=process.env.RTC_TEST_ACCOUNT_EMAILS;process.env.RTC_TEST_ACCOUNT_EMAILS='';
+ try{
+  const row=await begin({challenge:JSON.stringify({account,areas:['mail','workspace'],mode:'live'})});
+  const results=await Promise.all([store.issue(row),testPassIssuanceStore(query).issue(row)]);expect(results.filter(Boolean)).toHaveLength(1);
+  const saved=await store.find(row.state);
+  const token=crypto.privateDecrypt({key:keys.privateKey,oaepHash:'sha256',padding:crypto.constants.RSA_PKCS1_OAEP_PADDING},Buffer.from(saved.sealed_code,'base64url')).toString();
+  const pass=await db.getRtcPass(token);expect(pass).toMatchObject({mode:'live',profile:'read_only',areas:['mail','workspace'],allow_writes:false,for_hub:false,cost_policy:{mode:'deny'}});
+  const duration=await query('SELECT extract(epoch FROM(expires_at-created_at))::int AS seconds FROM rtc_passes WHERE id=$1',[pass.id]);expect(duration[0].seconds).toBe(3600);
+  expect(await query('SELECT * FROM rtc_passes WHERE id<>$1 ORDER BY id',[pass.id])).toEqual(prior);
+  expect(JSON.stringify(saved)).not.toContain(token);
+  expect(await store.issue({...row,challenge:JSON.stringify({account,areas:['admin'],mode:'live'})})).toBe(false);
+  await expect(store.issue({...row,challenge:JSON.stringify({account,areas:['mail','workspace']})})).rejects.toThrow('invalid_test_account');
+  const missing=await begin({challenge:JSON.stringify({account:'absent@example.test',areas:['mail'],mode:'live'})});expect(await store.issue(missing)).toBe(false);
+ }finally{process.env.RTC_TEST_ACCOUNT_EMAILS=old;}
 });
