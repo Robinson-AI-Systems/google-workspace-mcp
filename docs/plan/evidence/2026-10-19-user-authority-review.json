@@ -61,6 +61,19 @@
         "test/unit/google-owner-consent.test.js"
       ],
       "status": "SOURCE_CHANGED; client/platform acceptance separately pending"
+    },
+    {
+      "paths": [
+        "api/well-known/oauth-authorization-server.js",
+        "api/well-known/oauth-protected-resource.js"
+      ],
+      "old": "When PUBLIC_BASE_URL was missing, unauthenticated Host header could supply the advertised HTTPS issuer, authorization, token and protected-resource origins, contrary to native MCP endpoint trust rules",
+      "classification": "genuine security/configuration defect (not developer-only rule)",
+      "fix": "both discovery handlers now require validated operator configured canonical HTTPS publicResource; missing/invalid origin refuses 503 without exposing attacker-provided issuer or resource",
+      "tests": [
+        "test/unit/oauth-discovery-origin.test.js configured/missing/invalid origin, malicious Host/forwarded Host, metadata parity"
+      ],
+      "status": "SOURCE_CHANGED; second PR CI/review and deployment required"
     }
   ],
   "validPoliciesObserved": [
@@ -142,7 +155,14 @@
     "test/unit/p10-auth-routes.test.js",
     "test/unit/direct-mcp-http.test.js",
     "test/unit/p10-public-homepage.test.js",
-    "test/unit/rtc-openapi.test.js"
+    "test/unit/rtc-openapi.test.js",
+    "api/well-known/oauth-authorization-server.js",
+    "api/well-known/oauth-protected-resource.js",
+    "src/oauth/connection-settings.js",
+    "src/auth/google-auth-hosted.js",
+    "src/auth/delegation-scopes.js",
+    "src/oauth/login-guard.js",
+    "src/db.js"
   ],
   "futureAudit": [
     "Full registry and per-tool Google SDK positive/write/denial coverage rather than relying on a scoped sample",
