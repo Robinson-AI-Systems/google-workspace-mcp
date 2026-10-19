@@ -258,11 +258,11 @@ describe('P10 actual route one-use browser callback and independent principal MC
  it('comprehensive user consent stays CSRF-bound, scoped and requires Google to approve every selected permission',async()=>{
   const portal=res();await account(req('GET',{},sessCookie),portal);
   expect(portal.statusCode).toBe(200);
-  expect(portal.body).toContain('Authorize all supported Google services together');
-  expect(portal.body).toContain('name="group" value="complete"');
-  const withoutCsrf=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'complete'}),withoutCsrf);
+  expect(portal.body).toContain('God mode — request all supported Google permissions together');
+  expect(portal.body).toContain('name="godMode" value="true" checked');
+  const withoutCsrf=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',godMode:'true'}),withoutCsrf);
   expect(withoutCsrf.statusCode).toBe(400);expect(h.started).toBeNull();
-  const okStart=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'complete',csrf}),okStart);
+  const okStart=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',godMode:'true',csrf}),okStart);
   expect(okStart.statusCode).toBe(302);expect(h.started.policy.group).toBe('complete');
   const wrongBrowser=res();await callback(req('GET',{state:h.started.state,code:'provider-code'},
     'p10_google_browser=foreign; '+sessCookie),wrongBrowser);
