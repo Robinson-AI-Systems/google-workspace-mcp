@@ -41,7 +41,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 <!-- BEGIN GENERATED TOOL CATALOG -->
 <!-- Registry-derived; regenerate with `npm run gen:catalog`. Do not edit this section by hand. -->
 
-**381 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
+**382 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
 
 | Area | Registered tools |
 | --- | ---: |
@@ -52,7 +52,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 | datatransfer | 3 |
 | dns | 3 |
 | domain | 3 |
-| files | 102 |
+| files | 103 |
 | identity | 5 |
 | mail | 60 |
 | people | 9 |
@@ -235,7 +235,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `domain_get_verification_token`
 - `domain_list_verified`
 
-### files (102)
+### files (103)
 
 - `docs_append_paragraph`
 - `docs_batch_update`
@@ -289,6 +289,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `drive_share_file`
 - `drive_star_file`
 - `drive_transfer_ownership`
+- `drive_trash_file`
 - `drive_unstar_file`
 - `drive_update_permission`
 - `drive_update_shared_drive`

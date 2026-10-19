@@ -8,6 +8,7 @@ import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.
 import {configureCustomerDelegation,listCustomerDelegations,revokeCustomerDelegation,
   addVerifiedDelegationSubject,removeDelegationSubject} from '../src/principals/delegation.js';
 import {readCookie,headers} from '../src/principals/security.js';
+import {PUBLIC_SCOPE_GROUPS} from '../src/principals/google.js';
 import {redirectCanonicalGet} from '../src/principals/canonical-entry.js';
 const escape=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export default async function handler(req,res){
@@ -71,10 +72,16 @@ export default async function handler(req,res){
    const form=(action,id,label)=>'<form method="POST"><input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
       '<input type="hidden" name="action" value="'+escape(action)+'">'+
       '<input type="hidden" name="id" value="'+escape(id)+'"><button>'+escape(label)+'</button></form>';
-   const links=Object.keys({mail:true,files:true,calendar:true,tasks:true,contacts:true,adminVerify:true})
-     .map(group=>'<form action="/api/auth/google/start" method="POST"><input type="hidden" name="purpose" value="link">'+
-       '<input type="hidden" name="group" value="'+group+'"><input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
-       '<button>Link Google '+group+' permissions</button></form>').join('');
+   const formLink=(group,label)=>'<form action="/api/auth/google/start" method="POST">'+
+     '<input type="hidden" name="purpose" value="link"><input type="hidden" name="group" value="'+escape(group)+'">'+
+     '<input type="hidden" name="csrf" value="'+escape(csrf)+'"><button>'+escape(label)+'</button></form>';
+   const fullConsent='<h3>Comprehensive Google authorization</h3>'+
+     '<p>Request all '+PUBLIC_SCOPE_GROUPS.complete.length+' direct-user OAuth permissions for supported services in one Google consent. This includes powerful admin-related capabilities. Review Google\'s permission screen; Google may reject restricted scopes without verified app approval or the necessary administrator role. It does not grant customer-specific delegation, Alert Center service-account rights or paid licenses. Granting permissions changes no Google files or messages. Replacing your account grant may require reconnecting existing agents to receive a fresh credential; the original owner connection is separate.</p>'+
+     formLink('complete','Authorize all supported Google services together');
+   const links='<details><summary>Or authorize permissions by individual service</summary>'+
+     Object.keys(PUBLIC_SCOPE_GROUPS).filter(g=>g!=='complete')
+       .map(g=>formLink(g,'Authorize '+g+' permissions ('+PUBLIC_SCOPE_GROUPS[g].length+')')).join('')+
+     '</details>';
    const html='<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
      '<title>My Workspace connections</title><main style="max-width:720px;margin:auto;font:16px/1.5 system-ui;padding:1rem">'+
      '<h1>'+escape(PRODUCT_DISPLAY_NAME)+'</h1><p>'+escape(PROVIDER_DISCLOSURE)+'</p><p>Only this authenticated principal’s accounts and agent connections appear here.</p>'+
@@ -87,7 +94,7 @@ export default async function handler(req,res){
      (identityOnly&&!freshConsentAvailable
        ? '<h2>Identity-only legacy tester</h2><p>This verified pilot login is intentionally separate from your original owner MCP. Existing Google connections stay with the original owner. This pilot identity cannot link Google data or issue MCP tool connections until a separately approved fresh consent.</p>'
        : '<h2>Link an account / add permissions</h2>'+
-         (freshConsentAvailable?'<p>You may now independently consent for your own Google account. This does not transfer, share or revoke original owner grants. Agent tool execution remains separately disabled until verified.</p>':'')+links)+
+         (freshConsentAvailable?'<p>You may now independently consent for your own Google account. This does not transfer, share or revoke original owner grants.</p>':'')+fullConsent+links)+
      '<h2>Customer administrator delegation</h2>'+
      '<p>This is optional and only for administrators of their own verified Google Workspace customer. First link the separate read-only Admin Verification permission above. An existing login and its grants stay intact. Domain name or email alone never grants authority.</p>'+
      '<p>A service-account key is submitted only over this signed-in HTTPS form with CSRF protection, encrypted per account in the database, and never shown again. The Google administrator must separately authorize the selected scopes for this service account in their own Admin Console. Enter only scopes required for the intended operations. Missing configuration does not disable ordinary Google access.</p>'+

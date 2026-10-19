@@ -39,7 +39,10 @@ export const handlers = {
   },
   docs_get_text: async (args, { docs }) => {
     const res = await docs.documents.get({ documentId: args.documentId });
-    return ok(extractText(res.data));
+    const text=extractText(res.data);
+    // Empty documents are valid provider reads; an empty tool text block is
+    // indistinguishable from a client display failure. Preserve exact text.
+    return ok({ documentId:args.documentId, text, empty:text.length===0 });
   },
   docs_insert_text: async (args, { docs }) => {
     const res = await docs.documents.batchUpdate({ documentId: args.documentId, requestBody: { requests: [{ insertText: { location: { index: args.index ?? 1 }, text: args.text } }] } });

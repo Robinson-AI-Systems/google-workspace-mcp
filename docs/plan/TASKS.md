@@ -787,7 +787,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-3"
     ],
-    "lastEvidence": "P10 B has separate minted V2 credentials and deliberate public_dispatch_not_enabled 403. Owner approved a bounded non-billable two-user pilot in issue #205, not credential provisioning, release, public activation or a write. No real new Google subject login or two external client test yet; remains PENDING."
+    "lastEvidence": "2026-10-19 genuine PARTIAL native Claude Full/compact MCP pilot: owner-reported real Gmail, Calendar, Drive, Docs, Sheets, Slides, Forms and Contacts read/write/cleanup; read-only production principal_changes independently corroborates Gmail label create/delete, Calendar event create/delete, Contact create/delete, Docs/Sheets/Slides/Forms create, Drive folder create/rename and five file deletes. The original owner direct read still works. Tasks/Chat and advanced Admin requests lack user OAuth scopes; Alert Center requires separate customer-bound DWD. One active pilot MCP client only. Comprehensive direct-user Google consent and provider diagnostic fixes in PR #229 await CI and checked release. Still PENDING: second distinct subject/client, wrong-account denial, token replay/refresh/revocation, original bearer continuation, real advanced reads and P10-6 public readiness. Do not confuse Full agent profile with Google OAuth grant. Issue #205 holds sanitized detail."
   },
   {
     "id": "P10-CUSTOMER-DELEGATION",
