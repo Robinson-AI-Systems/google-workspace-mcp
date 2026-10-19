@@ -3,6 +3,10 @@
 Agent entry: [AGENTS.md](../../AGENTS.md). Complete SESSION-START §§0–1 before
 selecting new implementation; preserve the existing session:finish workload check.
 
+## Owner clarification — 2026-10-19: Hub LIVE connection is Hub-owned, not Workspace completion
+
+Workspace completion requires a compliant, independently usable **RTC 1 provider** under the frozen Hub contract and latest reviewed `docs/HUB-COMPATIBILITY.md`, not a deployed Hub instance discovering or enrolling it. New optional Hub-initiated OAuth onboarding is the Hub's integration responsibility; the Workspace issuer continues to own any credentials it actually issues. Historical `P9-HUB-LIVE` acceptance ID is retained for traceability but its remaining Workspace scope is a source/deployed **RTC1 conformance** check, not a Hub end-to-end integration. Existing direct LIVE read/deny/revoke evidence, service conformance on two Workspace processes/shared PostgreSQL and prior original native/TEST proof may be reused when valid. The Hub project owns its actual LIVE connection tests, registry, caller isolation and relay. Do not add Workspace-to-Hub callbacks or block Workspace's provider release on Hub federation state. This is a newer explicit owner decision and supersedes older text below that implied Hub LIVE proof was required for Workspace completion.
+
 ## Owner clarification — 2026-10-17: Workspace pilot is Hub-independent
 
 The owner explicitly clarified that **Hub is optional**: the original Hub TEST RTC relay/denial and the separately planned generic Hub LIVE production integration must never block verified **direct Workspace** use. The original historical Hub evidence and any current expired pass are tracked honestly under the existing Hub-specific completion/continuity requirements and remain PENDING where fresh evidence is missing. Do not replace original proofs or mark those acceptance rows passed.
