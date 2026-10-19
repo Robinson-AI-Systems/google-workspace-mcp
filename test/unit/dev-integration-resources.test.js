@@ -153,4 +153,36 @@ describe('P8-7 exact app resource request contract',()=>{
   const empty=await inspectExactAppResources(normalizeExactAppResources({}),clients);
   expect(empty).toEqual([]);
  });
+
+ it('classifies Google Tasks 400 invalid task list IDs without leaking Google provider text',async()=>{
+  for(const payload of [
+   {message:'Invalid task list ID'},
+   {errors:[{reason:'invalid',message:'Invalid tasklist ID'}]},
+  ]){
+   const {clients}=stub();
+   clients.tasks.tasklists.get=async()=>{
+    const e=new Error('Do not expose provider response details');
+    e.response={status:400,data:{error:payload}};throw e;
+   };
+   const res=await inspectGoogleIntegration({apis:[],taskLists:['invalid-list-id']},clients);
+   expect(res.checks).toMatchObject([{kind:'task_list',status:'missing',reason:'invalid_provider_resource'}]);
+   expect(res.status).toBe('missing');
+   expect(JSON.stringify(res)).not.toMatch(/Do not expose|Invalid task list ID/);
+  }
+ });
+ it('preserves genuine Tasks permission and provider outages separately from invalid IDs',async()=>{
+  for(const [status,expectedStatus,reason] of [
+   [403,'not_readable','scope_or_access_denied'],
+   [500,'not_readable','google_probe_failed'],
+   [404,'missing','resource_not_found']
+  ]){
+   const {clients}=stub();
+   clients.tasks.tasklists.get=async()=>{
+    const e=new Error('provider failed');e.response={status,data:{error:{message:'provider failed'}}};
+    throw e;
+   };
+   const r=await inspectGoogleIntegration({apis:[],taskLists:['not-there']},clients);
+   expect(r.checks).toMatchObject([{kind:'task_list',status:expectedStatus,reason}]);
+  }
+ });
 });
