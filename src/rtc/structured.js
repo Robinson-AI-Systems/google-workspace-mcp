@@ -106,7 +106,7 @@ export function matchesStructuredShape(name,value){
    // runtime validator must agree, but ONLY for the exact unreadable/scope-
    // denial state. Never transform unknown into failed verification or green.
    const scopeUnknown=value.status==='WARN'&&value.readable===false&&
-     value.reason==='site_verification_scope_unavailable';
+     ['site_verification_scope_unavailable','invalid_domain'].includes(value.reason);
    if(value.readable===false&&!scopeUnknown)return false;
    return typeof value.domain==='string'&&value.domain.length>0&&
      ['PASS','WARN','FAIL'].includes(value.status)&&
