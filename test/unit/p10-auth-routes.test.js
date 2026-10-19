@@ -258,10 +258,82 @@ describe('P10 actual route one-use browser callback and independent principal MC
     {action:'set_default',id:'foreign',csrf}),blocked);
   expect(blocked).toMatchObject({statusCode:403,body:{error:'legacy_pilot_identity_only'}});
  });
+ it('alternate-host Google login redirects to configured HTTPS before cookies, state or provider operations',async()=>{
+   const offHost=req('GET',{purpose:'login',ignored:'not-forwarded'},'');
+   offHost.headers.host='workspace.example.test';
+   offHost.headers['x-forwarded-host']='attacker.example.test';
+   const out=res();await start(offHost,out);
+   expect(out.statusCode).toBe(303);
+   expect(out.headers.Location).toBe('https://mcp.example.test/api/auth/google/start?purpose=login');
+   expect(out.headers['Set-Cookie']).toBeUndefined();
+   expect(h.started).toBeNull();
+   const mcpParams={
+     purpose:'mcp_authorize',client_id:'registered-client',
+     redirect_uri:'https://chat.example.test/cb',
+     resource:'https://mcp.example.test/api/mcp',
+     code_challenge:'c'.repeat(43),state:'client-state',danger:'ignored'
+   };
+   const foreign=req('GET',mcpParams);
+   foreign.headers.host='attacker.example.test';
+   const redirect=res();await start(foreign,redirect);
+   expect(redirect.statusCode).toBe(303);
+   const dest=new URL(redirect.headers.Location);
+   expect(dest.host).toBe('mcp.example.test');
+   for(const [key,value] of Object.entries(mcpParams)){
+     if(key==='danger')expect(dest.searchParams.has(key)).toBe(false);
+     else expect(dest.searchParams.get(key)).toBe(value);
+   }
+   expect(h.started).toBeNull();
+   const canonical=req('GET',{purpose:'login'});
+   canonical.headers.host='mcp.example.test';
+   const started=res();await start(canonical,started);
+   expect(started.statusCode).toBe(302);
+   expect(h.started.purpose).toBe('login');
+   expect(started.headers['Set-Cookie']).toContain('p10_google_browser');
+ });
+ it('alternate-host account portal redirects before inspecting session; canonical anonymous GET guides pilot sign-in',async()=>{
+   const foreign=req('GET',{},sessCookie);
+   foreign.headers.host='workspace.example.test';
+   const redirected=res();await account(foreign,redirected);
+   expect(redirected.statusCode).toBe(303);
+   expect(redirected.headers.Location).toBe('https://mcp.example.test/api/account');
+   expect(redirected.headers['Set-Cookie']).toBeUndefined();
+   const canonical=req('GET');
+   canonical.headers.host='mcp.example.test';
+   const noSession=res();await account(canonical,noSession);
+   expect(noSession.statusCode).toBe(401);
+   expect(noSession.body).toContain('/api/auth/google/start?purpose=login');
+   expect(noSession.body).not.toContain('ops@example.test');
+   const ownerStillPrivate=req('GET',{},sessCookie);
+   ownerStillPrivate.headers.host='mcp.example.test';
+   const accountPage=res();await account(ownerStillPrivate,accountPage);
+   expect(accountPage.statusCode).toBe(200);
+   expect(accountPage.body).toContain('Workspace MCP by Robinson AI Systems');
+ });
+ it('invalid operator origin fails closed and alias POST cannot bypass existing CSRF guard',async()=>{
+   process.env.PUBLIC_BASE_URL='http://insecure.example.test';
+   const login=req('GET',{purpose:'login'});
+   login.headers.host='alternate.example.test';
+   const rejected=res();await start(login,rejected);
+   expect(rejected.statusCode).toBe(400);
+   expect(h.started).toBeNull();
+   const portal=req('GET');
+   portal.headers.host='alternate.example.test';
+   const unavailable=res();await account(portal,unavailable);
+   expect(unavailable.statusCode).toBe(403);
+   expect(unavailable.headers.Location).toBeUndefined();
+   process.env.PUBLIC_BASE_URL='https://mcp.example.test';
+   const action=req('POST',{},sessCookie,{action:'disconnect_account',id:'foreign'});
+   action.headers.host='workspace.example.test';
+   const csrfRejected=res();await account(action,csrfRejected);
+   expect(csrfRejected.statusCode).toBe(403);
+   expect(csrfRejected.headers.Location).toBeUndefined();
+ });
  it('logout affects browser only; account listing is owned and requires CSRF for mutations',async()=>{
   const get=res();await session(req('GET',{},sessCookie),get);
   expect(get).toMatchObject({statusCode:200,body:{authenticated:true,linkedAccounts:[]}});
-  const unauth=res();await account(req(),unauth);expect(unauth.statusCode).toBe(403);
+  const unauth=res();await account(req(),unauth);expect(unauth.statusCode).toBe(401);
+  expect(unauth.body).toContain('Sign in with your approved Google account');
   const read=res();await account(req('GET',{},sessCookie),read);
   expect(read.statusCode).toBe(200);expect(read.body).toContain('Workspace MCP by Robinson AI Systems');
   expect(read.body).toContain('Not created, operated, sponsored or endorsed by Google LLC.');
