@@ -8,13 +8,29 @@ import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.
 import {configureCustomerDelegation,listCustomerDelegations,revokeCustomerDelegation,
   addVerifiedDelegationSubject,removeDelegationSubject} from '../src/principals/delegation.js';
 import {readCookie,headers} from '../src/principals/security.js';
+import {redirectCanonicalGet} from '../src/principals/canonical-entry.js';
 const escape=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export default async function handler(req,res){
  headers(res);
  if(!['GET','POST'].includes(req.method))return res.status(405).send('Method not allowed');
  try{
+   // The public alias and configured OAuth callback must share the same host.
+   // A GET is safe to redirect; POST mutations must remain CSRF-bound.
+   if(redirectCanonicalGet(req,res,'/api/account'))return;
    await initSchema();
-   const session=await requireSession(req),principalId=session.principal_id;
+   let session;
+   try{session=await requireSession(req);}
+   catch(error){
+     if(req.method!=='GET'||error?.message!=='session_required')throw error;
+     res.setHeader('Content-Type','text/html; charset=utf-8');
+     return res.status(401).send('<!doctype html><html lang="en"><meta charset="utf-8">'+
+       '<title>Sign in — '+escape(PRODUCT_DISPLAY_NAME)+'</title>'+
+       '<main style="font:16px/1.5 system-ui;max-width:42rem;margin:3rem auto">'+
+       '<h1>Sign in to your Workspace account</h1>'+
+       '<p>This browser has no active pilot account session. Your existing owner MCP connections are separate and unchanged.</p>'+
+       '<p><a href="/api/auth/google/start?purpose=login">Sign in with your approved Google account</a></p></main>');
+   }
+   const principalId=session.principal_id;
    const identityOnly=await isLegacyPilotIdentityPrincipal(principalId);
    const freshConsentAvailable=identityOnly&&await canLegacyPilotStartFreshConsent(principalId);
    if(req.method==='POST'){
