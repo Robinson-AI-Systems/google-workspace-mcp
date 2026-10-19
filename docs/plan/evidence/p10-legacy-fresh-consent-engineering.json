@@ -1,0 +1,65 @@
+{
+  "schema": "workspace-p10-historical-fresh-consent-engineering-delivery-v1",
+  "workKind": "ENGINEERING",
+  "baseRevision": "53549470c24aa4b8a9ddb60b07c689415d142ca7",
+  "plannedAt": "acc06ef1a6f99ba2c74a7e776a569a121da305b0",
+  "implementedSource": "8cd13baf18e199a1595dc04fa2ba4e145b6a4e67",
+  "outcome": "Prepare a separately approved new Google consent path for the already-enrolled historical pilot tester, without inheriting or modifying the original owner connections.",
+  "integrationBoundary": "Own V2 principal DB, provider-verified link transaction, signed-in portal, source-only owner flag; no Hub implementation, public mode, owner grant migration or production setting change.",
+  "productionAdded": 80,
+  "productionRemoved": 12,
+  "newEngineering": "Add default-OFF one-subject reconsent policy; principal-specific owner-reserved identity eligibility; additive immutable historic marker + fresh-grant bit; V2-only encrypted per-principal account linkage, re-login and guarded consent; browser and real PostgreSQL regression tests.",
+  "planComparison": "Frozen P10-6 criteria retained without changing their wording. Engineering partially advances criterion 2 but does not satisfy full provider-read, two-client, write or owner-continuity acceptance. Estimate 180 production added lines vs actual 80 added / 12 removed; this is one smaller original subsection contribution, not a whole bundle.",
+  "relatedWorkDecision": "The existing owner-approved three-identity architecture is retained. No third test account, Hub source change, new provider permissions, live production setting change or unapproved release; real P10 external acceptance still queued.",
+  "decision": "CONTINUE",
+  "subsections": [
+    {
+      "id": "P10-6",
+      "criteria": [
+        {
+          "criterion": "Run off -> pilot -> public; first deploy with public off and unchanged owner login and prove original owner/native/Hub continuity around each relevant release.",
+          "evidence": "No off-to-public activation was attempted. Source default flag off, original pilot stays Stage 1 and owner/Hub continuity remains separately PENDING."
+        },
+        {
+          "criterion": "Use two separately owner-authorized disposable verified Google identities (ordinary Gmail and Workspace admin when available), with own exact resources and cleanup; prove actual client login, authorized reads, one separately approved reversible write, revocation, wrong-account refusal and owner continuity.",
+          "evidence": "Implemented single-historical-principal Google-verified fresh-link preflight, exact subject/email match and separate encrypted V2 account grant. CI route denial/CSRF/one-use proof and real Postgres owner ciphertext/bearer preservation; no live provider consent, client A/B or provider write yet."
+        },
+        {
+          "criterion": "Prepare public application identity, verified domains, privacy/support/delete-account information, incremental scope inventory, Google-sensitive/restricted verification requirements and actual exception or assessed paid-review applicability without spending or submitting binding agreements.",
+          "evidence": "Existing public/privacy/support pages and operator checklist preserved. Guide documents new separate consent and manual approval gates; actual operator/Google brand/scope review still pending."
+        },
+        {
+          "criterion": "Record source/deployment/client/identity/mode/scopes/provider/revocation/cleanup receipt and actual provider/permission limits; preserve all original 29 accepted tasks and do not treat source fixtures as external acceptance.",
+          "evidence": "Pinned plan, source SHA, CI and review findings recorded; all original acceptance rows unchanged, no synthetic substitution or full P10 completion claim."
+        }
+      ],
+      "remainingEngineering": [],
+      "remainingWork": [
+        "Obtain independent owner approval for exactly one new fresh Google consent with existing historical second tester; configure default-OFF flag only after approved serving release.",
+        "Run real Google SDK scope link via authenticated historical tester browser and verify isolated V2 grant/token readback without owner secrets.",
+        "Approve Stage 2 separately only after cross-principal real evidence; exercise distinct clients A/B, owner concurrency, wrong-principal, PKCE/refresh/replay/revocation and exact cleanup.",
+        "Complete original P10-6 Google brand/domain/legal/publication and any separately approved reversible write prerequisites."
+      ]
+    }
+  ],
+  "acceptanceTasks": [
+    "P10-VERIFY-GOOGLE",
+    "P10-MCP-PILOT",
+    "P10-OWNER-CONTINUITY",
+    "P10-6-PUBLIC-DISCLOSURE",
+    "P10-6-OWNER-SUBJECT-PROBE"
+  ],
+  "verification": {
+    "preDeliveryExactHead": "8cd13baf18e199a1595dc04fa2ba4e145b6a4e67",
+    "githubCI": [
+      "check SUCCESS",
+      "unit SUCCESS",
+      "db SUCCESS (disposable real Postgres)",
+      "rtc SUCCESS",
+      "test SUCCESS",
+      "release-policy SUCCESS"
+    ],
+    "review": "Codex P1 finding on global flag-versus-principal availability corrected in 8cd13b; reviewer thread resolved after checked CI.",
+    "local": "No local Git checkout/network in this environment. npm session:prepare/session:bundle/session:finish were unavailable against repo; exact-head GitHub CI is the actual executed test evidence."
+  }
+}

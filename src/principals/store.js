@@ -2,7 +2,7 @@
 import crypto from 'node:crypto';
 import {neon} from '@neondatabase/serverless';
 import {sealV2,openV2} from './crypto.js';
-import {OWNER_ID,digest,mint,validUuid,validEmail,requireScope,legacyPilotLoginAllowed} from './security.js';
+import {OWNER_ID,digest,mint,validUuid,validEmail,requireScope,legacyPilotLoginAllowed,legacyPilotFreshConsentAllowed} from './security.js';
 import {normalizeConnectionPolicy} from '../oauth/connection-settings.js';
 import {initTenantSchema,makeTenantStore} from './tenant-store.js';
 import {loadCustomerDelegation} from './delegation.js';
@@ -19,6 +19,9 @@ export async function initPrincipalSchema(q=sql()){
    legacy_pilot_identity_only BOOLEAN NOT NULL DEFAULT false,
    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
  await q`ALTER TABLE principals ADD COLUMN IF NOT EXISTS legacy_pilot_identity_only BOOLEAN NOT NULL DEFAULT false`;
+ // Preserve the immutable original identity-only classification for audit.
+ // Record a separate independently consented V2 grant without migrating owner data.
+ await q`ALTER TABLE principals ADD COLUMN IF NOT EXISTS legacy_pilot_fresh_grant BOOLEAN NOT NULL DEFAULT false`;
  await q`INSERT INTO principals(id,kind) VALUES (${OWNER_ID}::uuid,'legacy_owner') ON CONFLICT(id) DO NOTHING`;
  await q`CREATE UNIQUE INDEX IF NOT EXISTS principals_single_owner ON principals(kind) WHERE kind='legacy_owner'`;
  await q`CREATE TABLE IF NOT EXISTS principal_google_identities (
@@ -109,8 +112,19 @@ export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnl
  const q=sql();
  const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
  const legacyIdentityOnly=reserved.length>0&&identityOnlyPilot===true&&legacyPilotLoginAllowed(sub);
- requireScope(reserved.length===0||legacyIdentityOnly,'reserved_identity');
  const old=await getVerifiedPrincipal(issuer,sub);
+ if(old&&reserved.length){
+   // A historical owner-connected mailbox may ALSO carry its own explicitly
+   // consented V2 grant. Never infer cross-principal authority from email.
+   const independent=await q`SELECT 1 FROM principals p
+     JOIN principal_google_identities i ON i.principal_id=p.id
+     WHERE p.id=${old}::uuid AND p.kind='user' AND p.status='active'
+       AND p.legacy_pilot_identity_only=true AND p.legacy_pilot_fresh_grant=true
+       AND i.issuer=${issuer} AND i.google_sub=${sub}
+       AND lower(i.verified_email)=lower(${verifiedEmail}) LIMIT 1`;
+   if(independent.length===1)return old;
+ }
+ requireScope(reserved.length===0||legacyIdentityOnly,'reserved_identity');
  if(old)return old;
  const id=crypto.randomUUID();
  // Candidate principal and identity are created in ONE statement. If identity
@@ -156,16 +170,43 @@ export async function isLegacyPilotIdentityPrincipal(principalId){
  requireScope(validUuid(principalId),'invalid_identity');
  const rows=await sql()`SELECT 1 FROM principals
    WHERE id=${principalId}::uuid AND kind='user'
-   AND legacy_pilot_identity_only=true LIMIT 1`;
+   AND legacy_pilot_identity_only=true AND legacy_pilot_fresh_grant=false LIMIT 1`;
  return rows.length>0;
+}
+// The first fresh scope consent may start only for the EXACT Google-verified
+// historical tester, after explicit owner opt-in. No OAuth/owner token access.
+export async function canLegacyPilotStartFreshConsent(principalId){
+ requireScope(validUuid(principalId),'invalid_identity');
+ const rows=await sql()`SELECT i.google_sub FROM principals p
+   JOIN principal_google_identities i ON i.principal_id=p.id
+   JOIN google_accounts old ON lower(old.email)=lower(i.verified_email)
+   WHERE p.id=${principalId}::uuid AND p.kind='user' AND p.status='active'
+     AND p.legacy_pilot_identity_only=true
+     AND p.legacy_pilot_fresh_grant=false`;
+ return rows.length===1&&legacyPilotFreshConsentAllowed(rows[0].google_sub);
 }
 export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,scopeList,tokens}){
  requireScope(validUuid(principalId)&&validSub(sub)&&validEmail(verifiedEmail)&&
    Array.isArray(scopeList)&&scopeList.every(x=>typeof x==='string')&&tokens?.access_token,'invalid_link');
  const q=sql();
- requireScope(!await isLegacyPilotIdentityPrincipal(principalId),'legacy_pilot_identity_only');
+ const prior=await q`SELECT p.legacy_pilot_identity_only AS historical,
+   p.legacy_pilot_fresh_grant AS fresh FROM principals p
+   WHERE p.id=${principalId}::uuid AND p.kind='user' AND p.status='active'`;
+ requireScope(prior.length===1,'invalid_identity');
+ const historical=prior[0].historical===true;
+ let independentlyEligible=false;
+ if(historical){
+   const matching=await q`SELECT 1 FROM principal_google_identities i
+     JOIN google_accounts old ON lower(old.email)=lower(i.verified_email)
+     WHERE i.principal_id=${principalId}::uuid
+       AND i.issuer=${issuer} AND i.google_sub=${sub}
+       AND lower(i.verified_email)=lower(${verifiedEmail})`;
+   independentlyEligible=matching.length===1&&
+     (prior[0].fresh===true||legacyPilotFreshConsentAllowed(sub));
+   requireScope(independentlyEligible,'legacy_pilot_identity_only');
+ }
  const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
- requireScope(!reserved.length,'reserved_identity');
+ requireScope(!reserved.length||independentlyEligible,'reserved_identity');
  const foreign=await q`SELECT id FROM principal_google_accounts
    WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id<>${principalId}::uuid`;
  requireScope(!foreign.length,'identity_owned_elsewhere');
@@ -179,14 +220,30 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
    SELECT ${id}::uuid,p.id,${issuer},${sub},${verifiedEmail},${scopeList},${sealed}
    FROM principals p WHERE p.id=${principalId}::uuid AND p.kind='user' AND p.status='active'
    ON CONFLICT(issuer,google_sub) DO NOTHING RETURNING id`;
- if(rows.length)return rows[0].id;
+ if(rows.length){
+   if(historical)await recordLegacyFreshConsent(principalId,rows[0].id);
+   return rows[0].id;
+ }
  const same=await q`SELECT id FROM principal_google_accounts
    WHERE issuer=${issuer} AND google_sub=${sub}
    AND principal_id=${principalId}::uuid AND status='active'`;
  requireScope(same.length===1,'identity_owned_elsewhere');
  const record=await findAccount(principalId,same[0].id);
  await updateLinkedGrant({principalId,accountId:record.id,version:record.token_version,tokens,scopeList});
+ if(historical)await recordLegacyFreshConsent(principalId,record.id);
  return record.id;
+}
+// A new V2 encrypted grant must exist before changing the effective pilot
+// capability. This never changes the historical marker or legacy owner grants.
+async function recordLegacyFreshConsent(principalId,accountId){
+ const updated=await sql()`UPDATE principals SET legacy_pilot_fresh_grant=true,updated_at=now()
+   WHERE id=${principalId}::uuid AND kind='user'
+     AND legacy_pilot_identity_only=true
+     AND EXISTS(SELECT 1 FROM principal_google_accounts a
+       WHERE a.id=${accountId}::uuid AND a.principal_id=${principalId}::uuid
+         AND a.grant_ciphertext IS NOT NULL AND a.status='active')
+   RETURNING id`;
+ requireScope(updated.length===1,'independent_consent_incomplete');
 }
 export async function updateLinkedGrant({principalId,accountId,version,tokens,scopeList}){
  requireScope(validUuid(principalId)&&validUuid(accountId)&&Number.isSafeInteger(version)&&version>=0&&

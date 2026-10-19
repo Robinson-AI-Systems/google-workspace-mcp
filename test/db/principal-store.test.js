@@ -138,6 +138,67 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    }
   }
  });
+ it('preserves original owner ciphertext and bearer when the historical tester obtains its own freshly consented V2 grant',async()=>{
+  const envKeys=['PUBLIC_SIGNIN_MODE','PUBLIC_PILOT_GOOGLE_SUBJECTS',
+    'PUBLIC_PILOT_LEGACY_SUBJECTS','PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED',
+    'PUBLIC_P10_TOOL_EXECUTION_VERIFIED'];
+  const saved=Object.fromEntries(envKeys.map(k=>[k,process.env[k]]));
+  const email='independent-historical-tester@example.test';
+  const sub='123456789098765432109';
+  const identity={issuer:'https://accounts.google.com',sub,verifiedEmail:email};
+  try{
+   await db.saveGoogleTokensFor(email,{access_token:'legacy-original-only',
+     refresh_token:'owner-original-refresh'});
+   await db.createAccessToken({accessToken:'owner-original-live-bearer',
+     refreshToken:'owner-original-live-refresh',clientId:'owner-original-client',
+     googleAccount:email,profile:'read_only'});
+   const original=(await pool.query('SELECT email,is_default,tokens_enc FROM google_accounts WHERE email=$1',[email])).rows;
+   const oldBearer=(await pool.query('SELECT access_token,refresh_token,revoked_at FROM oauth_tokens WHERE access_token=$1',['owner-original-live-bearer'])).rows;
+   process.env.PUBLIC_SIGNIN_MODE='pilot';
+   process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321012345678901,'+sub;
+   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=sub;
+   delete process.env.PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED;
+   delete process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED;
+   const user=await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true});
+   expect(await store.isLegacyPilotIdentityPrincipal(user)).toBe(true);
+   expect(await store.canLegacyPilotStartFreshConsent(user)).toBe(false);
+   const args={principalId:user,...identity,scopeList:['scope:mail'],
+     tokens:{access_token:'new-only-v2-consent',refresh_token:'new-only-refresh'}};
+   await expect(store.upsertLinkedAccount(args)).rejects.toThrow('legacy_pilot_identity_only');
+   expect(await store.listAccounts(user)).toHaveLength(0);
+   process.env.PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED='true';
+   expect(await store.canLegacyPilotStartFreshConsent(user)).toBe(true);
+   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS='987654321012345678901';
+   // Global config may target another subject; THIS stored pilot user is not eligible.
+   expect(await store.canLegacyPilotStartFreshConsent(user)).toBe(false);
+   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=sub;
+   expect(await store.canLegacyPilotStartFreshConsent(user)).toBe(true);
+   await expect(store.upsertLinkedAccount({...args,sub:'999999999999999999999'}))
+     .rejects.toThrow('legacy_pilot_identity_only');
+   await expect(store.upsertLinkedAccount({...args,verifiedEmail:'another@example.test'}))
+     .rejects.toThrow('legacy_pilot_identity_only');
+   const linkedId=await store.upsertLinkedAccount(args);
+   expect((await store.listAccounts(user)).map(x=>x.id)).toEqual([linkedId]);
+   expect(await store.getLinkedGrant(user,linkedId)).toMatchObject(args.tokens);
+   expect(await store.isLegacyPilotIdentityPrincipal(user)).toBe(false);
+   expect((await pool.query('SELECT legacy_pilot_identity_only,legacy_pilot_fresh_grant FROM principals WHERE id=$1',[user])).rows[0])
+     .toEqual({legacy_pilot_identity_only:true,legacy_pilot_fresh_grant:true});
+   const foreign=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',
+     sub:'other-independent-user-sub',verifiedEmail:'other-independent@example.test'});
+   expect(await store.getLinkedGrant(foreign,linkedId)).toBeNull();
+   process.env.PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED='false';
+   expect(await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).toBe(user);
+   expect(await store.canLegacyPilotStartFreshConsent(user)).toBe(false);
+   expect((await pool.query('SELECT email,is_default,tokens_enc FROM google_accounts WHERE email=$1',[email])).rows).toEqual(original);
+   expect((await pool.query('SELECT access_token,refresh_token,revoked_at FROM oauth_tokens WHERE access_token=$1',['owner-original-live-bearer'])).rows).toEqual(oldBearer);
+   expect((await store.legacyOwnerContext('owner-original-live-bearer')).principal_kind).toBe('legacy_owner');
+   expect((await db.getTokenByRefreshToken('owner-original-live-refresh')).client_id).toBe('owner-original-client');
+  }finally{
+   for(const [k,v] of Object.entries(saved)){
+    if(v===undefined)delete process.env[k];else process.env[k]=v;
+   }
+  }
+ });
  it('verifies stable Google subject, reserves owner and blocks foreign account use',async()=>{
   a=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',sub:'subject-aaa1',verifiedEmail:'a@example.test'});
   b=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',sub:'subject-bbb2',verifiedEmail:'b@example.test'});

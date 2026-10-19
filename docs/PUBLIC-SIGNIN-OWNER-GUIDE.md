@@ -111,3 +111,43 @@ All of the following must hold before this exception permits enrollment: `PUBLIC
 **Activation/rollback:** This source does not set the variable or deploy itself. After exact-head CI, checked `main`/`live` and independent owner readbacks, the owner must explicitly authorize both the protected Production configuration and any unscheduled release/redeployment separately under `.github/RELEASE-POLICY.md`. Confirm actual new Vercel READY production source, canonical alias and sanitized pilot readiness `legacyPilotIdentityOnlyConfigured=true` and `legacyPilotIdentityOnlyEnabled=true` before asking the historical test identity to sign in. Then verify two independent browser principal sessions, empty newly enrolled tester Google connections, unchanged original two owner mailbox connections/bearers, CSRF/replay/wrong-account refusals and logout. Never mark real P10-6 two-client MCP or Google provider read/write acceptance passed by merely observing the browser portal.
 
 To disable future coexistence, remove `PUBLIC_PILOT_LEGACY_SUBJECTS`, redeploy via the approved process, and recheck that the original owner still functions. Existing new-user browser sessions may persist to expiry but retain their database-persisted identity-only marker and cannot link Google accounts or acquire owner grants, even after an original mailbox deletion. Clearing this permanent marker requires a separate reviewed/approved owner migration; a full principal cleanup or actual legacy account transfer must be separately designed, confirmed, and approved. Identity-only coexistence is temporary testing safety, **not** a permanent end-user provider limitation after separately reviewed real migration and permissions.
+
+## P10-6 historical pilot tester: independent fresh Google consent (source-only)
+
+The existing **two verified pilot users and third original direct owner
+connection** remain the intended pilot. Do not request another paid or free
+Google identity. The historical second tester overlaps an owner-connected
+legacy TEST mailbox, so identity-only sign-in alone does not confer Google
+data permission.
+
+A reviewed source candidate introduces the separately owner-approved,
+default-OFF `PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED` boolean. This is
+**not a request to set it in Production on merge**. It can authorize a
+fresh, independent Google OAuth grant only for the exact historical subject
+already specified privately by `PUBLIC_PILOT_LEGACY_SUBJECTS` within the
+existing two-subject `PUBLIC_PILOT_GOOGLE_SUBJECTS` roster. It requires
+`PUBLIC_SIGNIN_MODE=pilot`, Stage 2 execution OFF, the user's actual
+authenticated browser session and CSRF-bound Google link flow, a verified
+same issuer/subject/email, one-use nonce/PKCE and Google-granted scopes.
+No typed email, owner mailbox alias or public caller input can substitute.
+
+The callback encrypts only *newly consented* tokens in independently
+principal-scoped V2 account storage. Existing owner `google_accounts`
+ciphertext, owner bearer/refresh, default accounts, RTC and Hub passes are
+not copied, rotated or revoked. The immutable historical
+`legacy_pilot_identity_only` bit is retained; a **separate**
+`legacy_pilot_fresh_grant` bit is persisted once a scoped V2 grant exists.
+The account portal and subsequent independently authorized user MCP codes
+refer to that V2 grant, not legacy owner data. Switching the temporary
+gate back OFF prevents new first-time historical-grant enrollment but does
+not silently revoke an already authorized user grant.
+
+**External gates still apply:** independently approve the exact new Google
+consent and Production flag, checked source release and serving deployment,
+Google real-provider read with each of the two testers, wrong-principal,
+PKCE/refresh/revoke, original owner bearer and Hub continuity, and cleanup.
+`PUBLIC_P10_TOOL_EXECUTION_VERIFIED` remains OFF until its separate
+Stage 2 authorization and multi-tenant acceptance. No Google provider
+write, paid license, public enrollment, legacy-owner migration, arbitrary
+customer DWD or manual release is authorized by this engineering PR.
+`P10-MCP-PILOT` remains pending until its full external test receipts.

@@ -1,7 +1,7 @@
 // Public OIDC start never borrows legacy owner OAuth credentials.
 import {randomBytes} from 'node:crypto';
 import {initSchema,getOAuthClient} from '../../../src/db.js';
-import {createTransaction,isLegacyPilotIdentityPrincipal} from '../../../src/principals/store.js';
+import {createTransaction,isLegacyPilotIdentityPrincipal,canLegacyPilotStartFreshConsent} from '../../../src/principals/store.js';
 import {publicGoogleClient,providerUrl,PUBLIC_SCOPE_GROUPS} from '../../../src/principals/google.js';
 import {publicMode,publicResource,requireScope,mint,cookie,headers} from '../../../src/principals/security.js';
 import {requireSession,requireCsrf,BROWSER_COOKIE} from '../../../src/principals/session.js';
@@ -34,7 +34,8 @@ export default async function handler(req,res){
       &&/^[A-Za-z0-9_-]{43}$/.test(codeChallenge),'invalid_mcp_authorization');
   }
   await initSchema();
-  if(purpose==='link')requireScope(!await isLegacyPilotIdentityPrincipal(session.principal_id),'legacy_pilot_identity_only');
+  if(purpose==='link'&&await isLegacyPilotIdentityPrincipal(session.principal_id))
+   requireScope(await canLegacyPilotStartFreshConsent(session.principal_id),'legacy_pilot_identity_only');
   const client=publicGoogleClient();
   const state=mint('p10st_'),nonce=mint('p10n_'),browser=mint('p10b_');
   const verifier=randomBytes(48).toString('base64url');

@@ -3,7 +3,7 @@ import {Readable} from 'node:stream';
 import {createHash} from 'node:crypto';
 const h=vi.hoisted(()=>({
   started:null,consumed:false,accountLinks:[],codeConsumeCount:0,rotations:0,
-  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false,lastIdentity:null
+  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false,freshConsent:false,lastIdentity:null
 }));
 vi.mock('../../src/db.js',()=>({
  initSchema:async()=>{},getOAuthClient:async id=>id==='registered-client'?{
@@ -28,7 +28,9 @@ vi.mock('../../src/principals/store.js',()=>({
    csrf_hash:createHash('sha256').update('p10x_'+'b'.repeat(43)).digest('hex'),kind:'user'}:null,
  revokeSession:async()=>1,
  upsertLinkedAccount:async params=>{h.accountLinks.push(params);return 'account-a';},
- listAccounts:async()=>[],listConnections:async()=>[],isLegacyPilotIdentityPrincipal:async()=>h.legacyPilot,deletionPreview:async()=>({previewOnly:true}),
+ listAccounts:async()=>[],listConnections:async()=>[],isLegacyPilotIdentityPrincipal:async()=>h.legacyPilot,
+ canLegacyPilotStartFreshConsent:async()=>h.freshConsent,
+ deletionPreview:async()=>({previewOnly:true}),
  disconnectAccount:async()=>0,revokeConnection:async()=>0,setPrincipalDefault:async()=>null,
  requestDeletion:async()=>({pending:true}),cancelDeletion:async()=>({cancelled:true}),
  issuePrincipalCode:async()=> 'p10c_'+'c'.repeat(43),
@@ -83,7 +85,7 @@ beforeEach(()=>{
  process.env.PUBLIC_SIGNIN_MODE='pilot';
  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='pilot-subject';
  h.started=null;h.accountLinks=[];h.bindCalls=0;h.consumed=false;h.rotations=0;h.codeConsumeCount=0;
- h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;h.legacyPilot=false;h.lastIdentity=null;
+ h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;h.legacyPilot=false;h.freshConsent=false;h.lastIdentity=null;
 });
 afterEach(()=>{process.env=env;});
 describe('P10 actual route one-use browser callback and independent principal MCP issuance',()=>{
@@ -163,6 +165,42 @@ describe('P10 actual route one-use browser callback and independent principal MC
   expect(out.body).toEqual({error:'invalid_authorization_start'});
   expect(h.started).toBeNull();
   expect(h.accountLinks).toHaveLength(0);
+ });
+ it('does not offer fresh consent merely because a DIFFERENT pilot subject is globally allowed',async()=>{
+   h.legacyPilot=true;h.freshConsent=false;
+   const otherSubject='123456789012345678901';
+   process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321012345678901,'+otherSubject;
+   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=otherSubject;
+   process.env.PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED='true';
+   const portal=res();await account(req('GET',{},sessCookie),portal);
+   expect(portal.statusCode).toBe(200);
+   expect(portal.body).toContain('Identity-only legacy tester');
+   expect(portal.body).not.toContain('Link Google mail permissions');
+   const blocked=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',csrf}),blocked);
+   expect(blocked.statusCode).toBe(400);expect(h.started).toBeNull();
+ });
+ it('fresh legacy tester scope consent requires independent opt-in, CSRF, one-use browser-bound Google flow',async()=>{
+   h.legacyPilot=true;h.freshConsent=true;
+   const historical='123456789012345678901';
+   process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321012345678901,'+historical;
+   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS=historical;
+   process.env.PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED='true';
+   const portal=res();await account(req('GET',{},sessCookie),portal);
+   expect(portal.statusCode).toBe(200);
+   expect(portal.body).toContain('independently consent');
+   const bad=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail'}),bad);
+   expect(bad.statusCode).toBe(400);expect(h.started).toBeNull();
+   const begin=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',csrf}),begin);
+   expect(begin.statusCode).toBe(302);
+   const foreign=res();await callback(req('GET',{state:h.started.state,code:'google-code'},
+     'p10_google_browser=foreign; '+sessCookie),foreign);
+   expect(foreign.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(0);
+   const accepted=res();await callback(req('GET',{state:h.started.state,code:'google-code'},
+     'p10_google_browser='+h.started.browser+'; '+sessCookie),accepted);
+   expect(accepted.statusCode).toBe(302);expect(h.accountLinks).toHaveLength(1);
+   const replay=res();await callback(req('GET',{state:h.started.state,code:'google-code'},
+     'p10_google_browser='+h.started.browser+'; '+sessCookie),replay);
+   expect(replay.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(1);
  });
  it('link requires same-origin CSRF and bound session and cannot claim owner global mailboxes',async()=>{
   const missing=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail'}),missing);
