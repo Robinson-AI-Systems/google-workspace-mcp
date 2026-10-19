@@ -1,5 +1,6 @@
 // P10-6 public information: no owner mailbox/database/session lookups.
 import {validEmail} from './security.js';
+import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../branding.js';
 const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function supportContact(env=process.env){
   const address=String(env.PUBLIC_SUPPORT_EMAIL||'').trim();
@@ -10,7 +11,7 @@ const nav='<nav aria-label="Site"><a href="/">Home</a> · <a href="/api/privacy"
 export function pageHtml(title,content){
   return '<!doctype html><html lang="en"><head><meta charset="utf-8">'+
     '<meta name="viewport" content="width=device-width,initial-scale=1">'+
-    '<title>'+esc(title)+' — Robinson Google Workspace MCP</title>'+
+    '<title>'+esc(title===PRODUCT_DISPLAY_NAME?title:title+' — '+PRODUCT_DISPLAY_NAME)+'</title>'+
     '<style>body{font:16px/1.65 system-ui,-apple-system,sans-serif;max-width:48rem;margin:3rem auto;'+
     'padding:0 1.25rem;color:#222}h1{font-size:1.65rem;line-height:1.2}'+
     'h2{font-size:1.2rem;margin-top:2rem}a{color:#1252aa}'+
@@ -37,6 +38,7 @@ export function sendPage(req,res,title,content){
   return res.status(200).send(pageHtml(title,content));
 }
 export const homeInfo=[
+  '<p>'+esc(PROVIDER_DISCLOSURE)+'</p>',
   '<p>This standalone service lets you connect supported MCP agents to Google Workspace. ',
   'With permissions you select, your agent can read and manage Gmail, Drive, Calendar, ',
   'Tasks, contacts and applicable Workspace administrative settings.</p>',
@@ -89,7 +91,7 @@ export const privacyInfo=[
 ].join('');
 export function supportInfo(env=process.env){
   const address=supportContact(env);
-  return '<p>Robinson AI Systems operates this Workspace MCP integration. '+
+  return '<p>'+esc(PROVIDER_DISCLOSURE)+'</p><p>Robinson AI Systems operates this Workspace MCP integration. '+
     'For sign-in, account, privacy or deletion questions, contact the service operator.</p>'+
     (address?'<p>Email: <a href="mailto:'+encodeURIComponent(address)+'">'+esc(address)+'</a>.</p>':
       '<p><strong>Public support contact is not configured.</strong> An invited pilot user '+
