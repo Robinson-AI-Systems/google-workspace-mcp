@@ -2,12 +2,36 @@
 import crypto from 'node:crypto';
 import {google} from 'googleapis';
 import {publicResource,requireScope,validEmail,digest} from './security.js';
-import {SCOPE_GROUPS} from '../auth/scopes.js';
+import {SCOPE_GROUPS, CATALOG_READ_SCOPES, POSTMASTER_V2_READ_SCOPES,
+  SITE_VERIFICATION_READ_SCOPES} from '../auth/scopes.js';
 export const IDENTITY_SCOPES=Object.freeze(['openid','email','profile']);
+// Explicit user-approved consent is the only way to gain these provider scopes.
+// A customer's administrator role, service-account/DWD or Alert Center robot
+// delegation remains independently authorized: this code never impersonates one.
+const DIRECT_SCOPE_GROUPS=Object.freeze({
+ mail:SCOPE_GROUPS.gmail,
+ files:[...SCOPE_GROUPS.drive,...SCOPE_GROUPS.docs,...SCOPE_GROUPS.sheets,
+   ...SCOPE_GROUPS.slides,...SCOPE_GROUPS.forms],
+ calendar:SCOPE_GROUPS.calendar,tasks:SCOPE_GROUPS.tasks,
+ contacts:SCOPE_GROUPS.contacts,
+ chat:[...SCOPE_GROUPS.chat,'https://www.googleapis.com/auth/chat.memberships.readonly'],
+ classroom:SCOPE_GROUPS.classroom,
+ adminVerify:['https://www.googleapis.com/auth/admin.directory.user.readonly'],
+ adminDirectory:[...SCOPE_GROUPS.adminDirectory,...SCOPE_GROUPS.adminSecurity],
+ reports:SCOPE_GROUPS.adminReports,groups:SCOPE_GROUPS.groupsSettings,
+ licensing:SCOPE_GROUPS.licensing,dataTransfer:SCOPE_GROUPS.dataTransfer,
+ cloudIdentity:[...SCOPE_GROUPS.cloudIdentityPolicies,'https://www.googleapis.com/auth/cloud-identity.groups.readonly'],
+ chromePolicy:['https://www.googleapis.com/auth/chrome.management.policy.readonly'],
+ vault:['https://www.googleapis.com/auth/ediscovery.readonly'],
+ siteVerification:SITE_VERIFICATION_READ_SCOPES,
+ postmaster:POSTMASTER_V2_READ_SCOPES
+});
+// All direct-user OAuth capabilities in one Google consent dialog. Restricted
+// scopes still require Google's own app approval, user consent and role checks.
+// No service-account, payment or domain-wide delegation scope is inferred.
 export const PUBLIC_SCOPE_GROUPS=Object.freeze({
- mail:SCOPE_GROUPS.gmail,files:SCOPE_GROUPS.drive,calendar:SCOPE_GROUPS.calendar,
- tasks:SCOPE_GROUPS.tasks,contacts:SCOPE_GROUPS.contacts,
- adminVerify:['https://www.googleapis.com/auth/admin.directory.user.readonly']
+ ...DIRECT_SCOPE_GROUPS,
+ complete:Object.freeze([...new Set([...Object.values(DIRECT_SCOPE_GROUPS).flat(),...CATALOG_READ_SCOPES])])
 });
 export function publicGoogleClient(env=process.env){
  const id=env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID,secret=env.GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET;
