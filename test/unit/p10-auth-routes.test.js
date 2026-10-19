@@ -48,7 +48,7 @@ vi.mock('../../src/principals/delegation.js',()=>({
  removeDelegationSubject:async()=>({removed:true})
 }));
 vi.mock('../../src/principals/google.js',()=>({
- PUBLIC_SCOPE_GROUPS:{mail:['scope-mail']},
+ PUBLIC_SCOPE_GROUPS:{mail:['scope-mail'],complete:['scope-mail','scope-chat','scope-admin']},
  publicGoogleClient:()=>({}),
  providerUrl:({state})=>'https://accounts.google.com/o/oauth2?state='+state,
  verifyGoogleCode:async({nonceHash})=>{if(h.googleFailure)throw Error(h.googleFailure);return {issuer:'https://accounts.google.com',sub:h.verifiedSub,
@@ -201,6 +201,26 @@ describe('P10 actual route one-use browser callback and independent principal MC
    const replay=res();await callback(req('GET',{state:h.started.state,code:'google-code'},
      'p10_google_browser='+h.started.browser+'; '+sessCookie),replay);
    expect(replay.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(1);
+ });
+ it('comprehensive user consent stays CSRF-bound, scoped and requires Google to approve every selected permission',async()=>{
+  const portal=res();await account(req('GET',{},sessCookie),portal);
+  expect(portal.statusCode).toBe(200);
+  expect(portal.body).toContain('Authorize all supported Google services together');
+  expect(portal.body).toContain('name="group" value="complete"');
+  const withoutCsrf=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'complete'}),withoutCsrf);
+  expect(withoutCsrf.statusCode).toBe(400);expect(h.started).toBeNull();
+  const okStart=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'complete',csrf}),okStart);
+  expect(okStart.statusCode).toBe(302);expect(h.started.policy.group).toBe('complete');
+  const wrongBrowser=res();await callback(req('GET',{state:h.started.state,code:'provider-code'},
+    'p10_google_browser=foreign; '+sessCookie),wrongBrowser);
+  expect(wrongBrowser.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(0);
+  const declined=res();await callback(req('GET',{state:h.started.state,code:'provider-code'},
+    'p10_google_browser='+h.started.browser+'; '+sessCookie),declined);
+  // Google mock grants only scope-mail; the two additional requested scopes
+  // are missing, so the application must not pretend comprehensive consent passed.
+  expect(declined.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(0);
+  const unknown=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'unknown',csrf}),unknown);
+  expect(unknown.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(0);
  });
  it('link requires same-origin CSRF and bound session and cannot claim owner global mailboxes',async()=>{
   const missing=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail'}),missing);
