@@ -40,6 +40,12 @@ describe('Hub-neutral RTC 1 provider compatibility (not Hub enrollment acceptanc
   expect(spec.paths['/api/tools/{name}'].get).toBeDefined();
   expect(spec.paths['/api/tools/{name}'].post).toBeDefined();
   expect(spec.paths['/api/results/{handle}'].get).toBeDefined();
+  // Manifest and its published OpenAPI schema must agree exactly: clients
+  // may validate the public manifest without any Hub-specific integration.
+  expect(spec.components.schemas.Manifest.properties).not.toHaveProperty('conformance');
+  expect(spec.components.schemas.Manifest.required).not.toContain('conformance');
+  expect(Object.keys(manifest()).sort()).toEqual(
+   Object.keys(spec.components.schemas.Manifest.properties).sort());
   expect(registry.tools.every(t=>toExternal(t.name).startsWith('workspace_'))).toBe(true);
  });
  it('applies original provider scope guard before Hub can discover or dispatch',()=>{
