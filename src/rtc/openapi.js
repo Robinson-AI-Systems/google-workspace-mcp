@@ -1,6 +1,7 @@
 // P8-4: document the generic RTC doors, never expand every provider tool into
 // an operation. Tool-specific input/output schemas come from scoped discovery.
 import { RTC_AREAS } from './catalog.js';
+import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../branding.js';
 
 const ref = name => ({ $ref: '#/components/schemas/' + name });
 const json = schema => ({ 'application/json': { schema } });
@@ -50,8 +51,8 @@ export function rtcOpenapi(origin = '') {
   } catch { /* Serving origin is the safe default. */ }
   return {
     openapi: '3.1.0',
-    info: { title: 'Robinson Google Workspace RTC tools', version: '1.0.0',
-      description: 'Independent Workspace RTC 1 API. All provider operations use the same guarded registry as MCP. Service-issued TEST and user-authorized live passes authenticate these doors; native connector OAuth tokens do not. Live capabilities still require user-selected permission and provider entitlement.' },
+    info: { title: PRODUCT_DISPLAY_NAME, version: '1.0.0',
+      description: PROVIDER_DISCLOSURE+' Independent Workspace RTC 1 API. All provider operations use the same guarded registry as MCP. Service-issued TEST and user-authorized live passes authenticate these doors; native connector OAuth tokens do not. Live capabilities still require user-selected permission and provider entitlement.' },
     servers,
     security: [{ rtcPass: [] }],
     paths: {
