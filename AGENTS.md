@@ -1,8 +1,16 @@
-# Agent entry — Robinson Google Workspace MCP
+# Agent entry — Workspace MCP by Robinson AI Systems
 
 ## Universal Hub compatibility (owner-approved shared contract)
 
 Before changing RTC discovery, MCP transport, OAuth/provider consent, scoped meta-tools, tool pagination, or provider errors, follow [docs/HUB-COMPATIBILITY.md](docs/HUB-COMPATIBILITY.md), which links the canonical Hub contract. Hub discovers and connects to this **standalone** server; the server never calls Hub or installs bespoke Hub adapters. The agent and user plan, and Hub retains a small fixed gateway tool menu. This is a documentation-adoption instruction, **not** permission to change deployed auth or production data.
+
+## Native/direct MCP, independent branding and client acceptance — owner decision 2026-10-19
+
+The finished server **must remain independently reachable via standards-compliant native remote MCP**, with service-owned OAuth and actual scoped tool execution. Neither a ChatGPT wrapper nor Toolkit Hub may be mandatory. Hub owns live discovery, registration and relay; Workspace owns the canonical connector/RTC conformance. Read [direct MCP/branding guidance](docs/BRANDING-AND-DIRECT-MCP.md) before editing user-facing product metadata, endpoint/session/auth semantics, developer-only limits, identity, or tool availability. Keep existing machine names, token records, owner connections and tenant/provider trust boundaries stable unless an independently authorized migration is reviewed.
+
+Preferred owner brand is `Google Workspace by Robinson AI Systems`; independently verify provider-trademark and receiving-platform listing restrictions, with the first-party compliant displayed title/attribution in `src/branding.js`. Never claim Google's endorsement or a right to public directory listing; owner approval for a public name or publication remains separate. Real desktop and mobile MCP clients (when supported), authorized provider tool reads/writes, cross-account denial, refresh/revoke, and staged multi-user acceptance must be evidenced **per client**, not inferred from SDK fixtures, OAuth sign-in, or service deployment.
+
+The October 19 continuing restriction inventory is [recorded here](docs/plan/evidence/2026-10-19-user-authority-review.json); it is explicitly **not** a finished complete-repository audit. Each new restriction must be classified as developer-only, provider/security-mandated, user-controlled or defective, with positive/negative tests and actual evidence. No new user-product capability justifies developer-agent spending, production writes, unsafe scopes, manual release or bypass of PR/CI/review. Keep P10-6 and release acceptance separate until verified.
 
 ## End-user product authority versus developer operating limits — owner decision 2026-10-16
 
