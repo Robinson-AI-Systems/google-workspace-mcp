@@ -1,0 +1,148 @@
+{
+  "observedAt": "2026-10-19T00:22:33.689Z",
+  "sourceRevision": "0c2fa5b63d65866ac2c24f17a715512119d912ac",
+  "deploymentId": "dpl_3XbuZT2Co8CF49mZAXxQmkJfh6F1",
+  "deploymentState": "READY",
+  "authorization": "Owner explicitly approved one disposable Rentals native read-only mail/workspace connection, billing denied, and revocation after testing. Owner securely entered the existing MCP owner passphrase. No original credential was read or rotated.",
+  "http": {
+    "at": "2026-10-19T00:25:10.786439+00:00",
+    "checks": [
+      {
+        "method": "GET",
+        "status": 200,
+        "bodyBytes": 2285,
+        "allow": null,
+        "cacheControl": "no-store, max-age=0",
+        "privateMailboxPresent": false
+      },
+      {
+        "method": "HEAD",
+        "status": 200,
+        "bodyBytes": 0,
+        "allow": null,
+        "cacheControl": "no-store, max-age=0",
+        "privateMailboxPresent": false
+      },
+      {
+        "method": "POST",
+        "status": 405,
+        "bodyBytes": 18,
+        "allow": "GET, HEAD",
+        "cacheControl": "no-store, max-age=0",
+        "privateMailboxPresent": false
+      }
+    ]
+  },
+  "native": {
+    "initializeHttp": 200,
+    "catalog": {
+      "http": 200,
+      "count": 6,
+      "writeAdvertised": false,
+      "filesAdvertised": false
+    },
+    "identityMatchesGoogle": true,
+    "ownerAccountCount": 2,
+    "originalDefaultPreserved": true,
+    "googleRead": {
+      "tool": "gmail_list_labels",
+      "count": 19,
+      "sha256": "3b5f55a801d1b93ff7a1fd890a84c8abc9807af173bfb44d9b96484f35cf39a8",
+      "existingNativeComparisonCount": 19
+    },
+    "denials": {
+      "write": {
+        "http": 200,
+        "isError": true,
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Unknown tool: gmail_send_email"
+            }
+          ],
+          "isError": true
+        }
+      },
+      "area": {
+        "http": 200,
+        "isError": true,
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Unknown tool: drive_list_files"
+            }
+          ],
+          "isError": true
+        }
+      },
+      "brokerWrite": {
+        "http": 200,
+        "isError": true,
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Error: outside_scope: This tool is not allowed by the connection."
+            }
+          ],
+          "isError": true
+        }
+      },
+      "brokerArea": {
+        "http": 200,
+        "isError": true,
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Error: outside_scope: This tool is not allowed by the connection."
+            }
+          ],
+          "isError": true
+        }
+      },
+      "batchWrite": {
+        "http": 200,
+        "isError": true,
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Error: outside_scope: This tool is not allowed by the connection."
+            }
+          ],
+          "isError": true
+        }
+      }
+    },
+    "refresh": {
+      "http": 200,
+      "issuedDifferentAccess": true,
+      "identityMatchesGoogle": true,
+      "writeRefused": true,
+      "areaRefused": true
+    },
+    "revocation": {
+      "currentAccessHttp": 401,
+      "previousAccessHttp": 401,
+      "refreshHttp": 400,
+      "refreshError": "invalid_grant"
+    },
+    "disposableAccessRowsRevoked": 2,
+    "originalOwnerAccessRowsStillActive": 17,
+    "existingNativeWhoamiAfterCleanup": true
+  },
+  "acceptance": {
+    "P10-ANONYMOUS-HOMEPAGE-PRIVACY": "PASSED: real GET/HEAD/POST and complete protected existing-owner OAuth, account list, connection management, refresh/revoke continuation on the checked READY source.",
+    "P9-LIVE-DIRECT": "PENDING: genuine native portion newly exercised; a separately authorized LIVE RTC pass/HTTPS gateway path remains untested. Do not substitute native OAuth for RTC.",
+    "P10-OWNER-CONTINUITY": "PENDING: preserved original native connection read and 17 original access rows; disposable refresh/revoke is not original rotating-token replay or original Hub TEST proof."
+  },
+  "limits": [
+    "No Google write, paid operation, Stage2 activation, canonical/OAuth redirect change or original-owner revocation.",
+    "Label comparison is actual identity and count, not byte-for-byte payload comparison.",
+    "No assertion that observing no schema error proves an intermittent race eliminated.",
+    "No whole batch subsection or completion bundle claimed."
+  ]
+}

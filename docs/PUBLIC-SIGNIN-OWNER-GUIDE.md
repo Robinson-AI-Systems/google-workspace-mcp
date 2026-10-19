@@ -1,5 +1,11 @@
 # Parallel Google sign-in: P10-B owner setup and user safety
 
+## October 18 current operator checkpoint (supersedes preparation below)
+
+`workspace.robinsonaisystems.com` is attached to the Workspace project, its Spaceship CNAME is saved and normal HTTPS verification passed with a Vercel-issued certificate. The apex website remains separate. Owner-guided Google Console checks confirmed the pilot client/callback, External/Testing and both testers; Search Console confirmed domain ownership for the managing Systems account. Branding now uses the owned homepage and `/api/privacy`, with both old/owned authorized domains retained. Declared scopes are only openid/email/profile; Google says verification is not required for Testing. This does not authorize public publication or Google API scope expansion. Detailed provenance is in PR217 comments6256514785/6256629504/6256650937.
+
+The existing Vercel canonical origin, registered callback/resource and credentials remain unchanged; Stage2 stays OFF. Do not repeat the already-finished DNS/Console setup merely because the historical preparation below describes it. Final operator privacy/retention/support approval and the original remaining security/isolation/provider acceptance are still required. Original owner connection refresh must use its serialized coordinating runner; the newly completed disposable native OAuth refresh/revoke test does not transfer ownership of that checkpoint. The distinct live RTC pass still needs its own protected runner. No token should be copied through chat.
+
 ## October 18 observed state and owned-domain preparation
 
 Canonical production remains the existing Vercel alias. An actual secure owner-passphrase

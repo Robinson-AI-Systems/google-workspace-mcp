@@ -4,6 +4,14 @@ Owner clarification October16,2026 Denver: development-agent spending/TEST restr
 
 Authoritative execution contract: [User authority and parallel sign-in](designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). Follow current engineering-readiness and acceptance rows in dependency order; do not repeat already-merged implementation. Do not interpret original29 passed acceptance rows as completion of the new scope. Add new source-pinned acceptance rows only when implementation exists.
 
+## October 18 — disposable native owner acceptance
+
+Checked production, main and live remain `0c2fa5b63d65866ac2c24f17a715512119d912ac`; Vercel independently reports READY `dpl_3XbuZT2Co8CF49mZAXxQmkJfh6F1`. The approved manual release is complete (earlier release-gap statements are historical). New real owner-approved native OAuth, account-management and privacy proof passes **P10-ANONYMOUS-HOMEPAGE-PRIVACY**: queue **30 PASSED / 10 PENDING**. [Sanitized evidence](evidence/2026-10-18-disposable-owner-native.json) records real Google read, permission denials, refresh and cleanup. Only the disposable connection's two same-refresh access rows were revoked; all 17 original owner access records remain active and the established connector still reads. No full subsection/bundle claimed.
+
+Current domain/Google Console follow-up is preserved in [PR #217's operator evidence](https://github.com/Robinson-AI-Systems/google-workspace-mcp/pull/217#issuecomment-6256650937): owned subdomain DNS/HTTPS and Branding links are established; managing owner confirmed the separate pilot client/callback, External/Testing and two testers, Search Console ownership, and identity-only scopes. Google says verification is unnecessary for the current Testing status. These are owner-guided Console observations, not production brand/scope approval. Existing canonical callback/resource and Stage2 OFF remain unchanged.
+
+P9-LIVE-DIRECT still requires the distinct owner-issued live read-only RTC pass and protected runner; native OAuth alone cannot pass it. P10-OWNER-CONTINUITY retains original rotating-runner and Hub TEST prerequisites. Other original pending criteria/dependencies remain unchanged. No new roadmap or provider writes.
+
 ## Owner-requested final documentation, Git cleanup and Workspace release
 
 October17 UTC: reconcile current operational guides and historical evidence boundaries; renew the exact bounded housekeeping manifest, archive all reviewed development tips before leased removal, retain release receipts and protect open/concurrently advanced branches. There are no open product PRs or missing Workspace features. Then release the final checked Workspace main snapshot under the owner's explicit one-off release authorization. Record actual cleanup Action, exact source/live SHA and Vercel READY proof in this PR's permanent closeout comment. This is administrative closeout, not another product bundle or a repeat of accepted provider tests.
@@ -670,7 +678,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "gates": "Only after a READY deployment including P9 and a separately owner-issued disposable live read-only grant; no Google writes, no credential exposure, preserve TEST/Hub grants and original evidence.",
     "dependsOn": [],
     "status": "PENDING",
-    "lastEvidence": "PR #201 isolated fake-provider HTTPS/native write/read and real Postgres schema checks passed; NO deployed P9 direct live probe exists. Queue it until deployed and owner grants. 2026-10-18: independently READY production at 17beedb and real unauthenticated /api/contract plus /api/openapi.json GET 200 show test/live source-supported modes, 381 advertised tools and 3 billing-risk flags. Still no user-scoped live pass, Google live read, scope/denial or revoke; PENDING. See docs/plan/evidence/2026-10-18-p10-live-http-readback.json.",
+    "lastEvidence": "PR #201 isolated fake-provider HTTPS/native write/read and real Postgres schema checks passed; NO deployed P9 direct live probe exists. Queue it until deployed and owner grants. 2026-10-18: independently READY production at 17beedb and real unauthenticated /api/contract plus /api/openapi.json GET 200 show test/live source-supported modes, 381 advertised tools and 3 billing-risk flags. Still no user-scoped live pass, Google live read, scope/denial or revoke; PENDING. See docs/plan/evidence/2026-10-18-p10-live-http-readback.json. October18 Denver continuation: genuine owner-approved disposable native OAuth read_only mail/workspace read, area/write/broker/batch denial, refresh and revoke all passed on READY0c2fa5b; all17 originals remain active. This does not replace separate LIVE RTC issuance/HTTP acceptance or original rotating-runner/Hub TEST proof. See docs/plan/evidence/2026-10-18-disposable-owner-native.json.",
     "subsections": [
       "P9-3",
       "P9-4"
@@ -721,7 +729,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P10-1",
       "P10-3"
     ],
-    "lastEvidence": "2026-10-18 READY 17beedb: native whoami genuinely matches Rentals Gmail and workspace_list_accounts preserves both originals/default. Aggregate production SELECT: 17 unrevoked unexpired access rows, all refresh-capable; 2 owner mappings; no overlapping public grants. Owner passphrase readiness POST succeeded. No old bearer refresh replay or original Hub TEST identity/denial receipt: original shared rotating checkpoint belongs to its serialized coordinating runner and no active RTC pass exists. Hub adapter has upstreamEnabled=false/authorizedTargets=0. Original task remains PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json."
+    "lastEvidence": "2026-10-18 READY 17beedb: native whoami genuinely matches Rentals Gmail and workspace_list_accounts preserves both originals/default. Aggregate production SELECT: 17 unrevoked unexpired access rows, all refresh-capable; 2 owner mappings; no overlapping public grants. Owner passphrase readiness POST succeeded. No old bearer refresh replay or original Hub TEST identity/denial receipt: original shared rotating checkpoint belongs to its serialized coordinating runner and no active RTC pass exists. Hub adapter has upstreamEnabled=false/authorizedTargets=0. Original task remains PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json. October18 Denver continuation: genuine owner-approved disposable native OAuth read_only mail/workspace read, area/write/broker/batch denial, refresh and revoke all passed on READY0c2fa5b; all17 originals remain active. This does not replace separate LIVE RTC issuance/HTTP acceptance or original rotating-runner/Hub TEST proof. See docs/plan/evidence/2026-10-18-disposable-owner-native.json."
   },
   {
     "id": "P10-VERIFY-GOOGLE",
@@ -793,11 +801,11 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "api/index.js; test/unit/p10-public-homepage.test.js; docs/pr-cards/P10-DUAL-IDENTITY.md; PR #206; manual read-only HTTP observation with independent source/READY proof",
     "gates": "Only a verified serving READY production revision containing the exact reviewed source and safe unauthenticated HTTP GET/HEAD/POST. No Google login, credential, customer-wide data, private account enumeration, token, mutation, fixture reuse, flag change or manual release without separate checked approval.",
     "dependsOn": [],
-    "status": "PENDING",
+    "status": "PASSED",
     "subsections": [
       "P10-3"
     ],
-    "lastEvidence": "2026-10-18 checked READY source 17beedb: actual Python HTTPS GET / 200 with zero owner mailbox occurrences and no private account/label/default/count UI; HEAD / 200 with 0 bytes; POST / 405, Allow GET, HEAD. All return no-store/noindex. Browser and HTTP unauthenticated /api/account both 403. Existing owner native whoami matches and account list retains two originals. Secure browser passphrase readiness POST succeeded. Full authenticated owner OAuth/account-management continuation has not been exercised; original criterion remains PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json."
+    "lastEvidence": "2026-10-19 00:21\u201300:25 UTC (October18 Denver): independently READY dpl_3XbuZT2Co8CF49mZAXxQmkJfh6F1 serves 0c2fa5b. Fresh production GET200 contains no owner mailbox; HEAD200/zero bytes; POST405/Allow GET,HEAD; no-store retained. Owner-approved existing-owner OAuth form successfully authorized one disposable Rentals read_only mail/workspace connection through private PKCE/RSA exchange. Actual account list retained both originals/default, Google whoami matched, labels19 matched existing native count; refresh200 retained denials. Existing owner connection management revoked only the two disposable same-refresh access rows; both401 and refresh400 invalid_grant. Original17 remain active and existing native whoami still works. Full original privacy/owner-continuation criterion PASSED. See docs/plan/evidence/2026-10-18-disposable-owner-native.json."
   },
   {
     "id": "P10-6-PUBLIC-DISCLOSURE",
