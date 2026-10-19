@@ -3,6 +3,7 @@ import {createServer} from 'node:http';
 import {createFakeDb} from '../helpers/fake-db.js';
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
 import {StreamableHTTPClientTransport} from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import {MCP_TECHNICAL_NAME,PRODUCT_DISPLAY_NAME} from '../../src/branding.js';
 
 const holder=vi.hoisted(()=>({db:null}));
 vi.mock('../../src/db.js',async importActual=>{
@@ -87,6 +88,7 @@ describe('standalone direct MCP owner-origin and bearer trust',()=>{
   const client=new Client({name:'standalone-parity-test',version:'1.0.0'},{capabilities:{}});
   try{
    await client.connect(transport);
+   expect(client.getServerVersion()).toMatchObject({name:MCP_TECHNICAL_NAME,title:PRODUCT_DISPLAY_NAME});
    const listing=await client.listTools();
    expect(listing.tools.length).toBeGreaterThan(0);
    expect(listing.tools.some(t=>t.name==='workspace_list_accounts')).toBe(true);
