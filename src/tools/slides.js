@@ -22,7 +22,9 @@ const EMU_PER_PT = 12700;
 export const handlers = {
   slides_create_presentation: async (args, { slides }) => {
     const res = await slides.presentations.create({ requestBody: { title: args.title } });
-    return ok(res.data);
+    // Google can return a whole 300KB+ presentation on create. The guarded
+    // readback validates this exact ID and title without echoing all slides.
+    return ok({presentationId:res.data.presentationId,title:res.data.title});
   },
   slides_get_presentation: async (args, { slides }) => {
     const res = await slides.presentations.get({ presentationId: args.presentationId });
