@@ -105,13 +105,13 @@ export function matchesStructuredShape(name,value){
    // either property. The advertised output schema already accepts null; the
    // runtime validator must agree, but ONLY for the exact unreadable/scope-
    // denial state. Never transform unknown into failed verification or green.
-   const scopeUnknown=value.status==='WARN'&&value.readable===false&&
-     value.reason==='site_verification_scope_unavailable';
-   if(value.readable===false&&!scopeUnknown)return false;
+   const unavailableUnknown=value.status==='WARN'&&value.readable===false&&
+     ['site_verification_scope_unavailable','site_verification_api_not_enabled'].includes(value.reason);
+   if(value.readable===false&&!unavailableUnknown)return false;
    return typeof value.domain==='string'&&value.domain.length>0&&
      ['PASS','WARN','FAIL'].includes(value.status)&&
      ['root','www'].every(k=>value.verified?.[k]&&typeof value.verified[k].name==='string'&&
-       (scopeUnknown?value.verified[k].verified===null:typeof value.verified[k].verified==='boolean'))&&
+       (unavailableUnknown?value.verified[k].verified===null:typeof value.verified[k].verified==='boolean'))&&
      ['searchConsole','businessProfile','note'].every(k=>typeof value[k]==='string');
  }
  case 'reports_activity':
