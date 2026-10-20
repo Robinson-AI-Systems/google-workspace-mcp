@@ -107,6 +107,15 @@ export default async function handler(req, res) {
     return;
   }
 
+  // Both existing-owner and V2 authorizations require S256 PKCE. Do not
+  // advertise a weaker option that this issuer will silently accept.
+  // Already-issued access and refresh tokens remain valid and unchanged.
+  if (code_challenge_method !== 'S256' ||
+      !/^[A-Za-z0-9_-]{43}$/.test(code_challenge || '')) {
+    res.status(400).send('This connector requires S256 PKCE with a valid code challenge.');
+    return;
+  }
+
   // New Google sign-in is a separate auth path. Never enumerate the original
   // owner's mailboxes before passphrase authentication or to a V2 principal.
   if(params.auth_method==='google'){
