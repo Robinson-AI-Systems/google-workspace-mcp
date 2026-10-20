@@ -1,0 +1,100 @@
+{
+  "sourceRevision": "fbac5349fa66fed52502730441b4a84d05d6fb7c",
+  "observedAt": "2026-10-20T13:47:24.668534+00:00",
+  "authorization": "Owner explicitly approved Primary and RAR identity-only browser checks; existing scopes/agent permissions unchanged.",
+  "live": {
+    "Primary": {
+      "ownPortalOnly": true,
+      "identityOnlyGoogleLogin": true,
+      "preview": {
+        "accounts": 1,
+        "agentConnections": 1,
+        "previewOnly": true,
+        "deleted": false
+      },
+      "logoutGetRefused": "method_not_allowed",
+      "sessionSurvivesRefusedGet": true,
+      "validLogout": {
+        "loggedOut": true,
+        "agentConnectionsRevoked": false
+      },
+      "postLogoutPortal": "sign-in required"
+    },
+    "RAR": {
+      "ownPortalOnly": true,
+      "identityOnlyGoogleLogin": true,
+      "preview": {
+        "accounts": 1,
+        "agentConnections": 2,
+        "previewOnly": true,
+        "deleted": false
+      },
+      "logoutGetRefused": "method_not_allowed",
+      "sessionSurvivesRefusedGet": true,
+      "validLogout": {
+        "loggedOut": true,
+        "agentConnectionsRevoked": false
+      },
+      "postLogoutPortal": "sign-in required"
+    }
+  },
+  "independentReadOnlyDatabase": {
+    "newSessions": 2,
+    "distinctPilotPrincipals": 2,
+    "revokedNewSessions": 2,
+    "activeNewSessions": 0,
+    "firstCreated": "2026-10-20T13:34:46.829Z",
+    "lastRevoked": "2026-10-20T13:40:55.844Z",
+    "principalsBeforeAndAfter": 3,
+    "activeGoogleGrantsBeforeAndAfter": 2,
+    "activeUsefulAgentConnectionsBeforeAndAfter": 3,
+    "originalOwnerRowsBeforeAndAfter": 17,
+    "pendingDeletionRequestsBeforeAndAfter": 0,
+    "existingOtherBrowserSessionsRetained": 2
+  },
+  "afterLogoutRealGoogleIdentity": {
+    "Primary": true,
+    "RAR": true,
+    "originalOwnerAdapter": true
+  },
+  "crossSiteNegative": {
+    "result": "NOT_EXECUTED",
+    "block": "Cloud-browser URL policy refuses data: protocol before service traffic. Explicit no-workaround instruction respected.",
+    "limits": "Valid same-origin CSRF form and GET method guard were observed live; a forged authenticated POST was not. No cookie/CSRF secret was read or exported.",
+    "complementaryProof": "New actual-handler isolated-PostgreSQL integration checks missing/wrong/crossed session CSRF, absence of deletion/revocation, positive logout and replay; CI required, not a live browser claim."
+  },
+  "claimValidationProvenance": {
+    "live": "Both signed nonce negatives and real nonpilot signed subject refusal despite approved-email hints retained.",
+    "controlledTests": "Existing p10-google-auth SDK-contract tests explicitly refuse email_verified=false, invalid email/sub/audience/issuer/expiry/nonce; not a Google-issued forged Gmail claim."
+  },
+  "originalCredentialRecoveryDiscovery": {
+    "documentedRoute": "docs/pr-cards/DEVELOPER-CONNECTION.md",
+    "metadataOnlyInspected": true,
+    "checkpoint": "RTOOL_BUILDER_SESSION",
+    "target": "development only",
+    "lastUpdated": "2026-10-13T23:56:24.271Z",
+    "secretLoaded": false,
+    "credentialsExported": false,
+    "runnerOwnership": "Repository requires one serialized coordinating runner. This session has not assumed ownership or refreshed that shared checkpoint.",
+    "nextAction": "Coordinate with its owning runner or obtain owner direction for exclusive Workspace-only recovery/refresh; keep the other five service records unchanged.",
+    "originalChatGPTManagedRefreshStillUnverified": true
+  },
+  "optionalReverseResultProbe": {
+    "result": "NOT_EXECUTED",
+    "reason": "Automatic approval review refused a bulk Gmail-list request as insufficiently authorized sensitive access. No provider body/output was read; request was not retried.",
+    "existingEvidence": "Prior actual two-client foreign-result denial remains valid; no reverse-direction pass added."
+  },
+  "acceptance": {
+    "passed": 33,
+    "pending": 7,
+    "newWholeRowsPassed": 0,
+    "v1": "NOT_READY"
+  },
+  "safety": {
+    "providerWrites": 0,
+    "GoogleScopeChanges": 0,
+    "usefulAgentRevocations": 0,
+    "ownerCredentialExtraction": false,
+    "runtimeChanges": false
+  }
+}

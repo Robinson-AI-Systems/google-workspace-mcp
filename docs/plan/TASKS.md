@@ -516,7 +516,6 @@ already-proven evidence from the unchanged cards/ledger before running. Keep all
 open obligations, original fixture ownership, approvals and deployment provenance.
 
 <!-- release-acceptance:start -->
-
 ```json
 [
   {
@@ -713,7 +712,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "priority": 2,
     "requiredRevision": "7426e266752c8e97f4b970b6f4b31ab49d81275f",
     "task": "Verify deployed guarded workspace_bulk_operation with original owner-authorized scoped TEST targets and non-production approval. Prove permitted mappings, exact provider readbacks, safe domain refusal, partial failure and cleanup; no paid license actions without independent spending approval.",
-    "procedure": "docs/plan/TASKS.md — P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md \u2014 P7-8 / docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Exact READY deployment and authenticated custom MCP connection; owner-approved isolated TEST targets, permission/domain limits, exact fixture IDs and operation-specific approvals; no production bulk writes or autonomous spending",
     "dependsOn": [],
     "status": "PASSED",
@@ -769,7 +768,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "28e648611cf1e4a634490630201c517dfc501d7c",
     "status": "PASSED",
     "task": "Original disposable-group full-settings preview/edit/readback/cleanup through the actual scoped custom Google service.",
-    "procedure": "docs/plan/TASKS.md — P6-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md \u2014 P6-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Checked independently READY source containing 80c0870; original approved group fixture, scoped Google permission and operation-specific edit/cleanup authorization.",
     "dependsOn": [],
     "lastEvidence": "2026-10-16UTC/Oct15Denver actual SAMEoriginal approved Rentals Admin TESTprincipal and SAMEemptygroup on independently READY3ad0250/dpl_29kFsgUoW14Zf4EHCGbNZtuuYE54. Explicitalt=json repair now returns61settingsfields with every11prior restrictive patch value matched. Actual nonempty-before preview, disabledfooter update and independent readback confirmedtrue with durable audit ID. Members[] verified; exact group deletion dryRun/confirm after.existsfalse. Adminpass final revocation confirmedtrue, subsequentwhoami401pass_revoked. SharedDrive+permission alreadyremoved/deleted. Ordinary authorized own-domain read separately corroborates DirectorynotFound; not substituted forTEST mutation proof. Original failed GET{} and eventualDirectorycreate receipts preserved, no re-create. Current originalreadpass also proves138guide topics/7pages/capabilities parity; no scopes, mail or paid users."
@@ -780,7 +779,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "28e648611cf1e4a634490630201c517dfc501d7c",
     "status": "PASSED",
     "task": "Original disposable shared-drive create, member add/change/readback/remove and empty-drive delete lifecycle; preserve exact IDs, domain limits, no production file deletion and cleanup.",
-    "procedure": "docs/plan/TASKS.md — P7-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md \u2014 P7-1 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Independently READY checked source including 81264c1; explicit disposable-drive/member fixture permission and eligible Google role/edition. No paid account or production file changes.",
     "dependsOn": [],
     "lastEvidence": "2026-10-15 original newly owner-confirmed Rentals24h TEST/full workspace/files/admin principal; independently READY601f2f2/dpl_5RWTksxFxY5mEGK8rqb7MrgczobY. Fresh empty shared drive created with private saved UUID, domainUsersOnly/driveMembersOnly restrictions readback confirmed. Original empty owner-created Rentals fixture group granted reader with sendNotificationEmail:false; exact returned permission ID changed to writer, both confirmed. Exact permission removal confirmed; actual full files:[] and no cursor; dryRun/delete exact drive confirmed after.existsfalse, positive durable audit receipts. No production file/user/member or existing drive changed, no paid account or outside invite. Private intents/IDs/results retained, no uncertain create retry. Empty fixture group retained only for its separate Groups Settings retest/approved deletion."
@@ -791,7 +790,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "requiredRevision": "130bcc1f8275e87c1102bae553b1aefc3b80dd0a",
     "status": "PASSED",
     "task": "Complete the already-approved dated authenticated Google Admin Console walkthrough: inventory actual in-scope pages, compare mapped paths/steps/expected results, reconcile permitted API readbacks and correct real missing coverage. Do not add a new observation-storage feature.",
-    "procedure": "docs/plan/TASKS.md — P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
+    "procedure": "docs/plan/TASKS.md \u2014 P8-8 original Build/Acceptance; docs/plan/GOOGLE-ACCEPTANCE.md",
     "gates": "Authenticated read-only Google Admin Console session for the intended authorized organization/role; observe only approved scope, no policy changes. Record inaccessible/edition-specific pages honestly; an API-generated checklist alone is not the walkthrough.",
     "dependsOn": [],
     "lastEvidence": "2026-10-15Denver actual dated authenticated Rentals Console inventory across54 stored distinct routes plus initial7service/security pages, both business OUs inspected,15real missing Gemini/Directory/account sections repaired. Checked READY03e88b251b248db62571de469029925b9f65ee73/dpl_BG4rTF51DVDixKGV8GiGsb6B1g1f, original protected read_only TEST runner UTC2026-10-16T00:55:39.833Z verified153orderedunique topics/8boundedpages, complete steps/expected, capabilities parity. Full navigation walk criterion accepted with Vault denied/DLP upgrade/CAA absent/prior websession400 explicit limits; no effective-all-OU policy or PolicyAPI certificate. No Console mutation/fixture recreation."
@@ -902,7 +901,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
       "P10-1",
       "P10-3"
     ],
-    "lastEvidence": "PARTIAL Oct20 READY fbac5349: original adapter actual Gmail identity still matches;17 original access/refresh/client inventory aggregate SHA256 exactly unchanged across protected owner-link rollback and disposable-family cleanup. Protected passphrase preview/new linked-Google owner native read_only login/unlink/retained issued-bearer read/fresh unlinked login refusal all demonstrated (2026-10-20-owner-link-partial.json). Fresh separately owner-approved RSA-encrypted24h TEST pass for RAR read_only mail,workspace/billing denied/no Hub/no writes now genuine direct RTC PASS: exact-source manifest+pass identity+real Gmail identity+harmless read; direct write403/refused_by_guard, ungranted Drive area403/outside_scope, broker/batch write403. Receipt2026-10-20-limited-direct-rtc.json. Useful TEST pass retained under owner Oct16 policy. Remaining original registered serialized owner bearer/refresh proof not supplied by fresh disposable grant; no checkpoint takeover or full row PASS."
+    "lastEvidence": "Oct20 READY fbac5349: original ChatGPT owner adapter still real-reads; all17 original refresh-capable rows retained; earlier exact inventory fingerprint across reversible migration and limited direct RTC TEST identity/read/denial proof remain valid. Developer-connection card identifies original coordinating runner checkpoint RTOOL_BUILDER_SESSION, Development-only, metadata last updated2026-10-13T23:56:24.271Z. Inspected metadata only; no shared secret loaded or ownership assumed. Original native bearer/refresh requires its serialized owning runner or explicit exclusive recovery direction; no nonexistent runner location claim, no original ChatGPT refresh inferred from tools. Current three useful connectors retained. Receipt2026-10-20-browser-session-security.json; no full row PASS."
   },
   {
     "id": "P10-VERIFY-GOOGLE",
@@ -918,7 +917,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-2"
     ],
-    "lastEvidence": "PARTIAL Oct20 READY fbac5349: prior A/B signed login/logout retained. Two own transactions reject missing/wrong browser/state400 without consumption; rightful cancellation consumes and replay400. Both Primary/RAR fresh canonical Google identity-only flows with nonce replaced refused: visible failure and12:18:27.302Z/12:28:40.526Z runtime provider_verification/invalid_verified_identity; each own transaction consumed within TTL/no principal/stored nonce differs. Earlier expired/intermediate-chooser attempts not nonce proof. Signed non-pilot Systems owner login despite approved-email/hd hints refused12:35:17.755Z pilot_admission/public_signin_not_admitted; exact transaction consumed within TTL; before/after3 principals/2 identities/2 active grants/3 useful connections/3 browser sessions unchanged. DB2 own grants match signed subjects/emails/Gmail scopes; native own reads separately proved. Receipts2026-10-20-live-oidc-state-negatives.json,2026-10-20-live-signed-nonce-negative.json,2026-10-20-live-subject-admission-negative.json. Remaining full authenticated-CSRF/email-claim/cleanup criteria and P10-OWNER-CONTINUITY dependency retained; no full row PASS."
+    "lastEvidence": "Oct20 READY fbac5349: both approved Primary/RAR actual identity-only sign-in, own portal, valid protected nondeleting preview, rejected GET logout, valid POST logout loggedOut=true/agentConnectionsRevoked=false, then anonymous portal. SQL exactly2 new sessions/2 principals/both revoked/0 active;2 useful Google grants/3 agents/17 original owner rows/0 deletion requests preserved; all3 connectors still real-read. Prior live signed nonce negatives for both and signed nonpilot subject refusal despite email hints retained. Existing SDK-contract tests reject unverified email/issuer/audience/expiry/sub. New real-PG actual-handler tests cover missing/wrong/crossed CSRF and logout/replay; execution proof is recorded separately on the PR, not a live forged-POST claim. Browser forged POST not executed: data: URL policy refused. Receipt2026-10-20-browser-session-security.json. Full row remains PENDING with original owner-continuity dependency and unobserved live authenticated forged-POST limit; no new scope/grant/provider write."
   },
   {
     "id": "P10-MCP-PILOT",
@@ -978,7 +977,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-3"
     ],
-    "lastEvidence": "2026-10-19 00:21–00:25 UTC (October18 Denver): independently READY dpl_3XbuZT2Co8CF49mZAXxQmkJfh6F1 serves 0c2fa5b. Fresh production GET200 contains no owner mailbox; HEAD200/zero bytes; POST405/Allow GET,HEAD; no-store retained. Owner-approved existing-owner OAuth form successfully authorized one disposable Rentals read_only mail/workspace connection through private PKCE/RSA exchange. Actual account list retained both originals/default, Google whoami matched, labels19 matched existing native count; refresh200 retained denials. Existing owner connection management revoked only the two disposable same-refresh access rows; both401 and refresh400 invalid_grant. Original17 remain active and existing native whoami still works. Full original privacy/owner-continuation criterion PASSED. See docs/plan/evidence/2026-10-18-disposable-owner-native.json."
+    "lastEvidence": "2026-10-19 00:21\u201300:25 UTC (October18 Denver): independently READY dpl_3XbuZT2Co8CF49mZAXxQmkJfh6F1 serves 0c2fa5b. Fresh production GET200 contains no owner mailbox; HEAD200/zero bytes; POST405/Allow GET,HEAD; no-store retained. Owner-approved existing-owner OAuth form successfully authorized one disposable Rentals read_only mail/workspace connection through private PKCE/RSA exchange. Actual account list retained both originals/default, Google whoami matched, labels19 matched existing native count; refresh200 retained denials. Existing owner connection management revoked only the two disposable same-refresh access rows; both401 and refresh400 invalid_grant. Original17 remain active and existing native whoami still works. Full original privacy/owner-continuation criterion PASSED. See docs/plan/evidence/2026-10-18-disposable-owner-native.json."
   },
   {
     "id": "P10-6-PUBLIC-DISCLOSURE",
@@ -1012,7 +1011,6 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   }
 ]
 ```
-
 <!-- release-acceptance:end -->
 
 ### October 14 verified release catch-up checkpoint
