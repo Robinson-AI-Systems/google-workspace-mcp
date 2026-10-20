@@ -768,18 +768,12 @@ export async function revokeConnection(prefix) {
   const p = String(prefix || '');
   if (p.length < 8) return { revoked: 0, reason: 'too_short' };
   if (p.startsWith('pass_')) return { revoked: await revokeRtcPass(p) };
-  const found = await q`SELECT access_token, refresh_token FROM oauth_tokens WHERE left(access_token, ${p.length}) = ${p}`;
+  const found = await q`SELECT access_token,client_id FROM oauth_tokens WHERE left(access_token, ${p.length}) = ${p}`;
   if (found.length === 0) return { revoked: 0, reason: 'not_found' };
   if (found.length > 1) return { revoked: 0, reason: 'ambiguous' };
-  const { access_token, refresh_token } = found[0];
-  const done = await q`
-    UPDATE oauth_tokens SET revoked_at = now()
-    WHERE revoked_at IS NULL AND (access_token = ${access_token} OR (${refresh_token}::text IS NOT NULL AND refresh_token = ${refresh_token}))
-    RETURNING access_token
-  `;
-  // A renewal that slipped in between the lookup and the update would otherwise survive; sweep once more.
-  const late = refresh_token ? await q`UPDATE oauth_tokens SET revoked_at = now() WHERE revoked_at IS NULL AND refresh_token = ${refresh_token} RETURNING access_token` : [];
-  return { revoked: done.length + late.length };
+  // The internal owner control follows the same durable refresh-family denial
+  // as public RFC 7009; a late renewal can never resurrect the connection.
+  return { revoked: await revokeClientOAuthToken(found[0].access_token,found[0].client_id) };
 }
 
 // ---------- Change log ----------
