@@ -1,3 +1,9 @@
+## October 20 — original Workspace developer refresh accepted; two v1 gates remain
+
+Owner explicitly transferred exclusive Workspace-only checkpoint ownership. Original October13 native bearer initialized and read real Google identity/accounts; one real-time refresh succeeded, retained the original refresh and full policy, and both renewed and original bearers still read. Protected refreshed state was independently read back; other five service records untouched. SQL confirms all17 original records active plus1 normal same-policy refresh record. This closes **P10-OWNER-CONTINUITY**, and retained completed migration/subject-probe receipts close their dependencies: **36 PASSED / 4 PENDING**. [New proof](evidence/2026-10-20-original-workspace-refresh.json). No ChatGPT-managed refresh is claimed.
+
+**V1 still NOT READY:** P10-VERIFY-GOOGLE needs the live authenticated forged-POST proof; P10-MCP-PILOT depends on that row. Both real browser logins/logout/cleanup and all101 real-PostgreSQL handler tests are retained with distinct provenance. Cloud browser supports UI/read-only evaluation; controlled data: form was blocked in the earlier run. No alternate-surface bypass, session export or synthetic live pass. Resolve with an authorized browser test runner capable of submitting a controlled invalid-CSRF request in its own real pilot session; preserve existing grants. Paid licensing and customer DWD remain explicitly excluded pending capabilities. Production independently READY fbac5349; main2ec838c is tests/evidence only ahead of runtime. No release required to execute remaining tests.
+
 ## October 20 07:20 Denver — recovered live acceptance, v1 still NOT READY
 
 Recovered the interrupted thread's real two-client OAuth/provider/isolation/refresh/revoke receipts, protected reversible owner-login link/unlink, direct limited RTC proof and both signed-Google nonce refusals. [Recovery receipt](evidence/2026-10-20-failed-thread-recovery.json) links the seven detailed receipts. Independent current main/live and Vercel READY remain `fbac5349fa66fed52502730441b4a84d05d6fb7c`. Public HTTPS 8/8 and retained read_only TEST RTC identity/read/direct+broker+batch denial pass again. Primary, RAR and original-owner adapter independently return matching Google identities. All 17 original refresh-capable owner records remain active; no post-October17 issuance proves an original refresh.
@@ -491,8 +497,8 @@ restricts only the named operation. Source completion never proves actual Google
     "id": "P10-6",
     "state": "OPEN",
     "remaining": "Two-user pilot and public publication acceptance; complete all original acceptance in the new execution contract.",
-    "evidence": "P9-1..4, P10-1..5 and P10-7 source are now merged; P10-6 genuine provider/two-user custom MCP pilot/publication proof remains unperformed. Owner granted a narrowly scoped non-billable two-user pilot on 2026-10-17, recorded in issue #205; credentials, public activation and release not approved by that statement.",
-    "next": "Oct20 READY fbac5349: both independent RAR/Primary clients completed real code/read/rotation/replay/revoke and exact cross-client/principal result denial; three test families revoked. Reversible owner-link/login/unlink and limited RTC identity/read/denial receipts recovered. Both signed nonce negatives and actual non-pilot subject refusal passed. Owner confirms ChatGPT holds original connection; both other accounts work here. Do not request nonexistent runner/reconnect. Original ChatGPT client-managed refresh remains unobserved; no exposed force-refresh operation found. Finish authenticated browser CSRF/email/cleanup only after explicit named pilot identity-only sign-in approval: automatic review rejected account selection. Preserve dependencies/33 PASSED/7 PENDING; no public/paid/DWD/provider writes. Recovery receipt2026-10-20-failed-thread-recovery.json."
+    "evidence": "P9/P10 engineering merged and independently READY fbac5349. Real two-client provider/isolation/code/refresh/revoke, two browser sign-in/logout, owner migration/subject probes and original Oct13 native credential refresh retained. Canonical queue36PASSED/4PENDING, with two mandatory v1 rows pending. No new runtime code required for remaining live negative.",
+    "next": "Finish live authenticated invalid-CSRF POST using an authorized supported browser test runner; present cloud browser has UI/read-only evaluation, and controlled data: form was policy-blocked before traffic. Do not bypass or export sessions. Retain real-PG handler tests as distinct complementary proof. Then P10-VERIFY-GOOGLE and dependent P10-MCP-PILOT can be reviewed; verify checked main/live/READY, no unnecessary provider repeats, reconsent or sensitive bulk read. Full-public P10-6 remains separate."
   },
   {
     "id": "P10-7",
@@ -896,12 +902,12 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "docs/PUBLIC-SIGNIN-OWNER-GUIDE.md",
     "gates": "Original owner authorized account/read-only resource and original bearer/refresh or disposable approved pass ownership, independently READY source and exact controlled non-destructive proof. Native `workspace_whoami` and account listing alone do not substitute original bearer/refresh and RTC guard checks; no Hub LIVE/TEST prerequisite, credential rotation, provider write, or billing.",
     "dependsOn": [],
-    "status": "PENDING",
+    "status": "PASSED",
     "subsections": [
       "P10-1",
       "P10-3"
     ],
-    "lastEvidence": "Oct20 READY fbac5349: original ChatGPT owner adapter still real-reads; all17 original refresh-capable rows retained; earlier exact inventory fingerprint across reversible migration and limited direct RTC TEST identity/read/denial proof remain valid. Developer-connection card identifies original coordinating runner checkpoint RTOOL_BUILDER_SESSION, Development-only, metadata last updated2026-10-13T23:56:24.271Z. Inspected metadata only; no shared secret loaded or ownership assumed. Original native bearer/refresh requires its serialized owning runner or explicit exclusive recovery direction; no nonexistent runner location claim, no original ChatGPT refresh inferred from tools. Current three useful connectors retained. Receipt2026-10-20-browser-session-security.json; no full row PASS."
+    "lastEvidence": "PASSED Oct20 READY fbac5349: owner-authorized exclusive Workspace-only recovery of original Oct13 developer grant. SAME original bearer initialized and real-read exact Rentals Gmail identity/accounts before refresh. Actual-time authenticated refresh200 issued new access, retained original refresh/profile; renewed AND original bearers real-read expected Google identity. Independent SQL17 originals retained/active/refresh-capable plus1 refreshed record with identical client/account/profile/listing/areas/mode/cost-policy/refresh. Exact encrypted Development-only RTOOL_WORKSPACE_SESSION readback matches; shared six-service checkpoint update version unchanged; other5 untouched. Prior original-inventory migration fingerprint and source-identical limited RTC TEST identity/read/direct+broker+batch denial retained. No ChatGPT-managed refresh claim, reconsent/revocation/Google write. Receipt2026-10-20-original-workspace-refresh.json."
   },
   {
     "id": "P10-VERIFY-GOOGLE",
@@ -917,7 +923,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-2"
     ],
-    "lastEvidence": "Oct20 READY fbac5349: both approved Primary/RAR actual identity-only sign-in, own portal, valid protected nondeleting preview, rejected GET logout, valid POST logout loggedOut=true/agentConnectionsRevoked=false, then anonymous portal. SQL exactly2 new sessions/2 principals/both revoked/0 active;2 useful Google grants/3 agents/17 original owner rows/0 deletion requests preserved; all3 connectors still real-read. Prior live signed nonce negatives for both and signed nonpilot subject refusal despite email hints retained. Existing SDK-contract tests reject unverified email/issuer/audience/expiry/sub. New real-PG actual-handler tests cover missing/wrong/crossed CSRF and logout/replay; execution proof is recorded separately on the PR, not a live forged-POST claim. Browser forged POST not executed: data: URL policy refused. Receipt2026-10-20-browser-session-security.json. Full row remains PENDING with original owner-continuity dependency and unobserved live authenticated forged-POST limit; no new scope/grant/provider write."
+    "lastEvidence": "Oct20 READY fbac5349: real Primary/RAR identity-only signed login, own portal/scopes, valid nondeleting preview, GET logout refusal/session retained, POST logout and anonymous portal. SQL exactly2 new sessions/2principals/both revoked;2 useful Google grants/3 agents/17 originals/0deletion requests preserved. Live signed nonce negatives for both and signed nonpilot subject refusal despite email hints retained. SDK tests reject unverified email/issuer/audience/expiry/sub. PR242 real-PostgreSQL101tests includes3 actual-handler missing/wrong/crossed-CSRF/session/replay/nonmutation tests; not live-forged-POST proof. Original owner-continuity dependency now PASSED. Still PENDING for live authenticated forged-POST: controlled data: form blocked, browser evaluation read-only; no bypass/session export/new scope or grant. Receipts2026-10-20-browser-session-security.json and2026-10-20-original-workspace-refresh.json. Need authorized browser runner able to submit invalid-CSRF POST in its own approved real pilot session."
   },
   {
     "id": "P10-MCP-PILOT",
@@ -933,7 +939,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-3"
     ],
-    "lastEvidence": "PARTIAL Oct20 READY fbac5349:2 independent owner-consented read_only RAR/Primary custom clients now actually exchange/read/rotate/replay. RAR registration cannot exchange Primary code or refresh its active token400 invalid_grant; foreign-client revoke200 leaves Primary bearer working. Primary bearer creates real Gmail metadata result and reads its own exact handle; actual RAR bearer and another Primary connection both refuse same handle isError/not_found without data. Both native clients pass own-only lists/direct+broker+batch write denial. RAR active RFC7009 independently passed. All3 disposable families revoked; original2 grants/3 useful connections/17 owner refresh-capable records retained; Primary/RAR/owner adapter still read. Receipts2026-10-20-disposable-principal-lifecycle.json,2026-10-20-two-client-bearer-isolation.json and issue205 comment6289625034. No full row PASS: complete original matrix and P10-VERIFY-GOOGLE dependency remain."
+    "lastEvidence": "PARTIAL Oct20 READY fbac5349: independent RAR/Primary read_only native clients exchanged code/read/rotated/refreshed/replayed/revoked, own-only accounts and direct+broker+batch write denial. Foreign-client code/refresh400 and revoke200 did not damage Primary. Real own Gmail metadata handle read; RAR and second Primary connection refused same exact handle. All3 disposable families revoked,2 Google grants/3 useful connections retained. Original Oct13 owner bearer/refresh now PASSED;17 originals preserved plus1 same-policy refresh record; both old/new bearer Google identity pass. Existing lifecycle/isolation receipts retained; still PENDING on P10-VERIFY-GOOGLE live authenticated invalid-CSRF prerequisite. No additional bulk Gmail probe, new consent or provider write. See2026-10-20-disposable-principal-lifecycle.json,2026-10-20-two-client-bearer-isolation.json,2026-10-20-original-workspace-refresh.json."
   },
   {
     "id": "P10-CUSTOMER-DELEGATION",
@@ -962,8 +968,8 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [
       "P10-OWNER-CONTINUITY"
     ],
-    "status": "PENDING",
-    "lastEvidence": "Oct20 READY fbac5349 live migration flow demonstrated: protected passphrase preview, explicit fresh Google owner link0->1, verified new Google-owner OAuth/native read_only mail,workspace grant, actual owner Gmail/account read and direct/broker/batch denials; same proof binds client/PKCE/state/resource. Exact protected unlink1->0 returned no grants moved/no connections revoked. SAME issued bearer still read after unlink; fresh real removed-identity Google owner login then refused. Exact disposable family RFC7009 revoke200/bearer401/refresh400 cleanup restores original17;3 useful public connections/2 Google grants and all3 live connector identities retained. Aggregate fingerprint of original17 service credentials exactly unchanged across rollback (no raw extraction). Reuse prior passphrase-native receipt plus fresh protected passphrase authentication. Receipt2026-10-20-owner-link-partial.json. PENDING solely until original P10-OWNER-CONTINUITY dependency passes; no full row promotion."
+    "status": "PASSED",
+    "lastEvidence": "PASSED after P10-OWNER-CONTINUITY genuine original Oct13 bearer/refresh/read closure Oct20 at READY fbac5349. Retain actual passphrase-preview/Google-link0->1/linked-owner native read and exact unlink1->0/no-grants-moved/no-connections-revoked; same issued bearer read after rollback, fresh removed-subject login refused, disposable family revoked and original17 fingerprint unchanged. Receipt2026-10-20-owner-link-partial.json plus2026-10-20-original-workspace-refresh.json. No optional legacy sign-in retirement or new migration performed."
   },
   {
     "id": "P10-ANONYMOUS-HOMEPAGE-PRIVACY",
@@ -1003,11 +1009,11 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [
       "P10-OWNER-CONTINUITY"
     ],
-    "status": "PENDING",
+    "status": "PASSED",
     "subsections": [
       "P10-6"
     ],
-    "lastEvidence": "Original protected A/B no-enrollment probes already executed Oct18: PR217 comment6255719368 records both actual SDK-verified Google receipts, replay refusal for each callback, anonymous portal after probes and equal before/after aggregate counts. Prior project-owner Console/client/tester evidence in comments6256514785/6256650937. Fresh Oct19 protected readiness config9/9, roster2, pilot and tool execution true; original owner connections still read. Do not rerun valid probes merely because old ledger omitted them. PENDING because original P10-OWNER-CONTINUITY dependency remains unmet; no independent credential-byte equality proof claimed."
+    "lastEvidence": "PASSED after P10-OWNER-CONTINUITY closure. Retain original protected A/B SDK-verified subject probes PR217 comment6255719368 with callback replay refusal, no enrollment and equal before/after counts; protected readiness9/9, two approved subjects and owner-approved pilot activation separately retained. Original owner17 preserved plus one normal original-family refresh, verified policy and old/new native read. Receipt2026-10-20-original-workspace-refresh.json; no probe replay/new subjects or legacy credential change."
   }
 ]
 ```
