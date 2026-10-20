@@ -1,0 +1,53 @@
+# v1 early-release gate — finished usable product, not all APIs
+
+**Owner-approved October 19, 2026.** The immediate milestone is an independently usable, secure, reliable, **invite-only early-production release** for approved real Google identities and supported OAuth-native MCP clients. The product is **not** considered released merely because code was merged, a deployment is READY, or an owner-only connection works. This decision revises the *first release boundary*; it does not remove or mark complete the original acceptance work.
+
+[Machine-readable exact existing acceptance IDs](v1-release-gates.json) and the non-mutating gate `npm run v1:readiness` are the release checklist. The source of truth for *actual* acceptance is still the JSON `<!-- release-acceptance:start -->` block in `TASKS.md`; no parallel replacement acceptance ledger is authorized. The gate must be run after independent live/source observations. It prints a preflight, **not** a final Google/provider certification or a release authorization.
+
+## What v1 includes
+
+- Standalone remote MCP with the service's owned OAuth, successful protected-resource discovery and actual scoped client connection, authorized Google execution and proper consent; never depend on Hub.
+- Multi-user account and client isolation with real second test identity; verify wrong-subject/client denial, S256, single-use code/replay, refresh and RFC7009 revoke after the fixes in #235 are actually serving.
+- Original owner's existing active connection, original bearer and refresh continuation; real preserved credentials, reliable account link/unlink/owner recovery.
+- Supported **already-implemented** user-facing API operations with honest scope/edition/permission states, functional current-user reads and tested guarded writes on owner-approved reversible fixtures, no blanket development-agent limitation on end users.
+- Truthful app identity, owner domain, privacy/data-use/deletion/support and scoped-account consent/disconnect, appropriate protective defaults and audit/readbacks.
+- Verified desktop/mobile native MCP compatibility **per client/version when supported and actually observed**; if a client/platform is unsupported or untested, say so explicitly, do not advertise it as certified.
+- Required checked source, exact-head CI, reviewed PR, compliant release, independent production READY/source confirmation and post-release provider/source readbacks. Retain valid older provider tests until a relevant change invalidates them. No unnecessary reruns of destructive fixtures.
+
+This is **not** public unrestricted enrollment, Google's commercial verification, or acceptance of every API method. Invite-only/Testing audience restrictions and Google consent app limits must remain clearly disclosed. Never silently switch `PUBLIC_SIGNIN_MODE` to public or add strangers to allowlists on the strength of this plan. Explicit owner permission is required for any off-schedule release, external credentials, Google fees, paid operations, customer DWD, destructive tests or public-mode transition.
+
+## Required acceptance
+
+The existing rows that must actually be `PASSED` for v1 are:
+
+1. `P10-OWNER-CONTINUITY` — prove original owner bearer/refresh plus real limited RTC refusal on the protected source.
+2. `P10-VERIFY-GOOGLE` — two independent Google principals' own consent, signed login/nonce, logout/cleanup; no guessing from a single connection.
+3. `P10-MCP-PILOT` — two real independently authenticated clients/principals with provider read, denial, token replay/refresh/revoke and evidence from each.
+4. `P10-OWNER-MIGRATION-LIVE` — owner linked sign-in/reversible unlink with preserved original credential continuity.
+5. `P10-6-PUBLIC-DISCLOSURE` — accurate actual served policies, authenticated portal, retained privacy and owner review for intended early audience.
+6. `P10-6-OWNER-SUBJECT-PROBE` — genuine safely verified subject-bound readiness and nonmutation evidence for approved testers.
+
+These requirements are **not** satisfied in the baseline; current source is ahead of live. Retain the existing P10-6 original full-public phase acceptance separately as not yet accepted.
+
+## Two capability-specific release exclusions (NOT erased)
+
+- `P9-LICENSE-PAID`: license changes and purchases remain available only in the strictly user-authorized, properly guarded product path, but a **real charged write** is not a proven/advertised v1 capability. Provider-scope/billing results are honest. This existing task remains PENDING until approved specific paid fixture evidence.
+- `P10-CUSTOMER-DELEGATION`: arbitrary external customer's own DWD setup is not a verified/advertised v1 feature. Secure source support may remain and must never leak owner tenant keys. Record clear feature eligibility/limits, preserve PENDING until a separately approved real Google customer-admin setup.
+
+Existing paid and customer-DWD queue entries remain in `TASKS.md` with their original scope and dependencies. Full method coverage remains an ongoing **required** roadmap objective, not an early-release gate. Source/stage states never mean an endpoint is live or a Google API is usable without independent authorization.
+
+## Fastest correct execution order
+
+1. Source: #235 and #236 are merged into `main=b557eab28847b5adc60e8a09c65cfe0908864843`; deployment `ab26461a0fe3179b9b085937e437d977b7d0134b` was independently READY at planning. Reconfirm live/CI before applying the **next permitted scheduled release**. Do not attempt an unscheduled promotion without separate owner approval. Prioritize testing checks that are already eligible on the deployed revision.
+2. No new Google test identities: retain approved two pilot Google identities plus the independently existing direct owner connection; obtain the **second identity's genuine own consent**. Protect old bearer/refresh. Use supported native clients, not synthetic token injection or a forced TEST shortcut.
+3. Execute each required original P10 and data-use acceptance with real provider/client evidence, strict denial and cleanup, distinct scoped clients and actual ready revision. Fix any genuine v1 defect in a single coherent PR and reaccept only what changed.
+4. Run `npm run v1:readiness -- --main SHA --live SHA --deployed SHA --state READY` using **independently observed** refs and production proof; it performs **only static preflight**. Review externally verified release evidence, real Google/issuer/owner, CI and security separately. Then record approved early-release checkpoint; invite-only v1 can be complete even though advanced provider coverage continues.
+5. Schedule method-by-method API family bundles under `docs/PROVIDER-API-COVERAGE.md`, publishing truthful post-v1 coverage updates. No second open-ended "project completion push" before shipping v1.
+
+## Public-launch boundary
+
+Public self-service v1 GA, public directory listing, OAuth app verification, marketing/review/distribution and scope-use eligibility are **separate** from private early v1. Public mode cannot be enabled until actual provider approvals or documented applicable exceptions, owned domain and legal disclosures, open enrollment security and real audience/client testing are satisfied. Portfolio distribution is managed by Robinson AI Systems, not the standalone server. A deployed allowlisted service is usable production software without pretending public access is approved.
+
+## Status at adoption
+
+**NOT READY**. Required existing queue contains pending rows, newer source is not on READY production. Recorded baseline: 32 PASSED/8 PENDING; merged #235 and #236 exact-head CI green; Vercel READY serves `ab26461a0fe3179b9b085937e437d977b7d0134b` while `main` is `b557eab28847b5adc60e8a09c65cfe0908864843`. These are dated observations, not current-at-all-times facts. No release/consent/mutation or verified second independent client was caused by this plan.
