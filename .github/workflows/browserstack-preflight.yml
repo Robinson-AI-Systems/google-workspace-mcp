@@ -1,0 +1,52 @@
+name: BrowserStack connection preflight
+on:
+  pull_request:
+    paths:
+      - .github/workflows/browserstack-preflight.yml
+      - scripts/browserstack-preflight.mjs
+      - test/unit/browserstack-preflight.test.js
+  workflow_dispatch:
+    inputs:
+      read_account:
+        description: Read Automate plan using the two GitHub Actions secrets (starts no browser)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  network:
+    name: BrowserStack anonymous network check
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node scripts/browserstack-preflight.mjs --network
+  account:
+    if: github.event_name == 'workflow_dispatch' && inputs.read_account
+    needs: network
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require the owner and reviewed main
+        env:
+          ACTOR: ${{ github.actor }}
+          REF: ${{ github.ref }}
+        run: |
+          test "$ACTOR" = christcr2012
+          test "$REF" = refs/heads/main
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Read account without starting or buying a session
+        run: node scripts/browserstack-preflight.mjs --account
+        env:
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
