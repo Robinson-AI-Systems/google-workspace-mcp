@@ -160,7 +160,7 @@ describe('passphrase page lockout', () => {
       const req = Readable.from(['']);
       req.method = 'GET';
       req.headers = { 'x-vercel-forwarded-for': '1.1.1.1' };
-      req.query = { client_id: 'claude', redirect_uri: REDIRECT };
+      req.query = { client_id: 'claude', redirect_uri: REDIRECT, ...PKCE };
       const res = fakeRes();
       await handler(req, res);
       expect(res.statusCode).toBe(200);
