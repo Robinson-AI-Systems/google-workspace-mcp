@@ -6,6 +6,29 @@ Owner decision (2026-10-19): Every custom Robinson AI Systems MCP server aims at
 
 For **every Google Workspace API supported by this service**, inventory Google's current discovery/REST reference by version/resource/method, map each supported method to a real native MCP tool or a reviewed semantically equivalent complete operation, and label any missing method with a real roadmap task. Include all read/list/create/update/patch/delete variants, pagination, async status, search, export and bulk operations; do not confuse an internal helper or an Admin Console link with a remotely callable tool. Re-evaluate when Google releases API changes. Distinguish code+tests, shipped READY exact revision, Google scope, customer license/role/DWD, and real positive/negative provider testing. “Unavailable to this one test account” is not “impossible for the product.” No end-user feature is disabled just because the coding agent cannot afford or is unauthorized to test it.
 
+## Google Tasks API v1 — current source coverage (release/provider pending)
+
+References: [tasks list methods](https://developers.google.com/workspace/tasks/reference/rest/v1/tasks), [tasklists list methods](https://developers.google.com/workspace/tasks/reference/rest/v1/tasklists), and the official [move](https://developers.google.com/workspace/tasks/reference/rest/v1/tasks/move) contract. These are separate from Google Tasks user-owned OAuth scope grants or completed Stage 2 pilot identity acceptance.
+
+| Google REST method | Native MCP method | Source state |
+| --- | --- | --- |
+| tasklists.delete | `tasks_delete_tasklist` | Existing guarded |
+| tasklists.get | `tasks_get_tasklist` | Existing read |
+| tasklists.insert | `tasks_create_tasklist` | Existing guarded |
+| tasklists.list | `tasks_list_tasklists` | Source extension: bounds and cursor |
+| tasklists.patch | `tasks_update_tasklist` | Existing guarded PATCH |
+| tasklists.update (PUT) | `tasks_replace_tasklist` | Source addition; preview/confirm/readback |
+| tasks.clear | `tasks_clear_completed` | Existing guarded |
+| tasks.delete | `tasks_delete_task` | Existing guarded |
+| tasks.get | `tasks_get_task` | Existing read |
+| tasks.insert | `tasks_create_task` | Source extension: parent/previous |
+| tasks.list | `tasks_list_tasks` | Source extension: bounded cursor and all Google v1 filters |
+| tasks.move | `tasks_move_task` | Source addition: POST parent/previous/destination |
+| tasks.patch | `tasks_update_task` | Existing guarded PATCH |
+| tasks.update (PUT) | `tasks_replace_task` | Source addition; explicit replacement/confirm/readback |
+
+**Status:** 14/14 current published REST method *source mappings* in PR candidate; no Google user writes or billing operations carried out. Actual proof requires exact-head check/review, merge, checked READY source deployment and scoped provider acceptance. The former 11-tool server is still production until independently verified release. A complete page preserves the old flat-array response; a partial page or explicit page request returns `{items,nextPageToken,complete}`; callers must consume every cursor to claim a full list. New write verbs remain denied in read_only profile. No other Google Workspace API families were certified by this Tasks pass.
+
 ## Google Workspace Enterprise License Manager (licensing.googleapis.com) — v1
 
 Reference: https://developers.google.com/workspace/admin/licensing/reference/rest
