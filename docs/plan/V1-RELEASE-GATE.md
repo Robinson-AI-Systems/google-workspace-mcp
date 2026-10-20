@@ -61,3 +61,8 @@ Public self-service v1 GA, public directory listing, OAuth app verification, mar
 ## Status at adoption
 
 **NOT READY**. Required existing queue contains pending rows, newer source is not on READY production. Recorded baseline: 32 PASSED/8 PENDING; merged #235 and #236 exact-head CI green; Vercel READY serves `ab26461a0fe3179b9b085937e437d977b7d0134b` while `main` is `b557eab28847b5adc60e8a09c65cfe0908864843`. These are dated observations, not current-at-all-times facts. No release/consent/mutation or verified second independent client was caused by this plan.
+
+
+## October 19 22:37 Denver — invite-only disclosure gate accepted
+
+`P10-6-PUBLIC-DISCLOSURE` is now PASSED for the owner-approved early audience after real authenticated portal/public HTTPS observations, retained attributed owned-domain/Console evidence, and explicit operator acceptance of recoverable deletion, no irreversible erasure and no promised retention deadline. See [sanitized evidence](evidence/2026-10-19-approved-disclosure-browser-acceptance.json). Queue is 33 PASSED / 7 PENDING; the other five mandatory v1 rows remain PENDING. This does not approve unrestricted enrollment or Google/public distribution and does not substitute for token lifecycle or original-owner security acceptance. Earlier NOT READY baselines are dated history; current v1 verdict is still NOT READY.

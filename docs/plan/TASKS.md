@@ -1,3 +1,7 @@
+## October 19 22:37 Denver — disclosure accepted; original security gates remain open
+
+Owner approved the current invite-only v1 privacy, support and retention/deletion limitations. Combined with genuine public HTTPS, authenticated RAR portal and prior attributed owned-domain/Google Console evidence, `P10-6-PUBLIC-DISCLOSURE` is PASSED for the approved early audience. Authoritative queue: **33 PASSED / 7 PENDING**. This is one newly accepted original task, not a whole P10-6 subsection or bundle. General public enrollment, provider review and remaining security acceptance are not certified. Existing protected A/B no-enrollment receipts were recovered from PR217; preserve them and do not repeat them unnecessarily. Full sanitized accounting: [evidence](evidence/2026-10-19-approved-disclosure-browser-acceptance.json).
+
 **New independently executed external HTTPS acceptance PASS, limited to unauthenticated public routes:** [GitHub Actions job](https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/runs/39364282373/job/118437374212) at **2026-10-20T03:26:30Z** (October 19 Denver), exact `live=d67c5d6ba545f7cfd3b31ca6eef239e025dfb2ef`. The actual job output says `PASS real production anonymous HTTPS source d67c5d6ba545` with 8 groups: RTC1 contract/OAuth discovery on **two** domains; live public homepage, privacy, support, deletion GET/HEAD; HTTP401 protected anonymous account portal; and revocation endpoint GET405 (POST-only). Verified S256-only code-challenge metadata, advertised RFC7009 revoke and refresh, matching resource/issuer, no-store/security headers, no redirects and exact deployed SHA. The job uses **no token, Google grant, provider request or mutation** and never logs page content. Thus this supplies genuine **new partial** P10-6/P10-3 live-service evidence. It does **not** satisfy complete `P10-6-PUBLIC-DISCLOSURE` (authenticated portal and owner final retention/policy approval remain) or `P10-MCP-PILOT` (real principal B, OAuth lifecycle, owner refresher, two independent clients remain). Existing 32 PASSED / 8 PENDING unchanged. Full report and runner are in PR #239, not falsely counted as a completed roadmap subsection/bundle.
 
 ## October 19 — new-source v1 hard push: real post-release owner/database reconnaissance and LIVE anonymous HTTPS PASS (PARTIAL)
@@ -904,7 +908,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-2"
     ],
-    "lastEvidence": "2026-10-18 owner-authenticated production readiness confirms PUBLIC_GOOGLE_OAUTH_CLIENT_ID and server-only GOOGLE_PUBLIC_OAUTH_CLIENT_SECRET settings present/different from owner values, two roster entries; separate Cloud project, matching secret and Console testers still need independent verification, pilot mode, legacy owner enabled, execution OFF. Actual Google browser start reached account chooser requesting only openid/email/profile and S256; subsequent secure account choice declined, so no fresh A/B login or consent witnessed. Production SQL retains two verified user principals, one active session, zero user Google links/connections. Unissued-state callback HTTP400 is only a narrow real denial, not nonce/CSRF/replay/own-scope acceptance. PENDING. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json."
+    "lastEvidence": "PARTIAL: PR217 comments record actual A/B login/logout and protected no-enrollment callback replay refusal plus owner-reported separate Console/client/tester provenance. Oct19 fresh RAR secure Google sign-in reached account-local authenticated portal; browser-only logout returned loggedOut=true/agentConnectionsRevoked=false and next account GET required login. Existing approved Google session then reauthenticated SAME RAR principal. Two connected Google identities/provider reads in issue205 comment6283325804 retained. Full original wrong-subject/nonce/CSRF/own-scope matrix and P10-OWNER-CONTINUITY dependency remain PENDING."
   },
   {
     "id": "P10-MCP-PILOT",
@@ -920,7 +924,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-3"
     ],
-    "lastEvidence": "2026-10-19 genuine PARTIAL native Claude Full/compact MCP pilot: owner-reported real Gmail, Calendar, Drive, Docs, Sheets, Slides, Forms and Contacts read/write/cleanup; read-only production principal_changes independently corroborates Gmail label create/delete, Calendar event create/delete, Contact create/delete, Docs/Sheets/Slides/Forms create, Drive folder create/rename and five file deletes. The original owner direct read still works. Tasks/Chat and advanced Admin requests lack user OAuth scopes; Alert Center requires separate customer-bound DWD. One active pilot MCP client only. Comprehensive direct-user Google consent and provider diagnostic fixes in PR #229 await CI and checked release. Still PENDING: second distinct subject/client, wrong-account denial, token replay/refresh/revocation, original bearer continuation, real advanced reads and P10-6 public readiness. Do not confuse Full agent profile with Google OAuth grant. Issue #205 holds sanitized detail."
+    "lastEvidence": "PARTIAL: issue205 comment6283325804 records independent Primary/RAR whoami/Gmail/Drive reads, own-only account lists, bidirectional foreign-domain Admin refusals; read-only production counts2 grants/3 connections/2 distinct principals/2 client IDs, original17 owner records retained. Oct19 authenticated RAR portal and browser-only logout verified; post-logout RAR plugin and original owner adapter whoami both still match. Counts/domain denials do not prove bearer cross-principal isolation or real-client refresh/replay/revoke. P10-VERIFY-GOOGLE dependency and full original lifecycle matrix remain PENDING."
   },
   {
     "id": "P10-CUSTOMER-DELEGATION",
@@ -974,11 +978,11 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "procedure": "docs/plan/P10-PILOT-CHECKLIST.md; docs/pr-cards/P10-PILOT-READINESS.md; public GET/HEAD and authenticated account portal",
     "gates": "Reviewed source on real serving READY release, zero owner mailbox exposure; independent owner privacy/retention review, actual domain ownership and matching OAuth consent links. No provider write, enrollment, paid review or assertion of Google approval.",
     "dependsOn": [],
-    "status": "PENDING",
+    "status": "PASSED",
     "subsections": [
       "P10-6"
     ],
-    "lastEvidence": "2026-10-18 READY17beedb real public GET/HEAD for homepage/privacy/support/deletion return 200; all HEAD bodies 0. Protected owner readiness config 9/9; authenticated user portal still untested. Owner selected workspace.robinsonaisystems.com for preparation; no DNS/project-domain/canonical/Google credential changes. Authoritative DNS is Spaceship; project-specific recommended CNAME recorded in evidence. Google domain workflow reports unverified for connected Rentals account ONLY, not a claim about all accounts. Final operator policy, project-owner Search Console and Google brand/scope verification remain pending. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json."
+    "lastEvidence": "PASSED for owner-approved invite-only early-v1 audience: independently READY d67c5d6; real public two-domain GET/HEAD smoke Actions39364282373/job118437374212; actual authenticated RAR portal displayed account-local scopes/connections and privacy/support/deletion links, browser-only logout and subsequent sign-in refusal verified; protected readiness9/9/support configured. Owner explicitly approved current recoverable-deletion/no-irreversible-erasure/no-retention-deadline disclosures Oct19 22:37Denver (issue205 comment6283492324). Prior owner-guided Google Console/Search Console domain ownership and matching owned-host Branding links preserved from PR217 comments6256514785/6256629504/6256650937, explicitly owner-reported, not independent Google API verification. General-public brand/sensitive-scope approval remains outside early-v1; no unrestricted publication claimed. See docs/plan/evidence/2026-10-19-approved-disclosure-browser-acceptance.json."
   },
   {
     "id": "P10-6-OWNER-SUBJECT-PROBE",
@@ -994,7 +998,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-6"
     ],
-    "lastEvidence": "2026-10-18 canonical browser protected readiness POST actually authenticated with existing owner passphrase and returned configComplete=true, checks 9/9, roster 2, currentMode=pilot, execution false, legacy owner enabled and identity-only coexistence enabled. Secret/public client configuration is present; old missing-client statements are superseded. No new one-use Google subject discovery receipt or full before/after no-mutation probe was executed; original criterion stays PENDING. No IDs/secrets recorded. See docs/plan/evidence/2026-10-18-production-http-owner-continuation.json."
+    "lastEvidence": "Original protected A/B no-enrollment probes already executed Oct18: PR217 comment6255719368 records both actual SDK-verified Google receipts, replay refusal for each callback, anonymous portal after probes and equal before/after aggregate counts. Prior project-owner Console/client/tester evidence in comments6256514785/6256650937. Fresh Oct19 protected readiness config9/9, roster2, pilot and tool execution true; original owner connections still read. Do not rerun valid probes merely because old ledger omitted them. PENDING because original P10-OWNER-CONTINUITY dependency remains unmet; no independent credential-byte equality proof claimed."
   }
 ]
 ```

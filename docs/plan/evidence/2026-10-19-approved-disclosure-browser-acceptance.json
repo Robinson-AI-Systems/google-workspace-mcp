@@ -1,0 +1,134 @@
+{
+  "observedDate": "2026-10-19 America/Denver",
+  "main": "e75cf07024dfbf4e7ec25a7b98910ba8c3133d29",
+  "deployed": "d67c5d6ba545f7cfd3b31ca6eef239e025dfb2ef",
+  "deploymentId": "dpl_EoPBMRSC65TwyUFPwwJES7yACSvu",
+  "deploymentState": "READY",
+  "workKind": "acceptance reconciliation; no bundle claimed",
+  "newEvidence": {
+    "authenticatedRarPortal": true,
+    "onlyOwnLinkedAccount": true,
+    "agentConnectionsShown": 2,
+    "disclosuresPresent": true,
+    "browserLogout": {
+      "loggedOut": true,
+      "agentConnectionsRevoked": false
+    },
+    "accountAfterLogoutRequiresSignIn": true,
+    "postLogoutRarAndOriginalOwnerWhoamiMatch": true,
+    "readiness": {
+      "configured": 9,
+      "checked": 9,
+      "pilotRoster": 2,
+      "mode": "pilot",
+      "execution": true,
+      "legacyOwnerSignIn": true
+    },
+    "readOnlyDatabaseCounts": {
+      "principals": 3,
+      "identities": 2,
+      "googleGrants": 2,
+      "connections": 3,
+      "activeOwnerTokens": 17,
+      "ownerAccounts": 2
+    },
+    "ownerDisclosureApproval": "https://github.com/Robinson-AI-Systems/google-workspace-mcp/issues/205#issuecomment-6283492324"
+  },
+  "reusedEvidence": {
+    "browserReceipt": "https://github.com/Robinson-AI-Systems/google-workspace-mcp/issues/205#issuecomment-6283481330",
+    "publicHttps": "https://github.com/Robinson-AI-Systems/google-workspace-mcp/actions/runs/39364282373/job/118437374212",
+    "protectedProbes": "https://github.com/Robinson-AI-Systems/google-workspace-mcp/pull/217#issuecomment-6255719368",
+    "domainAndBrandingOwnerReported": [
+      "https://github.com/Robinson-AI-Systems/google-workspace-mcp/pull/217#issuecomment-6256514785",
+      "https://github.com/Robinson-AI-Systems/google-workspace-mcp/pull/217#issuecomment-6256629504",
+      "https://github.com/Robinson-AI-Systems/google-workspace-mcp/pull/217#issuecomment-6256650937"
+    ]
+  },
+  "acceptanceDelta": {
+    "before": {
+      "passed": 32,
+      "pending": 8
+    },
+    "after": {
+      "passed": 33,
+      "pending": 7
+    },
+    "newlyPassed": [
+      "P10-6-PUBLIC-DISCLOSURE"
+    ],
+    "originalCriteriaPinsAndDependenciesUnchanged": true
+  },
+  "remaining": [
+    {
+      "id": "P9-LICENSE-PAID",
+      "requiredRevision": "ed9ba9578381616f29341a0bdc063b84cd8064da",
+      "sourceInLive": true,
+      "outcome": "DEFERRED",
+      "prerequisite": "Exact paid target/SKU/billing-risk approval",
+      "remedy": "Reviewed current connected tools, actual browser routes, read-only production aggregates, prior original receipts and source ancestry; no useful live credential extraction or revocation.",
+      "nextAction": "Execute the original protected procedure with its separately controlled credential/fixture owner; preserve current useful connections."
+    },
+    {
+      "id": "P10-OWNER-CONTINUITY",
+      "requiredRevision": "681932972526ac3ea943666abcb8955ac25eb742",
+      "sourceInLive": true,
+      "outcome": "DEFERRED",
+      "prerequisite": "Original serialized bearer/refresh checkpoint and owned limited RTC proof",
+      "remedy": "Reviewed current connected tools, actual browser routes, read-only production aggregates, prior original receipts and source ancestry; no useful live credential extraction or revocation.",
+      "nextAction": "Execute the original protected procedure with its separately controlled credential/fixture owner; preserve current useful connections."
+    },
+    {
+      "id": "P10-VERIFY-GOOGLE",
+      "requiredRevision": "681932972526ac3ea943666abcb8955ac25eb742",
+      "sourceInLive": true,
+      "outcome": "DEFERRED",
+      "prerequisite": "Complete original identity/client security matrix and prerequisite acceptance",
+      "remedy": "Reviewed current connected tools, actual browser routes, read-only production aggregates, prior original receipts and source ancestry; no useful live credential extraction or revocation.",
+      "nextAction": "Execute the original protected procedure with its separately controlled credential/fixture owner; preserve current useful connections."
+    },
+    {
+      "id": "P10-MCP-PILOT",
+      "requiredRevision": "681932972526ac3ea943666abcb8955ac25eb742",
+      "sourceInLive": true,
+      "outcome": "DEFERRED",
+      "prerequisite": "Complete original identity/client security matrix and prerequisite acceptance",
+      "remedy": "Reviewed current connected tools, actual browser routes, read-only production aggregates, prior original receipts and source ancestry; no useful live credential extraction or revocation.",
+      "nextAction": "Execute the original protected procedure with its separately controlled credential/fixture owner; preserve current useful connections."
+    },
+    {
+      "id": "P10-CUSTOMER-DELEGATION",
+      "requiredRevision": "43d113726baba063ca45755ee7611189dd137651",
+      "sourceInLive": true,
+      "outcome": "DEFERRED",
+      "prerequisite": "Independent customer-owned administrator DWD consent",
+      "remedy": "Reviewed current connected tools, actual browser routes, read-only production aggregates, prior original receipts and source ancestry; no useful live credential extraction or revocation.",
+      "nextAction": "Execute the original protected procedure with its separately controlled credential/fixture owner; preserve current useful connections."
+    },
+    {
+      "id": "P10-OWNER-MIGRATION-LIVE",
+      "requiredRevision": "3442f6ac2840f667ff3643c372e1096466accbfd",
+      "sourceInLive": true,
+      "outcome": "DEFERRED",
+      "prerequisite": "Protected explicit owner link/dual-login/unlink plus owner continuity",
+      "remedy": "Reviewed current connected tools, actual browser routes, read-only production aggregates, prior original receipts and source ancestry; no useful live credential extraction or revocation.",
+      "nextAction": "Execute the original protected procedure with its separately controlled credential/fixture owner; preserve current useful connections."
+    },
+    {
+      "id": "P10-6-OWNER-SUBJECT-PROBE",
+      "requiredRevision": "4a9c6a929fab6931caea95f3af94fc9ed6a7173d",
+      "sourceInLive": true,
+      "outcome": "DEFERRED",
+      "prerequisite": "Original owner-continuity dependency",
+      "remedy": "Reviewed current connected tools, actual browser routes, read-only production aggregates, prior original receipts and source ancestry; no useful live credential extraction or revocation.",
+      "nextAction": "Retain PR217 protected A/B probe evidence; resolve owner continuity without rerunning valid probes."
+    }
+  ],
+  "limits": [
+    "No full v1/P10-6 certification, public enrollment, provider verification or paid/customer-DWD acceptance.",
+    "Cloud browser could not connect vanity host (one reload); canonical Vercel portal worked. Existing independently successful two-host HTTPS receipt retained.",
+    "No new refresh/replay/revoke or original bearer rotation proof.",
+    "No one-time probe rerun; prior valid A/B receipts retained.",
+    "No production flag, credential, Google scope, release or customer-data change. Browser sessions/login-attempt records changed through normal sign-in/logout.",
+    "No local npm execution claimed; exact-head Actions required before merge."
+  ]
+}
