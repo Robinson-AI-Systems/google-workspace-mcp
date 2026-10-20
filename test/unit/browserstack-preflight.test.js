@@ -1,7 +1,18 @@
 import {describe,it,expect} from 'vitest';
 import {probe,PLAN_URL} from '../../scripts/browserstack-preflight.mjs';
+import {readFileSync} from 'node:fs';
 const response=(status,body,headers={})=>({status,text:async()=>body,headers:new Headers(headers)});
 describe('BrowserStack preflight has no session or secret side effects',()=>{
+ it('guards the original actor and rerun initiator before any credential-backed step',()=>{
+  const workflow=readFileSync(new URL('../../.github/workflows/browserstack-preflight.yml',import.meta.url),'utf8');
+  const gate=workflow.indexOf('Require the owner and reviewed main');
+  const secret=workflow.indexOf('BROWSERSTACK_USERNAME: ${{ secrets.');
+  expect(gate).toBeGreaterThan(0);expect(secret).toBeGreaterThan(gate);
+  const guard=workflow.slice(gate,secret);
+  for(const actor of ['ACTOR','TRIGGERING_ACTOR'])expect(guard).toContain('test "$'+actor+'" = christcr2012');
+  expect(guard).toContain('TRIGGERING_ACTOR: ${{ github.triggering_actor }}');
+  expect(guard).toContain('test "$REF" = refs/heads/main');
+ });
  it('proves a real authentication challenge without requiring credentials',async()=>{
   let call;
   const result=await probe({fetcher:async(...args)=>{call=args;return response(401,'Unauthorized',{'www-authenticate':'Basic realm="BrowserStack"'});}});

@@ -35,9 +35,11 @@ jobs:
       - name: Require the owner and reviewed main
         env:
           ACTOR: ${{ github.actor }}
+          TRIGGERING_ACTOR: ${{ github.triggering_actor }}
           REF: ${{ github.ref }}
         run: |
           test "$ACTOR" = christcr2012
+          test "$TRIGGERING_ACTOR" = christcr2012
           test "$REF" = refs/heads/main
       - uses: actions/checkout@v4
         with:
