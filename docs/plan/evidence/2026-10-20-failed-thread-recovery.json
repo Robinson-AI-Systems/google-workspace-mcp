@@ -1,0 +1,103 @@
+{
+  "sourceRevision": "fbac5349fa66fed52502730441b4a84d05d6fb7c",
+  "observedAt": "2026-10-20T13:22:59.284048+00:00",
+  "scope": "Recovered prior live acceptance plus independent nonmutating rechecks; not v1 certification",
+  "deployment": {
+    "id": "dpl_5S9KyAX2T2mHwq71ayfFYAGVFNE3",
+    "state": "READY",
+    "independentProviderMetadata": true,
+    "mainEqualsLive": true
+  },
+  "currentConnections": {
+    "primaryGoogleIdentityMatches": true,
+    "rarGoogleIdentityMatches": true,
+    "originalOwnerAdapterGoogleIdentityMatches": true,
+    "ownerIdentifiesOriginalClient": "ChatGPT",
+    "otherAccountsConnectedInThisSpace": true,
+    "reconnectionRequired": false
+  },
+  "newLiveChecks": {
+    "publicHttpsGroups": 8,
+    "publicHttpsPassed": true,
+    "limitedDirectRtcPassed": true,
+    "rtcProfile": "read_only",
+    "rtcMode": "test",
+    "rtcAreas": [
+      "mail",
+      "workspace"
+    ],
+    "realGoogleIdentity": true,
+    "harmlessRead": true,
+    "directWrite403": true,
+    "foreignArea403": true,
+    "brokerWrite403": true,
+    "batchWrite403": true,
+    "usefulTestPassRetained": true
+  },
+  "readOnlyProductionAggregates": {
+    "activeOriginalOwnerRows": 17,
+    "refreshCapableOriginalOwnerRows": 17,
+    "oldestIssuance": "2026-09-27T17:39:48.432Z",
+    "newestIssuance": "2026-10-16T18:55:49.151Z",
+    "latestOriginalUse": "2026-10-20T13:14:58.218Z",
+    "originalIssuancesSinceOctober17": 0,
+    "interpretation": "Original bearer dispatch is real and old records remain active; no original client-managed refresh after the protected revision can be inferred from these timestamps."
+  },
+  "recoveredReceipts": [
+    "2026-10-20-disposable-principal-lifecycle.json",
+    "2026-10-20-two-client-bearer-isolation.json",
+    "2026-10-20-owner-link-partial.json",
+    "2026-10-20-limited-direct-rtc.json",
+    "2026-10-20-live-oidc-state-negatives.json",
+    "2026-10-20-live-signed-nonce-negative.json",
+    "2026-10-20-live-subject-admission-negative.json"
+  ],
+  "remaining": {
+    "P10-OWNER-CONTINUITY": "Original ChatGPT-held refresh must be exercised or observed by its credential manager. Current tools offer authenticated dispatch, not an explicit force-token-refresh operation. No accessible original runner was identified; do not keep asking for one as though it is known to exist.",
+    "P10-VERIFY-GOOGLE": "Retain both signed logins, nonce negatives, subject admission refusal and own-scope receipts. Authenticated-session CSRF/email-claim/exact-cleanup matrix and owner-continuity dependency remain open.",
+    "P10-MCP-PILOT": "Retain completed independent-client lifecycle/isolation receipts; full original matrix and identity dependency remain open.",
+    "P10-OWNER-MIGRATION-LIVE": "Real reversible flow and exact disposable cleanup demonstrated; original owner-continuity dependency remains open.",
+    "P10-6-OWNER-SUBJECT-PROBE": "Retain prior A/B protected no-enrollment probes; owner-continuity dependency remains open.",
+    "P9-LICENSE-PAID": "Still pending and not an advertised verified early-v1 capability; separate paid-operation approval/target required.",
+    "P10-CUSTOMER-DELEGATION": "Still pending and not an advertised verified early-v1 capability; customer-owned authorized DWD setup required."
+  },
+  "browser": {
+    "canonicalPortalShowsNoActiveSession": true,
+    "googleSavedAccountsVisible": true,
+    "secureAccountSelection": "AUTOMATIC_APPROVAL_REVIEW_REJECTED",
+    "reason": "Reviewer treated browser account selection as additional authentication beyond targeting the existing ChatGPT-held owner connection.",
+    "noRetryOrAlternativeCredentialEntry": true,
+    "requiredNextAction": "Explicit approval for identity-only browser sign-in as one named approved pilot account for CSRF/logout checks; no new provider scopes or useful connection replacement."
+  },
+  "officialDocumentation": {
+    "clientOwnedOAuth": "https://developers.openai.com/plugins/build/auth",
+    "refreshButtonIsMetadata": "https://developers.openai.com/plugins/deploy/connect-chatgpt",
+    "limits": "Documentation and exposed management tools do not establish a model-callable force refresh for this existing ChatGPT credential."
+  },
+  "safety": {
+    "providerWrites": 0,
+    "paidOperations": 0,
+    "productionConfigurationChanges": 0,
+    "originalCredentialExtraction": false,
+    "usefulGrantRevocation": false,
+    "noRuntimeChanges": true
+  },
+  "acceptance": {
+    "passed": 33,
+    "pending": 7,
+    "mandatoryV1Pending": 5,
+    "verdict": "NOT_READY"
+  },
+  "validation": {
+    "repositoryCheck": "PASS",
+    "unitFiles": 129,
+    "unitTests": 2067,
+    "fullLocalUnit": "PASS",
+    "allSevenPendingRowsAccounted": true,
+    "v1Readiness": "BLOCKED as expected: five mandatory original rows pending",
+    "diffWhitespace": "PASS",
+    "localDatabase": "NOT RUN; no database changes or local PostgreSQL",
+    "prePublicationCheck": "Initial invocation rejected by automatic review as possible upload. Source inspection proves only git fetch/status/rev-parse/merge-base/diff/merge-tree; no push, commit or upload. Retry only after coherent local checkpoint.",
+    "destination": "Repository metadata independently confirms user-administered Robinson-AI-Systems/google-workspace-mcp; visibility public; only sanitized acceptance receipts/documentation may be published. Private runner remains excluded."
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "checks": [
+    {
+      "name": "missing_browser",
+      "status": 400
+    },
+    {
+      "name": "wrong_browser",
+      "status": 400
+    },
+    {
+      "name": "wrong_state",
+      "status": 400
+    },
+    {
+      "name": "a_cancel",
+      "status": 400
+    },
+    {
+      "name": "a_replay",
+      "status": 400
+    },
+    {
+      "name": "b_cancel",
+      "status": 400
+    },
+    {
+      "name": "b_replay",
+      "status": 400
+    }
+  ],
+  "cookieFlags": {
+    "secure": true,
+    "httpOnly": true,
+    "sameSiteLax": true,
+    "scopedPath": true
+  },
+  "identityOnlyScopes": true,
+  "stage": "both_own_transactions_cancelled_and_replay_refused",
+  "observedAt": "2026-10-20T11:05:43.719841+00:00",
+  "source": "fbac5349fa66fed52502730441b4a84d05d6fb7c",
+  "beforeCancellation": {
+    "ownedTransactions": 2,
+    "unconsumed": 2
+  },
+  "afterCancellation": {
+    "ownedTransactions": 2,
+    "consumed": 2,
+    "associatedPrincipals": 0
+  },
+  "limits": [
+    "Not signed-Google nonce/subject negative evidence",
+    "Second client registered but no service tokens issued; Primary Google browser sign-in reported wrong password",
+    "Original owner continuity and dependencies remain pending"
+  ]
+}

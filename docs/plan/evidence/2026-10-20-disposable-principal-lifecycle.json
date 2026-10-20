@@ -1,0 +1,164 @@
+{
+  "observedAt": "2026-10-20T10:45:14.803795+00:00",
+  "source": "fbac5349fa66fed52502730441b4a84d05d6fb7c",
+  "repairSource": "3e888e3a301d385c3d81c5946f7f9aaf66aa547a",
+  "deploymentState": "READY",
+  "deploymentId": "dpl_5S9KyAX2T2mHwq71ayfFYAGVFNE3",
+  "releaseRun": "39408817611",
+  "profile": "read_only",
+  "codeExchange": [
+    {
+      "name": "wrong_resource_code",
+      "status": 400,
+      "error": "invalid_target"
+    },
+    {
+      "name": "wrong_verifier_code",
+      "status": 400,
+      "error": "invalid_grant"
+    },
+    {
+      "name": "wrong_redirect_code",
+      "status": 400,
+      "error": "invalid_grant"
+    },
+    {
+      "name": "wrong_client_secret_code",
+      "status": 401,
+      "error": "invalid_client"
+    },
+    {
+      "name": "authorization_code_replay",
+      "status": 400,
+      "error": "invalid_grant"
+    }
+  ],
+  "nativeRead": {
+    "initialized": true,
+    "catalogCount": 11,
+    "identityMatches": true,
+    "writeRefused": true
+  },
+  "refreshReplay": {
+    "identityMatches": true,
+    "rotatedAccess": true,
+    "rotatedRefresh": true,
+    "replayRevokedOnlyOwnFamily": true,
+    "checks": [
+      {
+        "name": "wrong_resource_refresh",
+        "status": 400,
+        "error": "invalid_target"
+      },
+      {
+        "name": "wrong_secret_refresh",
+        "status": 401,
+        "error": "invalid_client"
+      },
+      {
+        "name": "refresh_rotation",
+        "status": 200
+      },
+      {
+        "name": "spent_refresh_replay",
+        "status": 400,
+        "error": "invalid_grant"
+      },
+      {
+        "name": "rotated_bearer_after_replay",
+        "status": 401
+      },
+      {
+        "name": "revoked_family_refresh",
+        "status": 400,
+        "error": "invalid_grant"
+      }
+    ]
+  },
+  "postReplayAggregates": {
+    "activeGoogleGrants": 2,
+    "activePrincipalConnections": 3,
+    "revokedNewConnections": 1,
+    "spentPrincipalRefreshRecords": 1,
+    "originalActiveRefreshCapableRecords": 17
+  },
+  "explicitRevocation": "PASSED for independently active second family under same disposable client",
+  "evidence": "https://github.com/Robinson-AI-Systems/google-workspace-mcp/issues/205#issuecomment-6289111345",
+  "acceptance": {
+    "passed": 33,
+    "pending": 7,
+    "promoted": []
+  },
+  "remaining": [
+    "Full cross-principal bearer/OIDC and two-independent-client matrix",
+    "Original owner bearer/refresh checkpoint and limited RTC denial",
+    "Protected reversible owner migration"
+  ],
+  "privateData": "No credentials, Google subjects or account/connection identifiers in this receipt.",
+  "completedAt": "2026-10-20T10:53:30.816942+00:00",
+  "secondFamily": {
+    "sameClientRegistration": true,
+    "codeExchange": [
+      {
+        "name": "wrong_resource_code",
+        "status": 400,
+        "error": "invalid_target"
+      },
+      {
+        "name": "wrong_verifier_code",
+        "status": 400,
+        "error": "invalid_grant"
+      },
+      {
+        "name": "wrong_redirect_code",
+        "status": 400,
+        "error": "invalid_grant"
+      },
+      {
+        "name": "wrong_client_secret_code",
+        "status": 401,
+        "error": "invalid_client"
+      },
+      {
+        "name": "authorization_code_replay",
+        "status": 400,
+        "error": "invalid_grant"
+      }
+    ],
+    "nativeReadBeforeRevocation": {
+      "initialized": true,
+      "catalogCount": 11,
+      "identityMatches": true,
+      "writeRefused": true,
+      "brokerWriteRefused": true,
+      "batchWriteRefused": true,
+      "onlyOwnAccount": true
+    },
+    "activeRfc7009Revocation": {
+      "checks": [
+        {
+          "name": "rfc7009_own_refresh_revocation",
+          "status": 200
+        },
+        {
+          "name": "refresh_after_revocation",
+          "status": 400,
+          "error": "invalid_grant"
+        }
+      ],
+      "accessAfterRevocation": 401
+    }
+  },
+  "postRevocationAggregates": {
+    "activeGoogleGrants": 2,
+    "activePrincipalConnections": 3,
+    "revokedNewConnections": 2,
+    "spentPrincipalRefreshRecords": 1,
+    "originalActiveRefreshCapableRecords": 17
+  },
+  "postRevocationLiveIdentities": {
+    "Primary": true,
+    "RAR": true,
+    "originalOwnerAdapter": true
+  }
+}

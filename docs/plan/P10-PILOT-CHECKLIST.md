@@ -1,3 +1,7 @@
+## October 20 current acceptance recovery
+
+The original owner connection is held by ChatGPT; Primary and RAR are both connected in this space and independently verified. Production remains READY on `fbac5349`; pilot/Stage2 configuration is unchanged. Two independent disposable native clients, lifecycle/revocation/isolation, reversible owner Google-link/login/unlink, signed nonce refusals and limited direct RTC checks have genuine receipts. [Current recovery evidence](evidence/2026-10-20-failed-thread-recovery.json) distinguishes these completed tests from the still-open original client-managed owner refresh and authenticated browser identity matrix. The authoritative queue remains 33 PASSED/7 PENDING, five mandatory v1 rows pending. Do not repeat completed consent/probes or require Hub live acceptance. Older OFF/zero-client instructions below are historical preparation, not current observations. ChatGPT's metadata Refresh is not token-refresh proof; no force-token-refresh management tool was exposed in this session.
+
 # P10-6 — safe Google Console setup and two-user pilot preflight
 
 ## October 19 — verified Stage 2 two-user native MCP pilot execution enabled (supersedes earlier OFF status)

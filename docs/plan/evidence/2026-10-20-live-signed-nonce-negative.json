@@ -1,0 +1,62 @@
+{
+  "source": "fbac5349fa66fed52502730441b4a84d05d6fb7c",
+  "observedAt": "2026-10-20T12:18:27Z",
+  "subject": "approved Primary pilot identity",
+  "flow": "service-created identity-only login; same state, S256 PKCE challenge, client and registered redirect; canonical Google OAuth endpoint; only nonce replaced",
+  "browserResult": "Sign-in or account-link verification failed; restart the protected flow.",
+  "runtime": {
+    "timestamp": "2026-10-20T12:18:27.302Z",
+    "event": "p10_google_callback_denied",
+    "phase": "provider_verification",
+    "code": "invalid_verified_identity"
+  },
+  "targetedReadOnlyDatabase": {
+    "transactions": 1,
+    "consumed": 1,
+    "injectedNonceDiffers": true,
+    "noTransactionPrincipal": true,
+    "startedAt": "2026-10-20T12:17:50.938Z",
+    "consumedAt": "2026-10-20T12:18:27.169Z"
+  },
+  "interpretation": "Genuine Google authorization completed within transaction lifetime; changed nonce refused by deployed verified-identity validation. No session success claimed.",
+  "earlierAttempts": [
+    {
+      "method": "expired browser flow",
+      "result": "UNKNOWN; not nonce evidence"
+    },
+    {
+      "method": "top-level nonce changed on intermediate Google account chooser",
+      "result": "authenticated portal reached; intermediate flow may retain original request internally; not nonce rejection and not a confirmed defect"
+    }
+  ],
+  "preservation": {
+    "providerWrites": 0,
+    "storedCredentialExtraction": false,
+    "configurationChanges": false
+  },
+  "limits": [
+    "Both approved pilot identities have live signed nonce-negative evidence; not the full subject/email/CSRF/scope/cleanup matrix",
+    "P10-OWNER-CONTINUITY dependency remains; no whole row or bundle PASS"
+  ],
+  "secondSubject": {
+    "subject": "approved RAR pilot identity",
+    "observedAt": "2026-10-20T12:28:40.526Z",
+    "sameCanonicalMethod": true,
+    "identityOnlyScopes": true,
+    "browserResult": "Sign-in or account-link verification failed; restart the protected flow.",
+    "runtime": {
+      "event": "p10_google_callback_denied",
+      "phase": "provider_verification",
+      "code": "invalid_verified_identity"
+    },
+    "targetedReadOnlyDatabase": {
+      "transactions": 1,
+      "consumed": 1,
+      "injectedNonceDiffers": true,
+      "noTransactionPrincipal": true,
+      "startedAt": "2026-10-20T12:22:51.255Z",
+      "consumedAt": "2026-10-20T12:28:40.394Z",
+      "consumedWithinLifetime": true
+    }
+  }
+}

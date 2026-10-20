@@ -1,0 +1,50 @@
+{
+  "source": "fbac5349fa66fed52502730441b4a84d05d6fb7c",
+  "mode": "test",
+  "profile": "read_only",
+  "areas": [
+    "mail",
+    "workspace"
+  ],
+  "realGoogleIdentity": true,
+  "harmlessReadPassed": true,
+  "checks": [
+    {
+      "name": "workspace_gmail_send_email",
+      "status": 403,
+      "error": "refused_by_guard"
+    },
+    {
+      "name": "workspace_drive_list_files",
+      "status": 403,
+      "error": "outside_scope"
+    },
+    {
+      "name": "workspace_call",
+      "status": 403,
+      "error": "refused_by_guard"
+    },
+    {
+      "name": "workspace_batch",
+      "status": 403,
+      "error": "outside_scope"
+    }
+  ],
+  "providerWrites": 0,
+  "passRetainedPerOwnerPolicy": true,
+  "observedAt": "2026-10-20T11:45:33Z",
+  "issuance": {
+    "ownerSecureBrowserApproval": true,
+    "rsaEncryptedTransfer": true,
+    "sameExistingClientRegistration": true,
+    "newGoogleGrant": false,
+    "ttlHours": 24,
+    "billingDenied": true,
+    "forHub": false
+  },
+  "limits": [
+    "Not original rotating-owner bearer/refresh proof",
+    "No relay or Sandbox acceptance claimed",
+    "Useful limited TEST pass retained per existing owner policy; no credentials in receipt"
+  ]
+}
