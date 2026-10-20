@@ -40,6 +40,12 @@ Existing paid and customer-DWD queue entries remain in `TASKS.md` with their ori
 
 After ordinary daily receipts were consumed, the owner explicitly renewed authorization for an exceptional unscheduled release and deployment. The separate reviewed, fail-closed exception in [the release policy](../../.github/RELEASE-POLICY.md) permits a **single additional** checked October 19 promotion with original receipts intact, exact-head green CI, leased nonforced update, a unique immutable supplemental receipt, and independent READY/source/alias verification. This is **not v1 acceptance** and not permission to enable public login, paid Google operations, new subjects or customer DWD. A failed release remains a recorded incident.
 
+## October 19 — genuine production evidence without account permissions
+
+The new [real production public-HTTPS smoke harness](../../scripts/v1-live-public-smoke.mjs) and [GitHub Actions workflow](../../.github/workflows/v1-live-public.yml) inspect the live source SHA, both approved production aliases, public disclosures, anonymous account refusal and OAuth S256/revocation discovery without any credential. The runner explicitly **does not** certify signed users, token refresh, Google grant, two distinct clients, owner migration or legal/policy approval. Never upgrade a pending row on code review/unit tests alone; record a genuine Actions live result before claiming an actual pass.
+
+Independent read-only post-release Neon aggregate and connected owner whoami on READY `d67c5d6`: 17 still-active refresh-capable owner bearer records across 2 legacy owner Google accounts; 2 registered pilot subjects/principals but **1** active independent public Google grant and **1** active pilot MCP client. Owner-authenticated gateway continued to work and legacy token-use time advanced; **original refresh replay, second subject/client and protected portal/identity tests remain outstanding**.
+
 ## Fastest correct execution order
 
 1. Source: #235 and #236 are merged into `main=b557eab28847b5adc60e8a09c65cfe0908864843`; deployment `ab26461a0fe3179b9b085937e437d977b7d0134b` was independently READY at planning. Reconfirm live/CI before applying the **next permitted scheduled release**. Do not attempt an unscheduled promotion without separate owner approval. Prioritize testing checks that are already eligible on the deployed revision.
