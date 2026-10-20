@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "stage": "v1-invite-only-early-release",
+  "purpose": "Existing authorized users/allowlisted pilot subjects only; public self-service and public distribution are not authorized by this gate.",
+  "mandatoryAcceptanceIds": [
+    "P10-OWNER-CONTINUITY",
+    "P10-VERIFY-GOOGLE",
+    "P10-MCP-PILOT",
+    "P10-OWNER-MIGRATION-LIVE",
+    "P10-6-PUBLIC-DISCLOSURE",
+    "P10-6-OWNER-SUBJECT-PROBE"
+  ],
+  "deferredAcceptance": {
+    "P9-LICENSE-PAID": "Real billable Google Workspace licence assignment/change is not verified or advertised as v1-accepted. Keep guarded preview and authorization paths; actual charged action requires separate account/SKU/target/cost approval and provider readback.",
+    "P10-CUSTOMER-DELEGATION": "Customer-owned Admin Console domain-wide delegation for advanced Gmail/Calendar/Drive/Alert Center is not verified/advertised for early v1. Explicit capability-state NOT_VERIFIED; cannot borrow installation-owner keys, grants or proof."
+  },
+  "publicLaunchExtra": [
+    "Google OAuth consent-app verification, trademark/scopes approvals or eligible Testing/verification exception for actual intended public audience",
+    "Verified public-domain ownership, accurate reviewed privacy/retention/support/delete terms and public self-service authorization",
+    "Independent supported-client/mobile platform compatibility and publication rights for each advertised platform; no implied directory listing"
+  ],
+  "nonAcceptanceMandatory": [
+    "Checked exact-head CI, independent code review and repo-consistent release receipt; no unsigned manual promotion",
+    "Independently observed Vercel READY, exact production source/live GitHub ancestry, authenticated owner continuity after release",
+    "Scoped feature truth-in-advertising and supported desktop/mobile remote MCP/OAuth evidence for each platform actually claimed",
+    "No developer-only product restrictions, no tenant bypass, real source/protection for advertised mutation tools",
+    "Provider-specific negative auth/refresh/revocation and accurate limitations; no Hub live requirement"
+  ],
+  "coverage": "Exhaustive method-by-method Workspace API implementation and live evidence continue after v1 under docs/PROVIDER-API-COVERAGE.md; no existing pending record may be silently discarded."
+}

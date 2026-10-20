@@ -2,6 +2,8 @@
 
 # Workspace MCP by Robinson AI Systems
 
+**v1 early-release fast track:** The immediate target is a secure, verified standalone MCP product for invited, authorized Google users. [v1 release readiness and pending original acceptance](docs/plan/V1-RELEASE-GATE.md) are separate from the [ongoing exhaustive API coverage roadmap](docs/PROVIDER-API-COVERAGE.md). **Neither v1 nor public self-service is yet certified.** No Hub runtime connection is required for standalone Workspace acceptance.
+
 **Hub compatibility:** This server remains independently usable. Its coding agents should follow the [shared Hub compatibility checklist](docs/HUB-COMPATIBILITY.md) and the linked canonical Hub RTC contract; Hub initiates discovery and keeps provider schemas out of the agent's default tool menu.
 
 **Roadmap status:** [P9 user authority and P10 parallel multi-user Google sign-in](docs/plan/designs/USER-AUTHORITY-AND-PARALLEL-SIGNIN.md). P9 and P10-1..5/7 source engineering is merged; real P10-6 Google two-user custom-MCP pilot and public publication remain unaccepted. Owner and existing Hub TEST connections remain supported. The public pilot is **OFF by default**; do not interpret this README as launch approval. See [P10 owner setup](docs/PUBLIC-SIGNIN-OWNER-GUIDE.md) and [pilot readiness](docs/pr-cards/P10-PILOT-READINESS.md).
@@ -578,7 +580,7 @@ An owner may provide optional, reviewed boolean `expectations` for the selected 
 
 ### Machine-readable read-only results (RTC P8-1)
 
-Nine implemented read workflows now advertise validated MCP `outputSchema` and return `structuredContent` on full successful JSON responses. Added typed responses cover **Reports multi-application activity, Postmaster registered domains and delivery metrics, Cloud Identity policy list and the policy baseline audit**. Explicit `fields` projection still returns the selected JSON fields without pretending a partial object fulfills the full typed schema; `detail: full` keeps complete results, and large payloads use connection-owned, expiring retrieval handles. Error or missing-provider conditions cannot turn into typed success. The runtime tool registry remains 375 names; this does not certify live Google TEST or Hub conformance.
+Nine implemented read workflows now advertise validated MCP `outputSchema` and return `structuredContent` on full successful JSON responses. Added typed responses cover **Reports multi-application activity, Postmaster registered domains and delivery metrics, Cloud Identity policy list and the policy baseline audit**. Explicit `fields` projection still returns the selected JSON fields without pretending a partial object fulfills the full typed schema; `detail: full` keeps complete results, and large payloads use connection-owned, expiring retrieval handles. Error or missing-provider conditions cannot turn into typed success. The current source registry includes 387 tools after merged Tasks parity; count does not certify method completeness, a released revision, or live Google/provider acceptance.
 
 ## Coding-agent development access (2026-10-13)
 
