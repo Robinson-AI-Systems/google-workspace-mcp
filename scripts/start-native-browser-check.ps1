@@ -4,6 +4,7 @@ param(
  [switch]$PrepareOnly
 )
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 # A private portable runtime: no admin, npm, global install or PATH change.
 $runtime = Join-Path $env:LOCALAPPDATA 'RobinsonWorkspaceCheck\node-v24.22.0'
@@ -14,7 +15,7 @@ New-Item -ItemType Directory -Force -Path $runtime | Out-Null
 $node = Join-Path $runtime 'node.exe'
 if (!(Test-Path $node) -or (Get-FileHash $node -Algorithm SHA256).Hash.ToLowerInvariant() -ne $digest) {
  $download = Join-Path $runtime 'node.download'
- Invoke-WebRequest -UseBasicParsing -Uri "https://nodejs.org/download/release/v24.22.0/win-$arch/node.exe" -OutFile $download
+ Invoke-WebRequest -UseBasicParsing -TimeoutSec 120 -Uri "https://nodejs.org/download/release/v24.22.0/win-$arch/node.exe" -OutFile $download
  if ((Get-FileHash $download -Algorithm SHA256).Hash.ToLowerInvariant() -ne $digest) {
   Remove-Item $download
   throw 'Node download checksum mismatch; stopped before execution.'

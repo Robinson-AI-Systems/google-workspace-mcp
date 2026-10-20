@@ -88,17 +88,20 @@ export function boot(crossOrigin,expectedSource){
   finally{busy=false;root.querySelectorAll('button').forEach(button=>{button.disabled=false;});}
  };
  $('same').onclick=action(async()=>{
-  const email=await begin();report.sameOrigin=[];
+  report.sameOrigin=[];show('Checking this authenticated session.');
+  const email=await begin();
   await negatives(request,email,item=>{report.sameOrigin.push(item);show('Confirmed a refused request and unchanged session.');});
   show('Four authenticated refusals passed. Complete the four cross-site checks next.');
  });
  root.querySelectorAll('.cross').forEach(button=>{button.onclick=action(async()=>{
+  const {kind,variant}=button.dataset,path=kind==='preview'?'/api/account':'/api/auth/logout';
+  // An unsuccessful retry must invalidate its old receipt before any new work.
+  report.crossSite=report.crossSite.filter(x=>x.path!==path||x.variant!==variant);
   // Open synchronously during the tap so normal popup protection need not be disabled.
   const child=window.open('about:blank','workspace-controlled-check');
   if(!child)throw Error('popup_not_opened');
   try{
    const email=await begin(),state=await readOwn(request,email),before=await preview(request,state);
-   const {kind,variant}=button.dataset,path=kind==='preview'?'/api/account':'/api/auth/logout';
    const other=crossOrigin;
    if(location.origin===other)throw Error('canonical_origin_required');
    child.location.href=other+'/'+kind+'/'+variant;
@@ -108,7 +111,6 @@ export function boot(crossOrigin,expectedSource){
     const result=popupRefusal(child,location.origin,path);
     if(result){
      await unchanged(request,email,state,before);
-     report.crossSite=report.crossSite.filter(x=>x.path!==path||x.variant!==variant);
      report.crossSite.push({path,variant,http:403,formOrigin:other,sessionSurvived:true,previewUnchanged:true});found=true;break;
     }
     await new Promise(resolve=>setTimeout(resolve,500));
