@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "observedAtLocal": "2026-10-19 evening America/Denver",
+  "state": "PARTIAL_REAL_PROVIDER_ACCEPTANCE_NOT_FULL_CLOSURE",
+  "repository": "Robinson-AI-Systems/google-workspace-mcp",
+  "source": {
+    "verifiedGitHubMain": "834b004b9fee5b86e5248b3ad618f45f94b4396b",
+    "mainRequiredChecks": "success for the merged head, verified using Actions",
+    "verifiedLiveBranch": "ab26461a0fe3179b9b085937e437d977b7d0134b",
+    "independentlyObservedServingDeployment": "dpl_2essafTNKQDEakUrf8txxNfa1XSP",
+    "deploymentState": "READY",
+    "deployedSourceSha": "ab26461a0fe3179b9b085937e437d977b7d0134b",
+    "sourceDifference": "Enterprise seven-method parity from merged PR #233 is on main only, not on the serving live revision"
+  },
+  "connection": {
+    "route": "Connected Robinson Google Workspace cloud adapter from ChatGPT",
+    "issuerProbe": "reachable and issuerMatches reported by connection-status probe",
+    "ownerAccount": "redacted; independently verified by workspace_whoami",
+    "authorization": "Existing original owner connection, previously approved Workspace pilot reads",
+    "nativeRemoteMcpClientProof": false,
+    "newSecondUserProof": false
+  },
+  "observed": [
+    {
+      "operation": "workspace_whoami",
+      "result": "PASS",
+      "evidence": "The acting account matched the selected original owner mailbox; no account or token change"
+    },
+    {
+      "operation": "workspace_plan_summary",
+      "result": "PASS",
+      "evidence": "Positive Google Enterprise licensing-backed plan result for own customer: Business Standard, nonzero assignments, coverage complete with one page",
+      "providerPath": "licenseAssignments.listForProduct (internal call in existing deployed composite tool)",
+      "redactions": "Customer identifier, user addresses and exact license count omitted"
+    },
+    {
+      "operation": "licensing_list_assignments",
+      "result": "PASS",
+      "evidence": "Actual nonempty Google assignments array for independently observed Business Standard SKU; expected assignment fields present, no error; no writes",
+      "providerPath": "licenseAssignments.listForProductAndSku (existing deployed MCP operation)",
+      "redactions": "User IDs, assignment bodies and exact customer identifiers omitted"
+    },
+    {
+      "operation": "licensing_get_assignment",
+      "result": "PASS",
+      "evidence": "Read-only Google API returned the verified owner's already-assigned Business Standard SKU with expected assignment fields; no modification",
+      "providerPath": "licenseAssignments.get (existing deployed native operation)",
+      "redactions": "Connected user ID, provider assignment body omitted"
+    },
+    {
+      "operation": "licensing_get_assignment (deliberately invalid SKU)",
+      "result": "PASS_NEGATIVE",
+      "evidence": "Google rejected a deliberately nonexistent SKU with its invalid argument response; product surfaced a validation explanation rather than invented assignment data",
+      "providerPath": "licenseAssignments.get",
+      "redactions": "No customer data in error; test sentinel only"
+    }
+  ],
+  "notTested": [
+    "New licensing_list_product_assignments standalone tool on PR #233 (not deployed)",
+    "New licensing_replace_assignment PUT tool or any billable Google write",
+    "New paged/cursor response on the SKU listing (not deployed)",
+    "Customer-wide negative/foreign-principal licensing denial on the new release",
+    "Second independent user/client, refresh/replay/revocation and owner bearer lifecycle",
+    "Google Cloud License Manager separate 19-operation API"
+  ],
+  "acceptanceDecision": "Do not mark P10-6, full P2-6 license parity, billing-risk write or native desktop/mobile MCP acceptance as PASSED. This evidence proves only the specified read paths at the verified older deployment.",
+  "nextActions": [
+    "Apply a policy-compliant checked main-to-live promotion at the scheduled release, then independently verify READY exact SHA",
+    "Retest newly deployed listForProduct and bounded cursor pagination using the same authorized provider account, including failures and tenant guard",
+    "Keep PUT unexecuted without separate exact paid-mutation approval",
+    "Complete real second client/user OAuth and lifecycle acceptance separately"
+  ]
+}
