@@ -22,6 +22,12 @@ An actual execution limit gets an explicit incomplete recoverable checkpoint, ne
 a completion claim. Preserve every real safety, spending, release and approval gate.
 
 
+## Owner-approved October 19 v1 fast-track release boundary
+
+The current release target is [v1 early production](plan/V1-RELEASE-GATE.md), a complete reliable product **within accurately advertised supported capabilities**, for already approved/allowlisted users. Full provider API operation/method parity remains mandatory but belongs to **continuing post-v1 coverage releases**, not a blocker for certifying this scoped v1. Preserve every preexisting acceptance row and real security/permission/privacy/production requirement. Do not call code or synthetic/provider tests a real-client pass. Do not enable public enrollment/charge/customer DWD/release merely because the release scope is narrower.
+
+For next required work, prioritize **open v1-critical engineering and all eligible existing v1 acceptance ahead of coverage-only API expansion**. This supersedes earlier absolute-completion language that incorrectly pushed method-parity research in front of safe v1 shipping. No roadmap evidence or acceptance row is deleted, waived or marked passed; classifying a capability as not advertised in v1 does not make the underlying work optional in the product program. P10-6's full public-release requirements remain open even after an invite-only early release. Use `npm run v1:readiness` for a static fail-closed launch-preflight, then independently verify live provider/client, review, source, READY and explicit release authorization.
+
 ## Implementation bundles advance the approved product to completion
 <!-- BUNDLE_SCOPE_VERSION_1 -->
 
