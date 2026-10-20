@@ -1,0 +1,90 @@
+{
+  "sourceRevision": "fbac5349fa66fed52502730441b4a84d05d6fb7c",
+  "deploymentId": "dpl_5S9KyAX2T2mHwq71ayfFYAGVFNE3",
+  "deploymentState": "READY",
+  "authorization": "Owner explicitly transferred exclusive Workspace-only saved checkpoint ownership for original credential refresh/read.",
+  "originalGrant": {
+    "restored": {
+      "restored": [
+        "google"
+      ],
+      "existing": []
+    },
+    "originalSavedAt": "2026-10-13T23:56:24.271Z",
+    "originalBearerInitialize": true,
+    "originalBearerGoogleIdentity": true,
+    "originalBearerAccountRead": true,
+    "originalCredentialNotExpired": true
+  },
+  "refresh": {
+    "observedAt": "2026-10-20T14:04:37.895Z",
+    "refreshStatus": 200,
+    "actualTime": true,
+    "originalRefreshRetained": true,
+    "newAccessIssued": true,
+    "renewedBearerGoogleIdentity": true,
+    "originalBearerStillWorks": true,
+    "profileUnchanged": true,
+    "originUnchanged": true,
+    "otherServiceCredentialsTouched": false,
+    "revocation": false,
+    "googleScopeChange": false,
+    "checkpointPersistence": "VERIFIED_EXTERNAL_DEVELOPMENT_ENCRYPTED"
+  },
+  "independentDatabase": {
+    "retainedOriginals": 17,
+    "stillActiveOriginals": 17,
+    "stillRefreshCapableOriginals": 17,
+    "newRefreshRecords": 1,
+    "sameOriginalAccountProfileListingAreasModeCostPolicyAndRefresh": 1
+  },
+  "protectedPersistence": {
+    "sharedCheckpointUnchanged": true,
+    "sharedUpdatedAtUnchanged": "2026-10-13T23:56:24.271Z",
+    "otherFiveServiceRecordsUntouched": true,
+    "workspaceOnlyEncryptedDevelopmentCheckpoint": "RTOOL_WORKSPACE_SESSION",
+    "exactDecryptedReadbackMatches": true,
+    "reason": "Connector truncates shared checkpoint string at 2000 characters. Complete original Workspace record recovered without reconstructing missing other-service tail; shared value never overwritten.",
+    "recovery": "Use newer Workspace-only checkpoint, never stale google record from shared checkpoint."
+  },
+  "standingConnections": {
+    "PrimaryMatchesGoogle": true,
+    "RARMatchesGoogle": true,
+    "originalOwnerAdapterMatchesGoogle": true
+  },
+  "retainedProofs": {
+    "limitedDirectRtc": "2026-10-20-limited-direct-rtc.json",
+    "reversibleOwnerMigration": "2026-10-20-owner-link-partial.json",
+    "twoProtectedSubjectProbes": "2026-10-19-approved-disclosure-browser-acceptance.json plus PR217 comment6255719368",
+    "browserSessions": "2026-10-20-browser-session-security.json"
+  },
+  "acceptance": {
+    "newPassed": [
+      "P10-OWNER-CONTINUITY",
+      "P10-OWNER-MIGRATION-LIVE",
+      "P10-6-OWNER-SUBJECT-PROBE"
+    ],
+    "passed": 36,
+    "pending": 4,
+    "v1MandatoryPending": [
+      "P10-VERIFY-GOOGLE",
+      "P10-MCP-PILOT"
+    ],
+    "verdict": "NOT_READY"
+  },
+  "limits": [
+    "Original October13 developer grant refresh proven; no claim that ChatGPT-managed refresh was triggered.",
+    "Live authenticated forged POST remains unexecuted; real PostgreSQL handler tests are complementary, not a live browser pass.",
+    "No original credential revoked, no scopes/settings changed, no Google provider write or charge, no runtime deployment.",
+    "Repeat RTC negative runner was refused by automatic approval review because it submits authenticated write endpoints. No retry/workaround or new denial pass claimed; valid prior source-identical proof retained."
+  ],
+  "validation": {
+    "publicHttps": "PASS8groupsActualProduction",
+    "unit": "2067PASS129files",
+    "repositoryCheck": "PASS",
+    "acceptanceAccounting": "all4pendingrowsaccounted",
+    "readiness": "BLOCKED2mandatoryrowsAndMainLiveEvidenceOnlyLag",
+    "productionRuntimeDiff": "No runtime difference between deployed source and current merged main; docs plus PostgreSQL test only.",
+    "repeatRtc": "AutomaticApprovalReviewRejected; valid existing proof retained, no new pass claimed."
+  }
+}

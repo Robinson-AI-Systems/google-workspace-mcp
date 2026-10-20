@@ -21,3 +21,11 @@ Priority order after this scope update: (1) source/CI/review and checked schedul
 ### Evidence baseline
 
 At planning time GitHub main `b557eab28847b5adc60e8a09c65cfe0908864843`, current live/READY `ab26461a0fe3179b9b085937e437d977b7d0134b`, main CI success, no open PR; #235 S256/revocation/atomic owner code and #236 Tasks 14/14 merged but unshipped. Canonical queue 32 PASSED / 8 PENDING; do not count a second real user/client as proven. Recheck all these observations before claiming v1 READY.
+
+## October 20 — authorized original Workspace checkpoint recovery
+
+The owner explicitly transfers exclusive Workspace-only runner ownership for the saved original developer connection. Before execution: verify exact original native bearer and account read, perform one real-time refresh without revoking/replaying useful credentials, save the resulting Workspace record securely, and prove original bearer still works. Preserve other five records and prior acceptance receipts. This is acceptance continuation, zero engineering/bundles claimed.
+
+The Vercel connector truncates the six-service checkpoint string after 2,000 characters; the complete Workspace record is present, but the trailing Stripe record is incomplete. Never overwrite that shared value or fabricate the missing tail. Restore a Workspace-only checkpoint using the exact independently verified origin and original complete record. Persist refreshed Workspace-only state through saveDeveloperCheckpoint into a separate Development-only encrypted RTOOL_WORKSPACE_SESSION in the same existing protected project. The unchanged shared checkpoint remains historical for Workspace; use the newer per-service checkpoint for subsequent Workspace recovery. The other five service records and their authorities remain untouched. If protected save fails, retain encrypted local vault and report incomplete recovery.
+
+Acceptance evidence must distinguish this original October13 developer grant from ChatGPT-managed credentials. Do not claim a ChatGPT refresh was triggered. Source/READY and all original task dependencies remain binding; no launch claim from this recovery alone.
