@@ -1,3 +1,42 @@
+## October 19 late — reconciled post-#233 main/live, actual Enterprise read and no-gap pre-audit
+
+**Current baseline supersedes older same-day branch/disabled-API paragraphs below.**
+Main is `834b004b9fee5b86e5248b3ad618f45f94b4396b` (#233 merged,
+all required merged-main CI families including release policy successful).
+#232 and #231 are also merged; no open PR was found at the checkpoint.
+Independently checked Vercel production READY `dpl_2essafTNKQDEakUrf8txxNfa1XSP`
+serves `ab26461a0fe3179b9b085937e437d977b7d0134b` on
+`workspace.robinsonaisystems.com`, matching live branch; newer #232/#233
+fixes are **not** on the serving source. No unscheduled release performed.
+
+The original owner ChatGPT Workspace connection passed a genuine provider
+`workspace_plan_summary` read with nonzero Business Standard assignments,
+complete one-page coverage, then `licensing_list_assignments` returned real
+existing Google assignments; both were nonmutating. Thus Enterprise License
+Manager is **not currently disabled for this authenticated owner read**.
+New merged standalone `licensing_list_product_assignments`, guarded PUT
+`licensing_replace_assignment`, cursor extension, foreign-domain denial
+and full licensing/billing acceptance are **NOT LIVE-tested** and remain pending
+a compliant checked source release and any independently required provider grants.
+Sanitized evidence: [real licensing receipt](evidence/2026-10-19-live-enterprise-licensing-read.json).
+No paid action, new grant or credential modification occurred.
+
+The generated 384-tool registry is **not** method-complete evidence across
+Workspace APIs. [Provider pre-audit](../pr-cards/PROVIDER-API-COVERAGE-PREAUDIT.md)
+records Google-published API families lacking verified method-by-method mapping,
+including Apps Script, Classroom, Keep, Meet, Drive Activity/Labels and more;
+`docs/PROVIDER-API-COVERAGE.md` is the authoritative method-parity gate.
+Only seven Workspace Enterprise licensing methods are source-mapped; Cloud
+License Manager's unrelated 19 VM licensing methods require separate Google
+Cloud IAM/consent/approval and portfolio ownership. Keep these all explicitly
+OPEN until reconciliation and source/provider proof. Full product completion
+and P10-6 do not follow from the Haiku Phase 1/one Claude client:
+Sonnet Phase 2 second real user/client isolation, PKCE/replay, owner bearer
+refresh/revocation, customer-specific delegation and publication remain
+separately pending. Live Hub federation is not a Workspace gate.
+
+---
+
 # Robinson Google Workspace MCP: implementation plan
 
 ## October 19 — complete Workspace license method parity and no-gap contract (source only)
