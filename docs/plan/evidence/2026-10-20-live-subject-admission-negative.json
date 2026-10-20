@@ -1,0 +1,44 @@
+{
+  "source": "fbac5349fa66fed52502730441b4a84d05d6fb7c",
+  "observedAt": "2026-10-20T12:35:17.755Z",
+  "flow": "normal public identity-only login; misleading approved-email and hd request hints; owner securely selects existing original-owner Google identity outside pilot roster",
+  "googleDeviceVerification": "user completed Galaxy number-match; service callback completed within transaction lifetime",
+  "browserResult": "Sign-in or account-link verification failed; restart the protected flow.",
+  "runtime": {
+    "event": "p10_google_callback_denied",
+    "phase": "pilot_admission",
+    "code": "public_signin_not_admitted"
+  },
+  "targetedReadOnlyDatabase": {
+    "transactions": 1,
+    "consumed": 1,
+    "noTransactionPrincipal": true,
+    "startedAt": "2026-10-20T12:32:47.482Z",
+    "consumedAt": "2026-10-20T12:35:17.629Z",
+    "consumedWithinLifetime": true
+  },
+  "beforeAndAfter": {
+    "principals": 3,
+    "publicIdentities": 2,
+    "activePublicGrants": 2,
+    "activePublicConnections": 3,
+    "activeBrowserSessions": 3
+  },
+  "independentOwnScopeReadback": {
+    "activeGrants": 2,
+    "distinctOwners": 2,
+    "eachGrantMatchesVerifiedSubjectOwner": true,
+    "verifiedEmailsMatch": true,
+    "recordedScopesNonempty": true,
+    "gmailReadScopePresent": true
+  },
+  "interpretation": "Genuine verified Google identity reached pilot admission and was refused. Supplied approved-email/domain hints did not substitute for signed subject. No new principal, grant, connection or browser session. Device approval succeeded; later observation delay was not a user failure.",
+  "limits": [
+    "Not an actual Google-issued unverified-email claim test",
+    "No authenticated browser-session CSRF mutation proof from this test",
+    "Original owner serialized bearer/refresh proof and full original dependency criteria remain pending"
+  ],
+  "providerWrites": 0,
+  "configurationChanges": false,
+  "storedCredentialExtraction": false
+}

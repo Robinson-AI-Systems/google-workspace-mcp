@@ -1,0 +1,139 @@
+{
+  "observedAt": "2026-10-20T11:18:41.060088+00:00",
+  "source": "fbac5349fa66fed52502730441b4a84d05d6fb7c",
+  "twoIndependentDisposableClientRegistrations": true,
+  "primaryCodeExchange": [
+    {
+      "name": "other_registered_client_code",
+      "status": 400,
+      "error": "invalid_grant"
+    },
+    {
+      "name": "wrong_resource_code",
+      "status": 400,
+      "error": "invalid_target"
+    },
+    {
+      "name": "wrong_verifier_code",
+      "status": 400,
+      "error": "invalid_grant"
+    },
+    {
+      "name": "wrong_redirect_code",
+      "status": 400,
+      "error": "invalid_grant"
+    },
+    {
+      "name": "wrong_client_secret_code",
+      "status": 401,
+      "error": "invalid_client"
+    },
+    {
+      "name": "authorization_code_replay",
+      "status": 400,
+      "error": "invalid_grant"
+    }
+  ],
+  "primaryNativeRead": {
+    "initialized": true,
+    "catalogCount": 11,
+    "identityMatches": true,
+    "writeRefused": true,
+    "brokerWriteRefused": true,
+    "batchWriteRefused": true,
+    "onlyOwnAccount": true
+  },
+  "crossClient": {
+    "checks": [
+      {
+        "name": "other_registered_client_refresh",
+        "status": 400,
+        "error": "invalid_grant"
+      },
+      {
+        "name": "other_registered_client_revoke",
+        "status": 200
+      }
+    ],
+    "primaryBearerStillWorksAfterForeignClientRevocation": true,
+    "distinctRegisteredClients": true
+  },
+  "primaryRefreshReplay": {
+    "identityMatches": true,
+    "rotatedAccess": true,
+    "rotatedRefresh": true,
+    "replayRevokedOnlyOwnFamily": true,
+    "checks": [
+      {
+        "name": "wrong_resource_refresh",
+        "status": 400,
+        "error": "invalid_target"
+      },
+      {
+        "name": "wrong_secret_refresh",
+        "status": 401,
+        "error": "invalid_client"
+      },
+      {
+        "name": "refresh_rotation",
+        "status": 200
+      },
+      {
+        "name": "spent_refresh_replay",
+        "status": 400,
+        "error": "invalid_grant"
+      },
+      {
+        "name": "rotated_bearer_after_replay",
+        "status": 401
+      },
+      {
+        "name": "revoked_family_refresh",
+        "status": 400,
+        "error": "invalid_grant"
+      }
+    ]
+  },
+  "liveResultIsolation": {
+    "primaryOwnBearerCreatedRealGoogleMetadataResult": true,
+    "sameOwnBearerProjectedReadPassed": true,
+    "rarDifferentPrincipalBearerRefusedExactHandle": true,
+    "primarySamePrincipalDifferentConnectionBearerRefusedExactHandle": true,
+    "bothDenials": "isError/not_found; no projected data",
+    "mailBodiesRead": false,
+    "privateResultIdsPublished": false
+  },
+  "protectedOwnerPreview": {
+    "authenticated": true,
+    "ownerAccounts": 2,
+    "encryptedAccounts": 2,
+    "activeOwnerConnections": 17,
+    "linkedOwnerGoogleSubjects": 0,
+    "separateUserPrincipals": 2,
+    "encryptedOnly": true,
+    "dryRun": true,
+    "grantsChanged": false,
+    "connectionsRevoked": 0
+  },
+  "cleanup": {
+    "activeGoogleGrants": 2,
+    "activeUsefulConnections": 3,
+    "revokedDisposableConnections": 3,
+    "spentPrincipalRefreshRecords": 2,
+    "activeOriginalRefreshCapableRecords": 17,
+    "existingPrimaryRarOwnerAdapterLiveIdentitiesPass": true,
+    "resultCache": "Created by normal provider-read result shaping; connection now revoked. Cache inaccessible and normal expiry applies; no raw result handle or Google IDs in public evidence."
+  },
+  "evidence": "https://github.com/Robinson-AI-Systems/google-workspace-mcp/issues/205#issuecomment-6289625034",
+  "acceptance": {
+    "passed": 33,
+    "pending": 7,
+    "promoted": []
+  },
+  "limits": [
+    "One direction of cross-principal result isolation and cross-client code/refresh/revoke binding proved; not every original tenant scenario",
+    "Primary replay revocation proved; independent active RFC7009 was RAR second family",
+    "Owner preview only; link/dual-login/unlink and original bearer/refresh+limited RTC proof remain",
+    "Full signed-Google nonce/subject denial matrix remains pending"
+  ]
+}

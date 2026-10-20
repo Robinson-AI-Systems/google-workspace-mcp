@@ -1,0 +1,98 @@
+{
+  "observedAt": "2026-10-20T11:30:14.908778+00:00",
+  "source": "fbac5349fa66fed52502730441b4a84d05d6fb7c",
+  "ownerLink": {
+    "before": 0,
+    "after": 1,
+    "expectedOriginalOwnerEmailMatches": true,
+    "originalRefreshCapableRecords": 17,
+    "usefulPublicConnections": 3,
+    "publicGoogleGrants": 2
+  },
+  "ownerGoogleLogin": {
+    "realGoogleOwnerSelection": true,
+    "verifiedOwnerFormReached": true,
+    "otherRegisteredClientRefused": true,
+    "wrongPkceRefused": true,
+    "wrongStateRefused": true,
+    "wrongResourceRefused": true,
+    "correctRequestStillAccepted": true
+  },
+  "nativeGrant": {
+    "status": "EXCHANGED AND LIVE READ PASSED",
+    "profile": "read_only",
+    "areas": [
+      "mail",
+      "workspace"
+    ],
+    "bulkLicensing": "disallowed",
+    "newClientRegistration": false,
+    "nativeRead": {
+      "initialized": true,
+      "catalogCount": 6,
+      "identityMatches": true,
+      "writeRefused": true,
+      "brokerWriteRefused": true,
+      "batchWriteRefused": true,
+      "ownerAccountsVisible": true
+    },
+    "storedPolicyIndependentlyMatches": true
+  },
+  "remaining": [
+    "Original P10-OWNER-CONTINUITY dependency: original serialized bearer/refresh and direct limited RTC proof",
+    "Full original identity matrix and dependency gates"
+  ],
+  "acceptance": {
+    "passed": 33,
+    "pending": 7,
+    "promoted": []
+  },
+  "preRollback": {
+    "originalCredentialRecords": 17,
+    "aggregateCredentialFingerprintPrivatelyRetained": true,
+    "totalOwnerRecords": 18,
+    "disposableOwnOwnerRecords": 1,
+    "authenticatedPreviewIdentityMatches": true,
+    "linkedOwnerCount": 1,
+    "dryRun": true,
+    "grantsChanged": false
+  },
+  "rollbackAttempt": {
+    "result": "explicit_owner_confirmation_required",
+    "mappingStillPresent": true,
+    "original17CredentialInventoryFingerprintUnchanged": true,
+    "disposableOwnerLiveReadStillPasses": true,
+    "status": "PENDING corrected protected final submission"
+  },
+  "rollback": {
+    "unlinked": true,
+    "grantsMoved": false,
+    "connectionsRevoked": 0,
+    "mappingCount": 0,
+    "sameIssuedBearerLiveReadAfterUnlink": true,
+    "freshRemovedOwnerGoogleLoginRefused": true,
+    "original17CredentialFingerprintMatchesPreRollback": true
+  },
+  "cleanup": {
+    "disposableOwnerRfc7009": {
+      "checks": [
+        {
+          "name": "rfc7009_own_refresh_revocation",
+          "status": 200
+        },
+        {
+          "name": "refresh_after_revocation",
+          "status": 400,
+          "error": "invalid_grant"
+        }
+      ],
+      "accessAfterRevocation": 401
+    },
+    "activeOwnerRefreshCapableRecords": 17,
+    "activeDisposableOwnerRecords": 0,
+    "usefulPublicConnections": 3,
+    "activePublicGoogleGrants": 2,
+    "primaryRarOriginalOwnerAdapterLiveReadPass": true
+  },
+  "status": "Owner migration live flow demonstrated; full row remains dependency-blocked"
+}

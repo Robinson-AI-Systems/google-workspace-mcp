@@ -66,3 +66,8 @@ Public self-service v1 GA, public directory listing, OAuth app verification, mar
 ## October 19 22:37 Denver — invite-only disclosure gate accepted
 
 `P10-6-PUBLIC-DISCLOSURE` is now PASSED for the owner-approved early audience after real authenticated portal/public HTTPS observations, retained attributed owned-domain/Console evidence, and explicit operator acceptance of recoverable deletion, no irreversible erasure and no promised retention deadline. See [sanitized evidence](evidence/2026-10-19-approved-disclosure-browser-acceptance.json). Queue is 33 PASSED / 7 PENDING; the other five mandatory v1 rows remain PENDING. This does not approve unrestricted enrollment or Google/public distribution and does not substitute for token lifecycle or original-owner security acceptance. Earlier NOT READY baselines are dated history; current v1 verdict is still NOT READY.
+
+
+## October 20 — recovered acceptance and remaining exact prerequisites
+
+See [recovery receipt](evidence/2026-10-20-failed-thread-recovery.json). The original ChatGPT-held owner connection and both other connected accounts actually work; asking for a missing second connection or a known separate runner is incorrect. Existing-client refresh is still unobserved and cannot be inferred from active records or a metadata refresh. Recovered two-client, migration, direct RTC and signed-negative receipts remain valid at READY fbac5349; all dependencies and original criteria are unchanged. Authenticated browser CSRF/email/cleanup remains incomplete, and automatic approval review rejected Google account selection pending explicit named identity-only sign-in approval. 33 PASSED/7 PENDING; v1 NOT READY. No new release or public access is needed to finish these checks.
