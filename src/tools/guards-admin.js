@@ -259,6 +259,12 @@ export const GUARDS_ADMIN = {
     before: (a, { licensing }) => data(licensing.licenseAssignments.get(sku(a))).then((l) => pick(l, ['productId', 'skuId', 'skuName', 'userId'])),
     after: (a, { licensing }) => data(licensing.licenseAssignments.get({ ...sku(a), skuId: a.newSkuId })).then((l) => pick(l, ['productId', 'skuId', 'skuName', 'userId'])) },
 
+  licensing_replace_assignment: { destructive:D, verify:(a,b,after)=>same(after?.skuId,a.newSkuId),
+    describe:a=>({target:`${a.userId}: ${a.skuId} -> ${a.newSkuId}`,
+      summary:`Replace the license SKU for ${a.userId} from ${a.skuId} to ${a.newSkuId} via PUT (may change Workspace billing)`}),
+    before:(a,{licensing})=>data(licensing.licenseAssignments.get(sku(a))).then(l=>pick(l,['productId','skuId','skuName','userId'])),
+    after:(a,{licensing})=>data(licensing.licenseAssignments.get({...sku(a),skuId:a.newSkuId})).then(l=>pick(l,['productId','skuId','skuName','userId'])) },
+
   // ---------- Chrome policy ----------
   // No before(): the only way to read a policy (policies.resolve) is a POST that test/unit/guards.test.js does not recognise as a read.
   chrome_set_policy: { destructive: D,
