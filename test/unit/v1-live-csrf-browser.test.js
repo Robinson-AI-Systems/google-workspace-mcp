@@ -1,5 +1,11 @@
 import {describe,it,expect} from 'vitest';
 import http from 'node:http';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {configuration,previewCounts,checkNegatives,exercise,startCrossSiteForms,ORIGIN} from '../../scripts/v1-live-csrf-browser.mjs';
 
 const response=(status,body)=>({status:()=>status,json:async()=>body,text:async()=>String(body)});
@@ -17,6 +23,16 @@ function fixture({anonymous=false,acceptForgery=false,change=false}={}){
  return {row,calls};
 }
 describe('standalone live-CSRF tooling, controlled adapters only',()=>{
+ it('starts through the locked Playwright dependency and refuses an empty browser cache before network or login',async()=>{
+  const cache=await mkdtemp(join(tmpdir(),'workspace-csrf-empty-browsers-'));
+  try{
+   const run=promisify(execFile);
+   await expect(run(process.execPath,[fileURLToPath(new URL('../../scripts/v1-live-csrf-browser.mjs',import.meta.url)),
+    '--expected-live','a'.repeat(40)],{
+    env:{...process.env,PLAYWRIGHT_BROWSERS_PATH:cache},timeout:15000
+   })).rejects.toMatchObject({code:2,stderr:expect.stringContaining('INCOMPLETE: standalone_chromium_not_installed')});
+  }finally{await rm(cache,{recursive:true,force:true});}
+ });
  it('requires an explicit exact source and refuses attachment/storage arguments',()=>{
   expect(configuration(['--expected-live','a'.repeat(40)])).toEqual({expectedSha:'a'.repeat(40)});
   for(const argv of [[],['--expected-live','main'],['--cdp','http://localhost:9222'],['--storage-state','session.json']])expect(()=>configuration(argv)).toThrow();
