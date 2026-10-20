@@ -36,6 +36,10 @@ These requirements are **not** satisfied in the baseline; current source is ahea
 
 Existing paid and customer-DWD queue entries remain in `TASKS.md` with their original scope and dependencies. Full method coverage remains an ongoing **required** roadmap objective, not an early-release gate. Source/stage states never mean an endpoint is live or a Google API is usable without independent authorization.
 
+## October 19 exception-specific release authorization
+
+After ordinary daily receipts were consumed, the owner explicitly renewed authorization for an exceptional unscheduled release and deployment. The separate reviewed, fail-closed exception in [the release policy](../../.github/RELEASE-POLICY.md) permits a **single additional** checked October 19 promotion with original receipts intact, exact-head green CI, leased nonforced update, a unique immutable supplemental receipt, and independent READY/source/alias verification. This is **not v1 acceptance** and not permission to enable public login, paid Google operations, new subjects or customer DWD. A failed release remains a recorded incident.
+
 ## Fastest correct execution order
 
 1. Source: #235 and #236 are merged into `main=b557eab28847b5adc60e8a09c65cfe0908864843`; deployment `ab26461a0fe3179b9b085937e437d977b7d0134b` was independently READY at planning. Reconfirm live/CI before applying the **next permitted scheduled release**. Do not attempt an unscheduled promotion without separate owner approval. Prioritize testing checks that are already eligible on the deployed revision.
