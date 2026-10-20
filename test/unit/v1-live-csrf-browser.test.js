@@ -69,6 +69,15 @@ describe('standalone live-CSRF tooling, controlled adapters only',()=>{
   expect(result.cleanup).toEqual([{label:'Primary',result:'already_anonymous'},{label:'RAR',result:'already_anonymous'}]);
   expect(result.acceptance).toBe('NOT_AUTOMATICALLY_PROMOTED');
  });
+ it('retains sanitized completed groups even when a later cross-site operation fails',async()=>{
+  const first=fixture().row,second=fixture().row,progress=[];
+  second.csrf='second-private-session-csrf-bbbbbbbbbbbbb';second.label='RAR';
+  const result=await exercise([first,second],'http://127.0.0.1:12345',{onProgress:item=>progress.push(item)});
+  expect(result.result).toBe('FAIL');expect(progress).toHaveLength(1);
+  expect(progress.every(item=>item.phase==='authenticated_negative_requests'&&item.checks.length===6)).toBe(true);
+  for(const row of [first,second])expect(JSON.stringify(progress)).not.toContain(row.csrf);
+  expect(result.checks).toEqual(progress.map(({phase,...item})=>item));
+ });
  it('serves only fixed harmless cross-site forms on loopback, with no reflected input',async()=>{
   const forms=await startCrossSiteForms();
   const get=path=>new Promise((resolve,reject)=>http.get(forms.origin+path,res=>{

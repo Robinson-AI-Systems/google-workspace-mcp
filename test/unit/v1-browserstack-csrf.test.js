@@ -79,7 +79,7 @@ describe('BrowserStack acceptance controller, synthetic adapters only',()=>{
    const browser={newContext:async()=>context,close:async()=>{order.push('close');rejectLogin?.(new Error('interactive_login_timeout'));}};
    const pending=run({config:{mode:'csrf',expectedSha:sha},env,version:'1.62.1',chromium:{connect:async()=>browser},emit:x=>emitted.push(x),
     waitForPilotFn:()=>new Promise((resolve,reject)=>{rejectLogin=reject;ready();})});
-   await entered;await vi.advanceTimersByTimeAsync(900000);
+   await entered;await vi.advanceTimersByTimeAsync(1800000);
    expect((await pending).result).toBe('INCOMPLETE');
    expect(order.slice(0,3)).toEqual(['portal','portal','close']);
    expect(emitted.join('')).toContain('watchdogCleanup');

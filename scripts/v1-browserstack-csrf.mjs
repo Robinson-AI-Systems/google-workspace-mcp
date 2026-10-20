@@ -6,7 +6,7 @@ import {ORIGIN,PILOTS,REMOTE_FORM_ORIGIN,crossSiteDocument,exercise,cleanup} fro
 const assert=(value,code)=>{if(!value)throw new Error(code);};
 const failureReasons=new Set(['new_context_not_anonymous','contract_unavailable','deployed_source_mismatch',
  'anonymous_form_refusal_failed','unexpected_form_refusal','wrong_pilot_identity','login_portal_unavailable',
- 'interactive_login_timeout','session_csrf_unavailable','session_details_invalid']);
+ 'interactive_login_timeout','session_csrf_unavailable','session_details_invalid','run_duration_limit']);
 export function configuration(argv,env){
  assert(argv.length===4&&argv[0]==='--expected-live'&&/^[a-f0-9]{40}$/.test(argv[1])&&argv[2]==='--mode'&&['capability','csrf'].includes(argv[3]),'usage_expected_source_and_mode');
  assert(env.BROWSERSTACK_INCLUDED_USAGE_CONFIRMED==='true','included_usage_confirmation_required');
@@ -49,7 +49,7 @@ function message(text){
  console.log(text);
  if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,text+'\n\n');
 }
-export async function waitForPilot(row,{timeoutMs=360000,now=Date.now,pause=ms=>new Promise(r=>setTimeout(r,ms))}={}){
+export async function waitForPilot(row,{timeoutMs=600000,now=Date.now,pause=ms=>new Promise(r=>setTimeout(r,ms))}={}){
  const deadline=now()+timeoutMs;
  while(now()<deadline){
   const response=await row.context.request.get(ORIGIN+'/api/account',{maxRedirects:0,timeout:20000});
@@ -82,7 +82,9 @@ async function capabilityCheck(browser,expectedSha){
 export async function run({config,env,chromium,version,emit=message,waitForPilotFn=waitForPilot}){
  const rows=[],browsers=[],timers=[];
  let transferred=false,result,stage='browser_connect',budgetExpired=false;
+ const deadline=Date.now()+(config.mode==='capability'?300000:1800000);
  async function connect(label){
+  assert(Date.now()<deadline,'run_duration_limit');
   const caps=capabilities(env,label,version);
   const browser=await chromium.connect({wsEndpoint:'wss://cdp.browserstack.com/playwright?caps='+encodeURIComponent(JSON.stringify(caps)),timeout:60000});
   browsers.push(browser);
@@ -94,7 +96,7 @@ export async function run({config,env,chromium,version,emit=message,waitForPilot
     catch{emit(JSON.stringify({label:row.label,watchdogCleanup:'FAILED_REQUIRES_BROWSER_SESSION_CLEANUP'}));}
    }
    await browser.close().catch(()=>{});
-  },config.mode==='capability'?180000:900000));
+  },Math.max(1,deadline-Date.now())));
   return browser;
  }
  try{
@@ -113,7 +115,7 @@ export async function run({config,env,chromium,version,emit=message,waitForPilot
    await page.goto(ORIGIN+'/api/account');
    const details=JSON.parse(await page.evaluate(()=>{},'browserstack_executor: '+JSON.stringify({action:'getSessionDetails'})));
    const url=dashboardUrl(details);
-   emit(pilot.label+': open '+url+' and Start an interactive session. Complete only the approved identity-only Google login, then Stop Interactive Session. Six-minute sign-in window.');
+   emit(pilot.label+': open '+url+' and Start an interactive session. Complete only the approved identity-only Google login, then Stop Interactive Session. Ten-minute sign-in window.');
    timers.push(setInterval(()=>{page.title().catch(()=>{});},20000));
    stage='interactive_login_'+pilot.label;
    await page.getByRole('link',{name:'Sign in with your approved Google account',exact:true}).click();
@@ -124,7 +126,7 @@ export async function run({config,env,chromium,version,emit=message,waitForPilot
    emit(pilot.label+': expected pilot session verified; waiting for remaining test setup.');
   }
   stage='authenticated_matrix';transferred=true;
-  result=await exercise(rows,REMOTE_FORM_ORIGIN);
+  result=await exercise(rows,REMOTE_FORM_ORIGIN,{onProgress:progress=>emit(JSON.stringify({sourceRevision:config.expectedSha,progress}))});
   emit(JSON.stringify({sourceRevision:config.expectedSha,observedAt:new Date().toISOString(),
    attackerPage:'fixed reserved .invalid origin fulfilled by runner; application HTTPS is never intercepted',...result}));
   return result;

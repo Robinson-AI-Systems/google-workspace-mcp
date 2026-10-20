@@ -103,15 +103,17 @@ export async function cleanup(row){
  assert(after.status()===401,'cleanup_session_still_active');
  return 'logged_out_agents_preserved';
 }
-export async function exercise(rows,crossSiteOrigin){
+export async function exercise(rows,crossSiteOrigin,{onProgress=()=>{}}={}){
  const report={checks:[],crossSite:[],cleanup:[],scope:'authenticated HTTP negatives plus independently launched browser cross-site forms',
   independentDatabaseInventory:'NOT_PERFORMED',existingConnectorReadbacks:'NOT_PERFORMED',acceptance:'NOT_AUTOMATICALLY_PROMOTED'};
  try{
   assert(rows.length===2&&rows[0].csrf!==rows[1].csrf,'two_distinct_fresh_sessions_required');
   assert(/^http:\/\/127\.0\.0\.1:\d+$/.test(crossSiteOrigin||'')||crossSiteOrigin===REMOTE_FORM_ORIGIN,'controlled_cross_site_forms_required');
   for(let index=0;index<rows.length;index++){
-   report.checks.push(await checkNegatives(rows[index],rows[1-index].csrf));
-   report.crossSite.push(await checkCrossSite(rows[index],crossSiteOrigin));
+   const completed=await checkNegatives(rows[index],rows[1-index].csrf);
+   report.checks.push(completed);onProgress({phase:'authenticated_negative_requests',...completed});
+   const crossCompleted=await checkCrossSite(rows[index],crossSiteOrigin);
+   report.crossSite.push(crossCompleted);onProgress({phase:'cross_site_forms',...crossCompleted});
   }
   report.result='PASS_BROWSER_CSRF_ONLY';
  }catch{
