@@ -578,7 +578,7 @@ An owner may provide optional, reviewed boolean `expectations` for the selected 
 
 ### Machine-readable read-only results (RTC P8-1)
 
-Nine implemented read workflows now advertise validated MCP `outputSchema` and return `structuredContent` on full successful JSON responses. Added typed responses cover **Reports multi-application activity, Postmaster registered domains and delivery metrics, Cloud Identity policy list and the policy baseline audit**. Explicit `fields` projection still returns the selected JSON fields without pretending a partial object fulfills the full typed schema; `detail: full` keeps complete results, and large payloads use connection-owned, expiring retrieval handles. Error or missing-provider conditions cannot turn into typed success. The runtime tool registry remains 375 names; this does not certify live Google TEST or Hub conformance.
+Nine implemented read workflows now advertise validated MCP `outputSchema` and return `structuredContent` on full successful JSON responses. Added typed responses cover **Reports multi-application activity, Postmaster registered domains and delivery metrics, Cloud Identity policy list and the policy baseline audit**. Explicit `fields` projection still returns the selected JSON fields without pretending a partial object fulfills the full typed schema; `detail: full` keeps complete results, and large payloads use connection-owned, expiring retrieval handles. Error or missing-provider conditions cannot turn into typed success. The current source registry includes 387 tools after merged Tasks parity; count does not certify method completeness, a released revision, or live Google/provider acceptance.
 
 ## Coding-agent development access (2026-10-13)
 
