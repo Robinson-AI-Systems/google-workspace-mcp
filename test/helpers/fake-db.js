@@ -22,6 +22,7 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     clients: new Map(),
     codes: new Map(),
     tokens: [],
+    refreshRevocations: new Set(),
     attempts: [],
     nextAttemptId: 1,
     changes: [],
@@ -218,15 +219,18 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
         expires_at: afterSeconds(ttlSeconds), used: false
       });
     },
-    async consumeAuthCode(code) {
-      const row = state.codes.get(code);
-      if (!row || row.used || row.expires_at <= at()) return null;
-      const snapshot = { ...row };
-      row.used = true;
-      return snapshot;
+    async consumeAuthCode(code,{clientId,redirectUri,verifier}={}) {
+      const row=state.codes.get(code);
+      if(!row||row.used||row.expires_at<=at()||row.client_id!==clientId||
+       row.redirect_uri!==redirectUri||row.code_challenge_method!=='S256'||
+       typeof verifier!=='string'||!/^[A-Za-z0-9._~-]{43,128}$/.test(verifier)||
+       row.code_challenge!==crypto.createHash('sha256').update(verifier).digest('base64url'))return null;
+      const snapshot={...row};row.used=true;return snapshot;
     },
 
     async createAccessToken({ accessToken, refreshToken, clientId, googleAccount, profile = 'full', listing = 'catalog', areas = null, mode = null, costPolicy={mode:'per_action'}, cost_policy, ttlSeconds = 3600 * 24 * 30 }) {
+      if(refreshToken&&state.refreshRevocations.has(clientId+':'+crypto.createHash('sha256').update(refreshToken).digest('hex')))
+        throw Error('refresh_family_revoked');
       state.tokens.push({
         access_token: accessToken, refresh_token: refreshToken || null, client_id: clientId,
         google_account: googleAccount ? norm(googleAccount) : null, profile, listing, areas,mode,cost_policy:normalizeBillingPolicy(cost_policy ?? costPolicy,{account:googleAccount}),
@@ -235,12 +239,28 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     },
     async getTokenByRefreshToken(refreshToken) {
       if (!refreshToken) return null;
-      const rows = state.tokens.filter((t) => t.refresh_token === refreshToken && !t.revoked_at).sort((a, b) => b.created_at - a.created_at);
+      const rows = state.tokens.filter((t) => t.refresh_token === refreshToken && !t.revoked_at &&
+       !state.refreshRevocations.has(t.client_id+':'+crypto.createHash('sha256').update(refreshToken).digest('hex')))
+       .sort((a, b) => b.created_at - a.created_at);
       return rows[0] ? { client_id: rows[0].client_id, google_account: rows[0].google_account, profile: rows[0].profile, listing: rows[0].listing, areas: rows[0].areas,mode:rows[0].mode,cost_policy:rows[0].cost_policy } : null;
     },
     async getAccessToken(accessToken) {
-      const row = state.tokens.find((t) => t.access_token === accessToken && t.expires_at > at() && !t.revoked_at);
+      const row = state.tokens.find((t) => t.access_token === accessToken && t.expires_at > at() && !t.revoked_at &&
+       (!t.refresh_token||!state.refreshRevocations.has(t.client_id+':'+crypto.createHash('sha256').update(t.refresh_token).digest('hex'))));
       return row ? { ...row } : null;
+    },
+    async revokeClientOAuthToken(token,clientId) {
+      const owned=state.tokens.filter(t=>t.client_id===clientId&&!t.revoked_at&&
+        (t.access_token===token||t.refresh_token===token));
+      if(owned.length===0)return 0;
+      const families=new Set(owned.map(t=>t.refresh_token).filter(Boolean));
+      for(const f of families)state.refreshRevocations.add(clientId+':'+crypto.createHash('sha256').update(f).digest('hex'));
+      let revoked=0;
+      for(const t of state.tokens)if(t.client_id===clientId&&!t.revoked_at&&
+        (owned.some(x=>x.access_token===t.access_token)||families.has(t.refresh_token))){
+        t.revoked_at=at();revoked++;
+      }
+      return revoked;
     },
     async deleteAccessToken(accessToken) {
       state.tokens = state.tokens.filter((t) => t.access_token !== accessToken);
@@ -300,12 +320,7 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
       const found = state.tokens.filter((t) => t.access_token.startsWith(p));
       if (found.length === 0) return { revoked: 0, reason: 'not_found' };
       if (found.length > 1) return { revoked: 0, reason: 'ambiguous' };
-      const { access_token, refresh_token } = found[0];
-      let n = 0;
-      for (const t of state.tokens) {
-        if (!t.revoked_at && (t.access_token === access_token || (refresh_token && t.refresh_token === refresh_token))) { t.revoked_at = at(); n++; }
-      }
-      return { revoked: n };
+      return {revoked:await api.revokeClientOAuthToken(found[0].access_token,found[0].client_id)};
     },
 
     async recordChange({ actingAs, connection, tool, target, summary, before, after, dryRun }) {
