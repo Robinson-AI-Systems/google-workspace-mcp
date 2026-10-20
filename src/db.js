@@ -99,6 +99,13 @@ async function initializeSchemaSteps() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `;
+  // Durable owner-OAuth refresh-family tombstones: a stale in-flight refresh
+  // must never resurrect access after RFC 7009 revocation.
+  await q`CREATE TABLE IF NOT EXISTS oauth_refresh_revocations (
+    client_id TEXT NOT NULL, refresh_hash TEXT NOT NULL,
+    revoked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY(client_id,refresh_hash)
+  )`;
   // One row per Google mailbox this server is allowed to act as. Before
   // 2026-09-30 there was exactly one sign-in (the google_auth table above,
   // kept so existing deployments upgrade in place -- see migrateLegacyGoogleAuth).
@@ -631,23 +638,37 @@ export async function consumeAuthCode(code) {
 // ---------- Connector OAuth: access tokens ----------
 export async function createAccessToken({ accessToken, refreshToken, clientId, googleAccount, profile = 'full', listing = 'catalog', areas = null, mode = null, costPolicy = {mode:'per_action'}, cost_policy, ttlSeconds = 3600 * 24 * 30 }) {
   const q = db();
-  await q`
+  const revokedHash=refreshToken?crypto.createHash('sha256').update(refreshToken).digest('hex'):null;
+  const rows=await q`
     INSERT INTO oauth_tokens (access_token, refresh_token, client_id, google_account, profile, listing, areas, mode, cost_policy, expires_at)
-    VALUES (${accessToken}, ${refreshToken || null}, ${clientId}, ${googleAccount ? normalizeEmail(googleAccount) : null}, ${profile}, ${listing}, ${areas}, ${mode}, ${JSON.stringify(normalizeBillingPolicy(cost_policy ?? costPolicy,{account:googleAccount}))}::jsonb, now() + (${ttlSeconds} || ' seconds')::interval)
+    SELECT ${accessToken}, ${refreshToken || null}, ${clientId}, ${googleAccount ? normalizeEmail(googleAccount) : null}, ${profile}, ${listing}, ${areas}, ${mode}, ${JSON.stringify(normalizeBillingPolicy(cost_policy ?? costPolicy,{account:googleAccount}))}::jsonb, now() + (${ttlSeconds} || ' seconds')::interval
+    WHERE NOT EXISTS(SELECT 1 FROM oauth_refresh_revocations
+      WHERE client_id=${clientId} AND refresh_hash=${revokedHash})
+    RETURNING access_token
   `;
+  if(rows.length!==1)throw Error('refresh_family_revoked');
 }
 
 /** The most recent token row we issued for this refresh token, or null if we never issued it. */
 export async function getTokenByRefreshToken(refreshToken) {
   const q = db();
   if (!refreshToken) return null;
-  const rows = await q`SELECT client_id, google_account, profile, listing, areas, mode, cost_policy FROM oauth_tokens WHERE refresh_token = ${refreshToken} AND revoked_at IS NULL ORDER BY created_at DESC LIMIT 1`;
+  const hash=crypto.createHash('sha256').update(refreshToken).digest('hex');
+  const rows = await q`SELECT t.client_id,t.google_account,t.profile,t.listing,t.areas,t.mode,t.cost_policy
+    FROM oauth_tokens t WHERE t.refresh_token = ${refreshToken} AND t.revoked_at IS NULL
+    AND NOT EXISTS (SELECT 1 FROM oauth_refresh_revocations r
+      WHERE r.client_id=t.client_id AND r.refresh_hash=${hash})
+    ORDER BY t.created_at DESC LIMIT 1`;
   return rows[0] || null;
 }
 
 export async function getAccessToken(accessToken) {
   const q = db();
-  const rows = await q`SELECT * FROM oauth_tokens WHERE access_token = ${accessToken} AND expires_at > now() AND revoked_at IS NULL`;
+  const rows = await q`SELECT t.* FROM oauth_tokens t WHERE t.access_token = ${accessToken}
+    AND t.expires_at > now() AND t.revoked_at IS NULL
+    AND NOT EXISTS (SELECT 1 FROM oauth_refresh_revocations r WHERE
+      r.client_id=t.client_id AND t.refresh_token IS NOT NULL
+      AND r.refresh_hash=encode(sha256(convert_to(t.refresh_token,'UTF8')),'hex'))`;
   return rows[0] || null;
 }
 
@@ -664,6 +685,11 @@ export async function revokeClientOAuthToken(token, clientId) {
       SELECT access_token,refresh_token FROM oauth_tokens
       WHERE client_id=${clientId} AND revoked_at IS NULL
         AND (access_token=${token} OR refresh_token=${token})
+    ), marked AS (
+      INSERT INTO oauth_refresh_revocations(client_id,refresh_hash)
+      SELECT DISTINCT ${clientId},encode(sha256(convert_to(refresh_token,'UTF8')),'hex')
+      FROM owned WHERE refresh_token IS NOT NULL
+      ON CONFLICT DO NOTHING RETURNING refresh_hash
     ), revoked AS (
       UPDATE oauth_tokens t SET revoked_at=now()
       WHERE t.client_id=${clientId} AND t.revoked_at IS NULL
