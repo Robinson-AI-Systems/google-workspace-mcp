@@ -39,6 +39,20 @@
       "evidence": "Actual nonempty Google assignments array for independently observed Business Standard SKU; expected assignment fields present, no error; no writes",
       "providerPath": "licenseAssignments.listForProductAndSku (existing deployed MCP operation)",
       "redactions": "User IDs, assignment bodies and exact customer identifiers omitted"
+    },
+    {
+      "operation": "licensing_get_assignment",
+      "result": "PASS",
+      "evidence": "Read-only Google API returned the verified owner's already-assigned Business Standard SKU with expected assignment fields; no modification",
+      "providerPath": "licenseAssignments.get (existing deployed native operation)",
+      "redactions": "Connected user ID, provider assignment body omitted"
+    },
+    {
+      "operation": "licensing_get_assignment (deliberately invalid SKU)",
+      "result": "PASS_NEGATIVE",
+      "evidence": "Google rejected a deliberately nonexistent SKU with its invalid argument response; product surfaced a validation explanation rather than invented assignment data",
+      "providerPath": "licenseAssignments.get",
+      "redactions": "No customer data in error; test sentinel only"
     }
   ],
   "notTested": [
