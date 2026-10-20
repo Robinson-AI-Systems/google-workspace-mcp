@@ -10,7 +10,7 @@
 
 ---
 
-## October 19 — Sonnet Phase 2 partial and OAuth protocol security repair (IN PROGRESS)
+## October 19 historical — Sonnet Phase 2 partial; OAuth security repair subsequently MERGED in #235, NOT YET LIVE at v1 planning
 
 Owner supplied the independently performed Sonnet Phase 2 client report:
 [bounded sanitized evidence](evidence/2026-10-19-sonnet-phase2-partial.json).
