@@ -30,7 +30,7 @@ References: [tasks list methods](https://developers.google.com/workspace/tasks/r
 | tasks.patch | `tasks_update_task` | Existing guarded PATCH |
 | tasks.update (PUT) | `tasks_replace_task` | Source addition; explicit replacement/confirm/readback |
 
-**Status:** 14/14 current published REST method *source mappings* in PR candidate; no Google user writes or billing operations carried out. Actual proof requires exact-head check/review, merge, checked READY source deployment and scoped provider acceptance. The former 11-tool server is still production until independently verified release. A complete page preserves the old flat-array response; a partial page or explicit page request returns `{items,nextPageToken,complete}`; callers must consume every cursor to claim a full list. New write verbs remain denied in read_only profile. No other Google Workspace API families were certified by this Tasks pass.
+**Status:** 14/14 current published REST method *source mappings* in merged PR #236, with required exact-head and merged-main CI successful; new methods are **not on the observed READY live revision** and no Google user write for newly added methods is claimed. Actual proof requires exact-head check/review, merge, checked READY source deployment and scoped provider acceptance. The former 11-tool server is still production until independently verified release. A complete page preserves the old flat-array response; a partial page or explicit page request returns `{items,nextPageToken,complete}`; callers must consume every cursor to claim a full list. New write verbs remain denied in read_only profile. No other Google Workspace API families were certified by this Tasks pass.
 
 ## Google Workspace Enterprise License Manager (licensing.googleapis.com) — v1
 
