@@ -60,7 +60,11 @@ export function applyDomainGuard(registry) {
     const inner = registry.handlers[tool.name];
     const wrapper = async (args = {}, clients) => {
       const { crossDomain, ...rest } = args;
-      if (crossDomain !== true && Array.isArray(clients?.allowedDomains)) {
+      // The top-level tool arg is one source of explicit consent. A trusted
+      // server-created per-call child context is another (owner overview read
+      // composition). Both are request-local; neither changes stored grants.
+      const authorized = crossDomain === true || clients?.crossDomain === true;
+      if (!authorized && Array.isArray(clients?.allowedDomains)) {
         // Customer-wide Directory endpoints have no domain filter. Never
         // silently disclose other business domains from a restricted client.
         if (UNFILTERABLE_CUSTOMER_READS.has(tool.name))
@@ -90,7 +94,9 @@ export function applyDomainGuard(registry) {
         if (bad.length) return ok(refusal(bad, clients));
         if (DOMAIN_SCOPED_DRIVE_MEMBERSHIP.has(tool.name) && rest.type==='domain') return ok('Refused: domain-wide access requires crossDomain: true and independent owner confirmation. Nothing was changed.');
       }
-      return inner(rest, crossDomain === true ? Object.create(clients || {}, { crossDomain: { value: true, enumerable: true } }) : clients);
+      return inner(rest, authorized && clients?.crossDomain !== true
+        ? Object.create(clients || {}, { crossDomain: { value: true, enumerable: true } })
+        : clients);
     };
     registry.handlers[tool.name]=isGuardedWrite(inner)?inheritGuardedWrite(inner,wrapper):wrapper;
     return { ...tool, description: `${tool.description} Limited to this connection's own business domains unless crossDomain: true.`, inputSchema: { ...tool.inputSchema, properties: { ...props, crossDomain: CROSS_DOMAIN_FIELD } } };
