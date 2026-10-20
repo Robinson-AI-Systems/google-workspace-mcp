@@ -147,14 +147,23 @@ export async function buildAdminOverview(clients,call,{crossDomain=false,section
  const items={};
  await Promise.all(selected.map(async([section,source])=>{
   if(!allowedTool(source.tool,clients?.rtcPolicy||{})){
-   items[section]={status:'not_readable',reason:'Outside the permitted areas or connection profile.'};return;
+   // The installation owner's policy reference baseline is not an independent
+   // customer's baseline. A Full profile and explicit cross-domain read intent
+   // do not turn owner-specific reference data into customer authorization.
+   const ownerBaseline=source.tool==='identity_policy_audit' &&
+     clients?.rtcPolicy?.principalKind==='user';
+   items[section]={status:'not_readable',reason:ownerBaseline?
+    'This owner-specific policy baseline is not configured for this customer. Use authorized identity_list_policies for raw customer policies; crossDomain does not grant the installation owner baseline.':
+    'Outside the permitted areas or connection profile.'};return;
   }
   if(source.customerWide&&Array.isArray(clients?.allowedDomains)&&crossDomain!==true){
    items[section]={status:'not_readable',reason:'This source can include other business domains. Ask the owner before using crossDomain: true; nothing was read.'};return;
   }
   try{
-   // The owner intent is not a reusable permission grant: only the selected customer-wide policy child sees it.
-   const childClients=section==='policies'&&crossDomain===true?{...clients,crossDomain:true}:clients;
+   // Forward this request's explicit consent to each *selected customer-wide*
+   // child only; normal own-domain sources never inherit it and the original
+   // client context remains unchanged. Child domain guards still run.
+   const childClients=source.customerWide&&crossDomain===true?{...clients,crossDomain:true}:clients;
    const data=unpack(await call(source.tool,source.args(clients),childClients));
    items[section]={...evaluate(section,data,clients),data};
   }catch(e){items[section]={status:'not_readable',reason:errors(e)};}

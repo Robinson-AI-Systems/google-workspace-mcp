@@ -64,10 +64,17 @@ export function normalizeExactAppResources(input={}){
  if(total>MAX_TOTAL)throw Error('At most 24 exact app-resource reads per integration check.');
  return out;
 }
-function failed(error){
+function failed(error,kind){
  const status=Number(error?.response?.status||error?.code)||0;
- const reason=String(error?.response?.data?.error?.errors?.[0]?.reason||'');
+ const google=error?.response?.data?.error||{};
+ const reason=String(google.errors?.[0]?.reason||google.status||'');
+ const message=String(google.message||google.errors?.[0]?.message||error?.message||'');
  if(status===404)return {status:'missing',reason:'resource_not_found'};
+ // Tasks may report a nonexistent list as 400 "Invalid task list ID" rather
+ // than 404. Return a precise bounded classification, not raw Google text.
+ if(status===400&&['task_list','task_item'].includes(kind)&&
+   /invalid (?:task\s*list|tasklist) (?:id|identifier)/i.test(message))
+   return {status:'missing',reason:'invalid_provider_resource'};
  if(['accessNotConfigured','SERVICE_DISABLED'].includes(reason))
   return {status:'missing',reason:'api_not_enabled'};
  if(status===401||status===403)return {status:'not_readable',reason:'scope_or_access_denied'};
@@ -89,7 +96,7 @@ async function one({kind,tool,url,label,read,field,requireUntrashed},id,clients,
    throw Error('Google did not return the exact requested app resource.');
   return {kind,name,status:'ready'};
  }catch(error){
-  return {kind,name,...failed(error),
+  return {kind,name,...failed(error,kind),
    fix:guide(url,label)};
  }
 }
