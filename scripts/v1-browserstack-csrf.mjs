@@ -86,8 +86,14 @@ export async function run({config,env,chromium,version,emit=message,waitForPilot
   const caps=capabilities(env,label,version);
   const browser=await chromium.connect({wsEndpoint:'wss://cdp.browserstack.com/playwright?caps='+encodeURIComponent(JSON.stringify(caps)),timeout:60000});
   browsers.push(browser);
-  timers.push(setTimeout(()=>{
-   budgetExpired=true;emit('INCOMPLETE: browser_duration_limit');browser.close().catch(()=>{});
+  timers.push(setTimeout(async()=>{
+   budgetExpired=true;emit('INCOMPLETE: browser_duration_limit');
+   const row=rows.find(row=>row.browser===browser);
+   if(row){
+    try{emit(JSON.stringify({label:row.label,watchdogCleanup:await cleanup(row)}));}
+    catch{emit(JSON.stringify({label:row.label,watchdogCleanup:'FAILED_REQUIRES_BROWSER_SESSION_CLEANUP'}));}
+   }
+   await browser.close().catch(()=>{});
   },config.mode==='capability'?180000:900000));
   return browser;
  }
@@ -101,7 +107,7 @@ export async function run({config,env,chromium,version,emit=message,waitForPilot
    const browser=await connect(pilot.label+' fresh identity-only session');
    const context=await browser.newContext();context.setDefaultTimeout(20000);
    const page=await context.newPage();
-   const row={...pilot,context,page};rows.push(row);
+   const row={...pilot,context,page,browser};rows.push(row);
    stage='source_and_freshness_'+pilot.label;
    await anonymous(context);await sourceCheck(context,config.expectedSha);await installCrossSiteForms(context);
    await page.goto(ORIGIN+'/api/account');

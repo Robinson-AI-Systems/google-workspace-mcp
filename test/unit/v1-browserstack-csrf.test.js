@@ -1,4 +1,4 @@
-import {describe,it,expect} from 'vitest';
+import {describe,it,expect,vi} from 'vitest';
 import {configuration,capabilities,dashboardUrl,installCrossSiteForms,waitForPilot,run} from '../../scripts/v1-browserstack-csrf.mjs';
 import {crossSiteDocument,ORIGIN,REMOTE_FORM_ORIGIN} from '../../scripts/v1-live-csrf-browser.mjs';
 import {readFileSync} from 'node:fs';
@@ -68,5 +68,21 @@ describe('BrowserStack acceptance controller, synthetic adapters only',()=>{
   const guard=workflow.slice(0,workflow.indexOf('BROWSERSTACK_USERNAME: ${{ secrets.'));
   for(const actor of ['ACTOR','TRIGGERING_ACTOR'])expect(guard).toContain('test "$'+actor+'" = christcr2012');
   expect(guard).toContain('test "$REF" = refs/heads/main');
+ });
+ it('attempts session logout before the duration watchdog closes a full-test browser',async()=>{
+  vi.useFakeTimers();
+  try{
+   let ready,rejectLogin;const entered=new Promise(r=>{ready=r;}),order=[],emitted=[];
+   const page={goto:async()=>{order.push('portal');return {status:()=>401};},evaluate:async()=>JSON.stringify({build_hashed_id:'build123',hashed_id:'session123'}),
+    title:async()=>'',getByRole:()=>({click:async()=>{}})};
+   const context={setDefaultTimeout:()=>{},route:async()=>{},newPage:async()=>page,request:{get:async url=>({status:()=>url.endsWith('/api/contract')?200:401,json:async()=>({deployment:{sourceRevision:sha}})})}};
+   const browser={newContext:async()=>context,close:async()=>{order.push('close');rejectLogin?.(new Error('interactive_login_timeout'));}};
+   const pending=run({config:{mode:'csrf',expectedSha:sha},env,version:'1.62.1',chromium:{connect:async()=>browser},emit:x=>emitted.push(x),
+    waitForPilotFn:()=>new Promise((resolve,reject)=>{rejectLogin=reject;ready();})});
+   await entered;await vi.advanceTimersByTimeAsync(900000);
+   expect((await pending).result).toBe('INCOMPLETE');
+   expect(order.slice(0,3)).toEqual(['portal','portal','close']);
+   expect(emitted.join('')).toContain('watchdogCleanup');
+  }finally{vi.useRealTimers();}
  });
 });
