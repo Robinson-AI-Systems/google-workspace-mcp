@@ -271,6 +271,26 @@ const CORE = {
     describe: (a) => ({ target: a.resourceName, summary: `Delete the contact ${a.resourceName}` }),
     before: (a, { people }) => data(people.people.get({ resourceName: a.resourceName, personFields: 'names,emailAddresses' })).then((p) => pick(p, ['resourceName', 'names', 'emailAddresses'])),
     after: gone((a, { people }) => data(people.people.get({ resourceName: a.resourceName, personFields: 'names' }))) },
+  tasks_replace_tasklist: { destructive: D,
+    describe:a=>({target:a.tasklistId,summary:`PUT replace Google task list ${a.tasklistId} title with ${a.title}`}),
+    before:(a,{tasks})=>data(tasks.tasklists.get({tasklist:a.tasklistId})).then(v=>pick(v,['id','title'])),
+    after:(a,{tasks})=>data(tasks.tasklists.get({tasklist:a.tasklistId})).then(v=>pick(v,['id','title'])),
+    verify:(a,b,after)=>after?.id===a.tasklistId&&after?.title===a.title },
+  tasks_replace_task: { destructive: D,
+    describe:a=>({target:a.taskId,summary:`PUT replace task ${a.taskId} in ${a.tasklistId||'@default'}; unspecified optional fields may be cleared`}),
+    before:(a,{tasks})=>data(tasks.tasks.get({tasklist:a.tasklistId||'@default',task:a.taskId}))
+      .then(v=>pick(v,['id','title','notes','due','status','parent'])),
+    after:(a,{tasks})=>data(tasks.tasks.get({tasklist:a.tasklistId||'@default',task:a.taskId}))
+      .then(v=>pick(v,['id','title','notes','due','status','parent'])),
+    verify:(a,b,after)=>after?.id===a.taskId&&
+      ['title','notes','due','status'].filter(k=>a[k]!==undefined).every(k=>after[k]===a[k]) },
+  tasks_move_task: { destructive: D,
+    describe:a=>({target:a.taskId,summary:`Move task ${a.taskId} from ${a.tasklistId||'@default'} to ${a.destinationTasklist||'(same list)'}, parent ${a.parent||'(top level)'}, after ${a.previous||'(first)'}`}),
+    before:(a,{tasks})=>data(tasks.tasks.get({tasklist:a.tasklistId||'@default',task:a.taskId}))
+      .then(v=>pick(v,['id','parent','position','title'])),
+    after:(a,{tasks})=>data(tasks.tasks.get({tasklist:a.destinationTasklist||a.tasklistId||'@default',task:a.taskId}))
+      .then(v=>pick(v,['id','parent','position','title'])),
+    verify:(a,b,after)=>after?.id===a.taskId&&(!a.parent||after.parent===a.parent) },
   tasks_delete_tasklist: { destructive: D,
     describe: (a) => ({ target: a.tasklistId, summary: `Delete the task list ${a.tasklistId} and every task in it` }),
     before: (a, { tasks }) => data(tasks.tasklists.get({ tasklist: a.tasklistId })).then((t) => pick(t, ['id', 'title'])),
