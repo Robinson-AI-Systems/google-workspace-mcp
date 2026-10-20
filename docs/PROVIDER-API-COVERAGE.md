@@ -1,6 +1,9 @@
 # Provider API coverage standard — no silent gaps
 
-Owner decision (2026-10-19): Every custom Robinson AI Systems MCP server aims at **complete coverage of its connected provider's publicly supported operations**. A convenience subset is not completion. APIs may differ in authorization models, paid entitlements and providers: these are distinct **implementation boundaries**, not exemptions from recording outstanding coverage. Do not claim full project completion until the canonical API inventory is reconciled and real, appropriately authorized acceptance is recorded for each operation or an independently documented non-API provider restriction. Keep developer-agent release/spending policies distinct from legitimate end-user privileges and approvals.
+**Approved staged release policy (October 19, 2026):** [v1 early production](plan/V1-RELEASE-GATE.md) can be accepted and released for its explicitly advertised and independently verified capabilities without finishing every Google API method first. Exhaustive current public API coverage remains an active, REQUIRED product roadmap objective **after v1**, not silently excluded, replaced with console guidance or marked PASSED. Missing methods must remain tracked and implemented/tested in continuing coverage releases. Do not advertise unimplemented or unverified capability in v1. All security, consent, provider authority, client compatibility, billing and independently checked production requirements for v1 still apply.
+
+
+Owner decision (2026-10-19): Every custom Robinson AI Systems MCP server aims at **complete coverage of its connected provider's publicly supported operations**. A convenience subset is not completion. APIs may differ in authorization models, paid entitlements and providers: these are distinct **implementation boundaries**, not exemptions from recording outstanding coverage. Do not claim **full method-parity coverage completion** until the canonical API inventory is reconciled and real, appropriately authorized acceptance is recorded for each operation or an independently documented non-API provider restriction. This is distinct from **v1 early-release readiness**. Keep developer-agent release/spending policies distinct from legitimate end-user privileges and approvals.
 
 ## Required ongoing inventory method
 
@@ -61,9 +64,9 @@ Google Cloud License Manager manages **third-party Google Cloud VM licensing**, 
 
 **Coverage: 0/19 methods implemented for this Google Cloud API in this Google Workspace server. This remains a tracked OPEN integration responsibility, not a falsely certified Workspace Enterprise License Manager gap closure.** The owning Google Cloud integration must implement all 19 in one separate provider bundle with actual Cloud IAM/tenant/project ownership, pagination, async LROs and paid-action gates. This server must remain independently connectable for the Workspace APIs it owns. The Robinson AI Systems portfolio-wide coverage registry should track cross-service ownership and ensure this API cannot go unowned.
 
-## No-gap completion gate
+## Full API method-parity completion gate (continuing post-v1 work)
 
-A nominal count of >380 tools does **not** establish that every supported Google Workspace API method exists. Product completion requires:
+A nominal count of >380 tools does **not** establish that every supported Google Workspace API method exists. Full API coverage certification requires:
 
 1. A current canonical per-provider REST/Discovery operation inventory with mapping/coverage state and owner product-scope decisions.
 2. Source implementation and contract tests for every in-scope public operation, with existing operation identifiers preserved and explicit pagination/error behavior.
