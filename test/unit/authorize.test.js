@@ -2,6 +2,7 @@
 // drives it, with the fake database behind it.
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Readable } from 'node:stream';
+import crypto from 'node:crypto';
 import { createFakeDb } from '../helpers/fake-db.js';
 
 const MINUTE = 60 * 1000;
@@ -19,6 +20,10 @@ const { default: handler } = await import('../../api/oauth/authorize.js');
 
 const PASSPHRASE = 'correct horse battery staple';
 const REDIRECT = 'https://claude.example.test/callback';
+const VERIFIER='A'.repeat(43);
+const CHALLENGE=crypto.createHash('sha256').update(VERIFIER).digest('base64url');
+const AUTH={clientId:'claude',redirectUri:REDIRECT,verifier:VERIFIER};
+const PKCE={code_challenge:CHALLENGE,code_challenge_method:'S256'};
 
 function fakeRes() {
   const res = { statusCode: 200, headers: {}, body: '' };
@@ -31,7 +36,7 @@ function fakeRes() {
 }
 
 function post({ passphrase, account = 'rentals@example.test', ip = '1.1.1.1', profile='read_only',areas,cost_consent,ack_unknown_charges }) {
-  const form = new URLSearchParams({ client_id: 'claude', redirect_uri: REDIRECT, state: 'st', profile, passphrase, google_account: account });
+  const form = new URLSearchParams({ client_id: 'claude', redirect_uri: REDIRECT, state: 'st', ...PKCE, profile, passphrase, google_account: account });
   for(const [name,value] of Object.entries({areas,cost_consent,ack_unknown_charges}))
     if(value!==undefined)form.set(name,value);
   const req = Readable.from([form.toString()]);
@@ -59,7 +64,7 @@ beforeEach(async () => {
 describe('passphrase page lockout', () => {
   it('prefills requested access and preserves the owner choice after errors',async()=>{
     for(const profile of ['full','everyday',undefined]){
-      const res=fakeRes();await handler({method:'GET',headers:{},query:{client_id:'claude',redirect_uri:REDIRECT,profile}},res);
+      const res=fakeRes();await handler({method:'GET',headers:{},query:{client_id:'claude',redirect_uri:REDIRECT,...PKCE,profile}},res);
       expect(res.body).toContain(`<option value="${profile||'read_only'}" selected>`);
       expect(res.body).not.toContain('type="hidden" name="profile"');
       expect(res.body).not.toContain('ops@example.test');
@@ -68,7 +73,7 @@ describe('passphrase page lockout', () => {
     }
     const failed=await login({passphrase:'wrong',profile:'full'});expect(failed.body).toContain('<option value="full" selected>');
     const res=await login({passphrase:PASSPHRASE,profile:'everyday'});const code=new URL(res.headers.Location).searchParams.get('code');
-    expect(code).toHaveLength(32);expect((await fake.consumeAuthCode(code)).profile).toBe('everyday');
+    expect(code).toHaveLength(32);expect((await fake.consumeAuthCode(code,AUTH)).profile).toBe('everyday');
   });
   it('signs in with the right passphrase and binds the connection to the chosen account', async () => {
     const res = await login({ passphrase: PASSPHRASE });
@@ -76,19 +81,19 @@ describe('passphrase page lockout', () => {
     const target = new URL(res.headers.Location);
     expect(`${target.origin}${target.pathname}`).toBe(REDIRECT);
     expect(target.searchParams.get('state')).toBe('st');
-    const code = await fake.consumeAuthCode(target.searchParams.get('code'));
+    const code = await fake.consumeAuthCode(target.searchParams.get('code'),AUTH);
     expect(code.google_account).toBe('rentals@example.test');
   });
 
   it('persists an explicitly selected live owner policy and unknown-billing cost consent in a one-time code',async()=>{
-    const page=fakeRes();await handler({method:'GET',query:{client_id:'claude',redirect_uri:REDIRECT},headers:{}},page);
+    const page=fakeRes();await handler({method:'GET',query:{client_id:'claude',redirect_uri:REDIRECT,...PKCE},headers:{}},page);
     expect(page.body).toContain('name="cost_consent"');
     expect(page.body).toContain('name="ack_unknown_charges"');
     const signed=await login({passphrase:PASSPHRASE,profile:'full',areas:'admin,workspace',
       cost_consent:'standing_assign',ack_unknown_charges:'yes'});
     expect(signed.statusCode).toBe(302);
     const code=new URL(signed.headers.Location).searchParams.get('code');
-    expect(await fake.consumeAuthCode(code)).toMatchObject({google_account:'rentals@example.test',
+    expect(await fake.consumeAuthCode(code,AUTH)).toMatchObject({google_account:'rentals@example.test',
       profile:'full',areas:['admin','workspace'],mode:'live',cost_policy:{
         mode:'standing',account:'rentals@example.test',operations:['assign_license'],
         allowUnknownPrice:true,maxChargeUsd:null}});
@@ -155,7 +160,7 @@ describe('passphrase page lockout', () => {
       const req = Readable.from(['']);
       req.method = 'GET';
       req.headers = { 'x-vercel-forwarded-for': '1.1.1.1' };
-      req.query = { client_id: 'claude', redirect_uri: REDIRECT };
+      req.query = { client_id: 'claude', redirect_uri: REDIRECT, ...PKCE };
       const res = fakeRes();
       await handler(req, res);
       expect(res.statusCode).toBe(200);

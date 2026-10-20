@@ -1,3 +1,33 @@
+## October 19 — Sonnet Phase 2 partial and OAuth protocol security repair (IN PROGRESS)
+
+Owner supplied the independently performed Sonnet Phase 2 client report:
+[bounded sanitized evidence](evidence/2026-10-19-sonnet-phase2-partial.json).
+The existing Claude Full connection still showed the approved owner mailbox,
+valid Google read and correct direct domain/cross-customer refusals. Sonnet could
+observe only **one connection in its session**, which is not evidence of a
+server-wide count or two independent verified OAuth users. The second person
+did not complete their own Google sign-in, so principal A/B provider reads,
+wrong-subject and token-replay/refresh/revocation across two real clients
+remain **PENDING**, not failures or successes. Original owner bearer/refresh
+was not touched or proven by this session. Haiku Phase 1 real evidence retained.
+
+Code review confirmed metadata previously advertised `plain` PKCE and lacked
+an OAuth RFC 7009 token revocation endpoint; the legacy owner code helper
+accepted weak/missing challenge and had a SELECT/UPDATE code replay race.
+An existing P10-3/P10-6 security-repair branch
+`fix/p10-oauth-discovery-revocation-20261019` now enforces S256 for
+**new** owner and V2 authorizations, adds strictly client-owned owner/V2
+token-family revocation with durable owner refresh tombstones, and single-use
+atomic legacy code consumption. Includes synthetic route regressions and
+real-PostgreSQL race and cross-client/non-revocation tests. **This work is
+not yet source-accepted or live until required CI/review/merge and a checked
+policy-compliant release.** No production state/Google grants, previously
+issued bearer/refresh tokens, current Full connection, or owner Google data
+changed. Client A/B real consent is still an independent approval/browser
+action, and actual Hub federation is the Hub's responsibility.
+
+---
+
 ## October 19 late — reconciled post-#233 main/live, actual Enterprise read and no-gap pre-audit
 
 **Current baseline supersedes older same-day branch/disabled-API paragraphs below.**

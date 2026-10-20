@@ -56,6 +56,20 @@ describe('P10 MCP user authorization and original owner mailbox privacy',()=>{
   expect(h.enumerations).toBe(0);
   expect(page.body).toContain('Sign in with a separate Google account');
  });
+ it('rejects legacy owner authorization without exact S256 before any owner mailbox enumeration',async()=>{
+  for(const change of [
+   {code_challenge_method:'plain'},
+   {code_challenge_method:''},
+   {code_challenge_method:undefined},
+   {code_challenge:'too-short'},
+   {code_challenge:undefined}
+  ]){
+   const out=await call('GET',{...base,...change});
+   expect(out.statusCode).toBe(400);
+   expect(out.body).toMatch(/requires S256 PKCE/);
+   expect(h.enumerations).toBe(0);
+  }
+ });
  it('only the registered client and exact MCP resource/PKCE can start user auth',async()=>{
   const query={...base,auth_method:'google'};
   let out=await call('GET',{...query,redirect_uri:'https://foreign.example.test'});

@@ -6,14 +6,13 @@ export function randomToken(bytes = 32) {
 
 /** Verifies an OAuth 2.1 PKCE code_verifier against the stored code_challenge. */
 export function verifyPkce(codeVerifier, codeChallenge, method) {
-  if (!codeChallenge) return true; // PKCE not used by this client (allowed for confidential clients)
-  if (!codeVerifier) return false;
-  if ((method || 'S256') === 'S256') {
-    const computed = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
-    return computed === codeChallenge;
-  }
-  // 'plain' method
-  return codeVerifier === codeChallenge;
+  // OAuth 2.1 requires PKCE with S256 for all newly issued native MCP codes.
+  // A missing challenge or the legacy "plain" method is never an opt-out.
+  if (method !== 'S256' ||
+      typeof codeChallenge !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(codeChallenge) ||
+      typeof codeVerifier !== 'string' || !/^[A-Za-z0-9._~-]{43,128}$/.test(codeVerifier)) return false;
+  const computed = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+  return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(codeChallenge));
 }
 
 export function readBody(req) {

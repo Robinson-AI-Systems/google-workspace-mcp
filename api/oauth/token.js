@@ -43,7 +43,15 @@ export default async function handler(req, res) {
   }
 
   if (body.grant_type === 'authorization_code') {
-    const record = await consumeAuthCode(body.code);
+    // Reject an unrelated/unregistered client before touching a one-time code.
+    const client = await getOAuthClient(body.client_id);
+    if (!client || (client.client_secret && client.client_secret !== body.client_secret)) {
+      res.status(401).json({error:'invalid_client'});
+      return;
+    }
+    const record = await consumeAuthCode(body.code,{
+      clientId:body.client_id,redirectUri:body.redirect_uri,verifier:body.code_verifier
+    });
     if (!record) {
       res.status(400).json({ error: 'invalid_grant', error_description: 'Code is invalid, expired, or already used.' });
       return;
@@ -58,16 +66,6 @@ export default async function handler(req, res) {
     }
     if (!verifyPkce(body.code_verifier, record.code_challenge, record.code_challenge_method)) {
       res.status(400).json({ error: 'invalid_grant', error_description: 'PKCE verification failed.' });
-      return;
-    }
-
-    const client = await getOAuthClient(body.client_id);
-    if (!client) {
-      res.status(401).json({ error: 'invalid_client' });
-      return;
-    }
-    if (client.client_secret && client.client_secret !== body.client_secret) {
-      res.status(401).json({ error: 'invalid_client' });
       return;
     }
 
@@ -113,8 +111,16 @@ export default async function handler(req, res) {
       return;
     }
     const accessToken = randomToken(32);
-    await createAccessToken({ accessToken, refreshToken: body.refresh_token,
-      clientId: body.client_id, googleAccount: issued.google_account || null, ...settings });
+    // A concurrent client revocation can happen after the refresh lookup.
+    // The DB tombstone prevents a stale refresh from reissuing working access.
+    try {
+      await createAccessToken({ accessToken, refreshToken: body.refresh_token,
+        clientId: body.client_id, googleAccount: issued.google_account || null, ...settings });
+    } catch (error) {
+      if(error?.message==='refresh_family_revoked')
+        return res.status(400).json({error:'invalid_grant'});
+      throw error;
+    }
     res.status(200).json({ access_token: accessToken, token_type: 'Bearer', expires_in: 3600 * 24 * 30 });
     return;
   }

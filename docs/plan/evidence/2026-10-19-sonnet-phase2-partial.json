@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "observedLocalDate": "2026-10-19 America/Denver",
+  "source": "Owner-provided Sonnet Phase 2 transcript, independent later repository/Vercel source review",
+  "assessment": "PARTIAL_BLOCKED_MULTIPRINCIPAL_NOT_COMPLETE",
+  "observedClient": "preexisting Claude custom MCP Full client",
+  "productionChangesFromReportedSession": false,
+  "evidence": {
+    "singleClientIdentity": {
+      "result": "PASS_PRIMARY_ONLY",
+      "note": "Whoami matched the existing owner-connected mailbox; Gmail count and own account visible; one Full live connection visible from that session. Session visibility does not prove that no other principal exists globally."
+    },
+    "distinctPrincipals": {
+      "result": "BLOCKED",
+      "prerequisite": "Real second pilot Google subject explicitly consents through a different registered client."
+    },
+    "independentProviderGrants": {
+      "result": "BLOCKED",
+      "prerequisite": "Second subject grants its own Google OAuth scopes; never borrow owner refresh."
+    },
+    "accountIsolation": {
+      "result": "BLOCKED",
+      "prerequisite": "Two actual independently issued principal/client tokens and positive/foreign denials."
+    },
+    "domainIsolation": {
+      "result": "PARTIAL_PASS_ONE_CLIENT",
+      "note": "Current Full session saw outside-domain token lookup and unqualified customer-wide info correctly denied; owner override not bypassed."
+    },
+    "fullProfileAuthorization": {
+      "result": "PARTIAL_PASS_ONE_CLIENT",
+      "note": "Full profile did not bypass Google or customer boundary."
+    },
+    "pkceReplayStateBrowser": {
+      "result": "BLOCKED",
+      "note": "Not exercised with two actual client sign-in flows. Source metadata advertises plain, accepted by legacy helper; confirmed fix needed."
+    },
+    "scopeIsolation": {
+      "result": "BLOCKED",
+      "note": "49 authorized Google scopes belong to the single observed connected account; second independent account not tested."
+    },
+    "accessRefreshReplayRevocation": {
+      "result": "BLOCKED",
+      "prerequisite": "Disposable second-client OAuth issuance, refresh, revoked reuse and wrong-client replay against real browser and HTTP endpoints."
+    },
+    "legacyOwnerContinuation": {
+      "result": "PARTIAL_PASS",
+      "note": "Existing Full owner-connected client remained usable. Original historical bearer/refresh continuity not observed by Sonnet."
+    },
+    "customerDelegation": {
+      "result": "NOT_CONFIGURED",
+      "note": "Separate customer-owned Admin Console DWD requires independent admin/service-account approval; no owner/global impersonation."
+    },
+    "providerAdvanced": {
+      "result": "NOT_TESTED",
+      "note": "License/Vault/Groups Settings acceptance did not run in Sonnet report; no upgrades from source or fake fixtures."
+    }
+  },
+  "confirmedSourceDefects": [
+    "Legacy owner authorization metadata and PKCE helper accepted/advertised plain; V2 already S256-only.",
+    "OAuth discovery lacks RFC 7009 token revocation endpoint although owner/V2 internal revoke paths exist."
+  ],
+  "codePlan": "Existing P10-3/P10-6 maintenance in docs/pr-cards/P10-DUAL-IDENTITY.md; include owner and V2 client-bound revocation, no owner grant mutation.",
+  "explicitNotPassed": [
+    "P10-OWNER-CONTINUITY",
+    "P10-VERIFY-GOOGLE",
+    "P10-MCP-PILOT",
+    "P10-CUSTOMER-DELEGATION",
+    "P10-6",
+    "client A/B foreign principal and scope isolation",
+    "live authorization code PKCE/replay",
+    "live token lifecycle",
+    "platform public availability and provider paid operations"
+  ],
+  "requiredNextActions": [
+    "Merge checked S256-only and client-scoped OAuth revocation source; release only under independently authorized scheduled/manual policy.",
+    "Second pilot subject completes its own protected Google consent in a second real supported client; never request credentials in chat.",
+    "Run real source-pinned two-client A/B positive reads, wrong-principal denial, PKCE/browser/replay and revoke/refresh with disposable connections.",
+    "Verify unchanged original owner bearer/refresh and customer/admin grant independently; retain owner and Claude existing connection."
+  ],
+  "credentialsOrTokensIncluded": false
+}
