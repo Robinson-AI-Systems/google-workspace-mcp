@@ -304,6 +304,11 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
   expect(await db.getAccessToken('revocable-access-1')).toBeNull();
   expect(await db.getAccessToken('revocable-access-2')).toBeNull();
   expect(await db.getTokenByRefreshToken('revocable-refresh-1')).toBeNull();
+  await expect(db.createAccessToken({accessToken:'revocable-late-access',
+   refreshToken:'revocable-refresh-1',clientId:owner,
+   googleAccount:'owner@example.test',profile:'read_only'}))
+   .rejects.toThrow('refresh_family_revoked');
+  expect(await db.getAccessToken('revocable-late-access')).toBeNull();
   expect(await db.revokeClientOAuthToken('revocable-refresh-1',owner)).toBe(0);
   expect(await db.getAccessToken('other-access')).toBeTruthy();
   expect(await db.getTokenByRefreshToken('other-refresh')).toBeTruthy();
