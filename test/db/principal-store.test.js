@@ -289,4 +289,52 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
   expect(await store.readPrincipalAccess(issued.accessToken)).toBeNull(); // never resurrect old agent family
   expect(await store.findAccount(b,bb)).not.toBeNull();
  });
+
+ it('revokes only a registered legacy OAuth client family, leaving all other owner refreshes alive',async()=>{
+  const owner='oauth-revoke-owner-client',other='oauth-revoke-other-client';
+  await db.createAccessToken({accessToken:'revocable-access-1',refreshToken:'revocable-refresh-1',
+    clientId:owner,googleAccount:'owner@example.test',profile:'read_only'});
+  await db.createAccessToken({accessToken:'revocable-access-2',refreshToken:'revocable-refresh-1',
+    clientId:owner,googleAccount:'owner@example.test',profile:'read_only'});
+  await db.createAccessToken({accessToken:'other-access',refreshToken:'other-refresh',
+    clientId:other,googleAccount:'owner@example.test',profile:'read_only'});
+  expect(await db.revokeClientOAuthToken('revocable-refresh-1',other)).toBe(0);
+  expect(await db.getAccessToken('revocable-access-1')).toBeTruthy();
+  expect(await db.revokeClientOAuthToken('revocable-access-1',owner)).toBe(2);
+  expect(await db.getAccessToken('revocable-access-1')).toBeNull();
+  expect(await db.getAccessToken('revocable-access-2')).toBeNull();
+  expect(await db.getTokenByRefreshToken('revocable-refresh-1')).toBeNull();
+  expect(await db.revokeClientOAuthToken('revocable-refresh-1',owner)).toBe(0);
+  expect(await db.getAccessToken('other-access')).toBeTruthy();
+  expect(await db.getTokenByRefreshToken('other-refresh')).toBeTruthy();
+  expect(await db.getTokenByRefreshToken('legacy-owner-refresh')).toBeTruthy();
+ });
+ it('revokes only the exact V2 access/refresh family, never another principal or client',async()=>{
+  const make=async(sub,email,clientId)=>{
+   const principalId=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',
+    sub,verifiedEmail:email});
+   const accountId=await store.upsertLinkedAccount({principalId,issuer:'https://accounts.google.com',
+    sub,verifiedEmail:email,scopeList:['https://www.googleapis.com/auth/tasks.readonly'],
+    tokens:{access_token:'scratch-'+sub}});
+   const verifier=crypto.randomBytes(48).toString('base64url');
+   const codeChallenge=crypto.createHash('sha256').update(verifier).digest('base64url');
+   const resource='https://service.test/api/mcp';
+   const redirectUri='https://client.test/return';
+   const code=await store.issuePrincipalCode({principalId,accountId,clientId,redirectUri,
+    resource,codeChallenge,profile:'read_only'});
+   const record=await store.consumePrincipalCode({code,clientId,redirectUri,resource,verifier});
+   return store.issuePrincipalConnection(record);
+  };
+  const x=await make('revoke-principal-one','revoke-one@example.test','v2-client-one');
+  const y=await make('revoke-principal-two','revoke-two@example.test','v2-client-two');
+  expect(await store.revokeClientPrincipalToken(x.accessToken,'v2-client-two')).toBe(0);
+  expect(await store.readPrincipalAccess(x.accessToken)).toBeTruthy();
+  expect(await store.revokeClientPrincipalToken(x.refreshToken,'v2-client-one')).toBe(1);
+  expect(await store.readPrincipalAccess(x.accessToken)).toBeNull();
+  expect(await store.rotatePrincipalRefresh(x.refreshToken,{
+   clientId:'v2-client-one',resource:'https://service.test/api/mcp'})).toBeNull();
+  expect(await store.revokeClientPrincipalToken(x.accessToken,'v2-client-one')).toBe(0);
+  expect(await store.readPrincipalAccess(y.accessToken)).toBeTruthy();
+ });
+
 });
