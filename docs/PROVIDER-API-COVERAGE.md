@@ -12,15 +12,15 @@ Reference: https://developers.google.com/workspace/admin/licensing/reference/res
 
 | Google v1 licenseAssignments method | Independent MCP tool | Release / provider proof |
 | --- | --- | --- |
-| `listForProduct` | `licensing_list_product_assignments` | Source PR under CI; LIVE Google response pending |
-| `listForProductAndSku` | `licensing_list_assignments` (backward compatible page opt-in) | Existing tool; page-cursor extension source under CI |
+| `listForProduct` | `licensing_list_product_assignments` | Merged PR #233; standalone tool not yet deployed/read on LIVE |
+| `listForProductAndSku` | `licensing_list_assignments` (backward compatible page opt-in) | Existing tool; cursor extension merged in #233 but not yet deployed |
 | `get` | `licensing_get_assignment` | Existing; requires Google admin authority |
 | `insert` | `licensing_assign_license` | Existing guarded write; paid mutation untested without exact independent approval |
 | `patch` | `licensing_update_assignment` | Existing guarded write; paid mutation untested without exact independent approval |
-| `update` (PUT) | `licensing_replace_assignment` | Source PR under CI; guarded billable write with readback, LIVE unpaid validation pending |
+| `update` (PUT) | `licensing_replace_assignment` | Merged PR #233; guarded billable PUT, not deployed or executed; live mutation needs separate approval |
 | `delete` | `licensing_remove_license` | Existing guarded destructive write; LIVE revoke untested without exact approval |
 
-**Note:** `workspace_plan_summary` already calls `listForProduct` internally to calculate product/SKU counts, but an internal helper is **not** complete user-facing API coverage. This inventory specifically corrects that missing native tool. Lists must preserve Google pagination and customer-wide read consent. All Workspace license assignment calls require Google's **Enterprise License Manager API** to be enabled at the actual user OAuth project, with the customer's own Google licensing/admin authority.
+**Note:** `workspace_plan_summary` already calls `listForProduct` internally to calculate product/SKU counts, but an internal helper is **not** complete user-facing API coverage. This inventory specifically corrects that missing native tool. Lists must preserve Google pagination and customer-wide read consent. All Workspace license assignment calls require Google's **Enterprise License Manager API** to be enabled at the actual user OAuth project, with the customer's own Google licensing/admin authority. An October 19 real owner-connected Google read verified the prior deployed `listForProduct` composite and `listForProductAndSku` native route succeed for the authorized customer's existing subscription, so the old assertion that this API is disabled is superseded. This is **not** a seven-method live acceptance: the two new standalone operations, paging extension, tenant negatives and paid PUT are not yet on the serving revision. See [sanitized provider receipt](plan/evidence/2026-10-19-live-enterprise-licensing-read.json).
 
 ## Google Cloud License Manager (licensemanager.googleapis.com) — separate provider, OPEN
 
