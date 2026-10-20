@@ -128,7 +128,11 @@
     "Cloud browser could not connect vanity host (one reload); canonical Vercel portal worked. Existing independently successful two-host HTTPS receipt retained.",
     "No new refresh/replay/revoke or original bearer rotation proof.",
     "No one-time probe rerun; prior valid A/B receipts retained.",
-    "No production flag, credential, Google scope, release or customer-data change. Browser sessions/login-attempt records changed through normal sign-in/logout.",
-    "No local npm execution claimed; exact-head Actions required before merge."
-  ]
+    "No production flag, credential, Google scope, release or customer-data change. Browser sessions/login-attempt records changed through normal sign-in/logout."
+  ],
+  "runnerRecovery": {
+    "httpsRuntime": "Actual terminal GET canonical /api/contract returned HTTP200 and exact deployed SHA d67c5d6ba545f7cfd3b31ca6eef239e025dfb2ef. Official GitHub clone subsequently succeeded; initial mirror clone failure did not establish missing shell access.",
+    "disposableClient": "Fresh read_only developer handoff setup blocked by automatic approval review for missing specific credential authorization. Do not resume setup/polling or inspect credential values pending owner approval. No useful existing credential was reused or revoked.",
+    "review": "Automatic Codex review unavailable due to account code-review usage limit (PR240 comment6283528707). No credits purchased; no completed independent review claimed. Full diff/manual evidence-provenance review and required exact-head CI remain required."
+  }
 }
