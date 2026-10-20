@@ -1,3 +1,9 @@
+## October 19 — specific owner authorization for checked same-day emergency v1 deployment (PENDING)
+
+After independently verifying merged main `803fdcf98947390033aaef89a8d40e9898ec0ada` exact-head CI green and deployed/live at `ab26461a0fe3179b9b085937e437d977b7d0134b`, the owner **reaffirmed** explicit authorization for an unscheduled release *after* being told ordinary October 19 receipts were already consumed. Existing same-day `live-promotion/2026-10-19` and `release-markers/2026-10-19` are immutable and cannot be changed, so we are adding a **reviewed policy exception** for only one extra checked/manual/leased live fast-forward, with a new immutable `release-exceptions/2026-10-19/FULL_SHA` receipt. The normal daily scheduled cap and release code remain unchanged. Actual checked source, CI, Git lease, Vercel independently READY/aliases and preserved original-owner access are still required. **No release or new provider acceptance is claimed before these observations; original queue remains 32 PASSED/8 PENDING**. See `.github/RELEASE-POLICY.md`, frozen [emergency plan](../pr-cards/2026-10-19-V1-EXCEPTIONAL-RELEASE.md). 
+
+---
+
 ## October 19 — owner-approved fast-track v1 early release (CURRENT, supersedes older completion wording)
 
 **Immediate finish line: secure, independently usable, verified v1 early production for approved/allowlisted users, not full Google API-method parity.** The owner expressly moved exhaustive provider API coverage to mandatory **post-v1 continuous releases**, without weakening its no-gap objective or erasing pending tasks. [Canonical v1 acceptance gate](V1-RELEASE-GATE.md), [machine classification](v1-release-gates.json), [full API coverage obligation](../PROVIDER-API-COVERAGE.md). Public general enrollment, provider OAuth verification, distribution and directory publication are separate gates; the initial release must accurately disclose Testing/allowlist restrictions.
