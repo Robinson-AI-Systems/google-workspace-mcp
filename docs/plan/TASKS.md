@@ -1,3 +1,7 @@
+## October 19 22:50 Denver — real principal developer OAuth callback defect repaired in source
+
+The owner-approved disposable RAR read_only client reached consent, but the actual developer callback refused its valid principal code. Source fix `3e888e3a301d385c3d81c5946f7f9aaf66aa547a` reads hashed unconsumed/unexpired principal codes, requires active owning principal/account and exact client/redirect/S256/resource binding, and preserves legacy code proof. Local focused handoff10/10, full unit2067/2067 and npm check passed; real PostgreSQL/RTC and final source CI remain required. This code is NOT deployed. Existing P10-MCP-PILOT minimum source advances only for this defect; original scope and dependencies remain. Queue33 PASSED/7 PENDING, v1 NOT READY. Owner authorized the disposable client and PR240 correction publication; git push lacked terminal credentials, so connected GitHub API publishes the same reviewed repository branch. No additional release is authorized. [Failure/fix evidence](evidence/2026-10-19-principal-developer-handoff-failure.json).
+
 ## October 19 22:37 Denver — disclosure accepted; original security gates remain open
 
 Owner approved the current invite-only v1 privacy, support and retention/deletion limitations. Combined with genuine public HTTPS, authenticated RAR portal and prior attributed owned-domain/Google Console evidence, `P10-6-PUBLIC-DISCLOSURE` is PASSED for the approved early audience. Authoritative queue: **33 PASSED / 7 PENDING**. This is one newly accepted original task, not a whole P10-6 subsection or bundle. General public enrollment, provider review and remaining security acceptance are not certified. Existing protected A/B no-enrollment receipts were recovered from PR217; preserve them and do not repeat them unnecessarily. Full sanitized accounting: [evidence](evidence/2026-10-19-approved-disclosure-browser-acceptance.json).
@@ -913,7 +917,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
   {
     "id": "P10-MCP-PILOT",
     "priority": 4,
-    "requiredRevision": "681932972526ac3ea943666abcb8955ac25eb742",
+    "requiredRevision": "3e888e3a301d385c3d81c5946f7f9aaf66aa547a",
     "task": "Prove distinct Google principal account authorization and two independent real custom MCP clients plus owner concurrency, resource/PKCE tampering, replay, revocation and harmless provider readback.",
     "procedure": "docs/PUBLIC-SIGNIN-OWNER-GUIDE.md",
     "gates": "Needs P10-VERIFY-GOOGLE passed, fully implemented P10-4 tool/store and P10-5 delegation isolation verified on real disposable Postgres, explicit owner-approved pilot; no write without authorization.",
@@ -924,7 +928,7 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "subsections": [
       "P10-3"
     ],
-    "lastEvidence": "PARTIAL: issue205 comment6283325804 records independent Primary/RAR whoami/Gmail/Drive reads, own-only account lists, bidirectional foreign-domain Admin refusals; read-only production counts2 grants/3 connections/2 distinct principals/2 client IDs, original17 owner records retained. Oct19 authenticated RAR portal and browser-only logout verified; post-logout RAR plugin and original owner adapter whoami both still match. Counts/domain denials do not prove bearer cross-principal isolation or real-client refresh/replay/revoke. P10-VERIFY-GOOGLE dependency and full original lifecycle matrix remain PENDING."
+    "lastEvidence": "PARTIAL: issue205 comment6283325804 records independent Primary/RAR whoami/Gmail/Drive reads, own-only account lists, bidirectional foreign-domain Admin refusals; read-only production counts2 grants/3 connections/2 distinct principals/2 client IDs, original17 owner records retained. Oct19 authenticated RAR portal and browser-only logout verified; post-logout RAR plugin and original owner adapter whoami both still match. Counts/domain denials do not prove bearer cross-principal isolation or real-client refresh/replay/revoke. P10-VERIFY-GOOGLE dependency and full original lifecycle matrix remain PENDING. Actual Oct19 owner-authorized disposable RAR read_only principal consent failed at developer callback because codeProof consulted only legacy owner oauth_codes. Source repair 3e888e3a301d385c3d81c5946f7f9aaf66aa547a adds hashed principal proof and exact resource checks with unit/real-PG regression; NOT LIVE until checked release. Minimum source advanced from 681932972526ac3ea943666abcb8955ac25eb742 solely for this observed fix; original task/gates/dependencies unchanged. Failed attempt issued no connection tokens; private runner never exchanged/revoked useful credentials."
   },
   {
     "id": "P10-CUSTOMER-DELEGATION",
