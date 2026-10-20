@@ -19,7 +19,7 @@ const CROSS_DOMAIN_FIELD = { type: 'boolean', description: 'Set to true only whe
 // Reports API "all" queries and customer-wide usage reports may expose activity
 // from other businesses even when no outside email appears in the arguments.
 // An opaque Google user ID is not proof of membership in the allowed domain.
-const UNFILTERABLE_CUSTOMER_READS=new Set(['admin_get_customer_info']);
+const UNFILTERABLE_CUSTOMER_READS=new Set(['admin_get_customer_info','licensing_list_assignments','licensing_list_product_assignments']);
 const DOMAIN_DEFAULT_LISTS=new Set(['admin_list_users','admin_list_groups']);
 const reportsNeedOrganizationConsent = (name, args) =>
   name.startsWith('reports_') && (name === 'reports_usage_customer' ||
