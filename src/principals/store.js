@@ -480,6 +480,27 @@ export async function listConnections(principalId){
    mode,version,created_at,expires_at,revoked_at FROM principal_connections
    WHERE principal_id=${principalId}::uuid ORDER BY created_at DESC`;
 }
+/**
+ * OAuth RFC 7009: an access or refresh token can revoke ONLY its registered
+ * client's V2 family. Hashed lookup avoids storing secret token material.
+ * Unknown, stale, foreign-client or replayed tokens are indistinguishable.
+ */
+export async function revokeClientPrincipalToken(token,clientId) {
+ if(typeof token!=='string'||!/^p10[ar]_[A-Za-z0-9_-]{43}$/.test(token)||
+    typeof clientId!=='string'||!clientId)return 0;
+ const q=sql(),tokenHash=digest(token);
+ const rows=await q`WITH owned AS (
+   SELECT family FROM principal_connections
+   WHERE client_id=${clientId} AND revoked_at IS NULL
+     AND (access_hash=${tokenHash} OR refresh_hash=${tokenHash})
+ ), revoked AS (
+   UPDATE principal_connections SET revoked_at=now()
+   WHERE family IN (SELECT family FROM owned) AND client_id=${clientId}
+     AND revoked_at IS NULL RETURNING id
+ ) SELECT count(*)::int AS revoked FROM revoked`;
+ return rows[0]?.revoked??0;
+}
+
 export async function revokeConnection(principalId,connectionId){
  requireScope(validUuid(principalId)&&validUuid(connectionId));
  const q=sql();
