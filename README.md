@@ -41,11 +41,11 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 <!-- BEGIN GENERATED TOOL CATALOG -->
 <!-- Registry-derived; regenerate with `npm run gen:catalog`. Do not edit this section by hand. -->
 
-**384 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
+**382 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
 
 | Area | Registered tools |
 | --- | ---: |
-| admin | 112 |
+| admin | 110 |
 | calendar | 24 |
 | chat | 8 |
 | chrome | 3 |
@@ -60,12 +60,12 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 | workflows | 12 |
 | workspace | 28 |
 
-### admin (112)
+### admin (110)
 
 - `admin_action_chrome_device`
 - `admin_action_mobile_device`
-- `admin_add_domain_alias`
 - `admin_add_domain`
+- `admin_add_domain_alias`
 - `admin_add_group_alias`
 - `admin_add_group_member`
 - `admin_add_user_alias`
@@ -74,27 +74,27 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `admin_create_feature`
 - `admin_create_group`
 - `admin_create_orgunit`
-- `admin_create_role_assignment`
 - `admin_create_role`
+- `admin_create_role_assignment`
 - `admin_create_schema`
 - `admin_create_user`
 - `admin_delete_alert`
 - `admin_delete_asp`
 - `admin_delete_building`
 - `admin_delete_calendar_resource`
-- `admin_delete_domain_alias`
 - `admin_delete_domain`
+- `admin_delete_domain_alias`
 - `admin_delete_feature`
-- `admin_delete_group_alias`
 - `admin_delete_group`
+- `admin_delete_group_alias`
 - `admin_delete_mobile_device`
 - `admin_delete_orgunit`
-- `admin_delete_role_assignment`
 - `admin_delete_role`
+- `admin_delete_role_assignment`
 - `admin_delete_schema`
 - `admin_delete_token`
-- `admin_delete_user_alias`
 - `admin_delete_user`
+- `admin_delete_user_alias`
 - `admin_get_alert`
 - `admin_get_available_privileges`
 - `admin_get_building`
@@ -102,15 +102,15 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `admin_get_chrome_device`
 - `admin_get_customer_info`
 - `admin_get_domain`
-- `admin_get_group_settings`
 - `admin_get_group`
+- `admin_get_group_settings`
 - `admin_get_mobile_device`
 - `admin_get_orgunit`
 - `admin_get_role`
 - `admin_get_schema`
 - `admin_get_token`
-- `admin_get_user_photo`
 - `admin_get_user`
+- `admin_get_user_photo`
 - `admin_list_alerts`
 - `admin_list_asp`
 - `admin_list_buildings`
@@ -144,9 +144,9 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `admin_update_calendar_resource`
 - `admin_update_chrome_device`
 - `admin_update_customer_info`
+- `admin_update_group`
 - `admin_update_group_member_role`
 - `admin_update_group_settings`
-- `admin_update_group`
 - `admin_update_orgunit`
 - `admin_update_role`
 - `admin_update_schema`
