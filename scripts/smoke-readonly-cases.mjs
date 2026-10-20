@@ -21,6 +21,7 @@ admin_list_users calendar_list_acl calendar_list_event_instances contacts_list
 datatransfer_list_transfers directory_list_people drive_list_changes
 drive_list_permissions drive_list_revisions drive_search_files gmail_list_history
 gmail_search identity_list_policies licensing_list_assignments
+licensing_list_product_assignments
 postmaster_list_domains postmaster_list_traffic_stats`,
  resource: `
 admin_get_2sv_status admin_get_alert
@@ -154,6 +155,11 @@ export const SOURCE_RESULT_PROOFS=Object.freeze({
   (v.history===undefined||exactRows(v,'history'))&&optionalCursor(v),
  workspace_gmail_search:(v)=>obj(v)&&
   (exactRows(v,'messages')||v.resultSizeEstimate===0)&&optionalCursor(v),
+ workspace_licensing_list_product_assignments:(v)=>obj(v)&&
+   Array.isArray(v.items)&&v.items.length<=200&&
+   v.items.every(a=>obj(a)&&str(a.userId)&&str(a.skuId))&&
+   (v.nextPageToken===null||str(v.nextPageToken))&&
+   typeof v.complete==='boolean'&&v.complete===(v.nextPageToken===null),
  workspace_postmaster_list_domains:(v)=>exactRows(v,'domains')&&
   Number.isSafeInteger(v.count)&&v.count===v.domains.length&&optionalCursor(v),
  workspace_postmaster_list_traffic_stats:(v,_account,args)=>obj(v)&&
@@ -193,6 +199,7 @@ admin_list_group_members admin_list_groups admin_list_mobile_devices
 admin_list_orgunits admin_list_role_assignments admin_list_roles
 admin_list_schemas admin_list_tokens admin_list_users
 identity_list_policies identity_policy_audit licensing_list_assignments
+licensing_list_product_assignments
 postmaster_list_domains postmaster_list_traffic_stats
 reports_activity reports_admin_activity reports_drive_activity
 reports_groups_activity reports_login_activity reports_mobile_activity

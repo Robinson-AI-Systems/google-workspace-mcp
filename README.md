@@ -41,11 +41,11 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 <!-- BEGIN GENERATED TOOL CATALOG -->
 <!-- Registry-derived; regenerate with `npm run gen:catalog`. Do not edit this section by hand. -->
 
-**382 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
+**384 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
 
 | Area | Registered tools |
 | --- | ---: |
-| admin | 110 |
+| admin | 112 |
 | calendar | 24 |
 | chat | 8 |
 | chrome | 3 |
@@ -60,7 +60,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 | workflows | 12 |
 | workspace | 28 |
 
-### admin (110)
+### admin (112)
 
 - `admin_action_chrome_device`
 - `admin_action_mobile_device`
@@ -156,7 +156,9 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `licensing_assign_license`
 - `licensing_get_assignment`
 - `licensing_list_assignments`
+- `licensing_list_product_assignments`
 - `licensing_remove_license`
+- `licensing_replace_assignment`
 - `licensing_update_assignment`
 - `reports_activity`
 - `reports_admin_activity`

@@ -51,7 +51,7 @@ describe('P0-2 reviewed catalog-wide read cases',()=>{
   const safe=new Set(SAFE_READ_PROBES.map(x=>x.name));
   const fixtures=new Set(FIXTURE_TOOL_NAMES);
   const additional=Object.keys(EXTRA_READ_CASES);
-  expect(additional).toHaveLength(123);
+  expect(additional).toHaveLength(124);
   expect(new Set(additional).size).toBe(additional.length);
   for(const name of READ_ONLY_TOOL_NAMES){
    const rtc=name.startsWith('workspace_')?name:'workspace_'+name;
@@ -107,6 +107,12 @@ describe('P0-2 reviewed catalog-wide read cases',()=>{
   expect(verifyAdditionalRead('workspace_admin_list_users',{users:[{primaryEmail:account}]},account)).toBe(true);
   expect(verifyAdditionalRead('workspace_admin_list_users',{users:[{}]},account)).toBe(false);
   expect(verifyAdditionalRead('workspace_admin_list_users',{},account)).toBe(false);
+  expect(verifyAdditionalRead('workspace_licensing_list_product_assignments',
+    {items:[{userId:'sam@example.test',skuId:'1010020028'}],nextPageToken:null,complete:true},account)).toBe(true);
+  expect(verifyAdditionalRead('workspace_licensing_list_product_assignments',
+    {items:[{}],nextPageToken:null,complete:true},account)).toBe(false);
+  expect(verifyAdditionalRead('workspace_licensing_list_product_assignments',
+    {items:[],nextPageToken:'next',complete:true},account)).toBe(false);
   expect(verifyAdditionalRead('workspace_chat_list_spaces',[],account)).toBe(true);
   expect(verifyAdditionalRead('workspace_admin_get_available_privileges',[{privilegeName:'test'}],account)).toBe(true);
   expect(verifyAdditionalRead('workspace_admin_list_user_aliases',['alias@example.test'],account)).toBe(true);

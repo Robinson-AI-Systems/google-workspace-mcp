@@ -57,7 +57,7 @@ export function toolMetadata(t,policy={}){
  const writes=isWrite(t.name),destructive=Boolean(GUARDS[t.name]?.destructive)||t.name==='workspace_undo_change';
  // RTC money denotes direct funds movement (none supported here). Billing
  // risk is separate and does not justify a developer-imposed user prohibition.
- const billingRisk=['licensing_assign_license','licensing_update_assignment','workspace_bulk_operation'].includes(t.name);
+ const billingRisk=['licensing_assign_license','licensing_update_assignment','licensing_replace_assignment','workspace_bulk_operation'].includes(t.name);
  const warning=billingRisk?'BILLING WARNING: possible Google charges; price unknown. ':'';
  return {...t,description:(warning+t.description).slice(0,160),area:rtcArea(t.name),
  profiles:['read_only','everyday','full'].filter(profile=>allowedTool(t.name,{...policy,profile,areas:[rtcArea(t.name)]})),
