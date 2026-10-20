@@ -29,8 +29,8 @@ describe('Google Enterprise License Manager full v1 method parity',()=>{
  it('customer-restricted users cannot list another domain until explicit read intent',async()=>{
   forgetCustomerIds();
   const {clients,calls}=customer();
-  const a=result(await registry.handlers.licensing_list_product_assignments({},clients));
-  const b=result(await registry.handlers.licensing_list_assignments({skuId:'sku'},clients));
+  const a=(await registry.handlers.licensing_list_product_assignments({},clients)).content[0].text;
+  const b=(await registry.handlers.licensing_list_assignments({skuId:'sku'},clients)).content[0].text;
   expect(a).toMatch(/^Refused:/);
   expect(b).toMatch(/^Refused:/);
   expect(calls).toHaveLength(0);
@@ -66,7 +66,10 @@ describe('Google Enterprise License Manager full v1 method parity',()=>{
   const good=result(await registry.handlers.licensing_list_product_assignments({crossDomain:true},clients));
   expect(good).toEqual({items:[],nextPageToken:null,complete:true});
   when('licensing.licenseAssignments.listForProduct').rejects(googleError(403,'forbidden','Access denied'));
-  await expect(registry.handlers.licensing_list_product_assignments({crossDomain:true},clients)).rejects.toThrow('Access denied');
+  const rejected=await registry.handlers.licensing_list_product_assignments({crossDomain:true},clients);
+  expect(rejected.isError).toBe(true);
+  expect(rejected._meta['robinson/error-code']).toBe('permission');
+  expect(rejected.content[0].text).toMatch(/Access denied/);
  });
  it('PUT is real Google update not PATCH (raw adapter contract, no real Google or billing mutation)',async()=>{
   const {clients,calls,when}=customer();
