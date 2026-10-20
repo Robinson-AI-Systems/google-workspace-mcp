@@ -1,5 +1,19 @@
 # P10-6 — launch information and protected pilot preflight
 
+## October 20 remote-runner recovery — owner currently has phone access only
+
+Maintenance within the existing P10-VERIFY-GOOGLE / P10-MCP-PILOT acceptance, zero product bundles. Baseline main `ba4c895fd76bc29b901d5c1057099859b9f86c6e`; no runtime source or release change.
+
+BrowserStack credentials are now correctly readable Development-only Config values in Vercel. Do not repeat credential-type changes. This runtime's authenticated plan request still received HTTP200 `Site Unavailable` HTML. TinyFish reached the anonymous account page, but its concrete run `afbf879a-7eb1-40dc-8b0b-112b0c780275` reports no JS/custom POST/cross-site form/independent-context controls; no POST or Google sign-in happened. The owner approved up to $2 existing TinyFish balance; 17 reported steps consumed $0.272 in agent charges, no top-up. It cannot perform this matrix.
+
+The next route is a GitHub-hosted runner to BrowserStack Automate. The separate `BrowserStack connection preflight` workflow first makes a **credential-free GET** to the fixed plan endpoint; a provider HTTP401 authentication challenge proves network reachability only. Its manually selected account step reads the same endpoint with GitHub Actions secrets, from owner-triggered reviewed main only; it starts no browser and reports no raw response, redirect, credential, URL query or exception. Synthetic tests do not count as actual network/account evidence.
+
+Phone-only setup **after the real network check passes**: repository Settings → Secrets and variables → Actions → New repository secret, names `BROWSERSTACK_USERNAME` and `BROWSERSTACK_ACCESS_KEY`, using the owner's existing BrowserStack values. Vercel variables are not automatically available in GitHub Actions. Never paste these into chat, workflow inputs, source, issues or artifacts. The connected GitHub API does not provide secrets administration; this is the one owner setup step unless a separately authorized administration route becomes available.
+
+Then Actions → BrowserStack connection preflight → Run workflow → main → select `read_account`. A plan read does not establish included/free execution entitlement, supported client version, successful Google login, interactive Android usability or CSRF acceptance. Check those before starting a browser; do not purchase/upgrade or infer a free trial. BrowserStack documents GitHub Actions execution and interactive takeover (which requires video and interactiveDebugging enabled); expose only the authenticated dashboard URL, never public/token-bearing session URLs or captured Google credentials.
+
+The actual remote CSRF runner and secure fresh-login handoff must be integrated after the transport/account prerequisite is established. The existing standalone local script is not falsely advertised as already running remotely. Preserve both real pilot identities, all useful grants and the full original acceptance matrix. Current mandatory v1 rows remain pending, 36PASSED/4PENDING. No owner action to install another plugin or use a PC is required for this preflight.
+
 This is the existing roadmap P10-6's source-readiness contribution, **not a new subsection or a second roadmap**. The original provider pilot and publication acceptance remains OPEN until the actual Google and external MCP evidence exists; the owner approved only a bounded non-billable two-user pilot, not a release or public activation (issue #205).
 
 <!-- bundle-plan:start -->
