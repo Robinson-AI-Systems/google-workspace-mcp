@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {createServer} from 'node:http';
 
 export const ORIGIN='https://google-workspace-mcp-chris-projects-de6cd1bf.vercel.app';
+export const REMOTE_FORM_ORIGIN='https://workspace-csrf-test.invalid';
 export const PILOTS=[
  {label:'Primary',email:'chris.tcr.2012@gmail.com'},
  {label:'RAR',email:'ops@robinsonappliancerentals.com'}
@@ -54,16 +55,21 @@ export async function checkNegatives(row,foreignCsrf){
  }
  return {label:row.label,checks:results};
 }
+export function crossSiteDocument(path){
+ const match=/^\/(preview|logout)\/(missing|wrong)$/.exec(path);
+ if(!match)return null;
+ const target=match[1]==='preview'?'/api/account':'/api/auth/logout';
+ return '<!doctype html><title>Controlled invalid CSRF test</title><form method="POST" action="'+ORIGIN+target+'">'+
+  (match[1]==='preview'?'<input type="hidden" name="action" value="delete_preview">':'')+
+  (match[2]==='wrong'?'<input type="hidden" name="csrf" value="'+wrong+'">':'')+
+  '<button>Submit invalid CSRF test</button></form>';
+}
 export async function startCrossSiteForms(){
  const server=createServer((req,res)=>{
-  const match=/^\/(preview|logout)\/(missing|wrong)$/.exec(req.url);
-  if(req.method!=='GET'||!match){res.writeHead(404);res.end();return;}
-  const path=match[1]==='preview'?'/api/account':'/api/auth/logout';
+  const html=crossSiteDocument(req.url);
+  if(req.method!=='GET'||!html){res.writeHead(404);res.end();return;}
   res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});
-  res.end('<!doctype html><title>Controlled invalid CSRF test</title><form method="POST" action="'+ORIGIN+path+'">'+
-   (match[1]==='preview'?'<input type="hidden" name="action" value="delete_preview">':'')+
-   (match[2]==='wrong'?'<input type="hidden" name="csrf" value="'+wrong+'">':'')+
-   '<button>Submit invalid CSRF test</button></form>');
+  res.end(html);
  });
  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
  return {origin:'http://127.0.0.1:'+server.address().port,
@@ -97,15 +103,17 @@ export async function cleanup(row){
  assert(after.status()===401,'cleanup_session_still_active');
  return 'logged_out_agents_preserved';
 }
-export async function exercise(rows,crossSiteOrigin){
+export async function exercise(rows,crossSiteOrigin,{onProgress=()=>{}}={}){
  const report={checks:[],crossSite:[],cleanup:[],scope:'authenticated HTTP negatives plus independently launched browser cross-site forms',
   independentDatabaseInventory:'NOT_PERFORMED',existingConnectorReadbacks:'NOT_PERFORMED',acceptance:'NOT_AUTOMATICALLY_PROMOTED'};
  try{
   assert(rows.length===2&&rows[0].csrf!==rows[1].csrf,'two_distinct_fresh_sessions_required');
-  assert(/^http:\/\/127\.0\.0\.1:\d+$/.test(crossSiteOrigin||''),'local_cross_site_forms_required');
+  assert(/^http:\/\/127\.0\.0\.1:\d+$/.test(crossSiteOrigin||'')||crossSiteOrigin===REMOTE_FORM_ORIGIN,'controlled_cross_site_forms_required');
   for(let index=0;index<rows.length;index++){
-   report.checks.push(await checkNegatives(rows[index],rows[1-index].csrf));
-   report.crossSite.push(await checkCrossSite(rows[index],crossSiteOrigin));
+   const completed=await checkNegatives(rows[index],rows[1-index].csrf);
+   report.checks.push(completed);onProgress({phase:'authenticated_negative_requests',...completed});
+   const crossCompleted=await checkCrossSite(rows[index],crossSiteOrigin);
+   report.crossSite.push(crossCompleted);onProgress({phase:'cross_site_forms',...crossCompleted});
   }
   report.result='PASS_BROWSER_CSRF_ONLY';
  }catch{
