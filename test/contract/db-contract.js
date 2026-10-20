@@ -111,16 +111,21 @@ export function runDbContract(label, { makeDb, seedLegacy }) {
       });
 
       it('lets a login code be used exactly once and carries the chosen account', async () => {
-        await db.createAuthCode({ code: 'code-1', clientId: 'c1', redirectUri: 'https://example.test/cb', codeChallenge: 'ch', codeChallengeMethod: 'S256', googleAccount: 'Rentals@Example.test' });
-        const first = await db.consumeAuthCode('code-1');
-        expect(first).toMatchObject({ client_id: 'c1', redirect_uri: 'https://example.test/cb', code_challenge: 'ch', google_account: 'rentals@example.test' });
-        expect(await db.consumeAuthCode('code-1')).toBeNull();
-        expect(await db.consumeAuthCode('never-issued')).toBeNull();
+        const verifier='V'.repeat(43),challenge=crypto.createHash('sha256').update(verifier).digest('base64url');
+        await db.createAuthCode({ code: 'code-1', clientId: 'c1', redirectUri: 'https://example.test/cb', codeChallenge: challenge, codeChallengeMethod: 'S256', googleAccount: 'Rentals@Example.test' });
+        const auth={clientId:'c1',redirectUri:'https://example.test/cb',verifier};
+        expect(await db.consumeAuthCode('code-1',{...auth,clientId:'other'})).toBeNull();
+        expect(await db.consumeAuthCode('code-1',{...auth,verifier:'X'.repeat(43)})).toBeNull();
+        const first = await db.consumeAuthCode('code-1',auth);
+        expect(first).toMatchObject({ client_id: 'c1', redirect_uri: 'https://example.test/cb', code_challenge: challenge, google_account: 'rentals@example.test' });
+        expect(await db.consumeAuthCode('code-1',auth)).toBeNull();
+        expect(await db.consumeAuthCode('never-issued',auth)).toBeNull();
       });
 
       it('refuses an expired login code', async () => {
-        await db.createAuthCode({ code: 'old', clientId: 'c1', redirectUri: 'https://example.test/cb', ttlSeconds: -60 });
-        expect(await db.consumeAuthCode('old')).toBeNull();
+        const verifier='V'.repeat(43),challenge=crypto.createHash('sha256').update(verifier).digest('base64url');
+        await db.createAuthCode({ code: 'old', clientId: 'c1', redirectUri: 'https://example.test/cb', codeChallenge:challenge,codeChallengeMethod:'S256',ttlSeconds: -60 });
+        expect(await db.consumeAuthCode('old',{clientId:'c1',redirectUri:'https://example.test/cb',verifier})).toBeNull();
       });
 
       it('carries the account through access and refresh tokens; old-style connections have none', async () => {
@@ -132,8 +137,9 @@ export function runDbContract(label, { makeDb, seedLegacy }) {
       });
 
       it('keeps restrictive settings on codes, tokens and refresh', async () => {
-        await db.createAuthCode({code:'rtc-code',clientId:'c1',redirectUri:'https://example.test/cb',profile:'read_only',listing:'compact',areas:['mail']});
-        const code=await db.consumeAuthCode('rtc-code');
+        const verifier='V'.repeat(43),challenge=crypto.createHash('sha256').update(verifier).digest('base64url');
+        await db.createAuthCode({code:'rtc-code',clientId:'c1',redirectUri:'https://example.test/cb',codeChallenge:challenge,codeChallengeMethod:'S256',profile:'read_only',listing:'compact',areas:['mail']});
+        const code=await db.consumeAuthCode('rtc-code',{clientId:'c1',redirectUri:'https://example.test/cb',verifier});
         expect(code).toMatchObject({profile:'read_only',listing:'compact',areas:['mail']});
         await db.createAccessToken({accessToken:'rtc-at',refreshToken:'rtc-rt',clientId:'c1',profile:code.profile,listing:code.listing,areas:code.areas});
         const first=await db.getTokenByRefreshToken('rtc-rt');
