@@ -96,7 +96,10 @@ export async function legacyOwnerContext(accessToken){
  const rows=await q`SELECT p.id AS principal_id,p.kind AS principal_kind,p.status,
    t.google_account,t.client_id,t.profile,t.listing,t.areas,t.mode,t.cost_policy
    FROM oauth_tokens t JOIN principals p ON p.id=${OWNER_ID}::uuid
-   WHERE t.access_token=${accessToken} AND t.expires_at>now() AND t.revoked_at IS NULL`;
+   WHERE t.access_token=${accessToken} AND t.expires_at>now() AND t.revoked_at IS NULL
+   AND NOT EXISTS(SELECT 1 FROM oauth_refresh_revocations r
+     WHERE r.client_id=t.client_id AND t.refresh_token IS NOT NULL
+       AND r.refresh_hash=encode(sha256(convert_to(t.refresh_token,'UTF8')),'hex'))`;
  return rows.length===1&&rows[0].status==='active'?Object.freeze({...rows[0],connection_id:digest(accessToken).slice(0,16)}):null;
 }
 export async function getVerifiedPrincipal(issuer,sub){
