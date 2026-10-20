@@ -51,6 +51,7 @@ const CALLS = {
   admin_update_customer_info: { updates: { language: 'en' } },
   licensing_assign_license: { skuId: '1010020020', userId: 'sam@example.test' },
   licensing_update_assignment: { skuId: '1010020020', userId: 'sam@example.test', newSkuId: '1010020025' },
+  licensing_replace_assignment: { skuId: '1010020020', userId: 'sam@example.test', newSkuId: '1010020025' },
   chrome_set_policy: { orgUnitPath: 'id:abc', policySchema: 'chrome.users.BrowserSignin', policyValue: { browserSignin: 'DISABLE' } },
   vault_create_matter: { name: 'Case 1' },
   vault_create_hold: { matterId: 'm1', name: 'Hold 1', corpus: 'MAIL', accountEmails: ['sam@example.test'] },
@@ -60,7 +61,7 @@ const CALLS = {
   workspace_set_allowed_domains: { email: 'ops@example.test', domains: ['example.test', 'other.test'] },
   workspace_revoke_connection: { tokenPrefix: 'CCCCCCCC' }
 };
-const DESTRUCTIVE = ['admin_create_user', 'admin_unsuspend_user', 'admin_undelete_user', 'admin_set_2sv_enforcement', 'admin_add_domain', 'admin_add_domain_alias', 'admin_create_role', 'admin_update_role', 'admin_create_role_assignment', 'admin_move_chrome_devices_to_orgunit', 'admin_update_customer_info', 'licensing_assign_license', 'licensing_update_assignment', 'chrome_set_policy', 'vault_create_hold', 'workflow_onboard_employee', 'workflow_add_domain_and_start_verification', 'workspace_set_allowed_domains', 'workspace_revoke_connection'];
+const DESTRUCTIVE = ['admin_create_user', 'admin_unsuspend_user', 'admin_undelete_user', 'admin_set_2sv_enforcement', 'admin_add_domain', 'admin_add_domain_alias', 'admin_create_role', 'admin_update_role', 'admin_create_role_assignment', 'admin_move_chrome_devices_to_orgunit', 'admin_update_customer_info', 'licensing_assign_license', 'licensing_update_assignment', 'licensing_replace_assignment', 'chrome_set_policy', 'vault_create_hold', 'workflow_onboard_employee', 'workflow_add_domain_and_start_verification', 'workspace_set_allowed_domains', 'workspace_revoke_connection'];
 const PLAIN = Object.keys(CALLS).filter((n) => !DESTRUCTIVE.includes(n));
 
 beforeEach(async () => {
