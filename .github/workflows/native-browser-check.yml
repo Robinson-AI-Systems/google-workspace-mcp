@@ -1,0 +1,34 @@
+name: Native browser helper verification
+on:
+  pull_request:
+    paths: ['scripts/*native-browser*', 'scripts/v1-live-csrf-browser.mjs', 'test/unit/native-browser-check.test.js', '.github/workflows/native-browser-check.yml']
+  push:
+    branches: [main]
+    paths: ['scripts/*native-browser*', 'scripts/v1-live-csrf-browser.mjs', 'test/unit/native-browser-check.test.js', '.github/workflows/native-browser-check.yml']
+permissions:
+  contents: read
+jobs:
+  chromium-local-fixture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/test-native-browser-ui.mjs
+  windows-launcher:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify Windows PowerShell 5.1 launcher and official portable Node checksum
+        shell: powershell
+        run: ./scripts/start-native-browser-check.ps1 -PrepareOnly
