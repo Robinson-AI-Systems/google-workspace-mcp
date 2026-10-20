@@ -342,4 +342,20 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
   expect(await store.readPrincipalAccess(y.accessToken)).toBeTruthy();
  });
 
+
+ it('consumes a legacy owner OAuth code exactly once across competing SQL sessions',async()=>{
+  const verifier=crypto.randomBytes(48).toString('base64url');
+  const challenge=crypto.createHash('sha256').update(verifier).digest('base64url');
+  const code='owner-once-'+crypto.randomBytes(16).toString('base64url');
+  const clientId='owner-race-client',redirectUri='https://client.test/return';
+  await db.createAuthCode({code,clientId,redirectUri,codeChallenge:challenge,
+    codeChallengeMethod:'S256',googleAccount:'owner@example.test'});
+  const original=()=>db.consumeAuthCode(code,{clientId,redirectUri,verifier});
+  expect(await db.consumeAuthCode(code,{clientId:'attacker',redirectUri,verifier})).toBeNull();
+  expect(await db.consumeAuthCode(code,{clientId,redirectUri,verifier:'X'.repeat(43)})).toBeNull();
+  const results=await Promise.all([original(),original()]);
+  expect(results.filter(Boolean)).toHaveLength(1);
+  expect(await original()).toBeNull();
+ });
+
 });
