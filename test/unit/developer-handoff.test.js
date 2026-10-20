@@ -1,6 +1,7 @@
 import {describe,it,expect} from 'vitest';
 import {generateKeyPairSync,createHash,privateDecrypt,constants} from 'node:crypto';
 import {createHandoff,validateStart} from '../../src/developer/handoff.js';
+import {handoffStore} from '../../src/developer/handoff-store.js';
 const keys=generateKeyPairSync('rsa',{modulusLength:2048});
 const origin='https://service.example';
 const secret='p'.repeat(43),challenge='c'.repeat(43),code='a'.repeat(43);
@@ -17,6 +18,34 @@ function fixture(){
  return {handler,store,row:()=>row};
 }
 describe('mobile developer OAuth handoff',()=>{
+ it('resolves only hashed principal codes, retaining the legacy lookup and no prefix fallback',async()=>{
+  const calls=[];const proof={client_id:'principal-client',resource:origin+'/api/mcp'};
+  const store=handoffStore(async(text,args)=>{calls.push({text,args});return [proof];},{google:true});
+  const principalCode='p10c_'+'n'.repeat(43);
+  expect(await store.codeProof(principalCode)).toBe(proof);
+  expect(calls[0].text).toContain('FROM principal_oauth_codes');
+  expect(calls[0].text).toContain('c.consumed_at IS NULL');
+  expect(calls[0].args).toEqual([createHash('sha256').update(principalCode).digest('hex')]);
+  expect(await store.codeProof('p10c_bad')).toBeNull();expect(calls).toHaveLength(1);
+  await store.codeProof(code);expect(calls[1].text).toContain('FROM oauth_codes');expect(calls[1].args).toEqual([code]);
+ });
+ it('seals and privately delivers principal codes while refusing wrong client, redirect, challenge or resource',async()=>{
+  for(const changed of [null,{client_id:'foreign_client'},{redirect_uri:'https://foreign.example/callback'},
+   {code_challenge:'x'.repeat(43)},{code_challenge_method:'plain'},{resource:'https://foreign.example/api/mcp'}]){
+   const {handler,row,store}=fixture();await handler({method:'POST',body:body(),headers:{}},response());
+   const principalCode='p10c_'+'n'.repeat(43);
+   store.codeProof=async value=>value===principalCode?{client_id:row().client_id,redirect_uri:origin+'/api/developer/connect',
+    code_challenge:challenge,code_challenge_method:'S256',resource:origin+'/api/mcp',...changed}:null;
+   const result=response();await handler({method:'GET',query:{state:row().state,code:principalCode},headers:{}},result);
+   expect(result.statusCode).toBe(changed?400:200);expect(result.data).not.toContain(principalCode);
+   if(changed){expect(row().status).toBe('pending');expect(row().sealed_code).toBeUndefined();}
+   else{
+    const poll=response();await handler({method:'GET',query:{state:row().state},headers:{authorization:'Bearer '+secret}},poll);
+    expect(privateDecrypt({key:keys.privateKey,oaepHash:'sha256',padding:constants.RSA_PKCS1_OAEP_PADDING},
+     Buffer.from(poll.data.sealed_code,'base64url')).toString()).toBe(principalCode);
+   }
+  }
+ });
  it('never denies, approves or delivers an existing TEST-pass transfer through the OAuth route',async()=>{
   const {handler,row}=fixture();await handler({method:'POST',body:body(),headers:{}},response());
   row().client_id='rtc-pass:developer_client';
