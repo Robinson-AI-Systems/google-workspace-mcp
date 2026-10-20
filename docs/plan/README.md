@@ -1,3 +1,15 @@
+## October 19 — owner-approved fast-track v1 early release (CURRENT, supersedes older completion wording)
+
+**Immediate finish line: secure, independently usable, verified v1 early production for approved/allowlisted users, not full Google API-method parity.** The owner expressly moved exhaustive provider API coverage to mandatory **post-v1 continuous releases**, without weakening its no-gap objective or erasing pending tasks. [Canonical v1 acceptance gate](V1-RELEASE-GATE.md), [machine classification](v1-release-gates.json), [full API coverage obligation](../PROVIDER-API-COVERAGE.md). Public general enrollment, provider OAuth verification, distribution and directory publication are separate gates; the initial release must accurately disclose Testing/allowlist restrictions.
+
+**Required original v1 acceptance remains NOT PASSED:** `P10-OWNER-CONTINUITY`, `P10-VERIFY-GOOGLE`, `P10-MCP-PILOT`, `P10-OWNER-MIGRATION-LIVE`, `P10-6-PUBLIC-DISCLOSURE`, `P10-6-OWNER-SUBJECT-PROBE`. Original `P9-LICENSE-PAID` and `P10-CUSTOMER-DELEGATION` remain **PENDING**, specifically **not** certified or advertised as tested v1 capabilities; require independent billable-operation approval or customer-owned DWD when later completed. Other passed records remain passed. Total authoritative queue still **32 PASSED / 8 PENDING**; no acceptance is upgraded by a scope decision.
+
+**Source and release status at adoption:** PR #235 OAuth PKCE S256/RFC7009 revoke/atomic legacy owner authorization and PR #236 Tasks v1 14/14 method mapping are **MERGED**, source-main `b557eab28847b5adc60e8a09c65cfe0908864843`, exact-source GitHub required CI green. Verified production was READY at **older** `ab26461a0fe3179b9b085937e437d977b7d0134b`, so new fixes are not yet live/provider accepted. No manual release or second real independently consented client claimed. `npm run v1:readiness` is read-only/fail-closed and does not certify production from supplied flags. Recheck source/deployment every session.
+
+**Fast-track ordering:** preserve all deployed eligible acceptance; checked normal release of ready code when permitted; original owner bearer/refresh proof; second Google identity's own consent and actual two-client OAuth/provider/isolation/denial/revoke; portal/privacy/owner migration/accurate selected feature acceptance; independently verified production v1 receipt. Correct real defects in bundled PRs. Do not execute full API-method expansion ahead of unmet v1 criteria merely because method-parity ledger is open. This is a release-scope decision, not new product bundle credit or permission to skip CI, genuine testing, specific Google/paid approvals, or release policy. Actual Hub LIVE discovery is Hub-owned.
+
+---
+
 ## October 19 — Sonnet Phase 2 partial and OAuth protocol security repair (IN PROGRESS)
 
 Owner supplied the independently performed Sonnet Phase 2 client report:
