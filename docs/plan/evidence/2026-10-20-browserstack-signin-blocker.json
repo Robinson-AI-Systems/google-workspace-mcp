@@ -1,0 +1,22 @@
+{
+  "kind": "observed_runner_outcomes_not_google_acceptance",
+  "sourceRevision": "87554f6c51b7b7cc9c2794b93a211d5f77baa72b",
+  "capabilityRun": {
+    "runId": 39460948400,
+    "jobId": 118759947423,
+    "result": "PASS_REMOTE_CAPABILITIES_ONLY",
+    "authenticatedGoogleSession": false
+  },
+  "fullRuns": [
+    {"runId":39462443787,"jobId":118765116729,"result":"INCOMPLETE","stage":"interactive_login_Primary","reason":"interactive_login_timeout","cleanup":"already_anonymous"},
+    {"runId":39464006870,"jobId":118770505638,"result":"INCOMPLETE","stage":"interactive_login_Primary","reason":"interactive_login_timeout","cleanup":"already_anonymous","completedAt":"2026-10-20T17:22:48Z"}
+  ],
+  "ownerObservation": "Google reported that the remote browser was unsupported; no successful Google pilot sign-in in these runs.",
+  "officialExplanation": "https://support.google.com/accounts/answer/7675428?hl=en",
+  "retryDecision": "No further automated Google sign-in attempts or browser-disguising workaround. Owner offered Windows 11 access; prepare ordinary native Chrome/Edge with manual sign-in and a reviewed local DevTools snippet.",
+  "providerBillableMinutes": "NOT_INDEPENDENTLY_RETRIEVED",
+  "remainingIncludedMinutes": "NOT_INDEPENDENTLY_RETRIEVED",
+  "acceptance": "NOT_PROMOTED",
+  "queue": {"passed":36,"pending":4},
+  "v1": "NOT_READY"
+}

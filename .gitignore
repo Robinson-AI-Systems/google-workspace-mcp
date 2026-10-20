@@ -5,3 +5,4 @@ config.json
 .env.local
 *.log
 .vercel
+native-browser-check-output/

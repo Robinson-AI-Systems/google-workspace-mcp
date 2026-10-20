@@ -1,5 +1,10 @@
 # P10-6 — launch information and protected pilot preflight
 
+## October20 — Windows native browser route after Google remote sign-in failure
+
+BrowserStack capability run39460948400 passed only the anonymous tool check. Full runs39462443787 and39464006870 timed out at Primary sign-in; both reported `already_anonymous` cleanup. Owner reports Google rejects the remote browser. [Exact outcomes](../plan/evidence/2026-10-20-browserstack-signin-blocker.json). No retry/disguised automation or newly claimed live security pass. Owner now offers Windows11 access. [Native Windows procedure](../WINDOWS-NATIVE-BROWSER-CHECK.md) uses normal Chrome/Edge manual sign-in, a reviewed DevTools snippet and local loopback forms; no production source/deployment change. The tooling must pass focused/unit, actual Chromium fixture and Windows launcher CI before handoff. Actual pilot execution and independent cleanup/inventory/connector readbacks remain pending. Sequential native checks do not claim a live crossed-active-session token or simultaneous authenticated contexts; existing real PostgreSQL and prior live isolation evidence remain distinct. Zero product bundles; **36PASSED/4PENDING, v1 NOT READY**. Earlier BrowserStack-next instructions below are historical.
+
+
 ## October 20 — BrowserStack account accepted; bounded remote runner prepared
 
 New real account proof: [receipt](../plan/evidence/2026-10-20-browserstack-account-preflight.json), Actions run39458157168/job118750403851, authenticated HTTP200, capacity5/active0/queued0. Both GitHub Actions secrets work. Stop asking for credential setup or account preflight. Owner reports approximately100 free minutes and explicitly authorizes conservative use at10:35Denver; no paid upgrade/top-up is authorized.
