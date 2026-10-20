@@ -1,0 +1,16 @@
+{
+  "observedAt": "2026-10-20T16:31:29Z",
+  "scope": "Authenticated read-only BrowserStack plan, not browser or CSRF acceptance",
+  "workflowRun": 39458157168,
+  "job": 118750403851,
+  "sourceRevision": "0eee17afaf0c6d8117553638cbc927565bafee3c",
+  "http": 200,
+  "result": "PASS_ACCOUNT_READ_ONLY",
+  "capacity": {"parallel_sessions_max_allowed": 5, "parallel_sessions_running": 0, "queued_sessions": 0},
+  "sessionStarted": false,
+  "includedFreeEntitlement": "Owner reports approximately100 free browser minutes; provider balance not exposed by this plan receipt",
+  "ownerAuthority": "October20 10:35 Denver: owner explicitly authorizes using the included minutes conservatively; no purchase or upgrade",
+  "liveGoogleLogin": "NOT_PERFORMED",
+  "liveCsrfAcceptance": "NOT_PERFORMED",
+  "acceptance": {"passed": 36, "pending": 4}
+}

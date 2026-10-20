@@ -1,3 +1,7 @@
+## October 20 — remote account check passed; browser controller prepared
+
+BrowserStack accepted the GitHub Actions credentials with real HTTP200 and capacity5/active0. Owner now authorizes conservative included-minute usage. The bounded remote controller is prepared for an anonymous capability check before the full interactive two-pilot test; [operator details](../pr-cards/P10-PILOT-READINESS.md#october-20--browserstack-account-accepted-bounded-remote-runner-prepared), [actual account receipt](evidence/2026-10-20-browserstack-account-preflight.json). No remote-session/Google-login/CSRF pass is inferred.36PASSED/4PENDING, v1 NOT READY. Earlier account-prerequisite notes are historical.
+
 ## October 20 — phone-only remote browser recovery
 
 BrowserStack credentials are correctly readable in Vercel; this runtime's provider network path still returns Site Unavailable. TinyFish lacks the required controlled-request/browser-context capabilities, so signing in there cannot finish this test. A separate GitHub Actions connection preflight is prepared to check network reachability without credentials, then an owner-triggered account read using GitHub Actions secrets. It starts no browser and proves no CSRF acceptance. [Exact recovery and phone setup](../pr-cards/P10-PILOT-READINESS.md#october-20-remote-runner-recovery--owner-currently-has-phone-access-only). No PC, another plugin, release or changed Vercel variables required for that preflight. Actual external results must be recorded after execution; 36PASSED/4PENDING and v1 NOT READY remain unchanged.

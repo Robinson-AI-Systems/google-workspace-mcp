@@ -1,0 +1,63 @@
+name: BrowserStack controlled CSRF test
+on:
+  # One owner-authorized capability run after the agent reruns the successful
+  # account preflight. Fixed run/attempt prevents ongoing automatic usage.
+  workflow_run:
+    workflows: [BrowserStack connection preflight]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Capability first; csrf requires two interactive Google sign-ins
+        type: choice
+        options: [capability, csrf]
+        default: capability
+      included_usage_confirmed:
+        description: Use owner-authorized included Automate minutes (no purchase)
+        type: boolean
+        default: true
+      expected_live:
+        description: Exact independently verified production SHA
+        type: string
+        default: fbac5349fa66fed52502730441b4a84d05d6fb7c
+permissions:
+  contents: read
+concurrency:
+  group: workspace-browserstack-csrf
+  cancel-in-progress: false
+jobs:
+  browser:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.included_usage_confirmed) ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.id == 39458157168 &&
+      github.event.workflow_run.run_attempt == 2 && github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'workflow_dispatch' &&
+      github.event.workflow_run.head_sha == '0eee17afaf0c6d8117553638cbc927565bafee3c')
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.mode == 'csrf' && 18 || 5 }}
+    steps:
+      - name: Require owner initiation and reviewed main
+        env:
+          ACTOR: ${{ github.actor }}
+          TRIGGERING_ACTOR: ${{ github.triggering_actor }}
+          REF: ${{ github.ref }}
+        run: |
+          test "$ACTOR" = christcr2012
+          test "$TRIGGERING_ACTOR" = christcr2012
+          test "$REF" = refs/heads/main
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Start the explicitly approved remote browser run
+        run: node scripts/v1-browserstack-csrf.mjs --expected-live "$EXPECTED_LIVE" --mode "$MODE"
+        env:
+          EXPECTED_LIVE: ${{ inputs.expected_live || 'fbac5349fa66fed52502730441b4a84d05d6fb7c' }}
+          MODE: ${{ inputs.mode || 'capability' }}
+          BROWSERSTACK_INCLUDED_USAGE_CONFIRMED: 'true'
+          BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+          BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
