@@ -627,12 +627,20 @@ export async function createAuthCode({ code, clientId, redirectUri, codeChalleng
   `;
 }
 
-export async function consumeAuthCode(code) {
-  const q = db();
-  const rows = await q`SELECT * FROM oauth_codes WHERE code = ${code} AND used = false AND expires_at > now()`;
-  if (!rows[0]) return null;
-  await q`UPDATE oauth_codes SET used = true WHERE code = ${code}`;
-  return rows[0];
+export async function consumeAuthCode(code, { clientId, redirectUri, verifier } = {}) {
+  // One statement must both authenticate and consume the code. The old
+  // SELECT then UPDATE permitted two simultaneous exchanges to mint tokens.
+  if(typeof code!=='string'||!code||typeof clientId!=='string'||
+     typeof redirectUri!=='string'||typeof verifier!=='string'||
+     !/^[A-Za-z0-9._~-]{43,128}$/.test(verifier))return null;
+  const challenge=crypto.createHash('sha256').update(verifier).digest('base64url');
+  const q=db();
+  const rows=await q`UPDATE oauth_codes SET used=true
+    WHERE code=${code} AND client_id=${clientId} AND redirect_uri=${redirectUri}
+      AND code_challenge_method='S256' AND code_challenge=${challenge}
+      AND used=false AND expires_at>now()
+    RETURNING *`;
+  return rows[0]||null;
 }
 
 // ---------- Connector OAuth: access tokens ----------
