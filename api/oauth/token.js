@@ -43,7 +43,15 @@ export default async function handler(req, res) {
   }
 
   if (body.grant_type === 'authorization_code') {
-    const record = await consumeAuthCode(body.code);
+    // Reject an unrelated/unregistered client before touching a one-time code.
+    const client = await getOAuthClient(body.client_id);
+    if (!client || (client.client_secret && client.client_secret !== body.client_secret)) {
+      res.status(401).json({error:'invalid_client'});
+      return;
+    }
+    const record = await consumeAuthCode(body.code,{
+      clientId:body.client_id,redirectUri:body.redirect_uri,verifier:body.code_verifier
+    });
     if (!record) {
       res.status(400).json({ error: 'invalid_grant', error_description: 'Code is invalid, expired, or already used.' });
       return;
@@ -58,16 +66,6 @@ export default async function handler(req, res) {
     }
     if (!verifyPkce(body.code_verifier, record.code_challenge, record.code_challenge_method)) {
       res.status(400).json({ error: 'invalid_grant', error_description: 'PKCE verification failed.' });
-      return;
-    }
-
-    const client = await getOAuthClient(body.client_id);
-    if (!client) {
-      res.status(401).json({ error: 'invalid_client' });
-      return;
-    }
-    if (client.client_secret && client.client_secret !== body.client_secret) {
-      res.status(401).json({ error: 'invalid_client' });
       return;
     }
 
