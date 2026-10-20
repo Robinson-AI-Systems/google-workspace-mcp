@@ -1,0 +1,60 @@
+name: v1 real live public acceptance
+on:
+  pull_request:
+    paths:
+      - 'scripts/v1-live-public-smoke.mjs'
+      - 'scripts/v1-live-public-smoke.test.mjs'
+      - '.github/workflows/v1-live-public.yml'
+  push:
+    branches: [live]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v1-live-public-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  live-public:
+    name: real-source-pinned-anonymous-https
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Local adversarial source contract
+        run: node --test scripts/v1-live-public-smoke.test.mjs
+      - name: Independently read exact live GitHub revision
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          LIVE_SHA="$(gh api "repos/$GH_REPO/git/ref/heads/live" --jq '.object.sha')"
+          [[ "$LIVE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          echo "V1_EXPECTED_LIVE_SHA=$LIVE_SHA" >> "$GITHUB_ENV"
+          echo "Target live revision: ${LIVE_SHA:0:12}"
+      - name: Independently verify real Vercel public HTTPS, no credentials
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "push" ]]; then
+            # A live push starts an asynchronous production deployment.
+            # Retry its exact source with a bounded window, never accept old source.
+            for attempt in $(seq 1 18); do
+              if node scripts/v1-live-public-smoke.mjs --expected-live "$V1_EXPECTED_LIVE_SHA"; then
+                exit 0
+              fi
+              if [[ "$attempt" == "18" ]]; then exit 1; fi
+              sleep 15
+            done
+          else
+            node scripts/v1-live-public-smoke.mjs --expected-live "$V1_EXPECTED_LIVE_SHA"
+          fi
