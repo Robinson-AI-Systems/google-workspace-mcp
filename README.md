@@ -41,7 +41,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 <!-- BEGIN GENERATED TOOL CATALOG -->
 <!-- Registry-derived; regenerate with `npm run gen:catalog`. Do not edit this section by hand. -->
 
-**384 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
+**387 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
 
 | Area | Registered tools |
 | --- | ---: |
@@ -56,7 +56,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 | identity | 5 |
 | mail | 60 |
 | people | 9 |
-| tasks | 11 |
+| tasks | 14 |
 | workflows | 12 |
 | workspace | 28 |
 
@@ -426,7 +426,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `directory_list_people`
 - `directory_search_people`
 
-### tasks (11)
+### tasks (14)
 
 - `tasks_clear_completed`
 - `tasks_create_task`
@@ -437,6 +437,9 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `tasks_get_tasklist`
 - `tasks_list_tasklists`
 - `tasks_list_tasks`
+- `tasks_move_task`
+- `tasks_replace_task`
+- `tasks_replace_tasklist`
 - `tasks_update_task`
 - `tasks_update_tasklist`
 

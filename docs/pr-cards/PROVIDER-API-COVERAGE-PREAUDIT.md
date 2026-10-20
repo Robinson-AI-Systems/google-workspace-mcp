@@ -80,3 +80,43 @@ single console menu, single operation summary or existing REST helper does
 **Disposition:** PARTIAL; complete provider coverage, Sonnet Phase 2 and latest
 licensing source live proof are **PENDING**. No release, owner-credential changes,
 Google writes, paid actions, public enrollment or Hub changes were performed.
+
+## Google Tasks v1 complete method coverage — plan (October 19)
+
+Current official references: [tasklists](https://developers.google.com/workspace/tasks/reference/rest/v1/tasklists) has 6 methods; [tasks](https://developers.google.com/workspace/tasks/reference/rest/v1/tasks) has 8 methods. The existing registry exposes 11/14, missing both PUT updates and tasks.move. Current list methods lack public cursor, full Google query filters and assignment toggles. These are confirmed developer-feature gaps, not account/Google subscription limits. Preserve existing tool names/legacy array returns for *complete* pages while exposing a structured continuation object on paginated results.
+
+<!-- bundle-plan:start -->
+```json
+{
+  "workKind": "ENGINEERING",
+  "baseRevision": "f1bca37351cf037fb7e8abaa97dd88db5b1907f2",
+  "outcome": "Deliver all fourteen public Google Tasks v1 tasklists/tasks methods via independent guarded native MCP operations, including complete pages, list filtering, insert position and move, distinct PUT and PATCH behaviors and provider failures.",
+  "integrationBoundary": "Google Tasks v1 current-user OAuth only: selected client tasklists/tasks API, wrapped runtime registry, write guards, exact method/arg tests and generated catalog; no Google Cloud, owner grants, Stage 2 dispatch or release.",
+  "newEngineering": "Expose distinct tasklists.update PUT, tasks.update PUT and tasks.move POST with exact query/body; add list page tokens, bounded maxResults and official filter flags, explicit truncated paging response and backwards compatibility; guard writes, add mocked provider contract and negative/readback tests.",
+  "estimatedProductionLines": 190,
+  "relatedWorkDecision": "Continue the owner-approved no-gap provider method inventory through Google Tasks in a coherent single-provider bundle while preserving P0-2/P10-6 live acceptance and policy guard boundaries; do not invent completion credit for the unfinished original subsection.",
+  "subsections": [
+    {
+      "id":"P0-2",
+      "acceptance":["Report committed. Every failure is either fixed in this PR (if trivial) or turned into a row in the Known bugs table of ARCHITECTURE.md with a card reference."],
+      "remainingEngineering":["Tasks direct API missing three native operations and silently truncated default list pages; add schema, guards, pagination, provider mapping and tests."],
+      "remainingWork":["Full original read-only catalog/provider acceptance beyond Tasks remains queued, not passed."]
+    },
+    {
+      "id":"P10-6",
+      "acceptance":["Standalone two-principal direct MCP product retains per-user/domain authorization, real provider access and denial. Completion remains separately dependent on real two-client OAuth/refresh/revocation."],
+      "remainingEngineering":["Expose complete scoped Google Tasks methods without unguarded mutation, implicit cross-principal use or false completion."],
+      "remainingWork":["Actual distinct second Google consent/client, refresh/replay/revocation and owner credential lifecycle are still pending."]
+    }
+  ]
+}
+```
+<!-- bundle-plan:end -->
+
+### Acceptance checklist
+- [ ] 14/14 official Tasks method IDs mapped to native callable tools, stable original machine names, exact SDK arguments/body.
+- [ ] tasklist and task list methods support maxResults<=100, nextPageToken, all documented filter options; no silent truncated success and bounded compatible completed first-page arrays.
+- [ ] PUT vs PATCH explicit, move parent/previous/destinationTasklist, insert parent/previous, source and destination exact consent; no raw request metadata borrowed across principal.
+- [ ] Every new write guarded with dryRun/confirm where consequential and before/after readback, no provider calls for a refused preview.
+- [ ] Fake provider success/negative validation, cursor and error propagation; catalog and read-only profile tests, no real Google mutation.
+- [ ] Required exact-head check/unit/db/rtc/aggregate/release-policy green, code review and merge only after approval gates; actual live provider acceptance remains OPEN.
