@@ -1,0 +1,39 @@
+{
+  "observedDate": "2026-10-20",
+  "scope": "Execution capability diagnosis only; no live security pass",
+  "browserstack": {
+    "connectedTools": 40,
+    "setupTool": "SDK instructions only",
+    "liveTool": "Launch URL only",
+    "liveUrlInCloudBrowser": "Site Unavailable",
+    "runtimeCredentialsConfigured": false,
+    "remoteSessionObserved": false,
+    "paidUsageStarted": false
+  },
+  "standalonePlaywright": {
+    "installedVersion": "1.62.1",
+    "browserBinaryAvailable": false,
+    "browserInstallAttempt": "official Playwright Chromium1234 download",
+    "installResult": "FAIL invalid/truncated ZIP; End of central directory record signature not found",
+    "interactiveDisplayAvailable": false,
+    "XvfbAvailable": false
+  },
+  "nextPrerequisites": [
+    "Protected BrowserStack username/access key in Workspace Development env",
+    "Verified included/free Automate entitlement",
+    "Supported secure fresh Google sign-in into runner-owned browser"
+  ],
+  "limits": [
+    "No cloud-browser attachment or session extraction",
+    "No cookie/token/credential in repository or report",
+    "No successful Google login, CSRF request, acceptance promotion or v1 completion claimed"
+  ],
+  "acceptance": {
+    "passed": 36,
+    "pending": 4,
+    "mandatoryV1Pending": [
+      "P10-VERIFY-GOOGLE",
+      "P10-MCP-PILOT"
+    ]
+  }
+}
