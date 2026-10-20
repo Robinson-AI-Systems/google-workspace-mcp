@@ -31,6 +31,7 @@
   "license": "MIT",
   "devDependencies": {
     "pg": "^8.23.1",
+    "playwright": "1.62.1",
     "vitest": "^3.2.7"
   }
 }
