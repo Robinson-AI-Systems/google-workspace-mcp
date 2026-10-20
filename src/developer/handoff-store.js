@@ -35,6 +35,18 @@ export function handoffStore(query,{google=false}={}){
     },
     async find(state){return (await query('SELECT * FROM developer_oauth_handoffs WHERE state=$1 AND expires_at>now()',[state]))[0]||null;},
     async codeProof(code){
+      // Principal codes are hashed and never belong to the legacy owner store.
+      // Proof is read-only: only the PKCE token exchange consumes the code.
+      if(google&&typeof code==='string'&&code.startsWith('p10c_')){
+        if(!/^p10c_[A-Za-z0-9_-]{43}$/.test(code))return null;
+        const rows=await query(`SELECT c.client_id,c.redirect_uri,c.code_challenge,
+          'S256' AS code_challenge_method,c.resource FROM principal_oauth_codes c
+          JOIN principals p ON p.id=c.principal_id
+          JOIN principal_google_accounts a ON a.id=c.account_id AND a.principal_id=c.principal_id
+          WHERE c.code_hash=$1 AND c.consumed_at IS NULL AND c.expires_at>now()
+          AND p.status='active' AND a.status='active'`,[createHash('sha256').update(code).digest('hex')]);
+        return rows[0]||null;
+      }
       const key=google?code:createHash('sha256').update(code).digest('hex');
       const text=google?`SELECT client_id,redirect_uri,code_challenge,code_challenge_method FROM oauth_codes WHERE code=$1 AND used=false AND expires_at>now()`:
         `SELECT client_id,data->>'redirect_uri' AS redirect_uri,data->>'code_challenge' AS code_challenge,data->>'code_challenge_method' AS code_challenge_method FROM oauth_codes WHERE code=$1 AND expires_at>now()`;

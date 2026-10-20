@@ -1,0 +1,30 @@
+{
+  "observed": "2026-10-19 22:50 America/Denver",
+  "deployed": "d67c5d6ba545f7cfd3b31ca6eef239e025dfb2ef",
+  "ownerApproved": "One disposable OAuth client, read_only RAR; then PR240 correction publication",
+  "browserResult": "The authorization did not match this agent request. No connection was saved.",
+  "runnerResult": "authorization_pending; no token exchange",
+  "rootCause": "Google handoff codeProof looked only in legacy oauth_codes; principal flow stores SHA256 p10c_ codes in principal_oauth_codes.",
+  "reviewedFix": "3e888e3a301d385c3d81c5946f7f9aaf66aa547a",
+  "liveFixVerified": false,
+  "verification": {
+    "focusedHandoff": {
+      "passed": 10
+    },
+    "unit": {
+      "passed": 2067,
+      "files": 129
+    },
+    "npmCheck": "PASS",
+    "localPostgres": "Unavailable; exact-head CI required",
+    "exactHeadCI": "PENDING"
+  },
+  "preserved": [
+    "Original identity/client binding and consent",
+    "S256 verifier/token exchange ownership",
+    "No raw principal code in database query or page",
+    "Owner legacy lookup",
+    "Original useful token families and Google grants"
+  ],
+  "remaining": "Exact-head CI/review/merge, checked source release, fresh own disposable OAuth authorization and real refresh/replay/RFC7009 cleanup. Do not retry old expired code or treat fixtures as live proof."
+}

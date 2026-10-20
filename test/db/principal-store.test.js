@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import pg from 'pg';
 import {describe,it,expect,beforeAll,afterAll,vi} from 'vitest';
+import {handoffStore} from '../../src/developer/handoff-store.js';
 const holder=vi.hoisted(()=>({pool:null}));
 vi.mock('@neondatabase/serverless',()=>({neon:()=>async(strings,...values)=>{
  let query=strings[0];for(let i=0;i<values.length;i++)query+='$'+(i+1)+strings[i+1];
@@ -216,6 +217,38 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
   await expect(store.setPrincipalDefault(b,aa)).rejects.toThrow('outside_scope');
   await expect(store.upsertLinkedAccount({principalId:b,issuer:'https://accounts.google.com',sub:'subject-aaa1',
     verifiedEmail:'a@example.test',scopeList:[],tokens:{access_token:'forged'}})).rejects.toThrow('identity_owned_elsewhere');
+ });
+ it('proves actual principal developer codes without consuming them, rejects expired/used/revoked owners',async()=>{
+  const handoff=handoffStore(async(text,values)=>(await pool.query(text,values)).rows,{google:true});
+  const verifier=crypto.randomBytes(48).toString('base64url');
+  const codeChallenge=crypto.createHash('sha256').update(verifier).digest('base64url');
+  const opts={principalId:a,accountId:aa,clientId:'developer-principal-client',
+   redirectUri:'https://service.test/api/developer/connect',resource:'https://service.test/api/mcp',codeChallenge};
+  const code=await store.issuePrincipalCode(opts);
+  const proof=await handoff.codeProof(code);
+  expect(proof).toEqual({client_id:opts.clientId,redirect_uri:opts.redirectUri,
+   resource:opts.resource,code_challenge:codeChallenge,code_challenge_method:'S256'});
+  expect(await handoff.codeProof(code)).toEqual(proof);
+  expect((await pool.query('SELECT consumed_at FROM principal_oauth_codes WHERE code_hash=$1',
+   [crypto.createHash('sha256').update(code).digest('hex')])).rows[0].consumed_at).toBeNull();
+  expect(await store.consumePrincipalCode({code,clientId:opts.clientId,redirectUri:opts.redirectUri,
+   resource:opts.resource,verifier})).toBeTruthy();
+  expect(await handoff.codeProof(code)).toBeNull();
+  expect(await handoff.codeProof('p10c_'+'x'.repeat(43))).toBeNull();
+  for(const invalid of ['expired','consumed','principal','account']){
+   const candidate=await store.issuePrincipalCode(opts);
+   const hash=crypto.createHash('sha256').update(candidate).digest('hex');
+   try{
+    if(invalid==='expired')await pool.query("UPDATE principal_oauth_codes SET expires_at=now()-interval '1 second' WHERE code_hash=$1",[hash]);
+    if(invalid==='consumed')await pool.query('UPDATE principal_oauth_codes SET consumed_at=now() WHERE code_hash=$1',[hash]);
+    if(invalid==='principal')await pool.query("UPDATE principals SET status='revoked' WHERE id=$1",[a]);
+    if(invalid==='account')await pool.query("UPDATE principal_google_accounts SET status='revoked' WHERE id=$1",[aa]);
+    expect(await handoff.codeProof(candidate)).toBeNull();
+   }finally{
+    await pool.query("UPDATE principals SET status='active' WHERE id=$1",[a]);
+    await pool.query("UPDATE principal_google_accounts SET status='active' WHERE id=$1",[aa]);
+   }
+  }
  });
  it('enforces refresh CAS and keeps omitted provider refresh token',async()=>{
   const results=await Promise.allSettled([1,2].map(n=>store.updateLinkedGrant({principalId:a,accountId:aa,version:0,

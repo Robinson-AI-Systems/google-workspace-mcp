@@ -58,7 +58,8 @@ export function createHandoff({store,origin,getClient,clientIp=req=>req.socket?.
         // Verify the native code, client, redirect and PKCE before accepting a callback.
         const proof=await store.codeProof(q.code);
         if(!proof||proof.client_id!==row.client_id||proof.redirect_uri!==origin+callbackPath||
-          proof.code_challenge!==row.challenge||proof.code_challenge_method!=='S256')
+          proof.code_challenge!==row.challenge||proof.code_challenge_method!=='S256'||
+          (proof.resource!==undefined&&proof.resource!==origin+'/api/mcp'))
           return page(400,'The authorization did not match this agent request. No connection was saved.');
         const sealed=publicEncrypt({key:row.public_key,oaepHash:'sha256',padding:constants.RSA_PKCS1_OAEP_PADDING},Buffer.from(q.code)).toString('base64url');
         if(!await store.approve(q.state,sealed))return page(409,'This connection request was already handled. Return to your chat.');
