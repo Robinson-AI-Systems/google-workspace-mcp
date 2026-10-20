@@ -651,6 +651,30 @@ export async function getAccessToken(accessToken) {
   return rows[0] || null;
 }
 
+/**
+ * RFC 7009: revoke only this registered OAuth client's own token and every
+ * active legacy access row sharing that refresh family. Never use owner
+ * connection prefix tools or expose whether an unrelated token exists.
+ */
+export async function revokeClientOAuthToken(token, clientId) {
+  if (typeof token !== 'string' || !token || token.length > 256 ||
+      typeof clientId !== 'string' || !clientId) return 0;
+  const q = db();
+  const rows = await q`WITH owned AS (
+      SELECT access_token,refresh_token FROM oauth_tokens
+      WHERE client_id=${clientId} AND revoked_at IS NULL
+        AND (access_token=${token} OR refresh_token=${token})
+    ), revoked AS (
+      UPDATE oauth_tokens t SET revoked_at=now()
+      WHERE t.client_id=${clientId} AND t.revoked_at IS NULL
+        AND (t.access_token IN (SELECT access_token FROM owned)
+          OR (t.refresh_token IS NOT NULL AND t.refresh_token IN
+             (SELECT refresh_token FROM owned WHERE refresh_token IS NOT NULL)))
+      RETURNING t.access_token
+    ) SELECT count(*)::int AS revoked FROM revoked`;
+  return rows[0]?.revoked ?? 0;
+}
+
 export async function deleteAccessToken(accessToken) {
   const q = db();
   await q`DELETE FROM oauth_tokens WHERE access_token = ${accessToken}`;
