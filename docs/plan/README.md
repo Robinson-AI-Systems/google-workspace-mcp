@@ -1,3 +1,16 @@
+## 2026-10-21 — native MCP/RTC bearer identity correction (source, not live acceptance)
+
+Both direct MCP and RTC gateway required exact Bearer capitalization, rejecting authorized
+clients with other legal HTTP scheme casing. Shared readBearer now accepts case/horizontal
+whitespace and preserves exact credential bytes and user/pass prefixes; malformed credentials
+still fail closed. Actual local SDK HTTP, principal no-owner-fallback and RTC pass tests cover
+this correction. [Frozen P10 card](../pr-cards/P10-NATIVE-BEARER-IDENTITY.md).
+Prior focused identity audit: 59 tests across seven files passed. Full CI/review/merge remain
+required for this source. No new Google consent, provider/client acceptance, rollout flag,
+production configuration or v1 pass. Existing Windows/browser CSRF proof and dependent P10 pilot
+acceptance remain outstanding. Three organizational contexts are explicit in END-USER-AUTHORITY;
+existing P10/P11 role/tenant/credential engineering remains separate from this protocol fix.
+
 ## 2026-10-21 — maximum-authority planning, required after v1
 
 Owner-approved [MAXIMUM-AUTHORITY](designs/MAXIMUM-AUTHORITY.md) adds P11-1..P11-5

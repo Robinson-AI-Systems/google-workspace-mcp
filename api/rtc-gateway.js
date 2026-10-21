@@ -1,3 +1,4 @@
+import {readBearer} from '../src/oauth/bearer.js';
 // RTC 1 HTTPS door, sharing the exact wrapped handlers used by /api/mcp.
 // Existing legacy MCP tool names remain untouched; HTTPS uses workspace_ aliases.
 import { rtcWriteReceipt,rtcReceiptSchema } from '../src/rtc/write-receipt.js';
@@ -114,7 +115,7 @@ export function createRtcGateway(){
  if(!['GET','POST'].includes(req.method))return fail(res,405,'invalid_args','Method is not supported.');
  await schemaReady();
  const authorization=req.headers.authorization||'';
- const token=authorization.startsWith('Bearer ')?authorization.slice(7):'';
+ const token=readBearer(authorization)||'';
  const pass=await getRtcPass(token);
  if(!pass)return fail(res,401,await rtcPassFailureCode(token),'A valid issued RTC pass is required.');
  if(!await chargeRtcPass(pass.id,pass.rate_limit_per_minute))return fail(res,429,'rate_limited','Pass call limit reached.','Retry after this minute.',60);

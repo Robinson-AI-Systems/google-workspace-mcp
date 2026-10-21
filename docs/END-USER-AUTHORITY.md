@@ -27,3 +27,19 @@ This decision applies across **GitHub MCP, Stripe MCP, Vercel MCP, Neon MCP, Goo
 [The P11 design](plan/designs/MAXIMUM-AUTHORITY.md) keeps ordinary OAuth Full separate
 from optional additional app/DWD authority; neither company identity nor sign-in alone
 grants admin/customer access. All P11 work is open and follows v1-critical work.
+
+## Organizational identity and explicit authority contexts — owner 2026-10-21
+
+Robinson AI Systems can act as developer/operator, explicitly scoped product administrator,
+or ordinary production customer. Every operation must bind environment, authenticated principal,
+tenant/workspace membership, active role, owned provider connection and operation. Company
+email/domain or organization membership alone creates neither global administration nor a
+permanent developer-only product profile. Secure context switching must reauthorize each role;
+operator credentials never substitute for another user's missing provider grant. Preserve valid
+existing accounts and credentials through a reviewed migration and scoped refresh/revocation.
+
+Existing maximum-authority/identity units retain this requirement. Source tests and incremental
+protocol fixes do not certify complete multi-user business onboarding, role switching, tenant
+isolation or supported live-client/provider acceptance. Builder safety, CI and release policies,
+provider grants, explicit user policies and genuine transaction protections remain independently
+enforced. Robinson's own production tenant has normal delegated authority and no cross-tenant access.
