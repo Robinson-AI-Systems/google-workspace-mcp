@@ -73,3 +73,10 @@ A nominal count of >380 tools does **not** establish that every supported Google
 3. Real eligible independent user/client/provider acceptance, including negative access, refresh/revoke, readback/cleanup and customer-specific admin/config provider constraints.
 4. A durable queue for operations that require a different user/license/Google review or integration credentials; blocked != passed.
 5. A checked source, reviewed PR, main CI, compliant release and exact-source READY production match; never claim live success from un-deployed source.
+
+## Maximum authority follow-through — 2026-10-21
+
+[P11-1..P11-5](plan/designs/MAXIMUM-AUTHORITY.md) now own the post-v1 inventory, ordinary
+Full OAuth parity, additional app/DWD credential lifecycle and independent coverage
+proof. These are TODO/OPEN in TASKS, not completed by this design. Preserve existing
+method tables and source/live distinction; Google Cloud scope stays separately owned.
