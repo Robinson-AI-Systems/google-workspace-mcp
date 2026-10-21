@@ -21,3 +21,9 @@
 Tests must separately prove: (1) developer/CI actors cannot spend or mutate real/live resources outside their approvals; (2) properly entitled end users and their agents can execute provider-supported actions after the user-configured authorization and accurate warnings, including operations prohibited to our developer agents; (3) out-of-scope, revoked and improperly delegated actions are still blocked; and (4) financial/irreversible effects are journaled without unsafe retries.
 
 This decision applies across **GitHub MCP, Stripe MCP, Vercel MCP, Neon MCP, Google Workspace MCP, Robinson's Toolkit Hub**, and applicable user-facing projects. Service-specific authority boundaries, including the distinction between tenant/customer/owner/admin roles, remain real and enforceable. This documentation update does **not** certify that runtime remediation or live acceptance has completed.
+
+## Maximum authority — 2026-10-21
+
+[The P11 design](plan/designs/MAXIMUM-AUTHORITY.md) keeps ordinary OAuth Full separate
+from optional additional app/DWD authority; neither company identity nor sign-in alone
+grants admin/customer access. All P11 work is open and follows v1-critical work.

@@ -1,3 +1,13 @@
+## 2026-10-21 — maximum-authority planning, required after v1
+
+Owner-approved [MAXIMUM-AUTHORITY](designs/MAXIMUM-AUTHORITY.md) adds P11-1..P11-5
+as TODO/OPEN in this authoritative ledger: method inventory, fullest ordinary OAuth,
+additional delegated credentials, provider gaps and independent proof. Extend the
+existing [coverage standard](../PROVIDER-API-COVERAGE.md), keep original P9/P10 work
+on its own IDs and preserve current v1 native-browser/security priority. No current
+v1 gate, provider grant, acceptance pass, credential, migration, release or spend
+changed. Zero implementation units; this is explicitly requested planning maintenance.
+
 ## October20 — Windows native browser route after Google remote sign-in failure
 
 BrowserStack capability run39460948400 passed only the anonymous tool check. Full runs39462443787 and39464006870 timed out at Primary sign-in; both reported `already_anonymous` cleanup. Owner reports Google rejects the remote browser. [Exact outcomes](evidence/2026-10-20-browserstack-signin-blocker.json). No retry/disguised automation or newly claimed live security pass. Owner now offers Windows11 access. [Native Windows procedure](../WINDOWS-NATIVE-BROWSER-CHECK.md) uses normal Chrome/Edge manual sign-in, a reviewed DevTools snippet and local loopback forms; no production source/deployment change. The tooling must pass focused/unit, actual Chromium fixture and Windows launcher CI before handoff. Actual pilot execution and independent cleanup/inventory/connector readbacks remain pending. Sequential native checks do not claim a live crossed-active-session token or simultaneous authenticated contexts; existing real PostgreSQL and prior live isolation evidence remain distinct. Zero product bundles; **36PASSED/4PENDING, v1 NOT READY**. Earlier BrowserStack-next instructions below are historical.
