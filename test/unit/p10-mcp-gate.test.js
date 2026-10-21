@@ -39,6 +39,12 @@ describe('P10-B public bearer recognition never dispatches owner provider tools'
   expect(r).toMatchObject({statusCode:403,body:{error:'public_dispatch_not_enabled'}});
   expect(h.googleCalls).toBe(0);
  });
+ it.each(['bearer ','BEARER\t','bEaReR  '])('keeps user credentials on their isolated path with scheme %j',async prefix=>{
+  h.authenticated=true;
+  const r=res();await handler({headers:{authorization:prefix+'p10a_'+'a'.repeat(43)}},r);
+  expect(r.statusCode).toBe(403);expect(r.body.error).toBe('public_dispatch_not_enabled');
+  expect(h.googleCalls).toBe(0);
+ });
  it('rejects unrecognized/forged user and owner bearer without owner fallback',async()=>{
   h.authenticated=false;
   const a=res();await handler({headers:{authorization:'Bearer p10a_'+'a'.repeat(43)}},a);

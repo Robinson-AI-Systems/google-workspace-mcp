@@ -81,9 +81,9 @@ describe('standalone direct MCP owner-origin and bearer trust',()=>{
   const r=await fetch(origin+'/api/mcp',{headers:{authorization:'Bearer rtc_pass_'+'A'.repeat(43)}});
   expect(r.status).toBe(401);expect(await r.json()).toMatchObject({error:'invalid_token'});
  });
- it('connects the real standalone MCP SDK, lists scoped tools and invokes a harmless account read',async()=>{
+ it.each(['Bearer ','bearer ','BEARER\t'])('connects the real standalone MCP SDK with %j and retains scoped tool behavior',async prefix=>{
   const transport=new StreamableHTTPClientTransport(new URL(origin+'/api/mcp'),{
-   requestInit:{headers:{authorization:'Bearer '+token}}
+   requestInit:{headers:{authorization:prefix+token}}
   });
   const client=new Client({name:'standalone-parity-test',version:'1.0.0'},{capabilities:{}});
   try{

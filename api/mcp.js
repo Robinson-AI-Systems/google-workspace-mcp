@@ -1,3 +1,4 @@
+import {readBearer} from '../src/oauth/bearer.js';
 // The actual MCP endpoint Claude talks to. A fresh Server + transport is built
 // for each HTTP request, but Vercel can reuse a warm function instance. Expensive
 // one-time initialization is therefore cached after it succeeds (see src/once.js).
@@ -86,7 +87,7 @@ export default async function handler(req, res) {
   await ensureSchemaReady();
 
   const authHeader = req.headers['authorization'] || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = readBearer(authHeader);
   const base = trustedMcpOrigin();
 
   if (!token) {

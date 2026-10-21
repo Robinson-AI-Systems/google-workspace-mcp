@@ -31,6 +31,14 @@ beforeAll(async()=>{
  ({token}=await holder.db.createRtcPass({googleAccount:'ops@example.test',rateLimit:120}));
 });
 describe('RTC HTTPS contract and pass authorization',()=>{
+ it.each(['bearer ','BEARER\t','bEaReR  '])('preserves exact RTC pass identity for HTTP scheme %j',async prefix=>{
+  const r=res();await handler({method:'GET',query:{door:'whoami'},body:{},
+   headers:{authorization:prefix+token}},r);
+  expect(r.statusCode).toBe(200);
+  expect(r.body.result.account).toBe('ops@example.test');
+  expect(r.body.result.profile).toBe('read_only');
+ });
+
  it('advertises the exact raw public RTC manifest',async()=>{
   const r=await invoke('GET',{door:'contract'}, {}, '');
   expect(r.statusCode).toBe(200);expect(r.body).toMatchObject({rtc:1,prefix:'workspace'});
