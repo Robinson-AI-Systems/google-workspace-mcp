@@ -147,3 +147,7 @@ References checked 2026-10-21:
 - https://developers.google.com/workspace/guides/create-credentials
 - https://developers.google.com/identity/protocols/oauth2/service-account
 - https://developers.google.com/workspace/guides/auth-overview
+
+## Sol 5.6 implementation entry — owner 2026-10-21
+
+The [concrete implementation handoff](../../UNIVERSAL-IDENTITY-HANDOFF.md) maps these existing units to current files, migration boundaries, negative/positive fixtures and exact verification families. Use it with the original cards; no units, approval states or acceptance results change. Independent user/tenant/role/grant implementation is eligible engineering, not a live-provider prerequisite. Reconcile original unfinished work before dependent expansion.
