@@ -40,7 +40,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "DELETE",
+          "httpPath": "/tasks/v1/users/@me/lists/{tasklist}",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasklists.get",
@@ -55,7 +58,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "GET",
+          "httpPath": "/tasks/v1/users/@me/lists/{tasklist}",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasklists.insert",
@@ -70,7 +76,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "POST",
+          "httpPath": "/tasks/v1/users/@me/lists",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasklists.list",
@@ -85,7 +94,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "GET",
+          "httpPath": "/tasks/v1/users/@me/lists",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasklists.patch",
@@ -100,7 +112,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "PATCH",
+          "httpPath": "/tasks/v1/users/@me/lists/{tasklist}",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasklists.update",
@@ -115,7 +130,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "PUT",
+          "httpPath": "/tasks/v1/users/@me/lists/{tasklist}",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasks.clear",
@@ -130,7 +148,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "POST",
+          "httpPath": "/tasks/v1/lists/{tasklist}/clear",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasks.delete",
@@ -145,7 +166,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "DELETE",
+          "httpPath": "/tasks/v1/lists/{tasklist}/tasks/{task}",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasks.get",
@@ -160,7 +184,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "GET",
+          "httpPath": "/tasks/v1/lists/{tasklist}/tasks/{task}",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasks.insert",
@@ -175,7 +202,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "POST",
+          "httpPath": "/tasks/v1/lists/{tasklist}/tasks",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasks.list",
@@ -190,7 +220,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "GET",
+          "httpPath": "/tasks/v1/lists/{tasklist}/tasks",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasks.move",
@@ -205,7 +238,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "POST",
+          "httpPath": "/tasks/v1/lists/{tasklist}/tasks/{task}/move",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasks.patch",
@@ -220,7 +256,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "PATCH",
+          "httpPath": "/tasks/v1/lists/{tasklist}/tasks/{task}",
+          "host": "tasks.googleapis.com"
         },
         {
           "method": "tasks.update",
@@ -235,7 +274,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "PUT",
+          "httpPath": "/tasks/v1/lists/{tasklist}/tasks/{task}",
+          "host": "tasks.googleapis.com"
         }
       ]
     },
@@ -268,7 +310,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "GET",
+          "httpPath": "/apps/licensing/v1/product/{productId}/users",
+          "host": "licensing.googleapis.com"
         },
         {
           "method": "licenseAssignments.listForProductAndSku",
@@ -283,7 +328,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "GET",
+          "httpPath": "/apps/licensing/v1/product/{productId}/sku/{skuId}/users",
+          "host": "licensing.googleapis.com"
         },
         {
           "method": "licenseAssignments.get",
@@ -298,7 +346,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "GET",
+          "httpPath": "/apps/licensing/v1/product/{productId}/sku/{skuId}/user/{userId}",
+          "host": "licensing.googleapis.com"
         },
         {
           "method": "licenseAssignments.insert",
@@ -313,7 +364,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "POST",
+          "httpPath": "/apps/licensing/v1/product/{productId}/sku/{skuId}/user",
+          "host": "licensing.googleapis.com"
         },
         {
           "method": "licenseAssignments.patch",
@@ -328,7 +382,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "PATCH",
+          "httpPath": "/apps/licensing/v1/product/{productId}/sku/{skuId}/user/{userId}",
+          "host": "licensing.googleapis.com"
         },
         {
           "method": "licenseAssignments.update",
@@ -343,7 +400,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "PUT",
+          "httpPath": "/apps/licensing/v1/product/{productId}/sku/{skuId}/user/{userId}",
+          "host": "licensing.googleapis.com"
         },
         {
           "method": "licenseAssignments.delete",
@@ -358,7 +418,10 @@
           "testEvidence": [],
           "liveStatus": "unverified",
           "liveRevision": null,
-          "liveEvidence": null
+          "liveEvidence": null,
+          "httpMethod": "DELETE",
+          "httpPath": "/apps/licensing/v1/product/{productId}/sku/{skuId}/user/{userId}",
+          "host": "licensing.googleapis.com"
         }
       ]
     }
