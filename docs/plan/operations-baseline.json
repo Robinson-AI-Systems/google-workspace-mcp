@@ -8,7 +8,7 @@
       "api": "tasks",
       "version": "v1",
       "reference": "https://developers.google.com/workspace/tasks/reference/rest",
-      "discovery": "https://tasks.googleapis.com/$discovery/rest?version=v1",
+      "discovery": "https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest",
       "checkedOn": "2026-10-21",
       "referenceMethodIds": [
         "tasklists.delete",
@@ -242,7 +242,7 @@
     {
       "api": "enterprise_license_manager",
       "version": "v1",
-      "reference": "https://developers.google.com/admin-sdk/licensing/reference/rest",
+      "reference": "https://developers.google.com/workspace/admin/licensing/reference/rest",
       "discovery": "https://licensing.googleapis.com/$discovery/rest?version=v1",
       "checkedOn": "2026-10-21",
       "referenceMethodIds": [
