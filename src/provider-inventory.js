@@ -37,7 +37,7 @@ export function inspectProviderInventory(inventory, registeredToolNames) {
       continue;
     }
     const expected = new Set();
-    for (const method of family.referenceMethodIds || []) {
+    for (const method of (Array.isArray(family.referenceMethodIds) ? family.referenceMethodIds : [])) {
       if (!key(method)) problems.push('Invalid reference method key: ' + method);
       if (expected.has(method)) problems.push('Duplicate reference method: ' + familyName + ':' + method);
       expected.add(method);
