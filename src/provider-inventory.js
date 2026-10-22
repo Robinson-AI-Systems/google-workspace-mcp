@@ -22,7 +22,7 @@ export function inspectProviderInventory(inventory, registeredToolNames) {
   if (inventory.complete !== false) problems.push('Initial baseline must explicitly declare complete:false; full coverage is not certified.');
   if (registered.size !== toolNames.length) problems.push('Duplicate name in runtime registered tool set.');
   if (!Array.isArray(inventory.families) || inventory.families.length === 0) problems.push('Inventory must include families.');
-  for (const family of inventory.families || []) {
+  for (const family of (Array.isArray(inventory.families) ? inventory.families : [])) {
     const familyName = family?.api + '/' + family?.version;
     if (!key(family?.api) || !key(family?.version)) problems.push('Invalid API family/version: ' + familyName);
     if (seenFamilies.has(familyName)) problems.push('Duplicate API family: ' + familyName);
@@ -70,7 +70,7 @@ export function inspectProviderInventory(inventory, registeredToolNames) {
       if (operation?.sourceStatus === 'mapped') {
         if (!key(operation.tool) || !registered.has(operation.tool)) problems.push('Mapped operation has no registered tool: ' + fullId + ' => ' + operation.tool);
         else linkedTools.add(operation.tool);
-        if (!operation.sourcePath.startsWith('src/')) problems.push('Mapped source must cite a source path: ' + fullId);
+        if (typeof operation.sourcePath !== 'string' || !operation.sourcePath.startsWith('src/')) problems.push('Mapped source must cite a source path: ' + fullId);
       } else if (operation?.tool) {
         problems.push('Unmapped operation cannot cite a working tool: ' + fullId);
       }
