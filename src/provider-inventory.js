@@ -55,8 +55,8 @@ export function inspectProviderInventory(inventory, registeredToolNames) {
       if (!STATUS.has(operation?.sourceStatus)) problems.push('Invalid source disposition: ' + fullId);
       else statuses[operation.sourceStatus]++;
       if (!/^(GET|POST|PUT|PATCH|DELETE)$/.test(operation?.httpMethod || '')) problems.push('Missing/invalid official HTTP method: ' + fullId);
-      if (typeof operation?.httpPath !== 'string' || !/^\\/[A-Za-z0-9_@./{}-]+$/.test(operation.httpPath)) problems.push('Missing/invalid official HTTP route: ' + fullId);
-      if (!/^[a-z0-9.-]+\\.googleapis\\.com$/.test(operation?.host || '')) problems.push('Missing/invalid provider hostname: ' + fullId);
+      if (typeof operation?.httpPath !== 'string' || !/^\/[A-Za-z0-9_@./{}-]+$/.test(operation.httpPath)) problems.push('Missing/invalid official HTTP route: ' + fullId);
+      if (!/^[a-z0-9.-]+\.googleapis\.com$/.test(operation?.host || '')) problems.push('Missing/invalid provider hostname: ' + fullId);
       if (!EFFECTS.has(operation?.effect)) problems.push('Missing/invalid side-effect class: ' + fullId);
       if (!CREDENTIALS.has(operation?.credentialKind)) problems.push('Missing/invalid credential type: ' + fullId);
       if (!operation?.roleOrEntitlement || !operation?.scopeAssessment) problems.push('Missing authority assessment: ' + fullId);
