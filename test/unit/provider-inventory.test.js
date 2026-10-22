@@ -84,6 +84,18 @@ describe('P11-1 provider method inventory foundation', () => {
     expect(JSON.stringify(result)).not.toMatch(/coveragePercent/);
   });
 
+  it('requires a genuine method, route and Google API host on every operation', () => {
+    const data = clone();
+    const op = data.families[0].operations[0];
+    op.httpMethod = '';
+    op.httpPath = '/bad route';
+    op.host = 'other.example.com';
+    const result = inspectProviderInventory(data, toolNames);
+    expect(result.problems.some((value) => value.includes('official HTTP method'))).toBe(true);
+    expect(result.problems.some((value) => value.includes('official HTTP route'))).toBe(true);
+    expect(result.problems.some((value) => value.includes('provider hostname'))).toBe(true);
+  });
+
   it('requires an explicit incomplete inventory status', () => {
     const data = clone();
     data.complete = true;
