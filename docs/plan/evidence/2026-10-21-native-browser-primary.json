@@ -1,0 +1,82 @@
+{
+  "kind": "native_browser_session_check",
+  "startedAt": "2026-10-22T01:11:21.279Z",
+  "result": "PASS_NATIVE_BROWSER_CSRF_SESSION",
+  "sameOrigin": [
+    {
+      "variant": "missing",
+      "path": "/api/account",
+      "http": 403,
+      "sessionSurvived": true,
+      "previewUnchanged": true
+    },
+    {
+      "variant": "missing",
+      "path": "/api/auth/logout",
+      "http": 403,
+      "sessionSurvived": true,
+      "previewUnchanged": true
+    },
+    {
+      "variant": "wrong",
+      "path": "/api/account",
+      "http": 403,
+      "sessionSurvived": true,
+      "previewUnchanged": true
+    },
+    {
+      "variant": "wrong",
+      "path": "/api/auth/logout",
+      "http": 403,
+      "sessionSurvived": true,
+      "previewUnchanged": true
+    }
+  ],
+  "crossSite": [
+    {
+      "path": "/api/account",
+      "variant": "missing",
+      "http": 403,
+      "formOrigin": "http://127.0.0.1:54094",
+      "sessionSurvived": true,
+      "previewUnchanged": true
+    },
+    {
+      "path": "/api/account",
+      "variant": "wrong",
+      "http": 403,
+      "formOrigin": "http://127.0.0.1:54094",
+      "sessionSurvived": true,
+      "previewUnchanged": true
+    },
+    {
+      "path": "/api/auth/logout",
+      "variant": "missing",
+      "http": 403,
+      "formOrigin": "http://127.0.0.1:54094",
+      "sessionSurvived": true,
+      "previewUnchanged": true
+    },
+    {
+      "path": "/api/auth/logout",
+      "variant": "wrong",
+      "http": 403,
+      "formOrigin": "http://127.0.0.1:54094",
+      "sessionSurvived": true,
+      "previewUnchanged": true
+    }
+  ],
+  "crossedActiveSessionToken": "NOT_PERFORMED",
+  "simultaneousIndependentContexts": "NOT_PERFORMED",
+  "independentDatabaseInventory": "NOT_PERFORMED",
+  "standingConnectorReadbacks": "NOT_PERFORMED",
+  "acceptance": "NOT_AUTOMATICALLY_PROMOTED",
+  "sourceRevision": "8886660b4dc03cd03fa5b4b4053641ca0ae44a4a",
+  "identity": "chris.tcr.2012@gmail.com",
+  "cleanup": {
+    "loggedOut": true,
+    "agentConnectionsRevoked": false,
+    "anonymousAfterward": true
+  },
+  "finishedAt": "2026-10-22T01:17:18.052Z"
+}

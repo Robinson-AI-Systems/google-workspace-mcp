@@ -1,3 +1,11 @@
+## October21 Denver — both live browser checks and final pilot acceptance passed
+
+Owner completed native Windows Primary/RAR runs on independently READY `8886660b4dc03cd03fa5b4b4053641ca0ae44a4a`: **16 actual HTTP403 refusals**, own-session/preview retention, both valid logouts and anonymous-afterward checks. Independent production SQL verifies exactly2 new sessions for2 distinct principals, both revoked; 2 Google grants/3 useful agents/17 active refresh-capable original owner records/0 deletion requests retained. Both connected Google identities still match. [Combined provenance and limitations](evidence/2026-10-21-native-browser-acceptance.json), [Primary report](evidence/2026-10-21-native-browser-primary.json), [RAR report](evidence/2026-10-21-native-browser-rar.json). The RAR report retains an earlier recovered expected-account dropdown mismatch; no failing server request is hidden.
+
+Original `P10-VERIFY-GOOGLE` and dependent `P10-MCP-PILOT` are now PASSED using these new results plus retained genuine nonce/subject, two-client lifecycle/isolation and original-owner evidence. Runtime `api/src` is unchanged between their original fbac5349 proof and verified live8886660; no original criterion, source pin or dependency changed. Sequential browser runs still do not claim live crossed-active-session tokens or simultaneous contexts; real PostgreSQL and prior live client-isolation proofs remain separate. **38PASSED/2PENDING; no mandatory v1 acceptance row remains pending.** Paid licensing and customer DWD remain unverified/excluded capabilities; exhaustive coverage and P11 work remain open.
+
+**Final current-main v1 readiness is still waiting for the checked release:** main includes PR249's Bearer casing/whitespace compatibility fix (plus later planning/docs), while production remains READY8886660. Preserve the normal scheduled main-to-live workflow; no new manual promotion, provider write, scope change, public enrollment or spending occurred. After that release, verify READY/source, original connection continuity and the v1 preflight again. Do not ask the owner to repeat these successful PC checks without a relevant change. This is new acceptance evidence, zero production code and zero newly claimed product bundles; older pending-browser checkpoints below are history.
+
 ## 2026-10-21 — maximum-authority planning, required after v1
 
 Owner-approved [MAXIMUM-AUTHORITY](designs/MAXIMUM-AUTHORITY.md) adds P11-1..P11-5
@@ -974,11 +982,11 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [
       "P10-OWNER-CONTINUITY"
     ],
-    "status": "PENDING",
+    "status": "PASSED",
     "subsections": [
       "P10-2"
     ],
-    "lastEvidence": "Oct20 READY fbac5349: real Primary/RAR identity-only signed login, own portal/scopes, valid nondeleting preview, GET logout refusal/session retained, POST logout and anonymous portal. SQL exactly2 new sessions/2principals/both revoked;2 useful Google grants/3 agents/17 originals/0deletion requests preserved. Live signed nonce negatives for both and signed nonpilot subject refusal despite email hints retained. SDK tests reject unverified email/issuer/audience/expiry/sub. PR242 real-PostgreSQL101tests includes3 actual-handler missing/wrong/crossed-CSRF/session/replay/nonmutation tests; not live-forged-POST proof. Original owner-continuity dependency now PASSED. Still PENDING for live authenticated forged-POST: controlled data: form blocked, browser evaluation read-only; no bypass/session export/new scope or grant. Receipts2026-10-20-browser-session-security.json and2026-10-20-original-workspace-refresh.json. Need authorized browser runner able to submit invalid-CSRF POST in its own approved real pilot session."
+    "lastEvidence": "Oct21 Denver READY8886660: owner-run native Windows Primary/RAR each passed4 authenticated missing/wrong-CSRF POST403 and4 real loopback cross-site form403, own session/preview unchanged after each; valid logout then anonymous401. Independent production SQL exactly2 fresh sessions/2 distinct principals/both revoked/0active,3principals/2Google grants/3useful agents/17active refresh-capable originals/0deletion requests retained; both connected real Google identities still match. RAR initial dropdown mismatch was before test POST and recovered; raw history retained. Prior actual signed nonce/nonpilot-subject/claim validation, own scopes and owner continuity proof retained; runtime unchanged from fbac5349. Live crossed-token/simultaneous browser contexts NOT claimed; real PG crossed-session proof remains separate. Full original scope/source/dependencies unchanged. Combined receipt2026-10-21-native-browser-acceptance.json plus both owner reports."
   },
   {
     "id": "P10-MCP-PILOT",
@@ -990,11 +998,11 @@ open obligations, original fixture ownership, approvals and deployment provenanc
     "dependsOn": [
       "P10-VERIFY-GOOGLE"
     ],
-    "status": "PENDING",
+    "status": "PASSED",
     "subsections": [
       "P10-3"
     ],
-    "lastEvidence": "PARTIAL Oct20 READY fbac5349: independent RAR/Primary read_only native clients exchanged code/read/rotated/refreshed/replayed/revoked, own-only accounts and direct+broker+batch write denial. Foreign-client code/refresh400 and revoke200 did not damage Primary. Real own Gmail metadata handle read; RAR and second Primary connection refused same exact handle. All3 disposable families revoked,2 Google grants/3 useful connections retained. Original Oct13 owner bearer/refresh now PASSED;17 originals preserved plus1 same-policy refresh record; both old/new bearer Google identity pass. Existing lifecycle/isolation receipts retained; still PENDING on P10-VERIFY-GOOGLE live authenticated invalid-CSRF prerequisite. No additional bulk Gmail probe, new consent or provider write. See2026-10-20-disposable-principal-lifecycle.json,2026-10-20-two-client-bearer-isolation.json,2026-10-20-original-workspace-refresh.json."
+    "lastEvidence": "Oct21 Denver P10-VERIFY-GOOGLE prerequisite now PASSED by actual two-pilot Windows POST/form/session/logout proof and independent SQL/provider readbacks at READY8886660. Retain genuine Oct20 RAR/Primary separately registered native clients: code/resource/redirect/S256/secret denial, own Google identity/read, actual refresh/rotation/replay/family revoke, foreign-client denial, scoped direct/broker/batch write refusal and foreign result-handle isolation; all3 disposable families revoked. Original owner bearer/refresh/limitedRTC continuity PASSED; 17 originals remain active. Real PG isolation proof retained; no synthetic rerun substitutes actual client evidence. Unchanged runtime from original fbac5349 to8886660, source/dependencies/criteria preserved. Receipts2026-10-20-disposable-principal-lifecycle.json,2026-10-20-two-client-bearer-isolation.json,2026-10-20-original-workspace-refresh.json and2026-10-21-native-browser-acceptance.json."
   },
   {
     "id": "P10-CUSTOMER-DELEGATION",

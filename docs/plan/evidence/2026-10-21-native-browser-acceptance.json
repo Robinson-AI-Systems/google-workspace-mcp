@@ -1,0 +1,112 @@
+{
+  "kind": "owner_run_live_browser_plus_independent_server_acceptance",
+  "localDate": "2026-10-21 America/Denver",
+  "sourceRevision": "8886660b4dc03cd03fa5b4b4053641ca0ae44a4a",
+  "provenance": {
+    "browser": "Owner-operated normal Windows browser and reviewed PR247 snippet; reports pasted directly into this conversation. Agent did not remotely observe individual request traffic.",
+    "independentServer": "Connected Neon read-only aggregate queries on the identified production project/main branch; connected Workspace actual Google identity readbacks; Vercel authenticated deployment metadata.",
+    "originalRuntimeUnchanged": "git diff fbac5349fa66fed52502730441b4a84d05d6fb7c..8886660b4dc03cd03fa5b4b4053641ca0ae44a4a -- api src is empty. Original acceptance source pins remain unchanged."
+  },
+  "reports": [
+    "2026-10-21-native-browser-primary.json",
+    "2026-10-21-native-browser-rar.json"
+  ],
+  "browserSummary": {
+    "sameOrigin403": 8,
+    "crossSite403": 8,
+    "bothOwnSessionsSurvivedAllRefusals": true,
+    "bothOwnPreviewCountsUnchanged": true,
+    "validLogoutConfirmed": 2,
+    "anonymousAfterward": 2,
+    "usefulConnectionsRevoked": 0,
+    "cookieOrProfileExport": false,
+    "newGoogleScopes": false
+  },
+  "rarRecoveredPrerequisite": {
+    "retainedLastFailure": "expected_account_not_signed_in",
+    "meaning": "Initial expected-account selection mismatch before any test POST. Owner corrected selection; subsequent own RAR identity passed all eight checks and true logout. Keep the historical field; do not relabel it a later server failure."
+  },
+  "deployment": {
+    "id": "dpl_3vPWi6KKw9vQS1iLWeZZXTgiveDY",
+    "state": "READY",
+    "gitCommit": "8886660b4dc03cd03fa5b4b4053641ca0ae44a4a",
+    "alias": "google-workspace-mcp-chris-projects-de6cd1bf.vercel.app",
+    "vanity": "workspace.robinsonaisystems.com"
+  },
+  "independentDatabase": {
+    "observedAt": "2026-10-22T01:31:41.060Z",
+    "principals": 3,
+    "activeGoogleGrants": 2,
+    "activeUsefulAgentConnections": 3,
+    "originalOwnerRows": 17,
+    "activeOriginalOwnerRows": 17,
+    "refreshCapableOriginalRows": 17,
+    "uncancelledDeletionRequests": 0,
+    "newBrowserSessions": 2,
+    "distinctPilotPrincipals": 2,
+    "revokedNewBrowserSessions": 2,
+    "activeNewBrowserSessions": 0,
+    "sessions": [
+      {
+        "identity": "chris.tcr.2012@gmail.com",
+        "createdAt": "2026-10-22T01:02:39.442773+00:00",
+        "revokedAt": "2026-10-22T01:17:17.648861+00:00"
+      },
+      {
+        "identity": "ops@robinsonappliancerentals.com",
+        "createdAt": "2026-10-22T01:21:09.997196+00:00",
+        "revokedAt": "2026-10-22T01:29:26.494906+00:00"
+      }
+    ],
+    "comparison": "Matches retained Oct20 aggregate baseline: 3 principals, 2 grants, 3 useful connections, 17 originals and 0 deletion requests. This is a later aggregate comparison, not a new full-row byte fingerprint."
+  },
+  "postLogoutProviderReadbacks": {
+    "Primary": {
+      "actingAs": "chris.tcr.2012@gmail.com",
+      "gmailReports": "chris.tcr.2012@gmail.com",
+      "matches": true
+    },
+    "RAR": {
+      "actingAs": "ops@robinsonappliancerentals.com",
+      "gmailReports": "ops@robinsonappliancerentals.com",
+      "matches": true
+    },
+    "privateAdapter": {
+      "actingAs": "ops@robinsonappliancerentals.com",
+      "gmailReports": "ops@robinsonappliancerentals.com",
+      "matches": true
+    },
+    "scope": "Identity-only provider readbacks, no mailbox bodies or provider writes. No newly repeated original-owner refresh is claimed."
+  },
+  "retainedComplementaryProofs": [
+    "2026-10-20-browser-session-security.json",
+    "2026-10-20-original-workspace-refresh.json",
+    "2026-10-20-disposable-principal-lifecycle.json",
+    "2026-10-20-two-client-bearer-isolation.json",
+    "2026-10-20-failed-thread-recovery.json"
+  ],
+  "limits": [
+    "Sequential native browser runs do not prove crossed-active-session token reuse or simultaneous authenticated browser contexts; both raw reports correctly retain NOT_PERFORMED. Existing real PostgreSQL crossed-session tests and genuine prior two-client/isolation evidence retain separate provenance.",
+    "Cross-site forms exercise SameSite cookies and CSRF guards together; no claim isolates which control refused them.",
+    "Original signed nonce/subject/verified-email validation, client lifecycle and owner continuity evidence are retained rather than needlessly repeated. No changed security criterion or source pin.",
+    "Only original P10-VERIFY-GOOGLE and its dependent P10-MCP-PILOT are newly closed by this combined evidence. No unrestricted public release, Google app verification, paid licensing, customer DWD, exhaustive API parity, every client/mobile platform, or whole-project completion claim."
+  ],
+  "acceptance": {
+    "newPassed": [
+      "P10-VERIFY-GOOGLE",
+      "P10-MCP-PILOT"
+    ],
+    "passed": 38,
+    "pending": 2,
+    "pendingExcludedCapabilities": [
+      "P9-LICENSE-PAID",
+      "P10-CUSTOMER-DELEGATION"
+    ],
+    "mandatoryV1Pending": []
+  },
+  "releaseState": {
+    "newMainRuntimeAheadOfLive": true,
+    "difference": "PR249 legal Bearer scheme-casing/whitespace compatibility correction in MCP and RTC parsing, plus planning/docs. Original browser and client criteria are valid on verified live8886660.",
+    "finalCurrentMainV1Preflight": "Still requires checked current-main production promotion and independent post-release verification. No deployment or public-mode change authorized by this receipt."
+  }
+}
