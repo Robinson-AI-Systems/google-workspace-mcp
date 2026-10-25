@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   if(body.grant_type==='authorization_code'&&typeof body.code==='string'&&body.code.startsWith('p10c_')){
     let resource;
     try{resource=publicResource()+'/api/mcp';}catch{return res.status(503).json({error:'temporarily_unavailable'});}
-    if(body.resource!==resource)return res.status(400).json({error:'invalid_target'});
+    if(body.resource!==resource && !(body.client_id==='muse' && !body.resource))return res.status(400).json({error:'invalid_target'});
     const client=await getOAuthClient(body.client_id);
     if(!client||client.client_secret&&client.client_secret!==body.client_secret)
       return res.status(401).json({error:'invalid_client'});
