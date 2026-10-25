@@ -2,7 +2,7 @@ import {describe,it,expect,vi} from 'vitest';
 import {Readable} from 'node:stream';
 const h=vi.hoisted(()=>({principalConsume:0,refresh:0}));
 vi.mock('../../src/db.js',()=>({
- initSchema:async()=>{},
+ initSchema:async()=>{},consumeAuthCode:async()=>null,createAccessToken:async()=>null,getTokenByRefreshToken:async()=>null,
  getOAuthClient:async id=> id==='muse'?{client_id:'muse',client_secret:null,redirect_uris:['https://agent.meta.ai/api/hatch/oauth/callback']}:
  id==='legacy'?{client_id:'legacy',client_secret:'legacy-secret'}:null
 }));
