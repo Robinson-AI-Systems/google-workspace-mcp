@@ -89,7 +89,8 @@ export default async function handler(req, res) {
   await ensureMigrated().catch(() => {}); // best effort; the page still renders if Google is unreachable
   const params = req.method === 'GET' ? req.query : await parseBody(req);
   const { client_id, redirect_uri, state, code_challenge, code_challenge_method, response_type } = params;
-  const hidden = { client_id, redirect_uri, state, code_challenge, code_challenge_method, resource: params.resource,
+  const resourceParam = client_id === 'muse' && !params.resource ? publicResource() + '/api/mcp' : params.resource;
+  const hidden = { client_id, redirect_uri, state, code_challenge, code_challenge_method, resource: resourceParam,
     ...(params.auth_method==='owner_google'?{auth_method:'owner_google'}:{}) };
 
   if (response_type && response_type !== 'code') {
@@ -121,7 +122,7 @@ export default async function handler(req, res) {
   if(params.auth_method==='google'){
     let resource;
     try{resource=publicResource()+'/api/mcp';}catch{return res.status(503).send('MCP origin unavailable.');}
-    if(params.resource!==resource||params.code_challenge_method!=='S256'||
+    if(resourceParam!==resource||params.code_challenge_method!=='S256'||
       !/^[A-Za-z0-9_-]{43}$/.test(params.code_challenge||''))
       return res.status(400).send('V2 requires exact MCP resource and S256 PKCE.');
     headers(res);
@@ -132,7 +133,7 @@ export default async function handler(req, res) {
       if(publicMode()==='off')return res.status(503).send('New public sign-in is currently disabled.');
       const next=new URL('/api/auth/google/start',publicResource());
       for(const key of ['client_id','redirect_uri','resource','code_challenge','state'])
-        next.searchParams.set(key,params[key]);
+        next.searchParams.set(key,key==='resource'?resourceParam:params[key]);
       next.searchParams.set('purpose','mcp_authorize');
       return res.status(200).send('<!doctype html><h1>Google sign-in</h1><p>Authorize this registered MCP client using your Google account.</p><a href="'+escapeHtml(next.toString())+'">Continue securely with Google</a>');
     }
@@ -171,17 +172,17 @@ export default async function handler(req, res) {
   let accounts=[]; // No owner mailbox query before either authentication.
   const ownerGoogle=params.auth_method==='owner_google';
   const ownerMeta={clientId:client_id,redirectUri:redirect_uri,
-    resource:params.resource||'',codeChallenge:code_challenge||'',
+    resource:resourceParam||'',codeChallenge:code_challenge||'',
     clientState:state||''};
   const ownerProof=ownerGoogle?readCookie(req,'p10_owner_proof'):null;
   if(ownerGoogle){
-    if(params.resource!==publicResource()+'/api/mcp'||params.code_challenge_method!=='S256'||
+    if(resourceParam!==publicResource()+'/api/mcp'||params.code_challenge_method!=='S256'||
        !/^[A-Za-z0-9_-]{43}$/.test(code_challenge||''))
       return res.status(400).send('Linked owner sign-in requires exact resource and S256 PKCE.');
     if(!ownerProof&&req.method==='GET'){
       const next=new URL('/api/auth/google/start',publicResource());
       for(const key of ['client_id','redirect_uri','resource','code_challenge','state'])
-        if(params[key])next.searchParams.set(key,params[key]);
+        if((key==='resource'?resourceParam:params[key]))next.searchParams.set(key,key==='resource'?resourceParam:params[key]);
       next.searchParams.set('purpose','owner_login');
       res.writeHead(302,{Location:next.toString()});res.end();return;
     }
