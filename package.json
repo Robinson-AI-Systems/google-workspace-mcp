@@ -5,7 +5,7 @@
   "type": "module",
   "main": "api/mcp.js",
   "scripts": {
-    "check": "find src api -name '*.js' -exec node --check {} \\; && node scripts/check-writes.mjs && node scripts/check-rtc-budget.mjs && node scripts/gen-catalog.mjs --check && npm run check:developer-evidence && npm run check:session",
+    "check": "find src api -name '*.js' -exec node --check {} \\; && node scripts/check-writes.mjs && node scripts/check-rtc-budget.mjs && node scripts/gen-catalog.mjs --check && npm run check:developer-evidence && npm run check:session && npm run check:provider-inventory",
     "test": "vitest run",
     "test:db": "vitest run --config vitest.db.config.js",
     "test:rtc": "vitest run --config vitest.rtc.config.js",
@@ -17,7 +17,8 @@
     "session:bundle": "node scripts/bundle-plan.mjs",
     "session:prepare": "node scripts/session-prepare.mjs",
     "v1:readiness": "node scripts/v1-readiness.mjs",
-    "v1:live-smoke": "node scripts/v1-live-public-smoke.mjs"
+    "v1:live-smoke": "node scripts/v1-live-public-smoke.mjs",
+    "check:provider-inventory": "node scripts/check-provider-inventory.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
