@@ -142,7 +142,7 @@ export default async function handler(req, res) {
       const csrfCookie=String(req.headers?.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('p10_csrf='));
       const csrf=csrfCookie?decodeURIComponent(csrfCookie.split('=').slice(1).join('=')):'';
       const inputs=['client_id','redirect_uri','state','code_challenge','code_challenge_method','resource']
-        .map(key=>'<input type="hidden" name="'+key+'" value="'+escapeHtml(params[key]||'')+'">').join('');
+        .map(key=>'<input type="hidden" name="'+key+'" value="'+escapeHtml(key==='resource'?resourceParam:params[key]||'')+'">').join('');
       return res.status(200).send('<!doctype html><meta charset="utf-8"><h1>Authorize this agent</h1>'+
         '<p>Only your own linked Google accounts and selected permissions are available. Agent access is issued but tool dispatch remains disabled pending cross-principal acceptance.</p>'+
         (accounts.length?'<form method="POST">'+inputs+'<input type="hidden" name="auth_method" value="google">'+
