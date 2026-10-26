@@ -99,6 +99,11 @@ async function initializeSchemaSteps() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `;
+  // Stable public OAuth client for Muse Android's manual Client ID entry.
+  // Fixed redirect and S256 PKCE; never overwrite another owner's client.
+  await q`INSERT INTO oauth_clients (client_id, client_secret, redirect_uris, client_name)
+    VALUES ('muse', NULL, '["https://agent.meta.ai/api/hatch/oauth/callback"]'::jsonb,
+      'Muse Android') ON CONFLICT (client_id) DO NOTHING`;
   // Durable owner-OAuth refresh-family tombstones: a stale in-flight refresh
   // must never resurrect access after RFC 7009 revocation.
   await q`CREATE TABLE IF NOT EXISTS oauth_refresh_revocations (

@@ -3,8 +3,8 @@ import {Readable} from 'node:stream';
 import {createHash} from 'node:crypto';
 const h=vi.hoisted(()=>({enumerations:0,issued:0,accounts:[],csrf:'p10x_'+'b'.repeat(43),loggedIn:false}));
 vi.mock('../../src/db.js',()=>({
- initSchema:async()=>{},getOAuthClient:async id=>id==='registered'?{client_id:id,
-  redirect_uris:['https://client.example.test/return']}:null,
+ initSchema:async()=>{},getOAuthClient:async id=>['registered','muse'].includes(id)?{client_id:id,
+  redirect_uris:id==='muse'?['https://agent.meta.ai/api/hatch/oauth/callback']:['https://client.example.test/return']}:null,
  listGoogleAccounts:async()=>{h.enumerations++;return [{email:'owner-private@example.test',label:'Private owner mailbox'}];},
  createAuthCode:async()=>{},recordLoginAttempt:async()=>{},countRecentFailedLogins:async()=>0,markLoginAttemptSucceeded:async()=>{}
 }));
@@ -48,6 +48,25 @@ beforeEach(()=>{
 });
 afterEach(()=>{process.env=env;});
 describe('P10 MCP user authorization and original owner mailbox privacy',()=>{
+  it('Muse public client accepts its exact callback with omitted resource and binds canonical MCP',async()=>{
+    const muse={...base,client_id:'muse',redirect_uri:'https://agent.meta.ai/api/hatch/oauth/callback',auth_method:'google'};
+    delete muse.resource;
+    const landing=await call('GET',muse);
+    expect(landing.statusCode).toBe(200);
+    expect(landing.body).toContain('resource=https%3A%2F%2Fmcp.example.test%2Fapi%2Fmcp');
+    h.loggedIn=true;
+    const page=await call('GET',muse,browser);
+    expect(page.statusCode).toBe(200);
+    expect(page.body).toContain('name="resource" value="https://mcp.example.test/api/mcp"');
+    const good=await call('POST',{...muse,account_id:h.accounts[0].id,csrf:h.csrf},browser);
+    expect(good.statusCode).toBe(302);
+    expect(h.issued).toBe(1);
+    const foreign=await call('POST',{...muse,redirect_uri:'https://evil.example.test/return',account_id:h.accounts[0].id,csrf:h.csrf},browser);
+    expect(foreign.statusCode).toBe(400);
+    const redirected=await call('POST',{...muse,resource:'https://evil.example.test/api/mcp',account_id:h.accounts[0].id,csrf:h.csrf},browser);
+    expect(redirected.statusCode).toBe(400);
+    expect(h.issued).toBe(1);
+  });
  it('anonymous owner choice never enumerates connected private mailboxes',async()=>{
   const page=await call('GET',base);
   expect(page.statusCode).toBe(200);
