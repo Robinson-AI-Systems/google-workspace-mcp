@@ -30,3 +30,24 @@
 This matrix is source-pinned to the already deployed provider implementation and existing real-provider evidence; it does not claim a new real Hub LIVE call, a Google write, general public OAuth release, or already served changes from this PR. The former `P9-HUB-LIVE` **historical row ID** is retained in the Workspace queue but its owner-approved acceptance scope is now provider conformance only. Its previous Hub-live intent is superseded and owned exclusively by Hub. No new owner tokens or temporary passes are requested merely to re-prove already accepted provider scope.
 
 When implementing a future tool or modifying authorization, include this contract compatibility check in the existing repository roadmap/card and tests, rather than duplicating the Hub's provider-independent router here.
+
+## RTC 2 adoption — owner decision, 2026-10-31
+
+**Adopted, not yet implemented.** By the owner's dated decision of 2026-10-31, **RTC 2 is adopted** as RTC 1's successor under the contract's §9 versioning rule. The primary record is the hub repo's `docs/DECISIONS.md` entry of 2026-10-31, and the adopted RTC 2 specification lives in the hub repo (`Robinson-AI-Systems/robinsons-toolkit-hub`). This section records the adoption for Workspace. It changes no current behavior: the RTC 1 text above remains the accurate description of what this server implements and has proven today, and Workspace's conformance claims remain RTC 1 claims until the follow-on card below lands.
+
+The five rulings:
+
+- **D1 — Result recovery = content pages.** RTC 2 §7 stands as written: oversized results are recovered as content pages.
+- **D2 — OAuth optional-but-specified.** RTC 2 specifies the standard OAuth profile, but it stays optional; scoped passes remain the required connection baseline.
+- **D3 — Handle lifetime = 24 hours**, carried unchanged from RTC 1.
+- **D4 — Health path in the advertisement.** The advertisement includes the health path as a SHOULD-level manifest field.
+- **D5 — The RTC 1 freeze holds for R-3.** No shipped dialect in this server is amended to chase the hub conformance suite's unversioned post-freeze drift; the freeze is superseded only by RTC 2's adoption here as the §9 successor.
+
+What RTC 2 supersedes on this server's discovery/connection surface — at contract level; the implementation is the follow-on, not this addendum:
+
+- **Discovery/advertisement:** the manifest gains the D4 health field and RTC 2's dialect declarations, superseding the RTC 1 advertisement shape as the target contract.
+- **Connection:** OAuth remains optional-but-specified (D2) and passes remain the required baseline; RTC 2 does not raise the required connection floor.
+- **Result recovery:** content pages (D1) become the contract's recovery shape, superseding RTC 1's result-recovery arrangement as the target contract.
+- **Handle lifetime:** fixed at 24 hours (D3), carried from RTC 1 — stated in RTC 2 so no server guesses.
+
+**Follow-on:** Workspace's own RTC 2 adoption and conformance proceed through Workspace's own card. This addendum is the pointer and the dated adoption record, not the adoption build.
