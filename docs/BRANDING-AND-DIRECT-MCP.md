@@ -35,3 +35,7 @@ The authoritative tracker is `docs/plan/TASKS.md` P9/P10, particularly open P10-
 Observed Meta Muse Android connector requests a Client ID rather than performing dynamic registration. The P10-compatible public client ID is `muse`; MCP server `https://workspace.robinsonaisystems.com/api/mcp`; OAuth authorization/token discovery is automatic. The fixed callback is `https://agent.meta.ai/api/hatch/oauth/callback`. Muse must use S256 PKCE. The public client does not have a client secret. No Google Cloud client ID is requested.
 
 This Client ID is only registered in service Postgres after the source fix has passed normal review, CI and a checked release. Existing Claude/ChatGPT clients and resource-bound grant checks remain unchanged. A *real Muse device sign-in, scoped read and disconnect* are separate acceptance; this document does not claim any such result. If Muse changes its callback, do not broaden redirect validation; verify the client-specific URL and change it through review.
+
+## Unleashed brand spec (filed 2026-11-02)
+
+The fleet-wide Unleashed brand spec is filed in this repo at [docs/UNLEASHED-BRAND-SPEC.md](UNLEASHED-BRAND-SPEC.md). This repo's product is **Workspace Unleashed** (accent Violet `#9A7BFF`, slug `workspace-unleashed`). The canonical record of claimed Unleashed names, accents, and slugs is the Library claims registry (living design D-005) in Robinson-AI-Systems/library.
