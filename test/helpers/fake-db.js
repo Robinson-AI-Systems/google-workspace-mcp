@@ -210,6 +210,26 @@ export function createFakeDb({ clock = () => Date.now() } = {}) {
     async getOAuthClient(clientId) {
       return state.clients.get(clientId) || null;
     },
+    async listOAuthClients() {
+      return [...state.clients.values()].map((client) => ({
+        client_id: client.client_id,
+        client_name: client.client_name,
+        redirect_uris: client.redirect_uris,
+        created_at: client.created_at || new Date(0).toISOString(),
+        has_secret: client.client_secret != null,
+        token_count: state.tokens.filter((token) => token.client_id === client.client_id).length,
+      }));
+    },
+    async deleteOAuthClient(clientId) {
+      const existed = state.clients.delete(clientId);
+      let codesRemoved = 0;
+      for (const [code, row] of state.codes) {
+        if (row.client_id === clientId) { state.codes.delete(code); codesRemoved++; }
+      }
+      const tokensBefore = state.tokens.length;
+      state.tokens = state.tokens.filter((token) => token.client_id !== clientId);
+      return { deleted: existed, codesRemoved, tokensRemoved: tokensBefore - state.tokens.length };
+    },
 
     async createAuthCode({ code, clientId, redirectUri, codeChallenge, codeChallengeMethod, googleAccount, profile = 'full', listing = 'catalog', areas = null, mode = 'live', costPolicy={mode:'per_action'}, ttlSeconds = 600 }) {
       state.codes.set(code, {
