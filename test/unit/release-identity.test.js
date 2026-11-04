@@ -41,7 +41,7 @@ describe('serverRelease resolver', () => {
 describe('release identity agreement', () => {
   it('workspace_whoami carries server_release from the same resolver', async () => {
     holder.db = createFakeDb();
-    await holder.db.saveGoogleTokensFor('ops@robinsonaisystems.test', { access_token: <redacted> });
+    await holder.db.saveGoogleTokensFor('ops@robinsonaisystems.test', { access_token: 'fake-token' });
     const { clients, when } = makeFakeClients({ actingAs: 'ops@robinsonaisystems.test' });
     when('gmail.users.getProfile').resolves({ data: { emailAddress: 'ops@robinsonaisystems.test', messagesTotal: 7 } });
     const out = JSON.parse(text(await handlers.workspace_whoami({}, clients)));
