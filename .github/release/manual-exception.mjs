@@ -4,6 +4,13 @@
  * A read-only guard for the authenticated GitHub connector release operator.
  * Does NOT modify refs, deploy, publish permissions, or authenticate the owner.
  * The ordinary scheduled promoter remains exclusively once/day and unchanged.
+ *
+ * Owner rule (Chris, 2026-11-04): per-day release caps bind AUTOMATIC
+ * releases only. An owner-ordered release is unlimited in count: a prior
+ * same-day exception receipt never blocks a further explicitly owner-approved
+ * exception. Every exception still issues its own immutable receipt, prior
+ * receipts are preserved untouched, and every other gate below fails closed
+ * exactly as before.
  */
 const SHA = /^[0-9a-f]{40}$/;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -36,10 +43,9 @@ export function authorizeExceptionalRelease({
       existingExceptionBranches.some(x => typeof x !== 'string' || !x.startsWith(PREFIX + day + '/') ||
         !SHA.test(x.slice((PREFIX + day + '/').length))))
     throw Error('Missing or invalid complete exceptional-release receipt inventory');
-  if (existingExceptionBranches.length > 0)
-    throw Error('Same-day exceptional release already recorded; do not issue a second');
   if (main === live) return { action: 'NO_CHANGE', receipt: null };
   return { action: 'LEASED_FAST_FORWARD_THEN_RECEIPT', expectedLive: live,
     checkedMain: main, receipt,
-    warning: 'One user-approved exceptional manual release; keep daily receipts untouched. Independently verify Vercel READY/aliases after branch update.' };
+    priorExceptions: existingExceptionBranches.length,
+    warning: 'Owner-approved exceptional manual release; keep daily receipts untouched. Independently verify Vercel READY/aliases after branch update.' };
 }

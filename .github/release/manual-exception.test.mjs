@@ -23,8 +23,16 @@ test('every independent owner, source, lease, checks and original-receipt gate f
    currentMainAndLiveRechecked:false,existingExceptionBranches:null
  })) assert.throws(()=>authorizeExceptionalRelease({...base,[key]:value}),undefined,key);
 });
-test('a prior same-day exception rejects another even for a different revision',()=>{
- assert.throws(()=>authorizeExceptionalRelease({...base,existingExceptionBranches:[exceptionReceipt(day,main)]}),/already recorded/);
+test('a prior same-day exception never blocks a further owner-ordered exception (owner rule 2026-11-04: caps bind automatic releases only)',()=>{
+  const prior='c'.repeat(40);
+  const d=authorizeExceptionalRelease({...base,existingExceptionBranches:[exceptionReceipt(day,prior)]});
+  assert.equal(d.action,'LEASED_FAST_FORWARD_THEN_RECEIPT');
+  assert.equal(d.receipt,'release-exceptions/'+day+'/'+main);
+  assert.equal(d.priorExceptions,1);
+});
+test('a further exception still fails closed without explicit owner approval',()=>{
+  const prior='c'.repeat(40);
+  assert.throws(()=>authorizeExceptionalRelease({...base,explicitOwnerApproval:false,existingExceptionBranches:[exceptionReceipt(day,prior)]}),/owner authorization/);
 });
 test('receipt inventory and identifiers must be trusted and bounded',()=>{
  assert.throws(()=>exceptionReceipt('2026-99','z'.repeat(40)),/Invalid/);
