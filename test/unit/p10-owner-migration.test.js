@@ -151,13 +151,22 @@ describe('P10-7 protected owner migration and independent dual login',()=>{
   const replay=await invoke(authorize,'POST',{...query,google_account:'original-owner@example.test'},cookie);
   expect(replay.statusCode).toBe(403);expect(h.codes).toHaveLength(1);
  });
- it('retirement switch blocks NEW passphrase auth only; linked owner Google remains available',async()=>{
+ it('retirement switch blocks NEW passphrase sign-ins; the migration recovery ceremony and linked owner Google remain available',async()=>{
   process.env.LEGACY_OWNER_SIGNIN_ENABLED='false';
   h.auth='ok';
   const rejected=await invoke(authorize,'POST',{...base,google_account:'original-owner@example.test',passphrase:'owner-secret-for-test'});
   expect(rejected.statusCode).toBe(403);expect(h.codes).toHaveLength(0);
-  const denied=await invoke(migration,'POST',{action:'link',confirm:'yes',passphrase:'owner-secret-for-test'});
-  expect(denied.statusCode).toBe(403);
+  // The migration ceremony is the developer-only backend recovery route the
+  // owner preserved: behind the passphrase and lockout it stays available
+  // with the switch off, so the owner Google identity link can be created.
+  const ceremony=await invoke(migration,'POST',{action:'link',confirm:'yes',passphrase:'owner-secret-for-test'});
+  expect(ceremony.statusCode).toBe(302);
+  expect(h.tx.policy).toMatchObject({ownerProof:'link'});
+  // A wrong passphrase still refuses the ceremony with the switch off.
+  h.auth='wrong';h.tx=null;
+  const ceremonyDenied=await invoke(migration,'POST',{action:'link',confirm:'yes',passphrase:'bad'});
+  expect(ceremonyDenied.statusCode).toBe(401);expect(h.tx).toBeNull();
+  h.auth='ok';
   const entry=await invoke(authorize,'GET',{...base,auth_method:'owner_google'});
   expect(entry.statusCode).toBe(302);
   expect(h.accountsRead).toBe(0);
