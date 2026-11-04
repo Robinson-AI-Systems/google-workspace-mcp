@@ -5,6 +5,7 @@
 import { ok } from './util.js';
 import { listGoogleAccounts, setDefaultGoogleAccount, removeGoogleAccount, listConnections, revokeConnection, listRecentChanges, setAllowedDomains, getAllowedDomains } from '../db.js';
 import { recordChange } from '../changelog.js';
+import { serverRelease } from '../release.js';
 import { normalizeDomains } from '../domains.js';
 
 export const tools = [
@@ -61,7 +62,8 @@ export const handlers = {
       matches: profile.data.emailAddress?.toLowerCase() === clients.actingAs,
       label: me?.label || null,
       isDefaultAccount: !!me?.is_default,
-      messagesTotal: profile.data.messagesTotal
+      messagesTotal: profile.data.messagesTotal,
+      server_release: serverRelease()
     });
   },
   async workspace_list_accounts(_args,clients) {

@@ -4,6 +4,7 @@ import {readBearer} from '../src/oauth/bearer.js';
 // one-time initialization is therefore cached after it succeeds (see src/once.js).
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { PRODUCT_DISPLAY_NAME, MCP_TECHNICAL_NAME } from '../src/branding.js';
+import { serverRelease } from '../src/release.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { registry } from '../src/tools/index.js';
@@ -39,7 +40,7 @@ const ensureLegacyMigration = onceSuccessful(ensureMigrated);
 
 function buildServer(googleAccount, connection, settings, makeClients=null) {
   const server = new Server(
-    { name: MCP_TECHNICAL_NAME, title: PRODUCT_DISPLAY_NAME, version: '1.0.0' },
+    { name: MCP_TECHNICAL_NAME, title: PRODUCT_DISPLAY_NAME, version: serverRelease().version },
     { capabilities: { tools: {} } }
   );
 
