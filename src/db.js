@@ -623,6 +623,32 @@ export async function getOAuthClient(clientId) {
   return rows[0] || null;
 }
 
+// Owner administration of the client registry (capability-completeness fix,
+// 2026-11-04): registration existed with no list and no delete, so throwaway
+// registrations could never be retired. The list never returns secret values
+// — only whether one is stored — and each row carries its live token count
+// so an operator can see the effect of a revocation before confirming it.
+export async function listOAuthClients() {
+  const q = db();
+  return await q`
+    SELECT c.client_id, c.client_name, c.redirect_uris, c.created_at,
+      (c.client_secret IS NOT NULL) AS has_secret,
+      (SELECT COUNT(*)::int FROM oauth_tokens t WHERE t.client_id = c.client_id) AS token_count
+    FROM oauth_clients c ORDER BY c.created_at ASC, c.client_id ASC`;
+}
+
+// Revoking a registration retires the whole grant family with it: outstanding
+// authorization codes and tokens for the client are deleted in the same call,
+// so a removed registration can never complete a flow or refresh afterwards.
+export async function deleteOAuthClient(clientId) {
+  const q = db();
+  const codes = await q`DELETE FROM oauth_codes WHERE client_id = ${clientId}`;
+  const tokens = await q`DELETE FROM oauth_tokens WHERE client_id = ${clientId}`;
+  const rows = await q`DELETE FROM oauth_clients WHERE client_id = ${clientId} RETURNING client_id`;
+  const countOf = (result) => Number(result?.count ?? result?.length ?? 0);
+  return { deleted: rows.length > 0, codesRemoved: countOf(codes), tokensRemoved: countOf(tokens) };
+}
+
 // ---------- Connector OAuth: authorization codes (PKCE) ----------
 export async function createAuthCode({ code, clientId, redirectUri, codeChallenge, codeChallengeMethod, googleAccount, profile = 'full', listing = 'catalog', areas = null, mode = 'live', costPolicy = {mode:'per_action'}, ttlSeconds = 600 }) {
   const q = db();
