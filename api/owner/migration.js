@@ -6,7 +6,7 @@ import {initSchema,recordLoginAttempt,countRecentFailedLogins,markLoginAttemptSu
 import {clientIp,evaluateLogin,LOCKOUT_WINDOW_MINUTES} from '../../src/oauth/login-guard.js';
 import {parseBody} from '../../src/oauth/helpers.js';
 import {createTransaction} from '../../src/principals/store.js';
-import {ownerMigrationSnapshot,unlinkVerifiedOwner,legacyNewLoginEnabled} from '../../src/principals/owner-migration.js';
+import {ownerMigrationSnapshot,unlinkVerifiedOwner} from '../../src/principals/owner-migration.js';
 import {publicGoogleClient,providerUrl} from '../../src/principals/google.js';
 import {mint,cookie,headers} from '../../src/principals/security.js';
 import {BROWSER_COOKIE} from '../../src/principals/session.js';
@@ -30,7 +30,15 @@ export default async function handler(req,res){
  if(req.method==='GET')return res.status(200).send(form());
  if(req.method!=='POST')return res.status(405).send('Method not allowed');
  try{
-  if(!legacyNewLoginEnabled())return res.status(403).json({error:'owner_passphrase_enrollment_disabled'});
+  // This ceremony is deliberately NOT governed by the legacy sign-in switch.
+  // The switch closes new passphrase SIGN-INS (connection authorize, account
+  // enrollment, pass issuing, token readiness). This page is the developer-only
+  // backend recovery route the owner preserved when ordering the switch-off:
+  // behind the passphrase and the same lockout, it links or unlinks the
+  // owner's verified Google identity — the setup act that makes the
+  // passphrase-free Google sign-in route possible at all. Gating it with the
+  // switch would make the conforming route unreachable (owner ruling,
+  // 2026-11-04: the migration link ceremony is exactly this recovery route).
   if(!process.env.ADMIN_PASSPHRASE)return res.status(503).json({error:'owner_auth_unconfigured'});
   await initSchema();
   const p=req.body&&typeof req.body==='object'?req.body:await parseBody(req);
