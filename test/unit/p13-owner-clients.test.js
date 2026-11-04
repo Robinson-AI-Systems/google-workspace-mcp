@@ -129,6 +129,18 @@ describe('owner client administration', () => {
     expect(h.deleted).toEqual([]);
   });
 
+  it('submits without an Origin header succeed: the passphrase is the gate (migration-ceremony posture)', async () => {
+    const response = new ResponseRecorder();
+    await handler({
+      method: 'POST',
+      url: '/api/owner/clients',
+      headers: {host: 'example.test'},
+      body: {action: 'list', passphrase: PASS},
+    }, response);
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toMatch(/Vivienne RAR connection probe/);
+  });
+
   it('revoking an unknown id reports nothing revoked and deletes nothing extra', async () => {
     const response = await post({action: 'revoke', client_id: 'nope', confirmation: 'REVOKE', passphrase: PASS});
     expect(response.statusCode).toBe(200);
