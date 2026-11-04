@@ -38,6 +38,118 @@ Rows close only on live evidence. A new Standard section opens a correction row 
 | 12 | No global credential fallback | **IMPLICATED — see row 4.** | Tool access itself is per-connection OAuth against enrolled accounts. The shared admin passphrase is, however, a global credential for the five surfaces in row 4; this row cannot pass until that migration lands. |
 | 13 | Version evolution | **PASS for tonight's changes.** | The registration fix and the VER-1 adoption are server-side; the existing connection needed no reinstall and was re-verified working after the release. |
 | 14 | Pattern appraisal | **OPEN — not assessed in this pass.** | No appraisal of this server's patterns against the fleet's was performed tonight. |
-| 15 | Capability completeness | **CENSUS DONE; addendum OPEN.** | Base census: 385 live tools (fleet facts). The completeness addendum — documented claims checked line-by-line against the provider API surface — has not been written for this server. |
+| 15 | Capability completeness | **ADDENDUM DONE (2026-11-04 two-source re-census); completeness PARTIAL — capped by the amendment.** | Re-census under the RAS MCP Standard capability-completeness grading amendment (Library D-001 as amended 2026-11-04, Library PR #5): a service-first map built only from Google's official REST references (15 families / 113 resources / 486 methods) diffed against this server's executed registry (387 registered tools; 385 on a live-mode owner connection). Dispositions: **257 covered, 5 composed, 24 owner-excluded, 198 missing, 2 unverified** (full addendum below). The grade is capped at PARTIAL while plausibly-needed capabilities stand missing — headed by the OAuth client registration record, which has no read, update, list or delete anywhere in the product (the undeletable “Vivienne RAR connection probe” registrations are its living proof); build card [RECENSUS-1](pr-cards/RECENSUS-1.md) is filed with this addendum and the build is owned by this repo's existing queue. The Meet family (24 methods) is owner-excluded by the owner's recorded decision, not missing. The owner's rule that Workspace writes need his express authorization is a gate on the *use* of tools that exist, recorded here so it is never mistaken for a capability absence — and it hides none of the absences above. |
 | 16 | Conformance-correction process | **RUNNING.** | This record was created under the process; the rows 3–4 correction is designed and evidence-backed, awaiting the owner's decision; row 5's correction is built and awaiting its live read-back. |
 | 17 | Owner-obedience | **OPEN — no refusal census yet.** | This server's refusal mechanisms have not been classified the way Stripe Unleashed's have (47 mechanisms). The pass-issuing surface's LIVE-pass power behind a passphrase is recorded in row 4 as the first item any census must classify. |
+
+
+## Row 15 addendum — capability completeness re-census (2026-11-04)
+
+**Method (two sealed cartographers, Critic Step 0 pattern).** Cartographer A built the
+service-first map from Google's official REST reference indexes only — no server repo,
+tool list or prior census consulted: 15 families, 113 resources, 486 methods, 72 owner
+workflows. Cartographer B built the server inventory from this repo's code only, at
+`main` `544582deeac36b6712ccb601f03374a96b097fe2`, **executing** the registry
+(`src/tools/index.js`): 387 tools, 387 handlers, zero duplicates, zero orphans; the
+production policy filter simulated over that registry reproduces every recorded live
+figure exactly (385 live-mode owner connection; 171 read-only / 313 everyday;
+11/18/18 on the compact RTC door). Seals — service map sha256
+`1693d1860815679f429e547b8fe20a69d1eef0bbe16e60b6a0fa39e5c8926a06`; server inventory
+sha256 `bfbc009bc44b623dc7e678dd93c6369891c596cbce702391d8b4e0008369f914`.
+Dispositions use the amendment's vocabulary exactly: COVERED (a tool implements the
+method), COMPOSED (a named tool sequence implements it), OWNER-EXCLUDED (a recorded
+owner ruling removes it), MISSING (no tool, no ruling), UNVERIFIED (a source could not
+verify the leg). Lifecycle legs are dispositioned individually.
+
+**Map counts (486 mapped methods).**
+
+| Family | Mapped | Covered | Composed | Owner-excluded | Missing | Unverified |
+|---|---|---|---|---|---|---|
+| Gmail | 79 | 51 | 1 | 0 | 27 | 0 |
+| Calendar | 38 | 20 | 0 | 0 | 18 | 0 |
+| Drive | 59 | 25 | 0 | 0 | 34 | 0 |
+| Docs | 3 | 3 | 0 | 0 | 0 | 0 |
+| Sheets | 17 | 10 | 0 | 0 | 7 | 0 |
+| Slides | 5 | 5 | 0 | 0 | 0 | 0 |
+| Forms | 10 | 6 | 0 | 0 | 4 | 0 |
+| People | 24 | 9 | 4 | 0 | 11 | 0 |
+| Tasks | 14 | 14 | 0 | 0 | 0 | 0 |
+| Chat | 55 | 8 | 0 | 0 | 47 | 0 |
+| Admin SDK Directory | 113 | 91 | 0 | 0 | 21 | 1 |
+| Admin SDK Reports | 5 | 3 | 0 | 0 | 1 | 1 |
+| Admin SDK Licensing | 7 | 7 | 0 | 0 | 0 | 0 |
+| Vault | 33 | 5 | 0 | 0 | 28 | 0 |
+| Meet | 24 | 0 | 0 | 24 | 0 | 0 |
+| **Total** | **486** | **257** | **5** | **24** | **198** | **2** |
+
+Directory's one unverified count is a map-internal residual (the family's stated total
+exceeds its own legible table by one method); Reports' one unverified item is the
+`activities.watch` teardown leg, which the service map itself could not verify from
+Google's index. Docs, Sheets, Slides and Forms delete/list legs live in Drive by
+Google's design and are counted once, under Drive `files` (covered) — the
+cross-family join the map demands is present in this server.
+
+**Symmetry ledger (create without teardown, grant without revoke).**
+
+| Pair | Verdict | Evidence |
+|---|---|---|
+| OAuth client registration create ↔ delete | **SERVER-MISSING — the headline.** Create exists (open RFC 7591 dynamic registration); read (single, internal only), update, list and delete do not exist anywhere in the product. | `oauth_clients` is written by exactly two INSERTs (`api/oauth/register.js` → `createOAuthClient`, `src/db.js:612`, plus the seeded `muse` client) and read by one SELECT; all nine `DELETE FROM` statements in `src/`+`api/` were enumerated and none touches it; no deregister function, no HTTP DELETE route, no registration access token is issued, no sweep covers it. The three inert “Vivienne RAR connection probe” registrations cannot be removed short of direct database edits. Plan: card RECENSUS-1. |
+| Principal deletion request ↔ execution | **SERVER-MISSING.** The portal records a deletion *request*; no code executes it. | `deletionPreview` returns `deleted:false`; `requestDeletion` records a row in `principal_deletion_requests` and returns `{pending:true, irreversible:false}`; no function reads those rows to erase anything; the server's own `/api/data-deletion` disclosure states irreversible erasure is “not yet” performed. Plan: owner decision on launch retention/erasure, then a build card from this repo's queue. |
+| Enrolled account: legacy store ↔ P10 principal store | **ASYMMETRIC (server-side).** Legacy accounts hard-delete by tool; P10 accounts only soft-disconnect. | `workspace_remove_account` → `DELETE FROM google_accounts` (`src/db.js:571`, tokens included; connection rows and registrations survive it). P10 path is `disconnectAccount` (`src/principals/store.js:515`): status → `revoked`, connections revoked, account row and grant retained. Plan: resolves with the principal-deletion item above. |
+| Token / connection grant ↔ revoke | **SYMMETRIC — covered on both stores.** | Soft revoke plus durable refresh-family tombstones (`oauth_refresh_revocations`), RFC 7009 self-service, portal and tool surfaces (`workspace_revoke_connection`); RTC passes revoke by id through the same tool. |
+| Gmail forwarding address create ↔ delete | **SERVER-MISSING (small).** Add and list exist; no remove tool, though the platform offers the delete leg. | Inventory §1: forwarding address — create `gmail_add_forwarding_address`, list only, delete **no tool**. Plan: P11 provider-gaps bundle. |
+| Owner-migration identity link ↔ unlink; delegation subject add ↔ remove | **SYMMETRIC — covered.** | `unlinkVerifiedOwner` (`DELETE FROM principal_google_identities`); `removeDelegationSubject` (`DELETE FROM principal_delegation_subjects`). |
+| Forms responses delete; People “Other contacts” delete; Directory ASP/token create; ChromeOS device create/delete; Meet space delete | **PLATFORM HAS NO LEG** (map facts, not server gaps). | Recorded so no future census re-opens them as absences. |
+
+**Server-self surface (outside the 486).** The registration lifecycle above is this
+server's own surface, dispositioned here rather than in the map counts: registration
+create COVERED; registration read/list/update/delete MISSING (RECENSUS-1);
+token/connection revoke COVERED; enrolled-account delete COVERED (legacy) / soft-only
+(P10, plan above). Enrolling a Google account has no tool path by deliberate design —
+enrollment is an owner ceremony through the browser doors (public Google sign-in +
+link-while-signed-in; the legacy passphrase door), and that ceremony is the accepted
+shape, not a missing leg; the missing leg is the registration *delete*, not the
+enrollment door. Server-only families with no counterpart in the service map (Data
+Transfer, Postmaster, DNS records, Chrome policies, Admin alerts) are inventoried but
+not graded against the map; one symmetry note travels with them: Data Transfer has a
+start leg and no cancel leg in this server.
+
+**Missing-with-plan rows** (each is a MISSING disposition with its filed or named plan;
+all remain MISSING for the grade cap until built):
+
+| # | Missing capability | Plan |
+|---|---|---|
+| M1 | OAuth client registration read / update / list / delete | **Card [RECENSUS-1](pr-cards/RECENSUS-1.md), filed with this addendum**; build owned by this repo's existing queue (the census files the card; it does not jump the build order). |
+| M2 | P10 principal deletion execution (request recorded, nothing executes) | Owner decision on retention/erasure first (the portal's own disclosure defers it to launch); then a build card from this repo's queue. |
+| M3 | Chat depth — 47 of 55 methods: space patch/delete, member remove, message get/patch, reactions, pins, sections, read states, notification settings, custom emojis, availability, media, space events, space search/setup | P11 provider-gaps work already in the master queue (`docs/plan/TASKS.md`); bundle proposal to be filed by this repo's queue. |
+| M4 | Vault depth — 28 of 33 methods: matter get/update/delete/undelete/close/reopen/permissions, exports (full lifecycle), saved queries, operations, hold account add/remove, hold update | P11 provider-gaps bundle; note the repo's own records show Vault unavailable on the customer's current edition — the capability absence stands regardless, the edition note travels with the plan. |
+| M5 | Drive collaboration surface — comments and replies (10), file approvals (8), access proposals (3), revision update/pin (1), apps list/get (2), labels list (1) | P11 provider-gaps bundle. |
+| M6 | Gmail security and migration surface — CSE identities/keypairs and S/MIME (16), message insert/import (2), language settings (2), watch/stop (2), send-as verify and single-gets, delegate single-get | P11 provider-gaps bundle; forwarding-address delete (symmetry ledger) rides the same bundle. |
+| M7 | Push/watch channels server-wide — Calendar, Drive, Directory watch legs and channel stop | One design decision (a single notification-channel card) under P11 rather than per-family fragments. |
+| M8 | People depth — contact groups create/get/update/delete and members modify (6), Other contacts list/search/copy (3, delete is platform-absent), contact photo set/remove (2) | P11 provider-gaps bundle. (Batch contact create/update/delete and batch get are COMPOSED via the single-contact tools, not missing.) |
+| M9 | Directory stragglers — backup verification codes generate/invalidate/list (3), 2SV turnOff (1), ChromeOS batch status/commands surface (4), building-feature get/update/rename (3), member single-get/hasMember/patch (3), guest-user create (1), role-assignment and ASP single-gets (2), calendarList subscribe and per-user settings (6 of Calendar's 18), Forms watches (4 of Forms' 4), Reports entity usage (1), Sheets data-filter legs and batch clears (6 of Sheets' 7) | P11 provider-gaps bundle(s), split by family as the queue prefers. |
+
+**Composition economy.** The server's composites already collapse the heaviest raw-API
+workflows to one call (onboard employee ≈ 6 underlying operations →
+`workflow_onboard_employee`; offboard likewise; inbox triage 1; scheduling with guests
+and a Meet link 1 each; bulk operations on up to 20 users 1 guarded call; up to 10 reads
+in `workspace_batch` 1). Remaining jobs over 3 calls are flagged
+**COMPOSITION-OWED**: (1) reply to mail with an attachment sourced from Drive —
+search → read → Drive download/export → send = 4 calls; proposal: let
+`gmail_send_with_attachment` accept a Drive file ID and fetch the bytes server-side.
+Jobs whose legs are MISSING (Vault export run; Forms watch renewal) are recorded as
+missing above, not composition-owed — composition cannot be owed for legs that do not
+exist.
+
+**Declared limits carried forward.** Cartographer A: the Reports watch-teardown leg is
+unverified (above); everything else in the map was read in full from Google's indexes.
+Cartographer B: the live catalog was not independently re-paged (385 is proven from the
+executed registry plus the simulated production policy filter, reproducing the repo's
+recorded live census exactly); `test/`, most of `docs/` and most of `scripts/` were not
+read — bounded and argued in the inventory (no served tool or route can hide there:
+both doors' import graphs close over `src/tools/index.js`, and every HTTP surface is an
+`api/` file plus `vercel.json`, all read and byte-verified); production database row
+counts (how many stale registrations exist today) are not determinable from code.
+Method-level dispositions were allocated leg-by-leg from the two sealed sources'
+per-resource tables; where a map row groups methods (patch/update pairs, singleton
+settings), the allocation follows the map's own stated family totals.
