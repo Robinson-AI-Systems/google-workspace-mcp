@@ -1,6 +1,6 @@
-> **Independent service identity:** This is **Workspace MCP by Robinson AI Systems**, an independently operated connector for Google Workspace™; it is not made, operated, sponsored or endorsed by Google LLC. The stable native remote MCP URL is `https://workspace.robinsonaisystems.com/api/mcp` with service-owned OAuth. See [direct client setup, brand decisions and pending verification](docs/BRANDING-AND-DIRECT-MCP.md). Existing connected client credentials and technical identifiers are not renamed. Public directory publication has **not** been approved.
+> **Independent service identity:** This is **Workspace Unleashed by Robinson AI Systems**, an independently operated connector for Google Workspace™; it is not made, operated, sponsored or endorsed by Google LLC. The stable native remote MCP URL is `https://workspace.robinsonaisystems.com/api/mcp` with service-owned OAuth. See [direct client setup, brand decisions and pending verification](docs/BRANDING-AND-DIRECT-MCP.md). Existing connected client credentials and technical identifiers are not renamed. Public directory publication has **not** been approved.
 
-# Workspace MCP by Robinson AI Systems
+# Workspace Unleashed by Robinson AI Systems
 
 **v1 early-release fast track:** The immediate target is a secure, verified standalone MCP product for invited, authorized Google users. [v1 release readiness and pending original acceptance](docs/plan/V1-RELEASE-GATE.md) are separate from the [ongoing exhaustive API coverage roadmap](docs/PROVIDER-API-COVERAGE.md). **Neither v1 nor public self-service is yet certified.** No Hub runtime connection is required for standalone Workspace acceptance.
 
