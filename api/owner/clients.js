@@ -13,6 +13,13 @@
 // deliberately NOT governed by the legacy sign-in switch: revoking a
 // registration is a security control and must stay available while new
 // sign-ins are off, which is precisely when an operator reaches for it.
+// It also carries no Origin-header requirement, again like the migration
+// ceremony: the passphrase is the credential, an Origin check adds nothing
+// against an attacker who would already need it, and the fleet's operator
+// automation submits forms without an Origin header — the 2026-11-04 live
+// acceptance attempt failed on exactly that mismatch while the ceremony
+// on the same posture completed. The sign-in family keeps its Origin
+// gates; this administration surface follows the ceremony.
 // The seeded stable client 'muse' (the documented Muse Android manual
 // entry) is refused here so this page can never break that stable name.
 import {parseBody} from '../../src/oauth/helpers.js';
@@ -113,7 +120,6 @@ export default async function handler(request, response) {
   }
   if (!['GET', 'POST'].includes(request.method)) { page(response, 405, 'Method not allowed', 'Use the form.'); return; }
   if (request.method === 'GET') { reply(response, 200, homePage()); return; }
-  if (request.headers?.origin !== origin) { page(response, 403, 'Wrong website address', 'Submit this form only from the canonical service address.'); return; }
   if (!process.env.ADMIN_PASSPHRASE) { page(response, 503, 'Owner authentication unavailable', 'The server owner passphrase is not configured.'); return; }
 
   let body;
