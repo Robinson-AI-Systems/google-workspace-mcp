@@ -1,4 +1,4 @@
-# Agent entry — Workspace MCP by Robinson AI Systems
+# Agent entry — Workspace Unleashed by Robinson AI Systems
 
 ## Remaining universal permissions and identity implementation
 

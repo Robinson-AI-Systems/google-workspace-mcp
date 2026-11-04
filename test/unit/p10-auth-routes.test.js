@@ -381,7 +381,7 @@ describe('P10 actual route one-use browser callback and independent principal MC
    ownerStillPrivate.headers.host='mcp.example.test';
    const accountPage=res();await account(ownerStillPrivate,accountPage);
    expect(accountPage.statusCode).toBe(200);
-   expect(accountPage.body).toContain('Workspace MCP by Robinson AI Systems');
+   expect(accountPage.body).toContain('Workspace Unleashed by Robinson AI Systems');
  });
  it('invalid operator origin fails closed and alias POST cannot bypass existing CSRF guard',async()=>{
    process.env.PUBLIC_BASE_URL='http://insecure.example.test';
@@ -408,7 +408,7 @@ describe('P10 actual route one-use browser callback and independent principal MC
   const unauth=res();await account(req(),unauth);expect(unauth.statusCode).toBe(401);
   expect(unauth.body).toContain('Sign in with your approved Google account');
   const read=res();await account(req('GET',{},sessCookie),read);
-  expect(read.statusCode).toBe(200);expect(read.body).toContain('Workspace MCP by Robinson AI Systems');
+  expect(read.statusCode).toBe(200);expect(read.body).toContain('Workspace Unleashed by Robinson AI Systems');
   expect(read.body).toContain('Not created, operated, sponsored or endorsed by Google LLC.');
   const mutate=res();await account(req('POST',{},sessCookie,{action:'disconnect_account',id:'foreign'}),mutate);
   expect(mutate.statusCode).toBe(403);
