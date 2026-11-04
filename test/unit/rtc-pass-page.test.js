@@ -45,6 +45,14 @@ describe('owner RTC pass setup',()=>{
   }
  });
 
+ it('creates no pass when the owner has disabled new passphrase sign-ins',async()=>{
+  process.env.LEGACY_OWNER_SIGNIN_ENABLED='false';
+  try{
+   const res=await post({passphrase:process.env.ADMIN_PASSPHRASE,google_account:'ops@example.test',hours:'24'});
+   expect(res.statusCode).toBe(403);expect(res.body).toContain('New passphrase sign-in is disabled');
+   expect(await holder.db.listRtcPasses()).toHaveLength(0);
+  }finally{delete process.env.LEGACY_OWNER_SIGNIN_ENABLED;}
+ });
  it('redirects an alias to the pinned canonical origin before rendering a secret-bearing form',async()=>{
   const alias=await get('rtc-alias.vercel.app');
   expect(alias.statusCode).toBe(303);

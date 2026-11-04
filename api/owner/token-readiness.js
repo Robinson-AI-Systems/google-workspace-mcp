@@ -5,6 +5,7 @@ import {parseBody} from '../../src/oauth/helpers.js';
 import {initSchema,inspectGoogleTokenRetirement,activateGoogleTokenRetirement,listGoogleAccounts,recordLoginAttempt,
  countRecentFailedLogins,markLoginAttemptSucceeded} from '../../src/db.js';
 import {evaluateLogin,clientIp,LOCKOUT_WINDOW_MINUTES} from '../../src/oauth/login-guard.js';
+import {legacyNewLoginEnabled} from '../../src/principals/owner-migration.js';
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function reply(res,status,body,form=false){
  res.setHeader('Cache-Control','no-store, no-cache, max-age=0');
@@ -43,6 +44,10 @@ export default async function handler(req,res){
   reply(res,200,'<h1>Inspect token encryption readiness</h1><p>Read-only inspection of all connected accounts. This returns counts and readiness conditions only. It does not refresh accounts or retire plaintext tokens.</p><form method="POST"><label>Admin passphrase <input name="passphrase" type="password" autocomplete="current-password" required></label><p><button type="submit">Inspect readiness</button></p></form><hr><h2>Refresh one existing account</h2><p>Uses only its saved Google grant, verifies the mailbox and saves the refreshed credential. No new scopes or consent.</p><form id="refresh-form" method="POST"><input type="hidden" name="action" value="refresh"><p><label>Connected account email <input name="account" type="email" required></label></p><p><label>Repeat account email <input name="confirm_account" type="email" required></label></p><label>Admin passphrase <input name="passphrase" type="password" autocomplete="current-password" required></label><p><button type="submit">Refresh existing account</button></p></form><hr><h2>Activate encrypted-only storage</h2><p>Run only after the checked encryption-aware release is serving, incompatible deployments have drained, and encrypted recovery or account reconnection has been reviewed. All accounts must pass fresh readiness. This action then refreshes every connected account using its existing grant and verifies its mailbox, clearing only matched plaintext copies. No new scopes or Google consent.</p><form id="retire-form" method="POST"><input type="hidden" name="action" value="retire"><p><label><input type="checkbox" name="deployments_drained" value="confirmed" required> Incompatible deployments have drained</label></p><p><label><input type="checkbox" name="recovery_reviewed" value="confirmed" required> Encrypted recovery or reconnection reviewed</label></p><p><label>Type RETIRE PLAINTEXT <input name="confirmation" required></label></p><label>Admin passphrase <input name="passphrase" type="password" autocomplete="current-password" required></label><p><button type="submit">Activate and refresh connected accounts</button></p></form>',true);return;
  }
  if(req.headers?.origin!==origin){reply(res,403,'<h1>Wrong website address</h1>');return;}
+ // The legacy switch governs this page exactly as it governs the sign-in
+ // page: when the owner has disabled new passphrase sign-ins, refuse before
+ // the passphrase is compared or any login attempt is recorded.
+ if(!legacyNewLoginEnabled()){reply(res,403,'<h1>New passphrase sign-in is disabled</h1><p>New passphrase sign-in is disabled by owner choice. Existing issued connections remain valid.</p>');return;}
  if(!process.env.ADMIN_PASSPHRASE){reply(res,503,'<h1>Owner authentication unavailable</h1>');return;}
  let body,refresh=false,retire=false;
  try{body=req.body&&typeof req.body==='object'?req.body:await parseBody(req);

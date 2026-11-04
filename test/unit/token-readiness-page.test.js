@@ -55,6 +55,15 @@ describe('owner-only token readiness inspection',()=>{
   expect(r.headers['Referrer-Policy']).toBe('no-referrer');expect(mocks.inspectGoogleTokenRetirement).toHaveBeenCalledTimes(1);
   expect(mocks.markLoginAttemptSucceeded).toHaveBeenCalledWith(1);
  });
+ it('refuses before any login attempt when the owner has disabled new passphrase sign-ins',async()=>{
+  process.env.LEGACY_OWNER_SIGNIN_ENABLED='false';
+  try{
+   const r=await request({passphrase:'fake-owner-passphrase',action:'refresh',account:'ops@example.test',confirm_account:'ops@example.test'});
+   expect(r.statusCode).toBe(403);expect(r.body).toContain('New passphrase sign-in is disabled');
+   expect(mocks.recordLoginAttempt).not.toHaveBeenCalled();expect(mocks.refresh).not.toHaveBeenCalled();
+   expect(mocks.inspectGoogleTokenRetirement).not.toHaveBeenCalled();
+  }finally{delete process.env.LEGACY_OWNER_SIGNIN_ENABLED;}
+ });
  it('supports the actual urlencoded browser form',async()=>{
   const req=Readable.from(['passphrase=fake-owner-passphrase']);req.method='POST';
   req.headers={origin,'content-type':'application/x-www-form-urlencoded'};const r=response();await handler(req,r);

@@ -62,6 +62,14 @@ describe('protected owner-initiated Google setup',()=>{
   expect(accepted.statusCode).toBe(200);expect(holder.purpose).toBe('tasks_read');expect(holder.account).toBe('ops@example.test');
   expect(verifyGoogleSetup(continuation(accepted).searchParams.get('state'),accepted.headers['Set-Cookie'].split(';')[0])).not.toBeNull();
  });
+ it('refuses enrollment before any login attempt when the owner has disabled new passphrase sign-ins',async()=>{
+  process.env.LEGACY_OWNER_SIGNIN_ENABLED='false';
+  try{
+   const refused=await submit({passphrase,purpose:'standard',account:'ops@example.test'});
+   expect(refused.statusCode).toBe(403);expect(refused.body).toContain('New passphrase sign-in is disabled');
+   expect(holder.grants).toBe(0);
+  }finally{delete process.env.LEGACY_OWNER_SIGNIN_ENABLED;}
+ });
  it('keeps approved Postmaster-only recovery behind owner, canonical origin, mailbox and signed-state gates',async()=>{
   const alias=response();await authorize({method:'GET',headers:{host:'alias.test'},query:{purpose:'postmaster_read',account:'ops@example.test'}},alias);
   expect(new URL(alias.headers.Location).searchParams.get('purpose')).toBe('postmaster_read');

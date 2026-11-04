@@ -7,6 +7,7 @@ import {startGoogleSetup} from '../../src/oauth/google-setup-state.js';
 import {parseBody} from '../../src/oauth/helpers.js';
 import {initSchema,recordLoginAttempt,countRecentFailedLogins,markLoginAttemptSucceeded} from '../../src/db.js';
 import {evaluateLogin,clientIp,LOCKOUT_WINDOW_MINUTES} from '../../src/oauth/login-guard.js';
+import {legacyNewLoginEnabled} from '../../src/principals/owner-migration.js';
 const escape=s=>String(s).replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 function canonical(){
  try{
@@ -58,6 +59,10 @@ export default async function handler(req,res){
  }
  // The owner passphrase never goes through an attacker-controlled origin.
  if(req.headers?.origin!==origin){send(res,403,'<h1>Wrong website address</h1><p>Open the owner setup page at <a href="'+escape(origin)+'/api/google/authorize">the canonical service address</a> and try again.</p>');return;}
+ // The legacy switch governs this page exactly as it governs the sign-in
+ // page: when the owner has disabled new passphrase sign-ins, refuse before
+ // the passphrase is compared or any login attempt is recorded.
+ if(!legacyNewLoginEnabled()){send(res,403,'<h1>New passphrase sign-in is disabled</h1><p>New passphrase sign-in is disabled by owner choice. Existing issued connections remain valid.</p>');return;}
  if(!process.env.ADMIN_PASSPHRASE){send(res,503,'<h1>Owner authentication is not configured</h1>');return;}
  let p;
  try{p=req.body&&typeof req.body==='object'&&!Array.isArray(req.body)?req.body:await parseBody(req);}

@@ -4,6 +4,7 @@ import { parseBody } from '../../src/oauth/helpers.js';
 import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../../src/branding.js';
 import { initSchema, createRtcPass, recordLoginAttempt, countRecentFailedLogins, markLoginAttemptSucceeded } from '../../src/db.js';
 import { evaluateLogin, clientIp, LOCKOUT_WINDOW_MINUTES } from '../../src/oauth/login-guard.js';
+import { legacyNewLoginEnabled } from '../../src/principals/owner-migration.js';
 import { RTC_AREAS } from '../../src/rtc/catalog.js';
 import { selectedBillingPolicy } from '../../src/rtc/billing-authority.js';
 const escape = s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -56,6 +57,11 @@ export default async function handler(req,res){
  }
  const expected=origin;
  if(req.headers.origin!==expected){respond(res,403,'<h1>Wrong website address</h1><p>This form can only be submitted from its canonical service address. <a href="'+escape(origin)+'/api/rtc/passes">Open the correct owner setup page</a> and try again.</p>');return;}
+ // The legacy switch governs pass issuance exactly as it governs the
+ // sign-in page: when the owner has disabled new passphrase sign-ins, refuse
+ // before the passphrase is compared or any login attempt is recorded. No
+ // pass — TEST or live — is created while the switch is off.
+ if(!legacyNewLoginEnabled()){respond(res,403,'<h1>New passphrase sign-in is disabled</h1><p>New passphrase sign-in is disabled by owner choice. Existing issued connections remain valid.</p>');return;}
  if(!process.env.ADMIN_PASSPHRASE){respond(res,503,'<h1>Admin passphrase is not configured</h1>');return;}
  let body;
  try {
