@@ -1,3 +1,32 @@
+## 2026-11-04 — fleet completeness re-census: row 15 addendum done; registration-delete card RECENSUS-1 filed
+
+The fleet-wide capability-completeness re-census (two sealed cartographers: a
+service-first map from Google's official REST references — 15 families / 113 resources /
+486 methods — diffed against this server's executed registry, 387 registered / 385
+live-mode owner-visible) reopened `docs/COMPLETION.md` row 15 and closed its addendum:
+**257 covered, 5 composed, 24 owner-excluded (the Meet family, owner's recorded
+decision), 198 missing, 2 unverified; completeness graded PARTIAL — capped** under the
+RAS MCP Standard capability-completeness grading amendment (Library D-001 as amended
+2026-11-04, Library PR #5) while plausibly-needed capabilities stand missing.
+
+The head finding is this server's own registration lifecycle: an OAuth client
+registration created through dynamic registration has **no read, update, list or delete
+anywhere in the product** (`oauth_clients`: two INSERTs, one internal SELECT, zero
+DELETEs; no deregister function, route, page or sweep). The three inert
+**“Vivienne RAR connection probe”** registrations are its standing proof — they cannot
+be removed short of direct database edits.
+
+**New queue item — RECENSUS-1** ([card](../pr-cards/RECENSUS-1.md)): owner list, read,
+update and delete for dynamic client registrations, with issued-token handling under
+the existing revocation discipline. Acceptance test, in substance: the three inert
+“Vivienne RAR connection probe” registrations become deletable through the product,
+and after deletion read back as gone. **Ownership: this repo's existing queue — the
+re-census files the card; it does not jump the build order.** Sibling missing-with-plan
+items from the same addendum (principal-deletion execution; Chat, Vault, Drive
+collaboration, Gmail security/migration, watch channels, People and Directory depth)
+are recorded as rows M2–M9 in the row 15 addendum and ride the P11 provider-gaps work
+already in this ledger unless the queue splits them out.
+
 ## October21 Denver — both live browser checks and final pilot acceptance passed
 
 Owner completed native Windows Primary/RAR runs on independently READY `8886660b4dc03cd03fa5b4b4053641ca0ae44a4a`: **16 actual HTTP403 refusals**, own-session/preview retention, both valid logouts and anonymous-afterward checks. Independent production SQL verifies exactly2 new sessions for2 distinct principals, both revoked; 2 Google grants/3 useful agents/17 active refresh-capable original owner records/0 deletion requests retained. Both connected Google identities still match. [Combined provenance and limitations](evidence/2026-10-21-native-browser-acceptance.json), [Primary report](evidence/2026-10-21-native-browser-primary.json), [RAR report](evidence/2026-10-21-native-browser-rar.json). The RAR report retains an earlier recovered expected-account dropdown mismatch; no failing server request is hidden.
