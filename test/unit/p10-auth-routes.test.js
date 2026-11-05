@@ -4,7 +4,8 @@ import {createHash} from 'node:crypto';
 const h=vi.hoisted(()=>({
   started:null,consumed:false,accountLinks:[],codeConsumeCount:0,rotations:0,
   verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false,freshConsent:false,lastIdentity:null,scopeList:null,
-  linkedAccounts:[],disconnects:[],providerRevokeTokens:[],providerRevokeError:false
+  linkedAccounts:[],disconnects:[],providerRevokeTokens:[],providerRevokeError:false,
+  linkDenials:[],linkDenial:null
 }));
 vi.mock('../../src/db.js',()=>({
  initSchema:async()=>{},getOAuthClient:async id=>id==='registered-client'?{
@@ -29,6 +30,8 @@ vi.mock('../../src/principals/store.js',()=>({
    csrf_hash:createHash('sha256').update('p10x_'+'b'.repeat(43)).digest('hex'),kind:'user'}:null,
  revokeSession:async()=>1,
  upsertLinkedAccount:async params=>{h.accountLinks.push(params);return 'account-a';},
+ recordLinkDenial:async denial=>{h.linkDenials.push(denial);},
+ getLatestLinkDenial:async()=>h.linkDenial,
  listAccounts:async()=>h.linkedAccounts,listConnections:async()=>[],isLegacyPilotIdentityPrincipal:async()=>h.legacyPilot,
  canLegacyPilotStartFreshConsent:async()=>h.freshConsent,
  deletionPreview:async()=>({previewOnly:true}),
@@ -90,6 +93,7 @@ beforeEach(()=>{
  h.started=null;h.accountLinks=[];h.bindCalls=0;h.consumed=false;h.rotations=0;h.codeConsumeCount=0;
  h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;h.legacyPilot=false;h.freshConsent=false;h.lastIdentity=null;h.scopeList=null;
  h.linkedAccounts=[];h.disconnects=[];h.providerRevokeTokens=[];h.providerRevokeError=false;
+ h.linkDenials=[];h.linkDenial=null;
 });
 afterEach(()=>{process.env=env;});
 describe('P10 actual route one-use browser callback and independent principal MCP issuance',()=>{
@@ -205,6 +209,23 @@ describe('P10 actual route one-use browser callback and independent principal MC
    const replay=res();await callback(req('GET',{state:h.started.state,code:'google-code'},
      'p10_google_browser='+h.started.browser+'; '+sessCookie),replay);
    expect(replay.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(1);
+ });
+ it('a refused link records its exact reason and the account page shows it to the holder',async()=>{
+   h.scopeList=[];
+   const begin=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',csrf}),begin);
+   expect(begin.statusCode).toBe(302);
+   const refused=res();await callback(req('GET',{state:h.started.state,code:'google-code'},
+     'p10_google_browser='+h.started.browser+'; '+sessCookie),refused);
+   expect(refused.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(0);
+   expect(h.linkDenials).toEqual([{principalId:'33333333-3333-4333-8333-333333333333',
+     phase:'account_link',code:'grant_scope_missing'}]);
+   h.linkDenial={phase:'account_link',code:'grant_scope_missing',
+     created_at:new Date('2026-11-05T18:50:00.000Z')};
+   const portal=res();await account(req('GET',{},sessCookie),portal);
+   expect(portal.statusCode).toBe(200);
+   expect(portal.body).toContain('Most recent link attempt');
+   expect(portal.body).toContain('Google did not confirm the permissions this link needs.');
+   expect(portal.body).toContain('grant_scope_missing');
  });
  it('pilot preselects God mode and public onboarding keeps it optional and off by default',async()=>{
    const pilot=res();await account(req('GET',{},sessCookie),pilot);

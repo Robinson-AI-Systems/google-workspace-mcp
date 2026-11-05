@@ -1,11 +1,13 @@
 import crypto from 'node:crypto';
 import {describe,it,expect,vi,beforeEach,afterEach} from 'vitest';
-const mock=vi.hoisted(()=>({url:null,token:null,claims:null,clientId:null,called:null}));
+const mock=vi.hoisted(()=>({url:null,token:null,claims:null,clientId:null,called:null,
+ tokenInfoScopes:null,tokenInfoError:false,tokenInfoCalled:null}));
 vi.mock('googleapis',()=>({google:{auth:{OAuth2:class{
  constructor(id,secret,redirect){mock.clientId={id,secret,redirect};}
  generateAuthUrl(options){mock.url=options;return 'https://accounts.google.com/o/oauth2?state='+encodeURIComponent(options.state);}
  async getToken(options){mock.called=options;return {tokens:mock.token};}
  async verifyIdToken(options){mock.verified=options;return {getPayload:()=>mock.claims};}
+ async getTokenInfo(token){mock.tokenInfoCalled=token;if(mock.tokenInfoError)throw Error('tokeninfo_failed');return {scopes:mock.tokenInfoScopes||[]};}
 }}}}));
 import {publicGoogleClient,providerUrl,verifyGoogleCode} from '../../src/principals/google.js';
 import {digest,publicMode,admitted,legacyPilotLoginAllowed,readCookie,cookie} from '../../src/principals/security.js';
@@ -20,6 +22,7 @@ beforeEach(()=>{
  process.env.PUBLIC_SIGNIN_MODE='pilot';
  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='google-sub-a,google-sub-b';
  mock.url=null;mock.called=null;mock.verified=null;
+ mock.tokenInfoScopes=null;mock.tokenInfoError=false;mock.tokenInfoCalled=null;
  mock.token={id_token:'signed-jwt-from-sdk',access_token:'granted-access',scope:'openid email profile'};
  mock.claims={iss:'https://accounts.google.com',aud:process.env.PUBLIC_GOOGLE_OAUTH_CLIENT_ID,
   exp:Math.floor(Date.now()/1000)+3600,nonce:'random-protected-nonce',sub:'google-sub-a',
@@ -81,6 +84,25 @@ describe('P10 Google OIDC, no legacy fallback, provider PKCE and encrypted scope
       email_verified:true,email:'person@example.test',sub:'google-sub-a',
       exp:Math.floor(Date.now()/1000)+3600,nonce:'random-protected-nonce'}[k]]))};
   }
+ });
+ it('resolves granted scopes from token introspection when a re-consent receipt omits them',async()=>{
+  const client=publicGoogleClient();
+  const args={client,code:'opaque-google-code',verifier:'provider-verifier',nonceHash:digest('random-protected-nonce')};
+  // Without the flag the receipt list stands and introspection never runs.
+  const plain=await verifyGoogleCode(args);
+  expect(plain.scopeList).toEqual(['openid','email','profile']);
+  expect(mock.tokenInfoCalled).toBeNull();
+  mock.tokenInfoScopes=['openid','https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/drive.readonly'];
+  const resolved=await verifyGoogleCode({...args,resolveGrantedScopes:true});
+  expect(mock.tokenInfoCalled).toBe('granted-access');
+  expect(resolved.scopeList).toContain('https://www.googleapis.com/auth/gmail.readonly');
+  expect(resolved.scopeList).toContain('https://www.googleapis.com/auth/drive.readonly');
+  expect(resolved.scopeList.filter(s=>s==='openid')).toHaveLength(1);
+  // Introspection failure never turns a working verification into a refusal.
+  mock.tokenInfoError=true;
+  const survived=await verifyGoogleCode({...args,resolveGrantedScopes:true});
+  expect(survived.scopeList).toEqual(['openid','email','profile']);
  });
  it('honors off/pilot/public only after stable verified subject, not an email hint',()=>{
   expect(admitted('google-sub-a')).toBe(true);

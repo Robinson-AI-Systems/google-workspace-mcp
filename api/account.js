@@ -3,7 +3,7 @@ import {initSchema} from '../src/db.js';
 import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../src/branding.js';
 import {listAccounts,listConnections,revokeConnection,disconnectAccount,deletionPreview,
   setPrincipalDefault,requestDeletion,cancelDeletion,isLegacyPilotIdentityPrincipal,
-  canLegacyPilotStartFreshConsent,getLinkedGrant} from '../src/principals/store.js';
+  canLegacyPilotStartFreshConsent,getLinkedGrant,getLatestLinkDenial} from '../src/principals/store.js';
 import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.js';
 import {configureCustomerDelegation,listCustomerDelegations,revokeCustomerDelegation,
   addVerifiedDelegationSubject,removeDelegationSubject} from '../src/principals/delegation.js';
@@ -96,7 +96,25 @@ export default async function handler(req,res){
      return res.status(400).json({error:'unknown_action'});
    }
    const accounts=await listAccounts(principalId),connections=await listConnections(principalId),
-     delegations=await listCustomerDelegations(principalId);
+     delegations=await listCustomerDelegations(principalId),
+     linkDenial=await getLatestLinkDenial(principalId).catch(()=>null);
+   // A refused link used to say only "verification failed" — the exact
+   // reason is fixed-vocabulary and safe to show the account holder here.
+   const denialLabels={
+     grant_scope_missing:'Google did not confirm the permissions this link needs.',
+     legacy_pilot_identity_only:'A pilot-era restriction refused this account.',
+     identity_owned_elsewhere:'That Google account is already tied to a different profile.',
+     reserved_identity:'That account is reserved by the original connection.',
+     session_required:'The sign-in session was missing — sign in again and retry.',
+     principal_mismatch:'The sign-in session did not match this link — sign in again and retry.',
+     consent_declined:'The Google consent was not completed.',
+     invalid_link:'The link request was incomplete.'};
+   const denialNote=linkDenial
+     ? '<p><strong>Most recent link attempt:</strong> refused — '+
+       escape(denialLabels[linkDenial.code]||'The verification did not pass.')+
+       ' (Reason code: '+escape(linkDenial.code)+', '+
+       escape(new Date(linkDenial.created_at).toISOString())+')</p>'
+     : '';
    const csrf=readCookie(req,CSRF_COOKIE)||'';
    if(!csrf)return res.status(401).send('Session CSRF state missing.');
    res.setHeader('Content-Type','text/html; charset=utf-8');
@@ -157,7 +175,7 @@ export default async function handler(req,res){
      '<h2>Google connections</h2><ul>'+accounts.map(a=>'<li>'+escape(a.label||a.email)+' · '+
        escape(a.scope_list.join(', '))+' · '+(a.is_default?'Default':'Linked')+
        form('set_default',a.id,'Make default')+
-       accessNote(a)+'</li>').join('')+'</ul>'+
+       accessNote(a)+'</li>').join('')+'</ul>'+denialNote+
      (identityOnly&&!freshConsentAvailable
        ? '<h2>Identity-only legacy tester</h2><p>This verified pilot login is intentionally separate from your original owner MCP. Existing Google connections stay with the original owner. This pilot identity cannot link Google data or issue MCP tool connections until a separately approved fresh consent.</p>'
        : '<h2>Link an account / add permissions</h2>'+

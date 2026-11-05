@@ -56,7 +56,7 @@ export function providerUrl({client,state,nonce,verifier,group='identity'}){
    code_challenge:challenge,code_challenge_method:'S256',state,nonce
  });
 }
-export async function verifyGoogleCode({client,code,verifier,nonceHash}){
+export async function verifyGoogleCode({client,code,verifier,nonceHash,resolveGrantedScopes=false}){
  requireScope(typeof code==='string'&&code.length>0&&verifier&&nonceHash,'invalid_google_callback');
  // Current Google SDK getToken({code,codeVerifier}) and verifyIdToken({idToken,audience})
  // perform provider-side PKCE and verified signature+audience/expiry validation.
@@ -72,6 +72,24 @@ export async function verifyGoogleCode({client,code,verifier,nonceHash}){
    &&typeof claims.nonce==='string'&&digest(claims.nonce)===nonceHash&&claims.email_verified===true
    &&typeof claims.sub==='string'&&claims.sub.length>=4&&
    validEmail(claims.email),'invalid_verified_identity');
+ let scopeList=String(tokens.scope||'').split(/\s+/).filter(Boolean);
+ // Google's token response omits the scope field when a consent grants
+ // nothing new — a re-consent over an existing grant, which is exactly the
+ // shape of linking an account whose permissions the app already holds
+ // (owner-raised defect, 2026-11-05: the personal-account link read an
+ // empty granted list and refused). The access token itself still carries
+ // the full grant, so when the receipt lists no API permission, ask the
+ // SDK's token introspection what the token actually holds and union the
+ // two lists. Introspection failure leaves the original list untouched.
+ if(resolveGrantedScopes&&tokens.access_token&&
+   !scopeList.some(scope=>scope.startsWith('https://'))&&
+   typeof client.getTokenInfo==='function'){
+   try{
+     const info=await client.getTokenInfo(tokens.access_token);
+     const attested=Array.isArray(info?.scopes)?info.scopes.filter(x=>typeof x==='string'):[];
+     scopeList=[...new Set([...scopeList,...attested])];
+   }catch{ /* the fallback never turns a working verification into a refusal */ }
+ }
  return {issuer:claims.iss,sub:claims.sub,email:claims.email.toLowerCase(),
-   tokens,scopeList:String(tokens.scope||'').split(/\s+/).filter(Boolean)};
+   tokens,scopeList};
 }

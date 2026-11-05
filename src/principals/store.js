@@ -82,6 +82,10 @@ export async function initPrincipalSchema(q=sql()){
  await q`CREATE TABLE IF NOT EXISTS principal_deletion_requests (
    principal_id UUID PRIMARY KEY REFERENCES principals(id),requested_at TIMESTAMPTZ NOT NULL DEFAULT now(),
    cancelled_at TIMESTAMPTZ,confirmed_at TIMESTAMPTZ)`;
+ await q`CREATE TABLE IF NOT EXISTS principal_link_denials (
+   principal_id UUID PRIMARY KEY REFERENCES principals(id),
+   phase TEXT NOT NULL,code TEXT NOT NULL,
+   created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
  await q`CREATE TABLE IF NOT EXISTS principal_delegations (
    id UUID PRIMARY KEY,principal_id UUID NOT NULL REFERENCES principals(id),
    customer_id TEXT NOT NULL,scopes TEXT[] NOT NULL,subject_rule TEXT NOT NULL,
@@ -187,6 +191,24 @@ export async function canLegacyPilotStartFreshConsent(principalId){
      AND p.legacy_pilot_identity_only=true
      AND p.legacy_pilot_fresh_grant=false`;
  return rows.length===1&&legacyPilotFreshConsentAllowed(rows[0].google_sub);
+}
+// The callback's denial reason is deliberately never exposed on the public
+// error page, and server logs are not always reachable — so the most recent
+// link refusal is also recorded against the principal, where the account
+// holder can read it on their own account page. Fixed vocabulary only
+// (phase + denial code): no identity, account or token material is stored.
+export async function recordLinkDenial({principalId,phase,code}){
+ requireScope(validUuid(principalId)&&typeof phase==='string'&&typeof code==='string','invalid_link');
+ const q=sql();
+ await q`INSERT INTO principal_link_denials(principal_id,phase,code)
+   VALUES (${principalId}::uuid,${phase},${code})
+   ON CONFLICT(principal_id) DO UPDATE SET phase=EXCLUDED.phase,code=EXCLUDED.code,created_at=now()`;
+}
+export async function getLatestLinkDenial(principalId){
+ requireScope(validUuid(principalId),'invalid_identity');
+ const rows=await sql()`SELECT phase,code,created_at FROM principal_link_denials
+   WHERE principal_id=${principalId}::uuid`;
+ return rows[0]||null;
 }
 export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,scopeList,tokens}){
  requireScope(validUuid(principalId)&&validSub(sub)&&validEmail(verifiedEmail)&&
