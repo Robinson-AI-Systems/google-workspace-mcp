@@ -3,7 +3,7 @@ import {Readable} from 'node:stream';
 import {createHash} from 'node:crypto';
 const h=vi.hoisted(()=>({
   started:null,consumed:false,accountLinks:[],codeConsumeCount:0,rotations:0,
-  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false,freshConsent:false,lastIdentity:null,
+  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false,freshConsent:false,lastIdentity:null,scopeList:null,
   linkedAccounts:[],disconnects:[],providerRevokeTokens:[],providerRevokeError:false
 }));
 vi.mock('../../src/db.js',()=>({
@@ -55,7 +55,7 @@ vi.mock('../../src/principals/google.js',()=>({
  publicGoogleClient:()=>({revokeToken:async token=>{h.providerRevokeTokens.push(token);if(h.providerRevokeError)throw Error('no token details');}}),
  providerUrl:({state})=>'https://accounts.google.com/o/oauth2?state='+state,
  verifyGoogleCode:async({nonceHash})=>{if(h.googleFailure)throw Error(h.googleFailure);return {issuer:'https://accounts.google.com',sub:h.verifiedSub,
-   email:'user@example.test',scopeList:['scope-mail'],
+   email:'user@example.test',scopeList:h.scopeList||['scope-mail'],
    tokens:{access_token:'google-access',id_token:'validated-google-jwt',refresh_token:'google-refresh'}};}
 }));
 const {default:start}=await import('../../api/auth/google/start.js');
@@ -88,7 +88,7 @@ beforeEach(()=>{
  process.env.PUBLIC_SIGNIN_MODE='pilot';
  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='pilot-subject';
  h.started=null;h.accountLinks=[];h.bindCalls=0;h.consumed=false;h.rotations=0;h.codeConsumeCount=0;
- h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;h.legacyPilot=false;h.freshConsent=false;h.lastIdentity=null;
+ h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;h.legacyPilot=false;h.freshConsent=false;h.lastIdentity=null;h.scopeList=null;
  h.linkedAccounts=[];h.disconnects=[];h.providerRevokeTokens=[];h.providerRevokeError=false;
 });
 afterEach(()=>{process.env=env;});
@@ -255,7 +255,7 @@ describe('P10 actual route one-use browser callback and independent principal MC
    expect(JSON.stringify(out.body)).not.toContain('user-owned-google-refresh');
    expect(h.disconnects).toHaveLength(1);
  });
- it('comprehensive user consent stays CSRF-bound, scoped and requires Google to approve every selected permission',async()=>{
+ it('comprehensive user consent stays CSRF-bound and links the subset Google actually grants',async()=>{
   const portal=res();await account(req('GET',{},sessCookie),portal);
   expect(portal.statusCode).toBe(200);
   expect(portal.body).toContain('God mode — request all supported Google permissions together');
@@ -267,13 +267,37 @@ describe('P10 actual route one-use browser callback and independent principal MC
   const wrongBrowser=res();await callback(req('GET',{state:h.started.state,code:'provider-code'},
     'p10_google_browser=foreign; '+sessCookie),wrongBrowser);
   expect(wrongBrowser.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(0);
-  const declined=res();await callback(req('GET',{state:h.started.state,code:'provider-code'},
-    'p10_google_browser='+h.started.browser+'; '+sessCookie),declined);
-  // Google mock grants only scope-mail; the two additional requested scopes
-  // are missing, so the application must not pretend comprehensive consent passed.
-  expect(declined.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(0);
+  const linked=res();await callback(req('GET',{state:h.started.state,code:'provider-code'},
+    'p10_google_browser='+h.started.browser+'; '+sessCookie),linked);
+  // Google mock grants only scope-mail of the three God-mode scopes — the
+  // consumer-account shape, where administrator permissions cannot be
+  // granted at all. The link accepts and stores exactly the granted subset
+  // instead of refusing the whole link (owner-raised defect, 2026-11-05).
+  expect(linked.statusCode).toBe(302);expect(h.accountLinks).toHaveLength(1);
+  expect(h.accountLinks[0].scopeList).toEqual(['scope-mail']);
   const unknown=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'unknown',csrf}),unknown);
-  expect(unknown.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(0);
+  expect(unknown.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(1);
+ });
+ it('God mode still refuses when Google grants none of the requested permissions; single-service links stay all-or-nothing',async()=>{
+  h.scopeList=['scope-unrelated'];
+  const all=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',godMode:'true',csrf}),all);
+  expect(all.statusCode).toBe(302);expect(h.started.policy.group).toBe('complete');
+  const none=res();await callback(req('GET',{state:h.started.state,code:'provider-code'},
+    'p10_google_browser='+h.started.browser+'; '+sessCookie),none);
+  expect(none.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(0);
+  const single=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',csrf}),single);
+  expect(single.statusCode).toBe(302);expect(h.started.policy.group).toBe('mail');
+  const partial=res();await callback(req('GET',{state:h.started.state,code:'provider-code'},
+    'p10_google_browser='+h.started.browser+'; '+sessCookie),partial);
+  expect(partial.statusCode).toBe(400);expect(h.accountLinks).toHaveLength(0);
+ });
+ it('account page states granted vs supported honestly for a partial God-mode account',async()=>{
+  h.linkedAccounts=[{id:'44444444-4444-4444-8444-444444444444',email:'person@example.test',
+    scope_list:['scope-mail'],is_default:false}];
+  const page=res();await account(req('GET',{},sessCookie),page);
+  expect(page.statusCode).toBe(200);
+  expect(page.body).toContain('Google granted 1 of 3 supported permissions');
+  expect(page.body).not.toContain('God mode active locally');
  });
  it('link requires same-origin CSRF and bound session and cannot claim owner global mailboxes',async()=>{
   const missing=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail'}),missing);

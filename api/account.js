@@ -122,6 +122,17 @@ export default async function handler(req,res){
      'You can turn off God mode later; doing so locally disconnects this Google grant and its connected agents. '+
      'You can revoke the Google permission at Google when turning it off, and separately check or remove the app from your Google Account third-party access settings if the provider cannot confirm revocation.</p>'+
      '<button>Continue to Google consent</button></form>';
+   const accessNote=a=>{
+     const granted=PUBLIC_SCOPE_GROUPS.complete.filter(scope=>a.scope_list.includes(scope)).length;
+     if(granted===PUBLIC_SCOPE_GROUPS.complete.length)
+       return ' · God mode active locally'+disableGodMode(a);
+     if(granted>0)
+       return ' · Google granted '+granted+' of '+PUBLIC_SCOPE_GROUPS.complete.length+
+         ' supported permissions to this account. Permissions Google did not grant — for example '+
+         'administrator permissions, which require a Google Workspace account — are unavailable '+
+         'for this account.'+form('disconnect_account',a.id,'Disconnect locally');
+     return form('disconnect_account',a.id,'Disconnect locally');
+   };
    const disableGodMode=a=>'<form method="POST">'+
      '<input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
      '<input type="hidden" name="action" value="disable_god_mode">'+
@@ -146,9 +157,7 @@ export default async function handler(req,res){
      '<h2>Google connections</h2><ul>'+accounts.map(a=>'<li>'+escape(a.label||a.email)+' · '+
        escape(a.scope_list.join(', '))+' · '+(a.is_default?'Default':'Linked')+
        form('set_default',a.id,'Make default')+
-       (PUBLIC_SCOPE_GROUPS.complete.every(scope=>a.scope_list.includes(scope))
-         ? ' · God mode active locally'+disableGodMode(a)
-         : form('disconnect_account',a.id,'Disconnect locally'))+'</li>').join('')+'</ul>'+
+       accessNote(a)+'</li>').join('')+'</ul>'+
      (identityOnly&&!freshConsentAvailable
        ? '<h2>Identity-only legacy tester</h2><p>This verified pilot login is intentionally separate from your original owner MCP. Existing Google connections stay with the original owner. This pilot identity cannot link Google data or issue MCP tool connections until a separately approved fresh consent.</p>'
        : '<h2>Link an account / add permissions</h2>'+
