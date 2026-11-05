@@ -197,6 +197,19 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    await pool.query(`DELETE FROM google_accounts WHERE lower(email)=lower($1)`,[identity.verifiedEmail]).catch(()=>{});
   }
  });
+ it('the owner profile holds a browser session and linked accounts on its own record',async()=>{
+  const security=await import('../../src/principals/security.js');
+  const session=await store.createSession(security.OWNER_ID);
+  expect(session.secret).toMatch(/^p10s_/);
+  expect((await store.readSession(session.secret)).principal_id).toBe(security.OWNER_ID);
+  const linked=await store.upsertLinkedAccount({principalId:security.OWNER_ID,
+   issuer:'https://accounts.google.com',sub:'owner-hub-subject-001',
+   verifiedEmail:'owner-hub@example.test',scopeList:['scope-mail'],
+   tokens:{access_token:'google-access',refresh_token:'google-refresh'}});
+  expect(linked).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+  const accounts=await store.listAccounts(security.OWNER_ID);
+  expect(accounts.some(a=>a.email==='owner-hub@example.test')).toBe(true);
+ });
  it('records a sign-in refusal under a one-time id the sign-in page can read once',async()=>{
   const id=await store.recordSigninDenial({phase:'pilot_admission',code:'public_signin_not_admitted'});
   expect(typeof id).toBe('string');
