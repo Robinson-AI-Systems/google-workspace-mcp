@@ -204,8 +204,15 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
      WHERE i.principal_id=${principalId}::uuid
        AND i.issuer=${issuer} AND i.google_sub=${sub}
        AND lower(i.verified_email)=lower(${verifiedEmail})`;
-   independentlyEligible=matching.length===1&&
-     (prior[0].fresh===true||legacyPilotFreshConsentAllowed(sub));
+   // The legacy-mailbox match gates only the FIRST independent link: it
+   // proves the historical tester controls this principal before any fresh
+   // grant exists. Once that first fresh-consent link has landed
+   // (legacy_pilot_fresh_grant), control is proven and later links are
+   // ordinary — requiring every later account to also match a legacy
+   // mailbox would bar the owner from ever adding a non-legacy account
+   // (owner-raised defect, 2026-11-05: a personal Gmail could never link).
+   independentlyEligible=prior[0].fresh===true||
+     (matching.length===1&&legacyPilotFreshConsentAllowed(sub));
    requireScope(independentlyEligible,'legacy_pilot_identity_only');
  }
  const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;

@@ -12,7 +12,8 @@ const SAFE_DENIAL_CODES=new Set([
  'public_signin_not_admitted','reserved_identity','invalid_identity',
  'invalid_owner_link','invalid_owner_login','invalid_pilot_subject_proof',
  'principal_mismatch','grant_scope_missing','identity_owned_elsewhere',
- 'session_required','invalid_grant','version_conflict','outside_scope'
+ 'session_required','invalid_grant','version_conflict','outside_scope',
+ 'legacy_pilot_identity_only','invalid_link'
 ]);
 export default async function handler(req,res){
  headers(res);
