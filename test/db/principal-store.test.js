@@ -402,5 +402,17 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
   expect(results.filter(Boolean)).toHaveLength(1);
   expect(await original()).toBeNull();
  });
+ it('records the latest link denial per principal for the account page',async()=>{
+  const user=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',
+   sub:'denial-probe-subject',verifiedEmail:'denial-probe@example.test',identityOnlyPilot:true});
+  expect(await store.getLatestLinkDenial(user)).toBeNull();
+  await store.recordLinkDenial({principalId:user,phase:'account_link',code:'grant_scope_missing'});
+  let denial=await store.getLatestLinkDenial(user);
+  expect(denial.code).toBe('grant_scope_missing');expect(denial.phase).toBe('account_link');
+  await store.recordLinkDenial({principalId:user,phase:'account_link',code:'identity_owned_elsewhere'});
+  denial=await store.getLatestLinkDenial(user);
+  expect(denial.code).toBe('identity_owned_elsewhere');
+  await expect(store.recordLinkDenial({principalId:user,phase:42,code:'x'})).rejects.toThrow('invalid_link');
+ });
 
 });

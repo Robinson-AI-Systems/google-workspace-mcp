@@ -1,5 +1,5 @@
 import {initSchema} from '../../../src/db.js';
-import {consumeTransaction,bindVerifiedIdentity,upsertLinkedAccount} from '../../../src/principals/store.js';
+import {consumeTransaction,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial} from '../../../src/principals/store.js';
 import {publicGoogleClient,verifyGoogleCode,PUBLIC_SCOPE_GROUPS} from '../../../src/principals/google.js';
 import {admitted,digest,cookie,headers,requireScope} from '../../../src/principals/security.js';
 import {readCookie} from '../../../src/principals/security.js';
@@ -22,10 +22,10 @@ export default async function handler(req,res){
  res.setHeader('Set-Cookie',cookie(BROWSER_COOKIE,'','/api/auth/google',0));
  if(typeof state!=='string'||!browser){res.status(400).send('Invalid Google sign-in.');return;}
  let phase='schema';
+ let tx=null;
  try{
   await initSchema();
   phase='transaction';
-  let tx=null;
   for(const purpose of ['login','link','mcp_authorize']){
     tx=await consumeTransaction({state,browser,purpose});
     if(tx)break;
@@ -37,7 +37,7 @@ export default async function handler(req,res){
   // Google SDK verifies signature/audience/expiry; compare nonce hash, never
   // accept unverified email/hd/client hints from request parameters.
   const verified=await verifyGoogleCode({client:publicGoogleClient(),code:req.query.code,
-    verifier:tx.verifier,nonceHash:tx.nonce_hash});
+    verifier:tx.verifier,nonceHash:tx.nonce_hash,resolveGrantedScopes:tx.purpose==='link'});
   // Owner-passphrase authenticated identity discovery for a disposable pilot
   // tester: use a one-use, browser-bound OIDC transaction while normal public
   // enrollment is OFF. Reveal only the stable verified subject to that browser.
@@ -159,6 +159,13 @@ export default async function handler(req,res){
   const message=typeof error?.message==='string'?error.message:null;
   const code=SAFE_DENIAL_CODES.has(message)?message:'unclassified';
   console.warn('p10_google_callback_denied',{phase,code});
+  // The public page never names the reason and the log line is not always
+  // reachable, so a refused LINK is also recorded against its principal:
+  // the account holder reads the exact reason on their own account page.
+  // Recording is best-effort and never changes the refusal response.
+  if(tx?.purpose==='link'&&tx.principal_id){
+    try{await recordLinkDenial({principalId:tx.principal_id,phase,code});}catch{}
+  }
   // A consumed state may not be retried; never expose the internal reason.
   res.status(400).send('Sign-in or account-link verification failed; restart the protected flow.');
  }
