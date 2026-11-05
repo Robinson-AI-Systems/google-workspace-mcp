@@ -3,15 +3,15 @@ on:
   schedule:
     # Primary Denver midnight release, with bounded missed-event recovery.
     # The UTC backup also avoids relying exclusively on timezone triggers.
-    - cron: '1 0 * * *'
+    - cron: '19 0 * * *'
       timezone: America/Denver
-    - cron: '17 0 * * *'
+    - cron: '35 0 * * *'
       timezone: America/Denver
-    - cron: '17 1 * * *'
+    - cron: '35 1 * * *'
       timezone: America/Denver
-    - cron: '37 5 * * *'
+    - cron: '55 5 * * *'
       timezone: America/Denver
-    - cron: '43 12 * * *'
+    - cron: '1 13 * * *'
   workflow_dispatch:
     inputs:
       recover_missed_daily:
