@@ -5,7 +5,7 @@ const h=vi.hoisted(()=>({
   started:null,consumed:false,accountLinks:[],codeConsumeCount:0,rotations:0,
   verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false,freshConsent:false,lastIdentity:null,scopeList:null,boundFull:null,boundShell:null,boundShape:null,boundOwner:null,
   linkedAccounts:[],disconnects:[],providerRevokeTokens:[],providerRevokeError:false,
-  linkDenials:[],linkDenial:null,signinDenials:[]
+  linkDenials:[],linkDenial:null,signinDenials:[],signinDenial:null
 }));
 vi.mock('../../src/db.js',()=>({
  initSchema:async()=>{},getOAuthClient:async id=>id==='registered-client'?{
@@ -36,7 +36,7 @@ vi.mock('../../src/principals/store.js',()=>({
  upsertLinkedAccount:async params=>{h.accountLinks.push(params);return 'account-a';},
  recordLinkDenial:async denial=>{h.linkDenials.push(denial);},
  recordSigninDenial:async denial=>{h.signinDenials.push(denial);return '99999999-9999-4999-8999-999999999999';},
- getSigninDenial:async()=>null,deleteSigninDenial:async()=>{},
+ getSigninDenial:async()=>h.signinDenial,deleteSigninDenial:async()=>{},
  getLatestLinkDenial:async()=>h.linkDenial,
  listAccounts:async()=>h.linkedAccounts,listConnections:async()=>[],isLegacyPilotIdentityPrincipal:async()=>h.legacyPilot,
  canLegacyPilotStartFreshConsent:async()=>h.freshConsent,
@@ -99,7 +99,7 @@ beforeEach(()=>{
  h.started=null;h.accountLinks=[];h.bindCalls=0;h.consumed=false;h.rotations=0;h.codeConsumeCount=0;h.boundFull=null;h.boundShell=null;h.boundShape=null;h.boundOwner=null;
  h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;h.legacyPilot=false;h.freshConsent=false;h.lastIdentity=null;h.scopeList=null;
  h.linkedAccounts=[];h.disconnects=[];h.providerRevokeTokens=[];h.providerRevokeError=false;
- h.linkDenials=[];h.linkDenial=null;h.signinDenials=[];
+ h.linkDenials=[];h.linkDenial=null;h.signinDenials=[];h.signinDenial=null;
 });
 afterEach(()=>{process.env=env;});
 describe('P10 actual route one-use browser callback and independent principal MCP issuance',()=>{
@@ -465,6 +465,16 @@ describe('P10 actual route one-use browser callback and independent principal MC
    const accountPage=res();await account(ownerStillPrivate,accountPage);
    expect(accountPage.statusCode).toBe(200);
    expect(accountPage.body).toContain('Workspace Unleashed by Robinson AI Systems');
+ });
+ it('the sign-in page names the step a refused sign-in died at',async()=>{
+   h.signinDenial={phase:'principal_bind',code:'unclassified',
+     created_at:new Date('2026-11-05T23:16:49.669Z')};
+   const withDenial=req('GET',{d:'99999999-9999-4999-8999-999999999999'});
+   withDenial.headers.host='mcp.example.test';
+   const out=res();await account(withDenial,out);
+   expect(out.statusCode).toBe(401);
+   expect(out.body).toContain('refused at the principal_bind step');
+   expect(out.body).toContain('Reason code: unclassified');
  });
  it('invalid operator origin fails closed and alias POST cannot bypass existing CSRF guard',async()=>{
    process.env.PUBLIC_BASE_URL='http://insecure.example.test';

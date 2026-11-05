@@ -47,7 +47,8 @@ export default async function handler(req,res){
            invalid_verified_identity:'Google could not verify that sign-in.',
            invalid_identity:'Google could not verify that sign-in.',
            invalid_grant:'The Google sign-in code was refused — start again.'};
-         signinNote='<p><strong>Most recent sign-in attempt:</strong> refused — '+
+         signinNote='<p><strong>Most recent sign-in attempt:</strong> refused at the '+
+           escape(signinDenial.phase)+' step — '+
            escape(signinLabels[signinDenial.code]||'The verification did not pass.')+
            ' (Reason code: '+escape(signinDenial.code)+', '+
            escape(new Date(signinDenial.created_at).toISOString())+')</p>';
