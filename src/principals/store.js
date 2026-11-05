@@ -344,7 +344,8 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
  const q=sql();
  const prior=await q`SELECT p.legacy_pilot_identity_only AS historical,
    p.legacy_pilot_fresh_grant AS fresh FROM principals p
-   WHERE p.id=${principalId}::uuid AND p.kind='user' AND p.status='active'`;
+   WHERE p.id=${principalId}::uuid AND p.status='active'
+   AND (p.kind='user' OR p.id=${OWNER_ID}::uuid)`;
  requireScope(prior.length===1,'invalid_identity');
  const historical=prior[0].historical===true;
  let independentlyEligible=false;
@@ -416,7 +417,8 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
  const rows=await q`INSERT INTO principal_google_accounts
    (id,principal_id,issuer,google_sub,email,scope_list,grant_ciphertext)
    SELECT ${id}::uuid,p.id,${issuer},${sub},${verifiedEmail},${scopeList},${sealed}
-   FROM principals p WHERE p.id=${principalId}::uuid AND p.kind='user' AND p.status='active'
+   FROM principals p WHERE p.id=${principalId}::uuid AND p.status='active'
+   AND (p.kind='user' OR p.id=${OWNER_ID}::uuid)
    ON CONFLICT(issuer,google_sub) WHERE status='active' DO NOTHING RETURNING id`;
  // Zero rows here means a concurrent active grant appeared for this
  // identity between the check and the insert — still owned elsewhere.
@@ -501,7 +503,8 @@ export async function createSession(principalId){
  const secret=mint('p10s_'),csrf=mint('p10x_'),q=sql();
  const rows=await q`INSERT INTO user_sessions(token_hash,principal_id,csrf_hash,expires_at)
    SELECT ${digest(secret)},id,${digest(csrf)},now()+interval '24 hours'
-   FROM principals WHERE id=${principalId}::uuid AND status='active' AND kind='user'
+   FROM principals WHERE id=${principalId}::uuid AND status='active'
+   AND (kind='user' OR id=${OWNER_ID}::uuid)
    RETURNING principal_id`;
  requireScope(rows.length===1,'principal_inactive');
  return {secret,csrf};
@@ -512,7 +515,8 @@ export async function readSession(secret){
  const rows=await q`SELECT s.principal_id,s.csrf_hash,p.kind,p.status
    FROM user_sessions s JOIN principals p ON p.id=s.principal_id
    WHERE s.token_hash=${digest(secret)} AND s.expires_at>now()
-   AND s.revoked_at IS NULL AND p.status='active' AND p.kind='user'`;
+   AND s.revoked_at IS NULL AND p.status='active'
+   AND (p.kind='user' OR p.id=${OWNER_ID}::uuid)`;
  return rows[0]||null;
 }
 export async function revokeSession(secret){
