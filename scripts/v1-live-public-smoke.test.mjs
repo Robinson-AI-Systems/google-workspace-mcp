@@ -20,7 +20,7 @@ function fixture({wrongSha=false,plain=false,leak=false,redirect=false,unready=f
    if(u.pathname==='/api/account')return new Response(leak?'Connected Google accounts':'Sign in to your Workspace account',{status:401,headers:secureHeaders});
    if(u.pathname==='/api/oauth/revoke')return new Response(JSON.stringify({error:'method_not_allowed'}),{status:405,headers:{'cache-control':'no-store',allow:'POST'}});
    const body={
-     '/':'Workspace MCP /api/account /api/privacy /api/support /api/data-deletion',
+     '/':'Workspace Unleashed by Robinson AI Systems /api/account /api/privacy /api/support /api/data-deletion',
      '/api/privacy':'Google privacy and retention',
      '/api/support':'Robinson AI Systems support',
      '/api/data-deletion':'disconnect and deletion'}[u.pathname];
