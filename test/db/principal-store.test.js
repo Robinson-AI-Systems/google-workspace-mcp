@@ -139,6 +139,44 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    }
   }
  });
+ it('signs in an already-bound full principal on its own record, with no pilot-list membership',async()=>{
+  const oldEnv={PUBLIC_SIGNIN_MODE:process.env.PUBLIC_SIGNIN_MODE,
+    PUBLIC_PILOT_GOOGLE_SUBJECTS:process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS,
+    PUBLIC_PILOT_LEGACY_SUBJECTS:process.env.PUBLIC_PILOT_LEGACY_SUBJECTS,
+    PUBLIC_P10_TOOL_EXECUTION_VERIFIED:process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED};
+  const sub='555000111222333444555',identity={issuer:'https://accounts.google.com',
+    sub,verifiedEmail:'owner@example.test'};
+  try{
+   process.env.PUBLIC_SIGNIN_MODE='pilot';
+   process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='987654321098765432109';
+   delete process.env.PUBLIC_PILOT_LEGACY_SUBJECTS;
+   delete process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED;
+   await pool.query("INSERT INTO google_accounts(email,tokens) VALUES('owner@example.test','{}'::jsonb) ON CONFLICT(email) DO NOTHING");
+   // The owner identity-link ceremony's end state: a full user principal
+   // already bound to a Google identity whose email is legacy-reserved.
+   const bound=(await pool.query(
+     "INSERT INTO principals(id,kind) VALUES (gen_random_uuid(),'user') RETURNING id")).rows[0].id;
+   await pool.query('INSERT INTO principal_google_identities(issuer,google_sub,principal_id,verified_email) VALUES($1,$2,$3,$4)',
+     [identity.issuer,sub,bound,identity.verifiedEmail]);
+   expect(await store.getBoundFullPrincipal(identity.issuer,sub)).toBe(bound);
+   expect(await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).toBe(bound);
+   expect(await store.bindVerifiedIdentity(identity)).toBe(bound);
+   // An identity-only principal is not a full-principal record: its list
+   // gates are untouched, and an unbound identity still gets nothing.
+   const only=(await pool.query(
+     "INSERT INTO principals(id,kind,legacy_pilot_identity_only) VALUES (gen_random_uuid(),'user',true) RETURNING id")).rows[0].id;
+   await pool.query('INSERT INTO principal_google_identities(issuer,google_sub,principal_id,verified_email) VALUES($1,$2,$3,$4)',
+     [identity.issuer,'555000111222333444556',only,identity.verifiedEmail]);
+   expect(await store.getBoundFullPrincipal(identity.issuer,'555000111222333444556')).toBeNull();
+   await expect(store.bindVerifiedIdentity({issuer:identity.issuer,sub:'555000111222333444556',
+     verifiedEmail:identity.verifiedEmail,identityOnlyPilot:true})).rejects.toThrow('reserved_identity');
+   expect(await store.getBoundFullPrincipal(identity.issuer,'555000111222333444557')).toBeNull();
+  }finally{
+   for(const [key,value] of Object.entries(oldEnv)){
+    if(value===undefined)delete process.env[key];else process.env[key]=value;
+   }
+  }
+ });
  it('preserves original owner ciphertext and bearer when the historical tester obtains its own freshly consented V2 grant',async()=>{
   const envKeys=['PUBLIC_SIGNIN_MODE','PUBLIC_PILOT_GOOGLE_SUBJECTS',
     'PUBLIC_PILOT_LEGACY_SUBJECTS','PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED',

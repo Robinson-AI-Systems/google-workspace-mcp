@@ -1,5 +1,5 @@
 import {initSchema} from '../../../src/db.js';
-import {consumeTransaction,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial} from '../../../src/principals/store.js';
+import {consumeTransaction,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial,getBoundFullPrincipal} from '../../../src/principals/store.js';
 import {publicGoogleClient,verifyGoogleCode,PUBLIC_SCOPE_GROUPS} from '../../../src/principals/google.js';
 import {admitted,digest,cookie,headers,requireScope} from '../../../src/principals/security.js';
 import {readCookie} from '../../../src/principals/security.js';
@@ -132,7 +132,9 @@ export default async function handler(req,res){
     principalId=session.principal_id;
   }else {
     phase='pilot_admission';
-    requireScope(admitted(verified.sub),'public_signin_not_admitted');
+    // The pilot roster gates NEW enrollment. An identity already bound to a
+    // full principal is admitted on its own record (owner ruling, 2026-11-05).
+    requireScope(admitted(verified.sub)||Boolean(await getBoundFullPrincipal(verified.issuer,verified.sub)),'public_signin_not_admitted');
     phase='principal_bind';
     principalId=await bindVerifiedIdentity({issuer:verified.issuer,sub:verified.sub,
       verifiedEmail:verified.email,identityOnlyPilot:tx.purpose==='login'});

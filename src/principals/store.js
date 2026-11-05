@@ -123,12 +123,31 @@ export async function getVerifiedPrincipal(issuer,sub){
    WHERE i.issuer=${issuer} AND i.google_sub=${sub}`;
  return rows.length===1&&rows[0].status==='active'?rows[0].principal_id:null;
 }
+// The principal an already-bound identity signs in to on its own record: the
+// binding itself is the vetting (owner ruling, 2026-11-05 — an account with a
+// profile on record must not depend on the pilot tester list). Only a full
+// principal counts: the identity-only coexistence principal keeps its
+// documented list gates, and an unbound identity gets nothing here.
+export async function getBoundFullPrincipal(issuer,sub){
+ if(!validSub(sub))return null;
+ const q=sql();
+ const rows=await q`SELECT i.principal_id FROM principal_google_identities i
+   JOIN principals p ON p.id=i.principal_id
+   WHERE i.issuer=${issuer} AND i.google_sub=${sub}
+     AND p.kind='user' AND p.status='active' AND p.legacy_pilot_identity_only=false`;
+ return rows.length===1?rows[0].principal_id:null;
+}
 export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnlyPilot=false}){
  requireScope(['accounts.google.com','https://accounts.google.com'].includes(issuer)&&validSub(sub)&&validEmail(verifiedEmail),'invalid_identity');
  const q=sql();
  const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
  const legacyIdentityOnly=reserved.length>0&&identityOnlyPilot===true&&legacyPilotLoginAllowed(sub);
  const old=await getVerifiedPrincipal(issuer,sub);
+ // A full principal's bound identity binds on its own record, even when its
+ // email is a legacy-reserved mailbox and its subject is on no pilot list:
+ // the reservation below guards NEW bindings and the identity-only
+ // coexistence principal, never an established full principal (2026-11-05).
+ if(old&&(await getBoundFullPrincipal(issuer,sub))===old)return old;
  if(old&&reserved.length){
    // A historical owner-connected mailbox may ALSO carry its own explicitly
    // consented V2 grant. Never infer cross-principal authority from email.
