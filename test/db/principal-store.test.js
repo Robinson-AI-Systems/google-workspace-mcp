@@ -184,6 +184,18 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    expect(await store.isLegacyPilotIdentityPrincipal(user)).toBe(false);
    expect((await pool.query('SELECT legacy_pilot_identity_only,legacy_pilot_fresh_grant FROM principals WHERE id=$1',[user])).rows[0])
      .toEqual({legacy_pilot_identity_only:true,legacy_pilot_fresh_grant:true});
+   // After that first independent link, control of the principal is proven:
+   // the same historical principal may link an account that never matched a
+   // legacy mailbox (the owner adding a personal account, 2026-11-05). The
+   // identical call is refused above, before the fresh grant exists.
+   const personalId=await store.upsertLinkedAccount({principalId:user,
+     issuer:'https://accounts.google.com',sub:'555555555555555555555',
+     verifiedEmail:'personal-style@example.test',scopeList:['scope:mail'],
+     tokens:{access_token:'personal-v2-consent',refresh_token:'personal-refresh'}});
+   expect((await store.listAccounts(user)).map(x=>x.id).sort())
+     .toEqual([linkedId,personalId].sort());
+   expect(await store.getLinkedGrant(user,personalId))
+     .toMatchObject({access_token:'personal-v2-consent',refresh_token:'personal-refresh'});
    const foreign=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',
      sub:'other-independent-user-sub',verifiedEmail:'other-independent@example.test'});
    expect(await store.getLinkedGrant(foreign,linkedId)).toBeNull();
