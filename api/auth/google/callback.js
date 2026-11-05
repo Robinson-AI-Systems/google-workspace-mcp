@@ -1,5 +1,5 @@
 import {initSchema} from '../../../src/db.js';
-import {consumeTransaction,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial,recordSigninDenial,getBoundFullPrincipal,getBoundGraduatingPrincipal,classifyBoundIdentity} from '../../../src/principals/store.js';
+import {consumeTransaction,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial,recordSigninDenial,getBoundFullPrincipal,getBoundGraduatingPrincipal,getBoundOwnerPrincipal,classifyBoundIdentity} from '../../../src/principals/store.js';
 import {publicGoogleClient,verifyGoogleCode,PUBLIC_SCOPE_GROUPS} from '../../../src/principals/google.js';
 import {admitted,digest,cookie,headers,requireScope} from '../../../src/principals/security.js';
 import {readCookie} from '../../../src/principals/security.js';
@@ -144,7 +144,9 @@ export default async function handler(req,res){
     const boundFull=await getBoundFullPrincipal(verified.issuer,verified.sub).catch(()=>null);
     const boundShell=boundFull?null:
       await getBoundGraduatingPrincipal(verified.issuer,verified.sub,verified.email).catch(()=>null);
-    if(!(admitted(verified.sub)||boundFull||boundShell)){
+    const boundOwner=boundFull||boundShell?null:
+      await getBoundOwnerPrincipal(verified.issuer,verified.sub).catch(()=>null);
+    if(!(admitted(verified.sub)||boundFull||boundShell||boundOwner)){
       const shape=await classifyBoundIdentity(verified.issuer,verified.sub).catch(()=>null);
       requireScope(false,shape||'public_signin_not_admitted');
     }

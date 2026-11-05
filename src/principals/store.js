@@ -187,6 +187,17 @@ export async function classifyBoundIdentity(issuer,sub){
   return 'bound_shell_email_mismatch';
  return 'bound_not_admissible';
 }
+// The owner profile's own bound identity: the owner-migration ceremony binds
+// the owner's Google identity to the constant owner principal, and that
+// binding — placed behind the owner passphrase — is its vetting. (Named by
+// the admission classifier, 2026-11-05: the systems identity lives here, not
+// on any user principal.)
+export async function getBoundOwnerPrincipal(issuer,sub){
+ if(!validSub(sub))return null;
+ const rows=await sql()`SELECT principal_id FROM principal_google_identities
+   WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id=${OWNER_ID}::uuid`;
+ return rows.length===1?OWNER_ID:null;
+}
 export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnlyPilot=false}){
  requireScope(['accounts.google.com','https://accounts.google.com'].includes(issuer)&&validSub(sub)&&validEmail(verifiedEmail),'invalid_identity');
  const q=sql();
@@ -198,6 +209,10 @@ export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnl
  // the reservation below guards NEW bindings and the identity-only
  // coexistence principal, never an established full principal (2026-11-05).
  if(old&&(await getBoundFullPrincipal(issuer,sub))===old)return old;
+ // The owner profile's own bound identity likewise binds on its record: the
+ // mailbox reservation guards new bindings, never the owner's established
+ // profile (2026-11-05).
+ if(old&&(await getBoundOwnerPrincipal(issuer,sub))===old)return old;
  if(old&&reserved.length){
    // A historical owner-connected mailbox may ALSO carry its own explicitly
    // consented V2 grant. Never infer cross-principal authority from email.
