@@ -3,7 +3,8 @@ import {initSchema} from '../src/db.js';
 import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../src/branding.js';
 import {listAccounts,listConnections,revokeConnection,disconnectAccount,deletionPreview,
   setPrincipalDefault,requestDeletion,cancelDeletion,isLegacyPilotIdentityPrincipal,
-  canLegacyPilotStartFreshConsent,getLinkedGrant,getLatestLinkDenial} from '../src/principals/store.js';
+  canLegacyPilotStartFreshConsent,getLinkedGrant,getLatestLinkDenial,
+  getSigninDenial,deleteSigninDenial} from '../src/principals/store.js';
 import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.js';
 import {configureCustomerDelegation,listCustomerDelegations,revokeCustomerDelegation,
   addVerifiedDelegationSubject,removeDelegationSubject} from '../src/principals/delegation.js';
@@ -23,11 +24,33 @@ export default async function handler(req,res){
    try{session=await requireSession(req);}
    catch(error){
      if(req.method!=='GET'||error?.message!=='session_required')throw error;
+     // A refused sign-in redirects here carrying a one-time denial id: show
+     // the exact fixed-vocabulary reason instead of a bare failure page.
+     let signinNote='';
+     const denialId=typeof req.query?.d==='string'?req.query.d:null;
+     if(denialId){
+       const signinDenial=await getSigninDenial(denialId).catch(()=>null);
+       if(signinDenial){
+         deleteSigninDenial(denialId).catch(()=>{});
+         const signinLabels={
+           public_signin_not_admitted:'That Google account is not on the approved sign-in list and has no profile on record.',
+           reserved_identity:'That account is reserved by the original connection.',
+           invalid_state:'The sign-in attempt expired or was already used — start again.',
+           consent_declined:'The Google consent was not completed.',
+           invalid_verified_identity:'Google could not verify that sign-in.',
+           invalid_identity:'Google could not verify that sign-in.',
+           invalid_grant:'The Google sign-in code was refused — start again.'};
+         signinNote='<p><strong>Most recent sign-in attempt:</strong> refused — '+
+           escape(signinLabels[signinDenial.code]||'The verification did not pass.')+
+           ' (Reason code: '+escape(signinDenial.code)+', '+
+           escape(new Date(signinDenial.created_at).toISOString())+')</p>';
+       }
+     }
      res.setHeader('Content-Type','text/html; charset=utf-8');
      return res.status(401).send('<!doctype html><html lang="en"><meta charset="utf-8">'+
        '<title>Sign in — '+escape(PRODUCT_DISPLAY_NAME)+'</title>'+
        '<main style="font:16px/1.5 system-ui;max-width:42rem;margin:3rem auto">'+
-       '<h1>Sign in to your Workspace account</h1>'+
+       '<h1>Sign in to your Workspace account</h1>'+signinNote+
        '<p>This browser has no active pilot account session. Your existing owner MCP connections are separate and unchanged.</p>'+
        '<p><a href="/api/auth/google/start?purpose=login">Sign in with your approved Google account</a></p></main>');
    }

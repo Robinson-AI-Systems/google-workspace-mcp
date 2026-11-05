@@ -1,5 +1,5 @@
 import {initSchema} from '../../../src/db.js';
-import {consumeTransaction,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial,getBoundFullPrincipal} from '../../../src/principals/store.js';
+import {consumeTransaction,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial,recordSigninDenial,getBoundFullPrincipal} from '../../../src/principals/store.js';
 import {publicGoogleClient,verifyGoogleCode,PUBLIC_SCOPE_GROUPS} from '../../../src/principals/google.js';
 import {admitted,digest,cookie,headers,requireScope} from '../../../src/principals/security.js';
 import {readCookie} from '../../../src/principals/security.js';
@@ -167,6 +167,15 @@ export default async function handler(req,res){
   // Recording is best-effort and never changes the refusal response.
   if(tx?.purpose==='link'&&tx.principal_id){
     try{await recordLinkDenial({principalId:tx.principal_id,phase,code});}catch{}
+  }
+  // A refused browser sign-in likewise records its reason and lands on the
+  // sign-in page, which displays it: the person at the browser restarts the
+  // flow from the page that names why it refused (2026-11-05).
+  if(tx?.purpose==='login'){
+    try{
+      const denialId=await recordSigninDenial({phase,code});
+      res.writeHead(302,{Location:'/api/account?d='+denialId});res.end();return;
+    }catch{}
   }
   // A consumed state may not be retried; never expose the internal reason.
   res.status(400).send('Sign-in or account-link verification failed; restart the protected flow.');

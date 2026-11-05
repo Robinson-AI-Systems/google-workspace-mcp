@@ -95,6 +95,10 @@ export async function initPrincipalSchema(q=sql()){
    principal_id UUID PRIMARY KEY REFERENCES principals(id),
    phase TEXT NOT NULL,code TEXT NOT NULL,
    created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
+ await q`CREATE TABLE IF NOT EXISTS principal_signin_denials (
+   id UUID PRIMARY KEY,
+   phase TEXT NOT NULL,code TEXT NOT NULL,
+   created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
  await q`CREATE TABLE IF NOT EXISTS principal_delegations (
    id UUID PRIMARY KEY,principal_id UUID NOT NULL REFERENCES principals(id),
    customer_id TEXT NOT NULL,scopes TEXT[] NOT NULL,subject_rule TEXT NOT NULL,
@@ -237,6 +241,29 @@ export async function getLatestLinkDenial(principalId){
  const rows=await sql()`SELECT phase,code,created_at FROM principal_link_denials
    WHERE principal_id=${principalId}::uuid`;
  return rows[0]||null;
+}
+// A refused browser SIGN-IN has no principal to record against yet, so the
+// refusal is stored under a one-time id and carried to the sign-in page by
+// redirect: the person at the browser reads the exact reason there instead
+// of a bare failure sentence (2026-11-05). Fixed vocabulary only (phase +
+// denial code), single-read, one-hour life; the id itself grants nothing.
+export async function recordSigninDenial({phase,code}){
+ requireScope(typeof phase==='string'&&typeof code==='string','invalid_link');
+ const id=crypto.randomUUID();
+ const q=sql();
+ await q`INSERT INTO principal_signin_denials(id,phase,code)
+   VALUES (${id}::uuid,${phase},${code})`;
+ return id;
+}
+export async function getSigninDenial(id){
+ if(!validUuid(id))return null;
+ const rows=await sql()`SELECT phase,code,created_at FROM principal_signin_denials
+   WHERE id=${id}::uuid AND created_at>now()-interval '1 hour'`;
+ return rows[0]||null;
+}
+export async function deleteSigninDenial(id){
+ if(!validUuid(id))return;
+ await sql()`DELETE FROM principal_signin_denials WHERE id=${id}::uuid`;
 }
 export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,scopeList,tokens}){
  requireScope(validUuid(principalId)&&validSub(sub)&&validEmail(verifiedEmail)&&
