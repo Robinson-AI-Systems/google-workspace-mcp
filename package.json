@@ -22,7 +22,8 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
     "@neondatabase/serverless": "^0.10.4",
-    "googleapis": "^144.0.0"
+    "googleapis": "^144.0.0",
+    "pg": "^8.23.1"
   },
   "engines": {
     "node": "24.x"
@@ -30,7 +31,6 @@
   "author": "Robinson AI Systems",
   "license": "MIT",
   "devDependencies": {
-    "pg": "^8.23.1",
     "playwright": "1.62.1",
     "vitest": "^3.2.7"
   }

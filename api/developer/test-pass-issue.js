@@ -1,4 +1,4 @@
-import {neon} from '@neondatabase/serverless';
+import {storeSql} from '../../src/db-transport.js';
 import {createTestPassIssuance} from '../../src/developer/test-pass-issuance.js';
 import {testPassIssuanceStore} from '../../src/developer/test-pass-issuance-store.js';
 import {HANDOFF_SCHEMA,HANDOFF_LIMIT_SCHEMA} from '../../src/developer/handoff-store.js';
@@ -16,7 +16,7 @@ export default async function handler(req,res){
    }
    if(Buffer.byteLength(JSON.stringify(req.body))>4096)return res.status(413).json({error:'request_too_large'});
   }
-  const sql=neon(process.env.DATABASE_URL),query=(text,values)=>typeof sql.query==='function'?sql.query(text,values):sql(text,values);
+  const sql=storeSql(process.env.DATABASE_URL),query=(text,values)=>typeof sql.query==='function'?sql.query(text,values):sql(text,values);
   await initSchema();await query(HANDOFF_SCHEMA);await query(HANDOFF_LIMIT_SCHEMA);
   return await createTestPassIssuance({store:testPassIssuanceStore(query),origin:process.env.PUBLIC_BASE_URL,getClient:getOAuthClient,clientIp,ownerPassphrase:process.env.ADMIN_PASSPHRASE,loginStore:{recordLoginAttempt,countRecentFailedLogins,markLoginAttemptSucceeded}})(req,res);
  }catch{return res.status(503).json({error:'test_issuance_unavailable'});}

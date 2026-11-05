@@ -1,4 +1,4 @@
-import {neon} from '@neondatabase/serverless';
+import {storeSql} from '../../src/db-transport.js';
 import {createTestPassHandoff} from '../../src/developer/test-pass-handoff.js';
 import {handoffStore,HANDOFF_SCHEMA,HANDOFF_LIMIT_SCHEMA} from '../../src/developer/handoff-store.js';
 import {getOAuthClient,getRtcPass,initSchema,recordLoginAttempt,countRecentFailedLogins,markLoginAttemptSucceeded} from '../../src/db.js';
@@ -17,7 +17,7 @@ export default async function handler(req,res) {
       if(Buffer.byteLength(JSON.stringify(req.body))>4096)return res.status(413).json({error:'request_too_large'});
     }
     const origin=process.env.PUBLIC_BASE_URL;
-    const sql=neon(process.env.DATABASE_URL);
+    const sql=storeSql(process.env.DATABASE_URL);
     const query=(text,values)=>typeof sql.query==='function'?sql.query(text,values):sql(text,values);
     await initSchema();await query(HANDOFF_SCHEMA);await query(HANDOFF_LIMIT_SCHEMA);
     return await createTestPassHandoff({store:handoffStore(query),origin,getClient:getOAuthClient,getPass:getRtcPass,clientIp,loginStore:{recordLoginAttempt,countRecentFailedLogins,markLoginAttemptSucceeded}})(req,res);

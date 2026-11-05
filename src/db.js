@@ -2,7 +2,7 @@
 // don't keep local files between requests, so anything that needs to survive
 // between calls -- your Google login tokens, and the connector's own OAuth
 // state -- lives in Postgres (Neon) instead.
-import { neon } from '@neondatabase/serverless';
+import { storeSql } from './db-transport.js';
 import crypto from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { loadKey, encryptJson, decryptJson } from './crypto.js';
@@ -17,7 +17,7 @@ function db() {
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL is not set. This is required for the hosted deployment (Neon connection string).');
     }
-    sql = neon(process.env.DATABASE_URL);
+    sql = storeSql(process.env.DATABASE_URL);
   }
   return sql;
 }
