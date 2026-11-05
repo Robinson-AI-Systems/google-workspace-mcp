@@ -37,6 +37,15 @@ export async function initPrincipalSchema(q=sql()){
    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
    UNIQUE(issuer,google_sub),UNIQUE(id,principal_id))`;
  await q`ALTER TABLE principal_google_accounts ADD COLUMN IF NOT EXISTS refresh_version INTEGER NOT NULL DEFAULT 0`;
+ // Ownership of a Google identity is its ACTIVE grant, not any row that
+ // ever existed: a revoked grant is history. Replace the blanket unique
+ // key with an active-only one so a holder who disconnected an account
+ // from one of their profiles can link it under another (owner-approved
+ // self-move doctrine, 2026-11-05); at most one ACTIVE grant per Google
+ // identity still holds worldwide.
+ await q`ALTER TABLE principal_google_accounts DROP CONSTRAINT IF EXISTS principal_google_accounts_issuer_google_sub_key`;
+ await q`CREATE UNIQUE INDEX IF NOT EXISTS principal_google_accounts_active_identity
+   ON principal_google_accounts(issuer,google_sub) WHERE status='active'`;
  await q`CREATE TABLE IF NOT EXISTS principal_defaults (
    principal_id UUID PRIMARY KEY REFERENCES principals(id),account_id UUID NOT NULL,
    FOREIGN KEY(account_id,principal_id) REFERENCES principal_google_accounts(id,principal_id))`;
@@ -239,47 +248,62 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
  }
  const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
  requireScope(!reserved.length||independentlyEligible,'reserved_identity');
+ // Ownership is an ACTIVE grant on another profile. A revoked grant there
+ // is history, not ownership: the holder disconnected the account, and a
+ // fresh consent here may attach it to this profile (self-move doctrine
+ // below). An actively linked account can never be taken.
  const foreign=await q`SELECT id FROM principal_google_accounts
-   WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id<>${principalId}::uuid`;
+   WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id<>${principalId}::uuid
+     AND status='active'`;
  requireScope(!foreign.length,'identity_owned_elsewhere');
- const identity=await q`SELECT principal_id FROM principal_google_identities
-   WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id<>${principalId}::uuid`;
- requireScope(identity.length===0,'identity_owned_elsewhere');
+ // A sign-in identity binding on another profile does not block this link
+ // either. Binding governs SIGN-IN; attaching the account as data is proven
+ // by this flow itself — a session on this profile plus a fresh, verified
+ // Google consent for this exact identity, completed in the same browser-
+ // bound transaction. A stranger cannot produce that consent for someone
+ // else's Google account. (Owner-approved self-move doctrine, 2026-11-05:
+ // one holder's profiles must be able to consolidate their own accounts.)
+ const same=await q`SELECT id,status,token_version FROM principal_google_accounts
+   WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id=${principalId}::uuid
+     AND status='active'`;
+ if(same.length===1){
+   const record=await findAccount(principalId,same[0].id);
+   await updateLinkedGrant({principalId,accountId:record.id,version:record.token_version,tokens,scopeList});
+   if(historical)await recordLegacyFreshConsent(principalId,record.id);
+   return record.id;
+ }
+ const mine=await q`SELECT id,status,token_version FROM principal_google_accounts
+   WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id=${principalId}::uuid
+     AND status='revoked'`;
+ if(mine.length===1){
+   // Provider OAuth links are uniquely keyed by issuer/subject; a user who
+   // turns off God mode must be able to reauthorize that SAME Google identity
+   // with a fresh, narrower provider grant. Old V2 agents remain revoked and
+   // cannot become valid again: advance the credential version, and never
+   // reactivate an owner or foreign principal's account.
+   const fresh=sealV2(tokens,principalId,mine[0].id,'google-grant');
+   const revived=await q`UPDATE principal_google_accounts SET status='active',
+     grant_ciphertext=${fresh},scope_list=${scopeList},
+     token_version=token_version+1,refresh_version=refresh_version+1,updated_at=now()
+     WHERE id=${mine[0].id}::uuid AND principal_id=${principalId}::uuid
+       AND status='revoked' AND token_version=${mine[0].token_version}
+     RETURNING id`;
+   requireScope(revived.length===1,'version_conflict');
+   if(historical)await recordLegacyFreshConsent(principalId,revived[0].id);
+   return revived[0].id;
+ }
  const id=crypto.randomUUID();
  const sealed=sealV2(tokens,principalId,id,'google-grant');
  const rows=await q`INSERT INTO principal_google_accounts
    (id,principal_id,issuer,google_sub,email,scope_list,grant_ciphertext)
    SELECT ${id}::uuid,p.id,${issuer},${sub},${verifiedEmail},${scopeList},${sealed}
    FROM principals p WHERE p.id=${principalId}::uuid AND p.kind='user' AND p.status='active'
-   ON CONFLICT(issuer,google_sub) DO NOTHING RETURNING id`;
- if(rows.length){
-   if(historical)await recordLegacyFreshConsent(principalId,rows[0].id);
-   return rows[0].id;
- }
- const same=await q`SELECT id,status,token_version FROM principal_google_accounts
-   WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id=${principalId}::uuid`;
- requireScope(same.length===1,'identity_owned_elsewhere');
- if(same[0].status==='revoked'){
-   // Provider OAuth links are uniquely keyed by issuer/subject; a user who
-   // turns off God mode must be able to reauthorize that SAME Google identity
-   // with a fresh, narrower provider grant. Old V2 agents remain revoked and
-   // cannot become valid again: advance the credential version, and never
-   // reactivate an owner or foreign principal's account.
-   const fresh=sealV2(tokens,principalId,same[0].id,'google-grant');
-   const revived=await q`UPDATE principal_google_accounts SET status='active',
-     grant_ciphertext=${fresh},scope_list=${scopeList},
-     token_version=token_version+1,refresh_version=refresh_version+1,updated_at=now()
-     WHERE id=${same[0].id}::uuid AND principal_id=${principalId}::uuid
-       AND status='revoked' AND token_version=${same[0].token_version}
-     RETURNING id`;
-   requireScope(revived.length===1,'version_conflict');
-   if(historical)await recordLegacyFreshConsent(principalId,revived[0].id);
-   return revived[0].id;
- }
- const record=await findAccount(principalId,same[0].id);
- await updateLinkedGrant({principalId,accountId:record.id,version:record.token_version,tokens,scopeList});
- if(historical)await recordLegacyFreshConsent(principalId,record.id);
- return record.id;
+   ON CONFLICT(issuer,google_sub) WHERE status='active' DO NOTHING RETURNING id`;
+ // Zero rows here means a concurrent active grant appeared for this
+ // identity between the check and the insert — still owned elsewhere.
+ requireScope(rows.length===1,'identity_owned_elsewhere');
+ if(historical)await recordLegacyFreshConsent(principalId,rows[0].id);
+ return rows[0].id;
 }
 // A new V2 encrypted grant must exist before changing the effective pilot
 // capability. This never changes the historical marker or legacy owner grants.

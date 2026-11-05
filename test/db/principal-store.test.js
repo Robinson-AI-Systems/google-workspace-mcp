@@ -402,6 +402,32 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
   expect(results.filter(Boolean)).toHaveLength(1);
   expect(await original()).toBeNull();
  });
+ it('lets a holder consolidate accounts across their own profiles, but never take an active grant',async()=>{
+  const issuer='https://accounts.google.com';
+  const a2=await store.bindVerifiedIdentity({issuer,sub:'move-source-sub',verifiedEmail:'move-source@example.test',identityOnlyPilot:true});
+  const b2=await store.bindVerifiedIdentity({issuer,sub:'move-target-sub',verifiedEmail:'move-target@example.test',identityOnlyPilot:true});
+  const acc=await store.upsertLinkedAccount({principalId:a2,issuer,sub:'move-account-sub',
+   verifiedEmail:'move-account@example.test',scopeList:['scope-x'],tokens:{access_token:'m1',refresh_token:'mr1'}});
+  // While the grant is ACTIVE under A, B cannot take the account.
+  await expect(store.upsertLinkedAccount({principalId:b2,issuer,sub:'move-account-sub',
+   verifiedEmail:'move-account@example.test',scopeList:['scope-x'],tokens:{access_token:'forged'}})).rejects.toThrow('identity_owned_elsewhere');
+  // Once the holder disconnects it under A, a fresh consent under B attaches
+  // it: A's revoked row stays as history, B holds the one active grant.
+  await store.disconnectAccount(a2,acc);
+  const moved=await store.upsertLinkedAccount({principalId:b2,issuer,sub:'move-account-sub',
+   verifiedEmail:'move-account@example.test',scopeList:['scope-x'],tokens:{access_token:'m2',refresh_token:'mr2'}});
+  expect(moved).not.toBe(acc);
+  expect((await store.listAccounts(b2)).map(x=>x.id)).toContain(moved);
+  expect((await store.listAccounts(a2)).map(x=>x.id)).not.toContain(acc);
+  const rows=await pool.query('SELECT status FROM principal_google_accounts WHERE issuer=$1 AND google_sub=$2',[issuer,'move-account-sub']);
+  expect(rows.rows.filter(r=>r.status==='active')).toHaveLength(1);
+  expect(rows.rows.filter(r=>r.status==='revoked')).toHaveLength(1);
+  // An account whose SIGN-IN identity is bound to A can also be attached
+  // under B after fresh consent: binding governs sign-in, not attachment.
+  const viaIdentity=await store.upsertLinkedAccount({principalId:b2,issuer,sub:'move-source-sub',
+   verifiedEmail:'move-source@example.test',scopeList:['scope-y'],tokens:{access_token:'m3',refresh_token:'mr3'}});
+  expect((await store.listAccounts(b2)).map(x=>x.id)).toContain(viaIdentity);
+ });
  it('records the latest link denial per principal for the account page',async()=>{
   const user=await store.bindVerifiedIdentity({issuer:'https://accounts.google.com',
    sub:'denial-probe-subject',verifiedEmail:'denial-probe@example.test',identityOnlyPilot:true});
