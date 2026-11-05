@@ -141,6 +141,26 @@ export async function getBoundFullPrincipal(issuer,sub){
      AND p.kind='user' AND p.status='active' AND p.legacy_pilot_identity_only=false`;
  return rows.length===1?rows[0].principal_id:null;
 }
+// The one identity-only shell that may graduate to a full profile at sign-in
+// (the separately approved owner migration the design notes call for): the
+// identity is already bound to an ACTIVE user principal carrying the
+// identity-only marker, a recorded independent fresh grant exists for that
+// principal, and the Google-verified email is BOTH the binding's verified
+// email and one of the original legacy mailboxes. All four proofs must hold;
+// anything less keeps the shell fenced exactly as designed.
+export async function getBoundGraduatingPrincipal(issuer,sub,verifiedEmail){
+ if(!validSub(sub)||!validEmail(verifiedEmail))return null;
+ const q=sql();
+ const rows=await q`SELECT i.principal_id FROM principal_google_identities i
+   JOIN principals p ON p.id=i.principal_id
+   WHERE i.issuer=${issuer} AND i.google_sub=${sub}
+     AND p.kind='user' AND p.status='active' AND p.legacy_pilot_identity_only=true
+     AND p.legacy_pilot_fresh_grant=true
+     AND lower(i.verified_email)=lower(${verifiedEmail})
+     AND EXISTS(SELECT 1 FROM google_accounts a
+       WHERE lower(a.email)=lower(${verifiedEmail}))`;
+ return rows.length===1?rows[0].principal_id:null;
+}
 export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnlyPilot=false}){
  requireScope(['accounts.google.com','https://accounts.google.com'].includes(issuer)&&validSub(sub)&&validEmail(verifiedEmail),'invalid_identity');
  const q=sql();
@@ -161,7 +181,19 @@ export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnl
        AND p.legacy_pilot_identity_only=true AND p.legacy_pilot_fresh_grant=true
        AND i.issuer=${issuer} AND i.google_sub=${sub}
        AND lower(i.verified_email)=lower(${verifiedEmail}) LIMIT 1`;
-   if(independent.length===1)return old;
+   if(independent.length===1){
+   // Graduation (the separately approved owner migration, 2026-11-05): a
+   // LOGIN — never an authorize — by the shell's own holder, with the bound
+   // identity, the recorded independent fresh grant and the legacy-reserved
+   // verified mailbox all proven by this query, promotes the identity-only
+   // shell to a full profile. One-way, at the moment of proven control; the
+   // shell's accounts and connections carry over untouched.
+   if(identityOnlyPilot===true){
+     await q`UPDATE principals SET legacy_pilot_identity_only=false,updated_at=now()
+       WHERE id=${old}::uuid AND legacy_pilot_identity_only=true`;
+   }
+   return old;
+   }
  }
  requireScope(reserved.length===0||legacyIdentityOnly,'reserved_identity');
  if(old)return old;

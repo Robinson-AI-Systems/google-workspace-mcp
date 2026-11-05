@@ -188,6 +188,56 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
   expect(await store.getSigninDenial('not-a-uuid')).toBeNull();
   expect(await store.getSigninDenial('99999999-9999-4999-8999-999999999999')).toBeNull();
  });
+ it('graduates a proven identity-only shell at login, never at authorize',async()=>{
+  const oldEnv={};
+  for(const key of ['DATABASE_URL','PUBLIC_SIGNIN_MODE','PUBLIC_PILOT_GOOGLE_SUBJECTS',
+    'PUBLIC_PILOT_LEGACY_SUBJECTS','PUBLIC_P10_TOOL_EXECUTION_VERIFIED'])oldEnv[key]=process.env[key];
+  try{
+   process.env.DATABASE_URL=url;process.env.PUBLIC_SIGNIN_MODE='pilot';
+   process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='777000111222333444,888000111222333444';
+   process.env.PUBLIC_PILOT_LEGACY_SUBJECTS='777000111222333444';
+   delete process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED;
+   const identity={issuer:'https://accounts.google.com',sub:'777000111222333444',verifiedEmail:'SHELL-OWNER@EXAMPLE.TEST'};
+   try{
+    await pool.query(`DELETE FROM principal_google_identities WHERE google_sub=$1`,[identity.sub]);
+    await pool.query(`DELETE FROM google_accounts WHERE lower(email)=lower($1)`,[identity.verifiedEmail]);
+    await db.saveGoogleTokensFor(identity.verifiedEmail.toLowerCase(),
+      {access_token:'shell-access',refresh_token:'shell-refresh'});
+    const shell=await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true});
+    expect(await store.isLegacyPilotIdentityPrincipal(shell)).toBe(true);
+    // No fresh grant yet: the shell cannot graduate — and under production
+    // conditions (tool execution verified, which closes the shell's own
+    // legacy login route) the reservation refuses its bind outright.
+    expect(await store.getBoundGraduatingPrincipal(identity.issuer,identity.sub,identity.verifiedEmail)).toBeNull();
+    process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED='true';
+    await expect(store.bindVerifiedIdentity({...identity,identityOnlyPilot:true}))
+      .rejects.toThrow('reserved_identity');
+    delete process.env.PUBLIC_P10_TOOL_EXECUTION_VERIFIED;
+    // The state the historical-link path records after a proven fresh grant.
+    await pool.query(`UPDATE principals SET legacy_pilot_fresh_grant=true WHERE id=$1`,[shell]);
+    expect(await store.getBoundGraduatingPrincipal(identity.issuer,identity.sub,identity.verifiedEmail)).toBe(shell);
+    // An authorize-shaped bind returns the shell but does NOT promote it
+    // (the raw marker is the graduation state; the identity-only helper
+    // stops counting a principal once its fresh grant is recorded).
+    const marker=async()=>(await pool.query(
+      `SELECT legacy_pilot_identity_only FROM principals WHERE id=$1`,[shell])).rows[0].legacy_pilot_identity_only;
+    expect(await store.bindVerifiedIdentity({...identity,identityOnlyPilot:false})).toBe(shell);
+    expect(await marker()).toBe(true);
+    // A login promotes it: full profile from here on.
+    expect(await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).toBe(shell);
+    expect(await marker()).toBe(false);
+    expect(await store.getBoundFullPrincipal(identity.issuer,identity.sub)).toBe(shell);
+    expect(await store.getBoundGraduatingPrincipal(identity.issuer,identity.sub,identity.verifiedEmail)).toBeNull();
+   }finally{
+    await pool.query(`DELETE FROM principal_google_identities WHERE google_sub=$1`,[identity.sub]).catch(()=>{});
+    await pool.query(`DELETE FROM google_accounts WHERE lower(email)=lower($1)`,[identity.verifiedEmail]).catch(()=>{});
+   }
+  }finally{
+   for(const [key,value] of Object.entries(oldEnv)){
+    if(value===undefined)delete process.env[key];else process.env[key]=value;
+   }
+  }
+ });
  it('preserves original owner ciphertext and bearer when the historical tester obtains its own freshly consented V2 grant',async()=>{
   const envKeys=['PUBLIC_SIGNIN_MODE','PUBLIC_PILOT_GOOGLE_SUBJECTS',
     'PUBLIC_PILOT_LEGACY_SUBJECTS','PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED',
