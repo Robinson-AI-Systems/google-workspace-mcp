@@ -24,7 +24,7 @@ describe('P10 full direct-user Google scope consent',()=>{
   expect(result).toBe('https://accounts.google.com/consent');
   expect(o.scope).toEqual(['openid','email','profile',...PUBLIC_SCOPE_GROUPS.complete]);
   expect(o).toMatchObject({access_type:'offline',include_granted_scopes:true,
-    prompt:'consent',code_challenge_method:'S256'});
+    prompt:'consent select_account',code_challenge_method:'S256'});
  });
  it('never confuses disabled provider API, missing Google consent and unrelated refusal',()=>{
   const provider=(reason,message)=>({response:{status:403,data:{error:{message,errors:[{reason}]}}}});

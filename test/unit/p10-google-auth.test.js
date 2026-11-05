@@ -52,11 +52,13 @@ describe('P10 Google OIDC, no legacy fallback, provider PKCE and encrypted scope
   const result=providerUrl({client,state:'opaque-state',nonce:'opaque-nonce',verifier:'client-verifier'});
   expect(result).toContain('accounts.google.com');
   expect(mock.url).toMatchObject({state:'opaque-state',nonce:'opaque-nonce',
-    code_challenge_method:'S256',scope:['openid','email','profile'],access_type:'online'});
+    code_challenge_method:'S256',scope:['openid','email','profile'],access_type:'online',
+    prompt:'select_account'});
   expect(mock.url.code_challenge).toBe(crypto.createHash('sha256').update('client-verifier').digest('base64url'));
   providerUrl({client,state:'state2',nonce:'nonce2',verifier:'proof',group:'calendar'});
   expect(mock.url.scope).toContain('https://www.googleapis.com/auth/calendar');
   expect(mock.url.access_type).toBe('offline');
+  expect(mock.url.prompt).toBe('consent select_account');
   expect(()=>providerUrl({client,state:'x',nonce:'y',verifier:'z',group:'admin'})).toThrow('invalid_scope_group');
  });
  it('trusts SDK verified JWT, exact audience/issuer/nonce/sub/email verification only',async()=>{
