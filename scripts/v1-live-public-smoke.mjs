@@ -83,7 +83,7 @@ export async function inspectV1Public({expectedSha,requester=fetch,
     proofs.push('rtc1-and-oauth-discovery');
   }
   const requirements=[
-    ['/', ['Workspace MCP','/api/account','/api/privacy','/api/support','/api/data-deletion']],
+    ['/', ['Workspace Unleashed','/api/account','/api/privacy','/api/support','/api/data-deletion']],
     ['/api/privacy',['privacy','Google','retention']],
     ['/api/support',['Robinson AI Systems','support']],
     ['/api/data-deletion',['disconnect','deletion']]
