@@ -47,7 +47,12 @@ export function providerUrl({client,state,nonce,verifier,group='identity'}){
  return client.generateAuthUrl({
    response_type:'code',scope:[...IDENTITY_SCOPES,...selected],
    access_type:group==='identity'?'online':'offline',
-   ...(group==='identity'?{}:{include_granted_scopes:true,prompt:'consent'}),
+   // Always show Google's account chooser. Without select_account, Google
+   // silently re-authenticates whichever account the browser already holds,
+   // which makes signing in with — or linking — a different Google account
+   // impossible from a browser with an existing Google session (owner-raised
+   // defect, 2026-11-05: the personal-account connection could not be added).
+   ...(group==='identity'?{prompt:'select_account'}:{include_granted_scopes:true,prompt:'consent select_account'}),
    code_challenge:challenge,code_challenge_method:'S256',state,nonce
  });
 }
