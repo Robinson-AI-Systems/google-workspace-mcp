@@ -111,7 +111,21 @@ export default async function handler(req,res){
     const session=await requireSession(req);
     requireScope(session.principal_id===tx.principal_id,'principal_mismatch');
     const scopes=tx.policy?.group&&PUBLIC_SCOPE_GROUPS[tx.policy.group];
-    requireScope(scopes?.every(scope=>verified.scopeList.includes(scope)),'grant_scope_missing');
+    // God mode is a best-effort bundle: Google alone decides which of the
+    // requested permissions a given account may hold — a consumer Gmail
+    // account cannot hold Workspace administrator permissions, so requiring
+    // the complete set makes the link impossible for such accounts
+    // (owner-raised defect, 2026-11-05). For the complete group, link what
+    // Google granted; the exact granted list is stored on the account and
+    // the account page shows granted vs supported honestly. Any other group
+    // keeps the all-or-nothing check: a partial single-service grant is a
+    // broken link, not a degraded one. A complete link that granted none of
+    // the requested permissions is still a refusal.
+    requireScope(Array.isArray(scopes)&&
+      (tx.policy.group==='complete'
+        ? scopes.some(scope=>verified.scopeList.includes(scope))
+        : scopes.every(scope=>verified.scopeList.includes(scope)))
+      ,'grant_scope_missing');
     await upsertLinkedAccount({principalId:session.principal_id,issuer:verified.issuer,
       sub:verified.sub,verifiedEmail:verified.email,scopeList:verified.scopeList,tokens:verified.tokens});
     principalId=session.principal_id;
