@@ -161,6 +161,32 @@ export async function getBoundGraduatingPrincipal(issuer,sub,verifiedEmail){
        WHERE lower(a.email)=lower(${verifiedEmail}))`;
  return rows.length===1?rows[0].principal_id:null;
 }
+// Coarse shape of whatever IS bound to a Google subject whose sign-in was
+// refused, in the fixed denial vocabulary — so the sign-in page can name the
+// exact state instead of one generic refusal (2026-11-05). Never returns an
+// email, a principal id or any part of the subject.
+export async function classifyBoundIdentity(issuer,sub){
+ if(!validSub(sub))return null;
+ const q=sql();
+ const rows=await q`SELECT i.issuer,p.kind,p.status,
+     p.legacy_pilot_identity_only,p.legacy_pilot_fresh_grant
+   FROM principal_google_identities i JOIN principals p ON p.id=i.principal_id
+   WHERE i.google_sub=${sub}`;
+ if(rows.length===0){
+  const accounts=await q`SELECT 1 FROM principal_google_accounts
+    WHERE google_sub=${sub} LIMIT 1`;
+  return accounts.length?'account_without_identity_binding':null;
+ }
+ const same=rows.find(r=>r.issuer===issuer);
+ if(!same)return 'bound_issuer_form_mismatch';
+ if(same.kind!=='user')return 'bound_not_user_principal';
+ if(same.status!=='active')return 'bound_principal_inactive';
+ if(same.legacy_pilot_identity_only&&!same.legacy_pilot_fresh_grant)
+  return 'bound_shell_no_fresh_grant';
+ if(same.legacy_pilot_identity_only&&same.legacy_pilot_fresh_grant)
+  return 'bound_shell_email_mismatch';
+ return 'bound_not_admissible';
+}
 export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnlyPilot=false}){
  requireScope(['accounts.google.com','https://accounts.google.com'].includes(issuer)&&validSub(sub)&&validEmail(verifiedEmail),'invalid_identity');
  const q=sql();

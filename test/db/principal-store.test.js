@@ -205,6 +205,9 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
       {access_token:'shell-access',refresh_token:'shell-refresh'});
     const shell=await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true});
     expect(await store.isLegacyPilotIdentityPrincipal(shell)).toBe(true);
+    expect(await store.classifyBoundIdentity(identity.issuer,identity.sub)).toBe('bound_shell_no_fresh_grant');
+    expect(await store.classifyBoundIdentity('accounts.google.com',identity.sub)).toBe('bound_issuer_form_mismatch');
+    expect(await store.classifyBoundIdentity(identity.issuer,'999000111222333444555')).toBeNull();
     // No fresh grant yet: the shell cannot graduate — and under production
     // conditions (tool execution verified, which closes the shell's own
     // legacy login route) the reservation refuses its bind outright.

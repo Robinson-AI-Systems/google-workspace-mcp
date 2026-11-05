@@ -3,7 +3,7 @@ import {Readable} from 'node:stream';
 import {createHash} from 'node:crypto';
 const h=vi.hoisted(()=>({
   started:null,consumed:false,accountLinks:[],codeConsumeCount:0,rotations:0,
-  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false,freshConsent:false,lastIdentity:null,scopeList:null,boundFull:null,boundShell:null,
+  verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false,freshConsent:false,lastIdentity:null,scopeList:null,boundFull:null,boundShell:null,boundShape:null,
   linkedAccounts:[],disconnects:[],providerRevokeTokens:[],providerRevokeError:false,
   linkDenials:[],linkDenial:null,signinDenials:[]
 }));
@@ -26,6 +26,7 @@ vi.mock('../../src/principals/store.js',()=>({
  bindVerifiedIdentity:async identity=>{h.bindCalls++;h.lastIdentity=identity;if(h.bindFailure)throw Error(h.bindFailure);return '33333333-3333-4333-8333-333333333333';},
  getBoundFullPrincipal:async()=>h.boundFull,
  getBoundGraduatingPrincipal:async()=>h.boundShell,
+ classifyBoundIdentity:async()=>h.boundShape,
  createSession:async()=>({secret:'p10s_'+'a'.repeat(43),csrf:'p10x_'+'b'.repeat(43)}),
  readSession:async secret=>secret==='p10s_'+'a'.repeat(43)?{
    principal_id:'33333333-3333-4333-8333-333333333333',
@@ -94,7 +95,7 @@ beforeEach(()=>{
  process.env.TOKEN_ENCRYPTION_KEY='x'.repeat(44);
  process.env.PUBLIC_SIGNIN_MODE='pilot';
  process.env.PUBLIC_PILOT_GOOGLE_SUBJECTS='pilot-subject';
- h.started=null;h.accountLinks=[];h.bindCalls=0;h.consumed=false;h.rotations=0;h.codeConsumeCount=0;h.boundFull=null;h.boundShell=null;
+ h.started=null;h.accountLinks=[];h.bindCalls=0;h.consumed=false;h.rotations=0;h.codeConsumeCount=0;h.boundFull=null;h.boundShell=null;h.boundShape=null;
  h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;h.legacyPilot=false;h.freshConsent=false;h.lastIdentity=null;h.scopeList=null;
  h.linkedAccounts=[];h.disconnects=[];h.providerRevokeTokens=[];h.providerRevokeError=false;
  h.linkDenials=[];h.linkDenial=null;h.signinDenials=[];
@@ -140,6 +141,13 @@ describe('P10 actual route one-use browser callback and independent principal MC
   const out=res();await callback(req('GET',{state:h.started.state,code:'google'},'p10_google_browser='+h.started.browser),out);
   expect(out.statusCode).toBe(302);expect(h.bindCalls).toBe(1);
   expect(String(out.headers.Location)).toBe('/api/account');
+ });
+ it('a refused sign-in records the classified shape of its bound record',async()=>{
+  const started=res();await start(req(),started);
+  h.verifiedSub='unlisted-test-subject';h.boundShape='bound_issuer_form_mismatch';
+  const out=res();await callback(req('GET',{state:h.started.state,code:'google'},'p10_google_browser='+h.started.browser),out);
+  expect(out.statusCode).toBe(302);expect(h.bindCalls).toBe(0);
+  expect(h.signinDenials).toEqual([{phase:'pilot_admission',code:'bound_issuer_form_mismatch'}]);
  });
  it('callback diagnostics classify admission and reserved-owner failures without identities',async()=>{
   const warn=vi.spyOn(console,'warn').mockImplementation(()=>{});
