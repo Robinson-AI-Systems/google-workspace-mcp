@@ -1,6 +1,6 @@
 // Isolated V2 principal store. There is NO global-owner fallback in these methods.
 import crypto from 'node:crypto';
-import {neon} from '@neondatabase/serverless';
+import {storeSql} from '../db-transport.js';
 import {sealV2,openV2} from './crypto.js';
 import {OWNER_ID,digest,mint,validUuid,validEmail,requireScope,legacyPilotLoginAllowed,legacyPilotFreshConsentAllowed} from './security.js';
 import {normalizeConnectionPolicy} from '../oauth/connection-settings.js';
@@ -9,7 +9,7 @@ import {loadCustomerDelegation} from './delegation.js';
 import {initOwnerMigrationSchema} from './owner-migration.js';
 let conn;
 const trustedContexts=new WeakSet(); // no caller-minted frozen principal is accepted
-const sql=()=>{if(!conn){if(!process.env.DATABASE_URL)throw Error('database_unavailable');conn=neon(process.env.DATABASE_URL);}return conn;};
+const sql=()=>{if(!conn){if(!process.env.DATABASE_URL)throw Error('database_unavailable');conn=storeSql(process.env.DATABASE_URL);}return conn;};
 const validSub=x=>typeof x==='string'&&x.length>=4&&x.length<=255&&/^[\x21-\x7e]+$/.test(x);
 const policy=record=>normalizeConnectionPolicy(record,{grant:'refresh_token'});
 export async function initPrincipalSchema(q=sql()){

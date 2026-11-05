@@ -1,14 +1,14 @@
 // Principal-owned persistence for public MCP requests. This module is only
 // constructed from scopedStore's server-minted, WeakSet-verified AuthContext.
 // Neither provider arguments nor cookies may supply its ownership keys.
-import { neon } from '@neondatabase/serverless';
+import { storeSql } from '../db-transport.js';
 import { validUuid, requireScope } from './security.js';
 
 let connection;
 const sql = () => {
   if (!connection) {
     if (!process.env.DATABASE_URL) throw Error('database_unavailable');
-    connection = neon(process.env.DATABASE_URL);
+    connection = storeSql(process.env.DATABASE_URL);
   }
   return connection;
 };

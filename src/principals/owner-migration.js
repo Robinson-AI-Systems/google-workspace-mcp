@@ -1,10 +1,10 @@
 // P10-7: additive owner identity proof; never move or decrypt legacy grants.
 // The owner principal is constant. Google issuer/sub is verified by the SDK in
 // the caller, never inferred from an email suffix or a claimed domain.
-import {neon} from '@neondatabase/serverless';
+import {storeSql} from '../db-transport.js';
 import {OWNER_ID,digest,mint,validEmail,requireScope} from './security.js';
 let cached;
-const sql=()=>{if(!cached){if(!process.env.DATABASE_URL)throw Error('database_unavailable');cached=neon(process.env.DATABASE_URL);}return cached;};
+const sql=()=>{if(!cached){if(!process.env.DATABASE_URL)throw Error('database_unavailable');cached=storeSql(process.env.DATABASE_URL);}return cached;};
 const issuerOk=x=>x==='accounts.google.com'||x==='https://accounts.google.com';
 const subOk=x=>typeof x==='string'&&x.length>=4&&x.length<=255&&/^[\x21-\x7e]+$/.test(x);
 const textOk=x=>typeof x==='string'&&x.length>0&&x.length<=2048;

@@ -1,7 +1,7 @@
 // P10 tenant delegation is customer owned. Only an authenticated browser
 // session can submit a key; no secret enters query strings, tool args or logs.
 // The installation owner's GOOGLE_SERVICE_ACCOUNT_JSON is never read here.
-import {neon} from '@neondatabase/serverless';
+import {storeSql} from '../db-transport.js';
 import {google} from 'googleapis';
 import {sealV2,openV2} from './crypto.js';
 import {validUuid,validEmail,requireScope} from './security.js';
@@ -13,7 +13,7 @@ import {publicGoogleClient} from './google.js';
 let connection;
 const sql=()=>{
  if(!connection){if(!process.env.DATABASE_URL)throw Error('database_unavailable');
-   connection=neon(process.env.DATABASE_URL);}
+   connection=storeSql(process.env.DATABASE_URL);}
  return connection;
 };
 const VERIFY_SCOPE='https://www.googleapis.com/auth/admin.directory.user.readonly';
