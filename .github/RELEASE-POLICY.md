@@ -3,7 +3,7 @@
 
 Owner-approved 2026-10-12. Pull requests target `main`; `main` is the default development branch. Do not merge PRs into `live` or push directly to it. Do not run Vercel CLI production deployments or manually promote a preview during routine development.
 
-`.github/workflows/daily-live.yml` alone promotes a checked main snapshot to `live`, at most once per America/Denver calendar day. The primary scheduled trigger remains 00:19 Denver with off-minute 00:35 and 01:35 recovery triggers if GitHub drops or delays a scheduled event. All three use the same checked release script and its atomic branch + dated tag operation; whichever trigger succeeds first wins and later invocations skip. Trigger redundancy is not permission to make extra releases. No changes means no release; failed, pending or missing required checks or diverged history refuse promotion. Nothing force-pushes. Existing customer billing and MCP production-access gates remain unchanged.
+`.github/workflows/daily-live.yml` alone promotes a checked main snapshot to `live`, at most once per America/Denver calendar day. The primary scheduled trigger remains 20:19 Denver with off-minute 20:35 and 21:35 recovery triggers if GitHub drops or delays a scheduled event. All three use the same checked release script and its atomic branch + dated tag operation; whichever trigger succeeds first wins and later invocations skip. Trigger redundancy is not permission to make extra releases. No changes means no release; failed, pending or missing required checks or diverged history refuse promotion. Nothing force-pushes. Existing customer billing and MCP production-access gates remain unchanged.
 
 Vercel projects linked to this repository must track `live` for production and have automatic preview deployments disabled. `vercel.json` permits Git deployments only for `live`, including future linked projects. Keep existing GitHub CI and any existing local browser/build tests enabled; use local fixtures rather than paid Vercel previews. Emergency releases require a separate explicit owner instruction. The release schedule is independent of development PR batch counts.
 
@@ -17,14 +17,14 @@ For a new Vercel project, set Settings → Environments → Production → Branc
 
 ## Active development and release races (owner, 2026-10-13)
 
-`main` holds ongoing checked development; `live` identifies the released snapshot. Agents continue merging into `main`, never into `live`. A commit merged after a release belongs to the next scheduled release; do not keep live synchronized on every merge or trigger extra daytime builds. The release job refreshes changed remote refs and waits up to ten minutes for missing/pending exact-head checks. A completed failed check, diverged history or exhausted window refuses promotion. Atomic daily markers and non-forced fast-forwards remain mandatory. The schedule is 00:19 America/Denver, with native DST and possible GitHub queue delays.
+`main` holds ongoing checked development; `live` identifies the released snapshot. Agents continue merging into `main`, never into `live`. A commit merged after a release belongs to the next scheduled release; do not keep live synchronized on every merge or trigger extra daytime builds. The release job refreshes changed remote refs and waits up to ten minutes for missing/pending exact-head checks. A completed failed check, diverged history or exhausted window refuses promotion. Atomic daily markers and non-forced fast-forwards remain mandatory. The schedule is 20:19 America/Denver, with native DST and possible GitHub queue delays.
 
 An explicit owner request can authorize a one-off manual release after the exact candidate passes required checks. Read fresh main/live refs, require ancestry, update live without force and with an expected-head lease, then verify Vercel production reaches READY for that SHA and the production alias resolves to it. If an authenticated API connector rather than the atomic GitHub runner performs this exceptional one-time release, create the corresponding `release-markers/YYYY-MM-DD` branch at the same released SHA and verify it independently, so all later scheduled triggers skip that local Denver date. The marker is an immutable release receipt, not a development branch, and must never be recreated at a different SHA. A partially completed release requires explicit investigation and receipt reconciliation before another attempt. A branch update alone is not deployment-success evidence. This exception does not authorize automatic releases at agent batch boundaries, new provider production permissions or spending.
 
 ## Missed-event recovery (owner repair, 2026-10-14)
 
-The primary remains 00:19 Denver. Backup events run at 00:35, 01:35 and 05:55 Denver,
-plus 13:01 UTC (07:01 MDT / 06:01 MST). Each invokes the same atomic, checked,
+The primary remains 20:19 Denver. Backup events run at 20:35, 21:35 and 01:55 Denver,
+plus 09:01 UTC (03:01 MDT / 02:01 MST). Each invokes the same atomic, checked,
 once-per-Denver-day promoter. These are recovery opportunities, not extra releases.
 GitHub can omit every scheduled event; backup configuration alone does not prove reliability.
 Verify the actual run, daily receipt, released SHA and Vercel production deployment.
