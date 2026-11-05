@@ -34,6 +34,13 @@ export default async function handler(req,res){
          deleteSigninDenial(denialId).catch(()=>{});
          const signinLabels={
            public_signin_not_admitted:'That Google account is not on the approved sign-in list and has no profile on record.',
+           bound_issuer_form_mismatch:'Your profile is on record under an older form of Google\u2019s sign-in address.',
+           bound_not_user_principal:'That sign-in belongs to a different kind of profile.',
+           bound_principal_inactive:'The profile on record for that account is not active.',
+           bound_shell_no_fresh_grant:'Your profile is on record, but its one-time full-access consent was never recorded.',
+           bound_shell_email_mismatch:'Your profile is on record, but the sign-in email does not match its record.',
+           account_without_identity_binding:'That account is linked, but has no sign-in profile binding.',
+           bound_not_admissible:'A profile is on record, but it is not admissible as it stands.',
            reserved_identity:'That account is reserved by the original connection.',
            invalid_state:'The sign-in attempt expired or was already used — start again.',
            consent_declined:'The Google consent was not completed.',

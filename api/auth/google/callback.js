@@ -1,5 +1,5 @@
 import {initSchema} from '../../../src/db.js';
-import {consumeTransaction,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial,recordSigninDenial,getBoundFullPrincipal,getBoundGraduatingPrincipal} from '../../../src/principals/store.js';
+import {consumeTransaction,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial,recordSigninDenial,getBoundFullPrincipal,getBoundGraduatingPrincipal,classifyBoundIdentity} from '../../../src/principals/store.js';
 import {publicGoogleClient,verifyGoogleCode,PUBLIC_SCOPE_GROUPS} from '../../../src/principals/google.js';
 import {admitted,digest,cookie,headers,requireScope} from '../../../src/principals/security.js';
 import {readCookie} from '../../../src/principals/security.js';
@@ -13,7 +13,10 @@ const SAFE_DENIAL_CODES=new Set([
  'invalid_owner_link','invalid_owner_login','invalid_pilot_subject_proof',
  'principal_mismatch','grant_scope_missing','identity_owned_elsewhere',
  'session_required','invalid_grant','version_conflict','outside_scope',
- 'legacy_pilot_identity_only','invalid_link'
+ 'legacy_pilot_identity_only','invalid_link',
+ 'bound_issuer_form_mismatch','bound_not_user_principal','bound_principal_inactive',
+ 'bound_shell_no_fresh_grant','bound_shell_email_mismatch',
+ 'account_without_identity_binding','bound_not_admissible'
 ]);
 export default async function handler(req,res){
  headers(res);
@@ -135,11 +138,16 @@ export default async function handler(req,res){
     // The pilot roster gates NEW enrollment. An identity already bound to a
     // full principal is admitted on its own record (owner ruling, 2026-11-05),
     // as is an identity-only shell meeting all four graduation proofs;
-    // bindVerifiedIdentity performs that promotion at this same login.
-    requireScope(admitted(verified.sub)||
-      Boolean(await getBoundFullPrincipal(verified.issuer,verified.sub))||
-      Boolean(await getBoundGraduatingPrincipal(verified.issuer,verified.sub,verified.email)),
-      'public_signin_not_admitted');
+    // bindVerifiedIdentity performs that promotion at this same login. A
+    // refusal classifies whatever IS bound, so the sign-in page names the
+    // exact state rather than one generic refusal.
+    const boundFull=await getBoundFullPrincipal(verified.issuer,verified.sub).catch(()=>null);
+    const boundShell=boundFull?null:
+      await getBoundGraduatingPrincipal(verified.issuer,verified.sub,verified.email).catch(()=>null);
+    if(!(admitted(verified.sub)||boundFull||boundShell)){
+      const shape=await classifyBoundIdentity(verified.issuer,verified.sub).catch(()=>null);
+      requireScope(false,shape||'public_signin_not_admitted');
+    }
     phase='principal_bind';
     principalId=await bindVerifiedIdentity({issuer:verified.issuer,sub:verified.sub,
       verifiedEmail:verified.email,identityOnlyPilot:tx.purpose==='login'});
