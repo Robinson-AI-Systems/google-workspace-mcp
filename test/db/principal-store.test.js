@@ -177,6 +177,26 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    }
   }
  });
+ it('binds the owner profile\u2019s own identity on its record despite the reservation',async()=>{
+  const migration=await import('../../src/principals/owner-migration.js');
+  const security=await import('../../src/principals/security.js');
+  const identity={issuer:'https://accounts.google.com',sub:'777000111222333444666',
+    verifiedEmail:'owner-record@example.test'};
+  try{
+   await pool.query(`DELETE FROM principal_google_identities WHERE google_sub=$1`,[identity.sub]);
+   await pool.query(`DELETE FROM google_accounts WHERE lower(email)=lower($1)`,[identity.verifiedEmail]);
+   await db.saveGoogleTokensFor(identity.verifiedEmail,
+     {access_token:'owner-record-access',refresh_token:'owner-record-refresh'});
+   await migration.linkVerifiedOwner({issuer:identity.issuer,sub:identity.sub,email:identity.verifiedEmail});
+   expect(await store.classifyBoundIdentity(identity.issuer,identity.sub)).toBe('bound_not_user_principal');
+   expect(await store.getBoundOwnerPrincipal(identity.issuer,identity.sub)).toBe(security.OWNER_ID);
+   expect(await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).toBe(security.OWNER_ID);
+   expect(await store.bindVerifiedIdentity({...identity,identityOnlyPilot:false})).toBe(security.OWNER_ID);
+  }finally{
+   await pool.query(`DELETE FROM principal_google_identities WHERE google_sub=$1`,[identity.sub]).catch(()=>{});
+   await pool.query(`DELETE FROM google_accounts WHERE lower(email)=lower($1)`,[identity.verifiedEmail]).catch(()=>{});
+  }
+ });
  it('records a sign-in refusal under a one-time id the sign-in page can read once',async()=>{
   const id=await store.recordSigninDenial({phase:'pilot_admission',code:'public_signin_not_admitted'});
   expect(typeof id).toBe('string');
