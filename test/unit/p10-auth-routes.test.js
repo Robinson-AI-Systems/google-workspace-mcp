@@ -5,7 +5,7 @@ const h=vi.hoisted(()=>({
   started:null,consumed:false,accountLinks:[],codeConsumeCount:0,rotations:0,
   verifiedSub:'pilot-subject',linker:'principal-A',session:null,bindCalls:0,bindFailure:null,googleFailure:null,legacyPilot:false,freshConsent:false,lastIdentity:null,scopeList:null,boundFull:null,
   linkedAccounts:[],disconnects:[],providerRevokeTokens:[],providerRevokeError:false,
-  linkDenials:[],linkDenial:null
+  linkDenials:[],linkDenial:null,signinDenials:[]
 }));
 vi.mock('../../src/db.js',()=>({
  initSchema:async()=>{},getOAuthClient:async id=>id==='registered-client'?{
@@ -32,6 +32,8 @@ vi.mock('../../src/principals/store.js',()=>({
  revokeSession:async()=>1,
  upsertLinkedAccount:async params=>{h.accountLinks.push(params);return 'account-a';},
  recordLinkDenial:async denial=>{h.linkDenials.push(denial);},
+ recordSigninDenial:async denial=>{h.signinDenials.push(denial);return '99999999-9999-4999-8999-999999999999';},
+ getSigninDenial:async()=>null,deleteSigninDenial:async()=>{},
  getLatestLinkDenial:async()=>h.linkDenial,
  listAccounts:async()=>h.linkedAccounts,listConnections:async()=>[],isLegacyPilotIdentityPrincipal:async()=>h.legacyPilot,
  canLegacyPilotStartFreshConsent:async()=>h.freshConsent,
@@ -94,7 +96,7 @@ beforeEach(()=>{
  h.started=null;h.accountLinks=[];h.bindCalls=0;h.consumed=false;h.rotations=0;h.codeConsumeCount=0;h.boundFull=null;
  h.verifiedSub='pilot-subject';h.bindFailure=null;h.googleFailure=null;h.legacyPilot=false;h.freshConsent=false;h.lastIdentity=null;h.scopeList=null;
  h.linkedAccounts=[];h.disconnects=[];h.providerRevokeTokens=[];h.providerRevokeError=false;
- h.linkDenials=[];h.linkDenial=null;
+ h.linkDenials=[];h.linkDenial=null;h.signinDenials=[];
 });
 afterEach(()=>{process.env=env;});
 describe('P10 actual route one-use browser callback and independent principal MCP issuance',()=>{
@@ -121,7 +123,8 @@ describe('P10 actual route one-use browser callback and independent principal MC
   const started=res();await start(req(),started);
   h.verifiedSub='not-enrolled';
   const out=res();await callback(req('GET',{state:h.started.state,code:'google'},'p10_google_browser='+h.started.browser),out);
-  expect(out.statusCode).toBe(400);expect(h.bindCalls).toBe(0);
+  expect(out.statusCode).toBe(302);expect(h.bindCalls).toBe(0);
+  expect(h.signinDenials).toEqual([{phase:'pilot_admission',code:'public_signin_not_admitted'}]);
  });
  it('an already-bound full principal is admitted on its own record, roster or not',async()=>{
   const started=res();await start(req(),started);
@@ -137,7 +140,9 @@ describe('P10 actual route one-use browser callback and independent principal MC
    h.verifiedSub='unlisted-test-subject';
    const rejected=res();await callback(req('GET',{state:h.started.state,code:'google-secret-code'},
      'p10_google_browser='+h.started.browser),rejected);
-   expect(rejected.statusCode).toBe(400);
+   expect(rejected.statusCode).toBe(302);
+   expect(String(rejected.headers.Location)).toBe('/api/account?d=99999999-9999-4999-8999-999999999999');
+   expect(h.signinDenials).toEqual([{phase:'pilot_admission',code:'public_signin_not_admitted'}]);
    expect(warn).toHaveBeenLastCalledWith('p10_google_callback_denied',
      {phase:'pilot_admission',code:'public_signin_not_admitted'});
    expect(h.bindCalls).toBe(0);
@@ -146,7 +151,8 @@ describe('P10 actual route one-use browser callback and independent principal MC
    h.verifiedSub='pilot-subject';h.bindFailure='reserved_identity';
    const reserved=res();await callback(req('GET',{state:h.started.state,code:'google-secret-code'},
      'p10_google_browser='+h.started.browser),reserved);
-   expect(reserved.statusCode).toBe(400);
+   expect(reserved.statusCode).toBe(302);
+   expect(h.signinDenials[1]).toEqual({phase:'principal_bind',code:'reserved_identity'});
    expect(warn).toHaveBeenLastCalledWith('p10_google_callback_denied',
      {phase:'principal_bind',code:'reserved_identity'});
    expect(JSON.stringify(warn.mock.calls)).not.toMatch(/unlisted-test-subject|user@example.test|google-secret-code/);
@@ -159,7 +165,7 @@ describe('P10 actual route one-use browser callback and independent principal MC
    h.googleFailure='provider secret token and user@example.test';
    const out=res();await callback(req('GET',{state:h.started.state,code:'private-code'},
      'p10_google_browser='+h.started.browser),out);
-   expect(out.statusCode).toBe(400);
+   expect(out.statusCode).toBe(302);
    expect(warn).toHaveBeenLastCalledWith('p10_google_callback_denied',
      {phase:'provider_verification',code:'unclassified'});
 
@@ -167,7 +173,7 @@ describe('P10 actual route one-use browser callback and independent principal MC
    h.googleFailure=null;h.bindFailure='secret db user@example.test';
    const denied=res();await callback(req('GET',{state:h.started.state,code:'private-code'},
      'p10_google_browser='+h.started.browser),denied);
-   expect(denied.statusCode).toBe(400);
+   expect(denied.statusCode).toBe(302);
    expect(warn).toHaveBeenLastCalledWith('p10_google_callback_denied',
      {phase:'principal_bind',code:'unclassified'});
    expect(JSON.stringify(warn.mock.calls)).not.toMatch(/secret|user@example.test|private-code/);

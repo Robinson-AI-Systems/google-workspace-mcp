@@ -177,6 +177,17 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    }
   }
  });
+ it('records a sign-in refusal under a one-time id the sign-in page can read once',async()=>{
+  const id=await store.recordSigninDenial({phase:'pilot_admission',code:'public_signin_not_admitted'});
+  expect(typeof id).toBe('string');
+  const read=await store.getSigninDenial(id);
+  expect(read.phase).toBe('pilot_admission');
+  expect(read.code).toBe('public_signin_not_admitted');
+  await store.deleteSigninDenial(id);
+  expect(await store.getSigninDenial(id)).toBeNull();
+  expect(await store.getSigninDenial('not-a-uuid')).toBeNull();
+  expect(await store.getSigninDenial('99999999-9999-4999-8999-999999999999')).toBeNull();
+ });
  it('preserves original owner ciphertext and bearer when the historical tester obtains its own freshly consented V2 grant',async()=>{
   const envKeys=['PUBLIC_SIGNIN_MODE','PUBLIC_PILOT_GOOGLE_SUBJECTS',
     'PUBLIC_PILOT_LEGACY_SUBJECTS','PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED',
