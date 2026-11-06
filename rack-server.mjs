@@ -256,7 +256,11 @@ export function createRackServer() {
       const limit = bodyLimitBytes(resolved.config);
       if (limit > 0 && req.method !== 'GET' && req.method !== 'HEAD') {
         const raw = await readBody(req, limit);
-        req.body = parseBody(raw, req.headers['content-type']);
+        const parsed = parseBody(raw, req.headers['content-type']);
+        // An empty body parses to undefined here; handlers expect the
+        // same {} the platform body contract yields for an empty body,
+        // and an undefined req.body reads as "not yet parsed" downstream.
+        req.body = parsed === undefined ? {} : parsed;
       }
       return await resolved.handler(req, res);
     } catch (error) {

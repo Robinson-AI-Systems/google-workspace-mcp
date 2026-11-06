@@ -24,11 +24,25 @@ export function readBody(req) {
   });
 }
 
-export async function parseBody(req) {
-  const raw = await readBody(req);
-  const contentType = req.headers['content-type'] || '';
+function parseRawBody(raw, contentType) {
   if (!raw) return {};
   if (contentType.includes('application/json')) return JSON.parse(raw);
   if (contentType.includes('application/x-www-form-urlencoded')) return Object.fromEntries(new URLSearchParams(raw));
   try { return JSON.parse(raw); } catch { return Object.fromEntries(new URLSearchParams(raw)); }
+}
+
+export async function parseBody(req) {
+  // A hosting entrypoint may already have consumed and parsed the body
+  // before dispatch (the rack server does, and sets req.body; several
+  // handlers have long preferred req.body for the same reason). A
+  // consumed stream never emits 'end' again, so re-reading it hangs
+  // forever — prefer the body that is already there: an object as-is, a
+  // raw string parsed exactly as the stream path would parse it.
+  if (req.body !== undefined) {
+    if (typeof req.body === 'string') return parseRawBody(req.body, req.headers['content-type'] || '');
+    if (req.body && typeof req.body === 'object') return req.body;
+    return {};
+  }
+  const raw = await readBody(req);
+  return parseRawBody(raw, req.headers['content-type'] || '');
 }
