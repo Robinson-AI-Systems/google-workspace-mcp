@@ -459,8 +459,15 @@ export async function updateLinkedGrant({principalId,accountId,version,tokens,sc
  requireScope(changed.length===1,'version_conflict');
  return changed[0].token_version;
 }
+// A server-minted context is executable for a full user principal and for
+// the owner profile itself: the owner's kind is 'legacy_owner', not 'user',
+// and the hub's own agent connections must execute like any other profile's
+// (owner ruling, 2026-11-05 — the three-account hub completes only when the
+// owner's connections actually run). Every other kind stays refused.
+const executableContext=context=>!!context&&
+ (context.principalKind==='user'||context.principalId===OWNER_ID);
 export async function persistPrincipalGoogleRefresh(context,tokens){
- requireScope(context&&trustedContexts.has(context)&&context.principalKind==='user',
+ requireScope(context&&trustedContexts.has(context)&&executableContext(context),
    'invalid_scoped_context');
  requireScope(tokens?.access_token&&typeof tokens.access_token==='string'&&
    Number.isFinite(tokens.expiry_date)&&tokens.expiry_date>Date.now()&&
@@ -722,13 +729,13 @@ export async function deletionPreview(principalId){
 
 export async function trustedCustomerDelegation(context){
  requireScope(context&&trustedContexts.has(context)&&Object.isFrozen(context)&&
-  context.principalKind==='user','invalid_scoped_context');
+  executableContext(context),'invalid_scoped_context');
  return loadCustomerDelegation(context);
 }
 export function scopedStore(context){
  // Inject this wrapper into future P10-4 public clients, never call global DB
  // helpers with a caller-provided tenant. No public tool dispatch exists yet.
- requireScope(context&&trustedContexts.has(context)&&Object.isFrozen(context)&&context.principalKind==='user'&&
+ requireScope(context&&trustedContexts.has(context)&&Object.isFrozen(context)&&executableContext(context)&&
    validUuid(context.principalId),'invalid_scoped_context');
  const principal=context.principalId;
  return Object.freeze({
