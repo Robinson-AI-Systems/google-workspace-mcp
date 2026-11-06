@@ -348,7 +348,12 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
    AND (p.kind='user' OR p.id=${OWNER_ID}::uuid)`;
  requireScope(prior.length===1,'invalid_identity');
  const historical=prior[0].historical===true;
- let independentlyEligible=false;
+ // The reservation below protects the original connection's legacy
+ // mailboxes from OTHER profiles. The owner profile IS the original
+ // connection's own record: its holder claiming one of those mailboxes
+ // with a live session and a fresh Google consent for that exact account
+ // is the reservation's owner, not a stranger it guards against.
+ let independentlyEligible=principalId===OWNER_ID;
  if(historical){
    const matching=await q`SELECT 1 FROM principal_google_identities i
      JOIN google_accounts old ON lower(old.email)=lower(i.verified_email)

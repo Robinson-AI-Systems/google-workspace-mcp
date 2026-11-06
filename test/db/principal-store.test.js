@@ -210,6 +210,23 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
   const accounts=await store.listAccounts(security.OWNER_ID);
   expect(accounts.some(a=>a.email==='owner-hub@example.test')).toBe(true);
  });
+ it('the owner profile may link its own legacy mailboxes; another profile may not',async()=>{
+  const security=await import('../../src/principals/security.js');
+  await db.saveGoogleTokensFor('owner-reserved@example.test',
+   {access_token:'legacy-access',refresh_token:'legacy-refresh'});
+  const linked=await store.upsertLinkedAccount({principalId:security.OWNER_ID,
+   issuer:'https://accounts.google.com',sub:'owner-reserved-subject-001',
+   verifiedEmail:'owner-reserved@example.test',scopeList:['scope-mail'],
+   tokens:{access_token:'google-access',refresh_token:'google-refresh'}});
+  expect(linked).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+  const stranger=(await pool.query(
+   "INSERT INTO principals(id,kind) VALUES (gen_random_uuid(),'user') RETURNING id")).rows[0].id;
+  await expect(store.upsertLinkedAccount({principalId:stranger,
+   issuer:'https://accounts.google.com',sub:'owner-reserved-subject-002',
+   verifiedEmail:'owner-reserved@example.test',scopeList:['scope-mail'],
+   tokens:{access_token:'google-access',refresh_token:'google-refresh'}}))
+   .rejects.toThrow('reserved_identity');
+ });
  it('records a sign-in refusal under a one-time id the sign-in page can read once',async()=>{
   const id=await store.recordSigninDenial({phase:'pilot_admission',code:'public_signin_not_admitted'});
   expect(typeof id).toBe('string');
