@@ -26,58 +26,93 @@ function publicSignInAvailable(){
  try{return publicMode()!=='off';}catch{return false;} // bad public config cannot lock out legacy owner
 }
 function renderLoginPage({ error, hidden, accounts, selected, profile, verifiedOwner=false, legacyEnabled=true }) {
-  const selectedProfile = ['read_only','everyday','full'].includes(profile) ? profile : 'read_only';
+  // The pre-picked access level is Full: the owner's own connections are
+  // full-access, and a quieter default silently downgraded every new
+  // connection. A profile the client asked for, or the owner already
+  // picked, is still pre-filled exactly as requested. (A hand-built POST
+  // that omits the field entirely keeps the handler's read-only
+  // fail-safe; the rendered form always submits this select.)
+  const selectedProfile = ['read_only','everyday','full'].includes(profile) ? profile : 'full';
   const hiddenInputs = Object.entries(hidden).map(([k, v]) => `<input type="hidden" name="${k}" value="${escapeHtml(v || '')}">`).join('\n');
+  const ownerGoogleHref = '/api/oauth/authorize?'+escapeHtml(new URLSearchParams({...hidden,auth_method:'owner_google'}).toString());
+  const separateGoogleHref = '/api/oauth/authorize?'+escapeHtml(new URLSearchParams({...hidden,auth_method:'google'}).toString());
+  const googleChoices = `${!verifiedOwner?`<a class="button" href="${ownerGoogleHref}">Sign in with Google</a>
+    <p class="hint">Use the Google account you already linked to this service.</p>`:''}${publicSignInAvailable()?`<p class="alt"><a href="${separateGoogleHref}">Sign in with a separate Google account</a> — first time here, or linking a different account.</p>`:''}`;
   const accountField = accounts.length === 0
-    ? `<label for="google_account">Connected owner mailbox address</label><input type="email" name="google_account" id="google_account" value="${escapeHtml(selected||'')}" required><p class="note">The owner passphrase is required before any connected mailbox is disclosed.</p>`
+    ? `<label for="google_account">Mailbox address</label><input type="email" name="google_account" id="google_account" value="${escapeHtml(selected||'')}" required><p class="hint">Type the address of a mailbox you have already linked to this service. Linked mailboxes are not listed here, for security.</p>`
     : accounts.length === 1
       ? `<input type="hidden" name="google_account" value="${escapeHtml(accounts[0].email)}">
          <p class="note">This connection will act as <strong>${escapeHtml(accounts[0].label || accounts[0].email)}</strong>.</p>`
-      : `<label for="google_account">Act as which Google account?</label>
+      : `<label for="google_account">Which mailbox should this connection act as?</label>
          <select name="google_account" id="google_account" required>
            ${accounts.map((a) => `<option value="${escapeHtml(a.email)}"${a.email === selected ? ' selected' : ''}>${escapeHtml(a.label ? `${a.label} (${a.email})` : a.email)}${a.is_default ? ' — default' : ''}</option>`).join('\n')}
          </select>`;
-  return `<!doctype html>
-<html><head><meta charset="utf-8"><title>Sign in</title>
-<style>
-  body { font-family: -apple-system, sans-serif; background: #f5f5f5; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-  form { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); width: 340px; }
-  h1 { font-size: 1.1rem; margin: 0 0 1rem; }
-  label { display: block; font-size: 0.85rem; color: #333; margin-bottom: 0.35rem; }
-  input[type=password], select { width: 100%; padding: 0.6rem; box-sizing: border-box; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; background: white; }
-  button { width: 100%; padding: 0.6rem; background: #111; color: white; border: none; border-radius: 6px; cursor: pointer; }
-  .error { color: #c00; font-size: 0.85rem; margin-bottom: 1rem; }
-  .note { font-size: 0.85rem; color: #444; margin: 0 0 1rem; }
-  code { font-size: 0.8rem; }
-</style></head>
-<body>
-  <form method="POST">
-    <h1>${escapeHtml(PRODUCT_DISPLAY_NAME)}</h1><p>${escapeHtml(PROVIDER_DISCLOSURE)}</p>
-    ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
-    ${publicSignInAvailable()?'<p><a href="/api/oauth/authorize?'+escapeHtml(new URLSearchParams({...hidden,auth_method:'google'}).toString())+'" style="color:#075fca">Sign in with a separate Google account</a></p>':''}
-    ${!verifiedOwner?'<p><a href="/api/oauth/authorize?'+escapeHtml(new URLSearchParams({...hidden,auth_method:'owner_google'}).toString())+'">Use my already-linked owner Google sign-in</a></p>':''}
-    ${accountField}
-    <label for="profile">Permission level</label>
-    <select name="profile" id="profile">${['read_only','everyday','full'].map(value=>`<option value="${value}"${selectedProfile===value ? ' selected' : ''}>${({read_only:'Read only',everyday:'Everyday',full:'Full'})[value]}</option>`).join('')}</select>
+  const profileField = `<label for="profile">Access level</label>
+    <select name="profile" id="profile">${['full','everyday','read_only'].map(value=>`<option value="${value}"${selectedProfile===value ? ' selected' : ''}>${({full:'Full',everyday:'Everyday',read_only:'Read only'})[value]}</option>`).join('')}</select>
+    <p class="hint">Your own connections normally use Full.</p>`;
+  const advancedFold = `<details class="advanced"><summary>Advanced options</summary>
     <label for="listing">Tool listing</label>
     <select name="listing" id="listing"><option value="compact">Compact</option><option value="catalog">All tools</option></select>
-    <label for="areas">Optional allowed areas (comma separated; leave blank for all)</label>
-    <input type="text" name="areas" id="areas" placeholder="mail,files,calendar">
-    <label for="cost_consent">Licensing and possible charges</label>
-    <p class="note">Assigning or changing license SKUs may incur unknown or unbounded charges. Full is a permission profile, NOT automatic billing approval. Ordinary operations remain available according to Google's actual permissions.</p>
-    <select name="cost_consent" id="cost_consent">
-      <option value="per_action">Request my approval for each exact billable operation</option>
-      <option value="deny">Disallow bulk licensing charges</option>
-      <option value="standing_assign">Standing approval to assign licenses</option>
-      <option value="standing_change">Standing approval to change licenses</option>
-      <option value="standing_both">Standing approval for both license operations</option>
-    </select>
-    <label><input type="checkbox" name="ack_unknown_charges" value="yes"> I accept unknown account-specific charges for my selected standing authorization</label>
-    ${verifiedOwner?'<p class="note">Your linked owner Google identity was verified for this authorization. Existing Google mailbox grants and billing approvals remain unchanged.</p>':legacyEnabled?'<label for="passphrase">Admin passphrase</label><input type="password" name="passphrase" id="passphrase" autofocus required>':'<p class="note">New passphrase sign-in is disabled by owner choice. Existing issued connections remain valid.</p>'}
-    ${hiddenInputs}
-    <button type="submit">Authorize as existing owner</button>
-  </form>
+    <label for="areas">Limit to certain areas (optional; leave blank for all)</label>
+    <input type="text" name="areas" id="areas" placeholder="mail, files, calendar">
+  </details>`;
+  const head = `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  body { font-family: Manrope, -apple-system, 'Segoe UI', sans-serif; background: #F7F5EC; color: #17251E; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; box-sizing: border-box; }
+  .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 12px rgba(23,37,30,0.10); width: 380px; max-width: 100%; box-sizing: border-box; }
+  h1 { font-size: 1.15rem; margin: 0 0 0.5rem; color: #123C2D; }
+  label { display: block; font-size: 0.85rem; color: #333; margin: 1rem 0 0.35rem; }
+  input[type=email], input[type=password], input[type=text], select { width: 100%; padding: 0.6rem; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; background: white; font-family: inherit; }
+  button { width: 100%; padding: 0.65rem; background: #123C2D; color: #F7F5EC; border: none; border-radius: 6px; cursor: pointer; font: inherit; font-weight: 600; margin-top: 1.25rem; }
+  a.button { display: block; text-align: center; background: #123C2D; color: #F7F5EC; padding: 0.65rem; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 1rem 0 0.25rem; }
+  a { color: #123C2D; }
+  .error { color: #c00; font-size: 0.85rem; margin-bottom: 1rem; }
+  .note { font-size: 0.9rem; color: #444; margin: 0 0 0.5rem; }
+  .hint { font-size: 0.85rem; color: #666; margin: 0.35rem 0 0; }
+  .alt { font-size: 0.9rem; margin: 0.75rem 0 0; }
+  .divider { text-align: center; font-size: 0.8rem; color: #888; margin: 1.25rem 0 0; }
+  .advanced { margin-top: 1rem; font-size: 0.9rem; }
+  .advanced summary { cursor: pointer; color: #123C2D; font-weight: 600; }
+  .fineprint { font-size: 0.72rem; color: #888; margin: 1.5rem 0 0; }
+</style></head>
+<body>
+  <div class="card">
+    <h1>${escapeHtml(PRODUCT_DISPLAY_NAME)}</h1>`;
+  const tail = `<p class="fineprint">${escapeHtml(PROVIDER_DISCLOSURE)}</p>
+  </div>
 </body></html>`;
+  if (!verifiedOwner && !legacyEnabled) {
+    // Passphrase sign-in is off (a server setting, not something to
+    // explain on the page): the one thing this page asks for is the
+    // Google sign-in the owner already linked. No form, no dead ends.
+    return `${head}
+    <p class="note">Connect this app to one of your linked Google mailboxes.</p>
+    ${googleChoices}
+    ${tail}`;
+  }
+  const intro = verifiedOwner
+    ? `<p class="note">You are signed in as the owner. Choose what this connection can do, then continue.</p>`
+    : `<p class="note">Connect this app to one of your linked Google mailboxes.</p>`;
+  const buttonLabel = verifiedOwner
+    ? (accounts.length === 1 ? `Continue as ${escapeHtml(accounts[0].label || accounts[0].email)}` : accounts.length > 1 ? 'Continue with the selected mailbox' : 'Continue')
+    : 'Sign in and authorize';
+  return `${head}
+    ${intro}
+    ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
+    ${!verifiedOwner ? `${googleChoices}
+    <p class="divider">or use your passphrase</p>` : ''}
+  <form method="POST">
+    ${accountField}
+    ${verifiedOwner ? '' : '<label for="passphrase">Admin passphrase</label><input type="password" name="passphrase" id="passphrase" autofocus required>'}
+    ${profileField}
+    ${advancedFold}
+    ${hiddenInputs}
+    <button type="submit">${buttonLabel}</button>
+  </form>
+    ${tail}`;
 }
 
 function escapeHtml(s) {
