@@ -6,6 +6,7 @@ import {initSchema,inspectGoogleTokenRetirement,activateGoogleTokenRetirement,li
  countRecentFailedLogins,markLoginAttemptSucceeded} from '../../src/db.js';
 import {evaluateLogin,clientIp,LOCKOUT_WINDOW_MINUTES} from '../../src/oauth/login-guard.js';
 import {legacyNewLoginEnabled} from '../../src/principals/owner-migration.js';
+import {requestHostIsCanonical} from '../../src/principals/canonical-entry.js';
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function reply(res,status,body,form=false){
  res.setHeader('Cache-Control','no-store, no-cache, max-age=0');
@@ -37,7 +38,7 @@ export default async function handler(req,res){
  if(!origin){reply(res,503,'<h1>Service configuration required</h1>');return;}
  if(!['GET','POST'].includes(req.method)){reply(res,405,'<h1>Method not allowed</h1>');return;}
  if(req.method==='GET'){
-  if(req.headers?.host&&String(req.headers.host).toLowerCase()!==new URL(origin).host.toLowerCase()){
+  if(req.headers?.host&&!requestHostIsCanonical(req,origin)){
    res.setHeader('Cache-Control','no-store');res.setHeader('Referrer-Policy','no-referrer');
    res.writeHead(303,{Location:origin+'/api/owner/token-readiness'});res.end();return;
   }

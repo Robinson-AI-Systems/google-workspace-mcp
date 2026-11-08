@@ -3,6 +3,7 @@ import {createHash,randomBytes} from 'node:crypto';
 import {validateStart} from './handoff.js';
 import {issuanceOptions,issuancePrefix} from './test-pass-issuance-store.js';
 import {evaluateLogin,LOCKOUT_WINDOW_MINUTES} from '../oauth/login-guard.js';
+import {requestHostIsCanonical} from '../principals/canonical-entry.js';
 const hash=v=>createHash('sha256').update(v).digest('hex');
 const pattern=/^[A-Za-z0-9_-]{43}$/;
 const escape=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -48,7 +49,7 @@ export function createTestPassIssuance({store,origin,getClient,loginStore,client
    }
    const mode=options.mode||'test',label=mode==='live'?'LIVE':'TEST',hours=mode==='live'?1:24;
    if(req.method==='GET'){
-    if(req.headers.host!==base.host){res.writeHead(303,{Location:origin+issuancePath+'?state='+p.state});return res.end();}
+    if(!requestHostIsCanonical(req,origin)){res.writeHead(303,{Location:origin+issuancePath+'?state='+p.state});return res.end();}
     if(row.status!=='pending')return page(200,'<h1>Request already handled</h1><p>Return to your chat. No additional pass will be created.</p>');
     res.setHeader('Referrer-Policy','same-origin');
     return page(200,'<h1>Create encrypted read-only '+label+' pass</h1><p>Mailbox: '+escape(options.account)+'</p><p>Allowed areas: '+escape(options.areas.join(', '))+'</p><p>'+hours+(hours===1?' hour':' hours')+'; read-only; no Toolkit access or writes. Billing denied. Creates one new pass. The requesting runner alone can decrypt it. Existing passes stay unchanged. Approve only a request your agent prepared.</p><form method="POST" action="'+issuancePath+'" autocomplete="off"><input type="hidden" name="state" value="'+escape(p.state)+'"><label>Service owner passphrase<input type="password" name="passphrase" autocomplete="off" required></label><button type="submit">Create '+hours+'-hour read-only '+label+' pass</button></form>');

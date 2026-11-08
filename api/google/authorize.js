@@ -8,6 +8,7 @@ import {parseBody} from '../../src/oauth/helpers.js';
 import {initSchema,recordLoginAttempt,countRecentFailedLogins,markLoginAttemptSucceeded} from '../../src/db.js';
 import {evaluateLogin,clientIp,LOCKOUT_WINDOW_MINUTES} from '../../src/oauth/login-guard.js';
 import {legacyNewLoginEnabled} from '../../src/principals/owner-migration.js';
+import {requestHostIsCanonical} from '../../src/principals/canonical-entry.js';
 const escape=s=>String(s).replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 function canonical(){
  try{
@@ -46,7 +47,7 @@ export default async function handler(req,res){
   const purpose=req.query?.purpose??'standard';
   if(!['standard','policy_read','acceptance_read','catalog_read','tasks_read','postmaster_read','siteverification_read','completion_read','postmaster_v2_read'].includes(purpose)){send(res,400,'<h1>Unknown Google consent purpose</h1>');return;}
   const host=req.headers?.host;
-  if(typeof host==='string'&&host.trim()&&host.toLowerCase()!==new URL(origin).host.toLowerCase()){
+  if(typeof host==='string'&&host.trim()&&!requestHostIsCanonical(req,origin)){
    const u=new URL('/api/google/authorize',origin);
    for(const k of ['account','label'])if(typeof req.query?.[k]==='string')u.searchParams.set(k,req.query[k].slice(0,320));
    if(purpose!=='standard')u.searchParams.set('purpose',purpose);

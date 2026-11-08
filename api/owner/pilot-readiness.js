@@ -5,6 +5,7 @@ import {initSchema,recordLoginAttempt,countRecentFailedLogins,markLoginAttemptSu
 import {createTransaction} from '../../src/principals/store.js';
 import {publicGoogleClient,providerUrl} from '../../src/principals/google.js';
 import {mint,cookie} from '../../src/principals/security.js';
+import {requestHostIsCanonical} from '../../src/principals/canonical-entry.js';
 import {BROWSER_COOKIE} from '../../src/principals/session.js';
 import {parseBody} from '../../src/oauth/helpers.js';
 import {clientIp,evaluateLogin,LOCKOUT_WINDOW_MINUTES} from '../../src/oauth/login-guard.js';
@@ -43,7 +44,7 @@ export default async function handler(req,res){
     // arrive with Origin: null; preserve strict same-origin authentication.
     res.setHeader('Referrer-Policy','same-origin');
     // Prevent alias-host form submissions from failing the strict Origin gate.
-    if(req.headers?.host&&req.headers.host.toLowerCase()!==new URL(origin).host.toLowerCase()){
+    if(req.headers?.host&&!requestHostIsCanonical(req,origin)){
       res.writeHead(303,{Location:origin+'/api/owner/pilot-readiness'});res.end();return;
     }
     return res.status(200).send(form);

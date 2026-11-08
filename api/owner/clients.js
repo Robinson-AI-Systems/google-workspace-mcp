@@ -32,6 +32,7 @@ import {
   markLoginAttemptSucceeded,
 } from '../../src/db.js';
 import {clientIp, evaluateLogin, LOCKOUT_WINDOW_MINUTES} from '../../src/oauth/login-guard.js';
+import {requestHostIsCanonical} from '../../src/principals/canonical-entry.js';
 
 const PROTECTED_CLIENT_IDS = new Set(['muse']);
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
@@ -112,7 +113,7 @@ export default async function handler(request, response) {
   if (!url || url.origin !== origin || url.pathname !== '/api/owner/clients') {
     page(response, 404, 'Not found', 'This address is not available.'); return;
   }
-  if (request.headers?.host && String(request.headers.host).toLowerCase() !== url.host.toLowerCase()) {
+  if (request.headers?.host && !requestHostIsCanonical(request, origin)) {
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('Referrer-Policy', 'no-referrer');
     response.writeHead(303, {Location: `${origin}/api/owner/clients`});

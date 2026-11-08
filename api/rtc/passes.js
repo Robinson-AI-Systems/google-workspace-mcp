@@ -5,6 +5,7 @@ import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../../src/branding.js';
 import { initSchema, createRtcPass, recordLoginAttempt, countRecentFailedLogins, markLoginAttemptSucceeded } from '../../src/db.js';
 import { evaluateLogin, clientIp, LOCKOUT_WINDOW_MINUTES } from '../../src/oauth/login-guard.js';
 import { legacyNewLoginEnabled } from '../../src/principals/owner-migration.js';
+import { requestHostIsCanonical } from '../../src/principals/canonical-entry.js';
 import { RTC_AREAS } from '../../src/rtc/catalog.js';
 import { selectedBillingPolicy } from '../../src/rtc/billing-authority.js';
 const escape = s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -37,7 +38,7 @@ function canonicalOrigin() {
 function directToCanonical(req,res,origin) {
  const host=req.headers?.host;
  if(!origin||typeof host!=='string'||!host.trim()||
-    host.toLowerCase()===new URL(origin).host.toLowerCase())return false;
+    requestHostIsCanonical(req,origin))return false;
  res.setHeader('Cache-Control','no-store');
  res.setHeader('Referrer-Policy','no-referrer');
  res.writeHead(303,{Location:origin+'/api/rtc/passes'});
