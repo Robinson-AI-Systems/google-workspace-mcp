@@ -23,7 +23,7 @@ with `docs/plan/README.md`.
 
 ## Developing
 
-Use Node 24 (the version used by GitHub CI and the hosted Vercel project).
+Use Node 24 (the version used by GitHub CI).
 
 ```
 npm ci            # install
@@ -498,7 +498,7 @@ For a plain-English list of what to ask Claude for, see [docs/OWNER-GUIDE.md](do
 
 ## How it runs
 
-It runs hosted, on Vercel, with your login token stored in Neon (Postgres), so claude.ai can reach it from your phone, browser, anywhere. Setup is in `DEPLOY.md`. (The old "run on one computer" mode was retired; nothing in the hosted setup needed it.)
+It runs on the Robinson AI Systems Development Rack (the owner's own hardware), with your login token stored in its Postgres database there, so claude.ai can reach it from your phone, browser, anywhere at `https://workspace.robinsonaisystems.com`. It moved there on 2026-11-08; the Vercel project and Neon database that hosted it before were retired (deleted) the same day. `DEPLOY.md` now describes standing up a separate hosted copy, not this production service.
 
 ## How it signs in to Google
 

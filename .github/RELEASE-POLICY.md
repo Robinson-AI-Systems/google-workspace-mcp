@@ -1,6 +1,8 @@
 <!-- Current repair also records no-change daily receipts: backups cannot publish later same-day development after a successful no-op. -->
 # Daily production release policy
 
+> **Alignment note — 2026-11-08:** production has served from the Robinson AI Systems Development Rack since 2026-11-08, and the Vercel project this policy's deployment steps reference was retired (deleted) the same day — a checked promotion to `live` currently deploys nothing. This policy's text is unchanged; the train's disposition remains the owner's. The October 19 and October 25, 2026 exception sections below are spent, single-use records retained for audit; they authorize nothing further.
+
 Owner-approved 2026-10-12. Pull requests target `main`; `main` is the default development branch. Do not merge PRs into `live` or push directly to it. Do not run Vercel CLI production deployments or manually promote a preview during routine development.
 
 `.github/workflows/daily-live.yml` alone promotes a checked main snapshot to `live`, at most once per America/Denver calendar day. The primary scheduled trigger remains 20:19 Denver with off-minute 20:35 and 21:35 recovery triggers if GitHub drops or delays a scheduled event. All three use the same checked release script and its atomic branch + dated tag operation; whichever trigger succeeds first wins and later invocations skip. Trigger redundancy is not permission to make extra releases. No changes means no release; failed, pending or missing required checks or diverged history refuse promotion. Nothing force-pushes. Existing customer billing and MCP production-access gates remain unchanged.

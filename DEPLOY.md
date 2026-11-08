@@ -1,5 +1,7 @@
 # Deploying the hosted version
 
+> **Alignment note — 2026-11-08:** production no longer runs on the deployment this guide creates. On 2026-11-08 the live service moved to the Robinson AI Systems Development Rack at `https://workspace.robinsonaisystems.com`, and the Vercel project and Neon database described below were retired (deleted) the same day. This guide is retained as the record of the hosted setup and as the route to stand up a separate hosted copy; following it does not change or restore the production service. The dated material below is unchanged.
+
 ## Current completion and release state — October 17, 2026 UTC
 
 All 29 required acceptance tasks and all 48 required roadmap subsections are complete. Workspace PR197 and Hub PR227 record genuine local/direct, encrypted GitHub-only relay, Sandbox direct, native Hub audit/read, same-pass revocation and cleanup. See [final route evidence](docs/plan/evidence/2026-10-17-final-hub-route-acceptance.json). The independent Workspace server remains usable without Hub; only optional P8-6 is on request. The owner has now requested a checked Workspace release after this documentation and Git closeout; the final released SHA/deployment belongs in the merged PR's permanent release receipt. Earlier dated pending observations below are historical, not new work or permission requests.
