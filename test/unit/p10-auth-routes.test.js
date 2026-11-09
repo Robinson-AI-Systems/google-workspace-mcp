@@ -16,7 +16,7 @@ vi.mock('../../src/db.js',()=>({
 }));
 vi.mock('../../src/principals/store.js',()=>({
  createTransaction:async input=>{h.started=input;h.consumed=false;return true;},
- consumeBrowserTransaction:async({state,browsers,purpose})=>{for(const browser of browsers){const tx=await mocks.consumeTransaction({state,browser,purpose});if(tx)return tx;}return null;},
+ consumeBrowserTransaction:async({state,browsers,purpose})=>{for(const browser of browsers){if(h.consumed||!h.started||h.started.state!==state||h.started.browser!==browser||h.started.purpose!==purpose)continue;h.consumed=true;return {...h.started,nonce_hash:createHash('sha256').update(h.started.nonce).digest('hex'),principal_id:h.started.principalId,policy:h.started.policy,verifier:h.started.verifier,client_id:h.started.clientId,redirect_uri:h.started.redirectUri,resource:h.started.resource,code_challenge:h.started.codeChallenge};}return null;},
  consumeTransaction:async({state,browser,purpose})=>{
    if(h.consumed||!h.started||h.started.state!==state||h.started.browser!==browser||h.started.purpose!==purpose)return null;
    h.consumed=true;

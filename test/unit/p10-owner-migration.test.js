@@ -18,7 +18,7 @@ vi.mock('../../src/oauth/login-guard.js',()=>({
 vi.mock('../../src/principals/store.js',()=>({
  isLegacyPilotIdentityPrincipal:async()=>false,
  createTransaction:async p=>{h.tx=p;h.used=false;return true;},
- consumeBrowserTransaction:async({state,browsers,purpose})=>{for(const browser of browsers){const tx=await mocks.consumeTransaction({state,browser,purpose});if(tx)return tx;}return null;},
+ consumeBrowserTransaction:async({state,browsers,purpose})=>{for(const browser of browsers){if(h.used||!h.tx||h.tx.state!==state||h.tx.browser!==browser||h.tx.purpose!==purpose)continue;h.used=true;return {purpose,policy:h.tx.policy,principal_id:h.tx.principalId||null,nonce_hash:'verified-nonce',verifier:h.tx.verifier,client_id:h.tx.clientId,redirect_uri:h.tx.redirectUri,resource:h.tx.resource,code_challenge:h.tx.codeChallenge};}return null;},
  consumeTransaction:async({state,browser,purpose})=>{
   if(h.used||!h.tx||h.tx.state!==state||h.tx.browser!==browser||h.tx.purpose!==purpose)return null;
   h.used=true;return {purpose,policy:h.tx.policy,principal_id:h.tx.principalId||null,
