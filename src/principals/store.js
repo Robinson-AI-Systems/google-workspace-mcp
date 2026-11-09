@@ -104,6 +104,16 @@ export async function initPrincipalSchema(q=sql()){
    customer_id TEXT NOT NULL,scopes TEXT[] NOT NULL,subject_rule TEXT NOT NULL,
    credential_ciphertext TEXT NOT NULL,enabled BOOLEAN NOT NULL DEFAULT false,
    revoked_at TIMESTAMPTZ,UNIQUE(principal_id,customer_id))`;
+ // D-006 MC-7.0 (2026-11-09): the cookie-free connect step. After Google
+ // sign-in the person lands on ONE Approve page; its state is this one-use
+ // handle (kept hashed) carried in the address, never a browser cookie.
+ await q`CREATE TABLE IF NOT EXISTS principal_connect_handles (
+   handle_hash TEXT PRIMARY KEY,principal_id UUID NOT NULL REFERENCES principals(id),
+   client_id TEXT NOT NULL,redirect_uri TEXT NOT NULL,resource TEXT NOT NULL,
+   code_challenge TEXT NOT NULL,client_state TEXT,
+   expires_at TIMESTAMPTZ NOT NULL,consumed_at TIMESTAMPTZ,
+   created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
+ await q`CREATE INDEX IF NOT EXISTS principal_connect_handles_expiry ON principal_connect_handles(expires_at)`;
  await initTenantSchema(q);
  await initOwnerMigrationSchema(q);
 }
@@ -473,7 +483,12 @@ export async function persistPrincipalGoogleRefresh(context,tokens){
    Number.isFinite(tokens.expiry_date)&&tokens.expiry_date>Date.now()&&
    validUuid(context.principalId)&&validUuid(context.accountId)&&
    validUuid(context.connectionId),'invalid_google_refresh');
- const {principalId,accountId,connectionId,accountVersion}=context;
+ const {principalId,connectionId}=context;
+ // The connection's home account proves the connection is live; the grant
+ // refreshed is the account this call acts as (the same one unless derived).
+ const home=context.accountId;
+ const accountId=context.googleAccountId||context.accountId;
+ const accountVersion=context.googleAccountId?context.googleAccountVersion:context.accountVersion;
  const row=await findAccount(principalId,accountId);
  requireScope(row&&row.token_version===accountVersion&&row.grant_ciphertext,
    'version_conflict');
@@ -489,7 +504,7 @@ export async function persistPrincipalGoogleRefresh(context,tokens){
    AND status='active' AND EXISTS(
      SELECT 1 FROM principal_connections c JOIN principals p ON p.id=c.principal_id
      WHERE c.id=${connectionId}::uuid AND c.principal_id=${principalId}::uuid
-       AND c.account_id=${accountId}::uuid AND c.revoked_at IS NULL
+       AND c.account_id=${home}::uuid AND c.revoked_at IS NULL
        AND c.expires_at>now() AND p.status='active')
    RETURNING refresh_version`;
  return result.length===1;
@@ -582,6 +597,69 @@ export async function consumeTransaction({state,browser,purpose,principalId=null
    rows[0].principal_id||OWNER_ID,hash,'provider-transaction')};
 }
 
+// D-006 MC-7.0: cookie-free transactions. The public connect sign-in and
+// "add another Google account" from the Approve page carry no browser
+// cookie, because in-app browsers (Muse) lose them. Only a transaction that
+// was CREATED cookie-free can be consumed without one; every other flow
+// keeps its browser binding. Nothing reaches any app from such a sign-in
+// until the person taps Approve on a page showing who is signed in and
+// which site receives access (the GitHub public-connect safety shape).
+export async function consumeCookieFreeTransaction({state,purpose}){
+ if(typeof state!=='string'||!state)return null;
+ const q=sql(),hash=digest(state);
+ const rows=await q`UPDATE user_oauth_transactions SET consumed_at=now()
+   WHERE state_hash=${hash} AND purpose=${purpose} AND consumed_at IS NULL
+   AND expires_at>now() AND policy->>'cookieFree'='true'
+   RETURNING *`;
+ if(rows.length!==1)return null;
+ return {...rows[0],...openV2(rows[0].provider_verifier_ciphertext,
+   rows[0].principal_id||OWNER_ID,hash,'provider-transaction')};
+}
+const CONNECT_HANDLE=/^p10h_[A-Za-z0-9_-]{43}$/;
+export async function issueConnectHandle({principalId,clientId,redirectUri,resource,codeChallenge,clientState=null}){
+ requireScope(validUuid(principalId)&&typeof clientId==='string'&&clientId&&
+  typeof redirectUri==='string'&&redirectUri&&typeof resource==='string'&&resource&&
+  /^[A-Za-z0-9_-]{43}$/.test(codeChallenge||''),'invalid_connect');
+ const handle=mint('p10h_'),q=sql();
+ const rows=await q`INSERT INTO principal_connect_handles
+   (handle_hash,principal_id,client_id,redirect_uri,resource,code_challenge,client_state,expires_at)
+   SELECT ${digest(handle)},p.id,${clientId},${redirectUri},${resource},${codeChallenge},
+     ${clientState},now()+interval '15 minutes'
+   FROM principals p WHERE p.id=${principalId}::uuid AND p.status='active'
+   RETURNING handle_hash`;
+ requireScope(rows.length===1,'invalid_connect');
+ return handle;
+}
+// The handle must match the exact client, redirect, resource and PKCE
+// challenge in the address it arrived with; anything else reads as absent.
+const connectMatches=(row,expect)=>!!row&&(!expect||
+ (row.client_id===expect.clientId&&row.redirect_uri===expect.redirectUri&&
+  row.resource===expect.resource&&row.code_challenge===expect.codeChallenge));
+export async function readConnectHandle(handle,expect=null){
+ if(typeof handle!=='string'||!CONNECT_HANDLE.test(handle))return null;
+ const rows=await sql()`SELECT h.* FROM principal_connect_handles h JOIN principals p ON p.id=h.principal_id
+   WHERE h.handle_hash=${digest(handle)} AND h.consumed_at IS NULL AND h.expires_at>now()
+   AND p.status='active'`;
+ return connectMatches(rows[0],expect)?rows[0]:null;
+}
+export async function consumeConnectHandle(handle,expect=null){
+ if(typeof handle!=='string'||!CONNECT_HANDLE.test(handle))return null;
+ const q=sql();
+ if(expect&&!await readConnectHandle(handle,expect))return null;
+ const rows=await q`UPDATE principal_connect_handles SET consumed_at=now()
+   WHERE handle_hash=${digest(handle)} AND consumed_at IS NULL AND expires_at>now()
+   RETURNING *`;
+ return connectMatches(rows[0],expect)?rows[0]:null;
+}
+// The verified Google address a person signed in with (shown on the
+// Approve page so a person can see whose sign-in they are approving).
+export async function principalSignInEmail(principalId){
+ if(!validUuid(principalId))return null;
+ const rows=await sql()`SELECT verified_email FROM principal_google_identities
+   WHERE principal_id=${principalId}::uuid ORDER BY updated_at DESC LIMIT 1`;
+ return rows[0]?.verified_email||null;
+}
+
 export async function issuePrincipalCode({principalId,accountId,clientId,redirectUri,resource,
  codeChallenge,profile='read_only',listing='compact',areas=null,costPolicy={mode:'per_action'}}){
  requireScope(validUuid(principalId)&&validUuid(accountId)&&clientId&&redirectUri&&resource&&
@@ -654,6 +732,24 @@ export async function readPrincipalAccess(token){
    costPolicy:Object.freeze({...settings.cost_policy})});
  trustedContexts.add(context);
  return context;
+}
+// One connection, every Google account its person has linked (owner
+// ruling 2026-11-09: public users add a second and third account inside the
+// product, with no roster). The connection keeps its own account as the
+// HOME for its results, change log and rate windows; a tool call that names
+// another account gets a derived context whose Google credential is that
+// account's. Only an account this same principal holds, active, qualifies.
+export async function accountContext(context,accountId){
+ requireScope(context&&trustedContexts.has(context)&&Object.isFrozen(context)&&
+  executableContext(context),'invalid_scoped_context');
+ if(accountId===context.accountId&&!context.googleAccountId)return context;
+ const account=await findAccount(context.principalId,accountId);
+ requireScope(account&&account.principal_id===context.principalId,'outside_scope');
+ if(account.id===context.accountId)return context;
+ const derived=Object.freeze({...context,googleAccountId:account.id,
+  googleAccountVersion:account.token_version,actingAs:account.email});
+ trustedContexts.add(derived);
+ return derived;
 }
 export async function rotatePrincipalRefresh(token,{clientId,resource}={}){
  if(typeof token!=='string'||!/^p10r_[A-Za-z0-9_-]{43}$/.test(token)||

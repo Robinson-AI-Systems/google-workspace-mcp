@@ -16,6 +16,8 @@ vi.mock('../../src/db.js',()=>({
 }));
 vi.mock('../../src/principals/store.js',()=>({
  createTransaction:async input=>{h.started=input;h.consumed=false;return true;},
+ consumeCookieFreeTransaction:async()=>null,
+ issueConnectHandle:async input=>{h.connectIssued=input;return 'p10h_'+'h'.repeat(43);},
  consumeBrowserTransaction:async({state,browsers,purpose})=>{for(const browser of browsers){if(h.consumed||!h.started||h.started.state!==state||h.started.browser!==browser||h.started.purpose!==purpose)continue;h.consumed=true;return {...h.started,nonce_hash:createHash('sha256').update(h.started.nonce).digest('hex'),principal_id:h.started.principalId,policy:h.started.policy,verifier:h.started.verifier,client_id:h.started.clientId,redirect_uri:h.started.redirectUri,resource:h.started.resource,code_challenge:h.started.codeChallenge};}return null;},
  consumeTransaction:async({state,browser,purpose})=>{
    if(h.consumed||!h.started||h.started.state!==state||h.started.browser!==browser||h.started.purpose!==purpose)return null;
@@ -383,6 +385,12 @@ describe('P10 actual route one-use browser callback and independent principal MC
   expect(u.searchParams.get('state')).toBe('original-client-state');
   expect(u.searchParams.get('code_challenge')).toBe(parameters.code_challenge);
   expect(u.searchParams.get('resource')).toBe(parameters.resource);
+  // D-006 MC-7.0: the Approve page is reached by a one-use handle bound to
+  // this exact client, redirect, resource and challenge, not a cookie.
+  expect(u.searchParams.get('connect')).toMatch(/^p10h_/);
+  expect(h.connectIssued).toMatchObject({clientId:'registered-client',redirectUri:parameters.redirect_uri,
+    resource:parameters.resource,codeChallenge:parameters.code_challenge,clientState:'original-client-state'});
+  expect(h.started.policy).toMatchObject({group:'complete',cookieFree:true});
  });
  it('exact S256 code and resource permit V2 issue, never forward Google tokens',async()=>{
   const payload={grant_type:'authorization_code',client_id:'registered-client',client_secret:'registered-secret',

@@ -18,7 +18,7 @@ import { clientIp, evaluateLogin, LOCKOUT_WINDOW_MINUTES } from '../../src/oauth
 import { ensureMigrated } from '../../src/auth/google-auth-hosted.js';
 import { RTC_AREAS } from '../../src/rtc/catalog.js';
 import { selectedBillingPolicy } from '../../src/rtc/billing-authority.js';
-import {getPrincipal,listAccounts,issuePrincipalCode} from '../../src/principals/store.js';
+import {getPrincipal,listAccounts,issuePrincipalCode,readConnectHandle,consumeConnectHandle,principalSignInEmail,getLatestLinkDenial} from '../../src/principals/store.js';
 import {requireSession,requireCsrf} from '../../src/principals/session.js';
 import {publicMode,publicResource,headers,readCookie,readCookies,cookie,digest} from '../../src/principals/security.js';
 import {inspectOwnerLoginProof,consumeOwnerLoginProof,legacyNewLoginEnabled} from '../../src/principals/owner-migration.js';
@@ -72,6 +72,66 @@ function renderReturnProblemPage(kind) {
     <p class="note">${what}</p>
     <p class="note">This page stops here so you are not sent round in a loop.</p>
     <p class="hint">Go back to your app and start connecting again. If it happens again, open this connection in your phone's normal browser, or allow cookies for this site, then try once more.</p>
+    ${loginTail()}`;
+}
+
+// The public connect pages (owner ruling 2026-11-09): anyone with a Google
+// account they control signs in, with no roster; a second or third account
+// is added from the Approve page itself with the same Google sign-in.
+const DENIAL_WORDS={
+  grant_scope_missing:'Google did not grant any of the permissions requested.',
+  identity_owned_elsewhere:'That Google account is already connected to a different person here.',
+  reserved_identity:"That Google account belongs to this server's owner connection.",
+  consent_declined:'The Google sign-in was cancelled.',
+  legacy_pilot_identity_only:'This sign-in is a test identity that cannot add accounts.'
+};
+function hostOf(uri){try{return new URL(uri).host;}catch{return 'your app';}}
+function renderGoogleStartPage(href,client){
+  const app=client?.client_name?escapeHtml(client.client_name):'Your app';
+  return `${loginHead()}
+    <p class="note">${app} wants to connect to your Google account.</p>
+    <a class="button" href="${escapeHtml(href)}">Continue with Google</a>
+    <p class="hint">Use any Google account you control. You can add more accounts on the next page.</p>
+    ${loginTail()}`;
+}
+function renderApproveProblem(message){
+  return `${loginHead()}<p class="note">${escapeHtml(message)}</p>${loginTail()}`;
+}
+function renderApprovePage({params,resourceParam,client,accounts,signedInAs,connectHandle,csrf,denial}){
+  const app=client?.client_name?escapeHtml(client.client_name):'This app';
+  const keep=['client_id','redirect_uri','state','code_challenge','code_challenge_method']
+    .map(k=>'<input type="hidden" name="'+k+'" value="'+escapeHtml(params[k]||'')+'">').join('')+
+    '<input type="hidden" name="resource" value="'+escapeHtml(resourceParam||'')+'">'+
+    '<input type="hidden" name="auth_method" value="google">'+
+    (connectHandle?'<input type="hidden" name="connect" value="'+escapeHtml(connectHandle)+'">':
+      '<input type="hidden" name="csrf" value="'+escapeHtml(csrf)+'">');
+  const pick=accounts.find(a=>a.is_default)||accounts[0];
+  const list=accounts.map(a=>'<label style="display:flex;gap:.5rem;align-items:center;margin:.4rem 0;font-size:.95rem">'+
+    '<input type="radio" name="account_id" value="'+escapeHtml(a.id)+'"'+(a===pick?' checked':'')+'> '+
+    escapeHtml(a.label?a.label+' ('+a.email+')':a.email)+'</label>').join('');
+  const reason=denial?(DENIAL_WORDS[denial.code]||'Google did not confirm that account.'):null;
+  // Adding an account: the same Google sign-in, from this page, coming back
+  // to this page. Without a handle (an ordinary signed-in browser) the
+  // account page's session form does the same job.
+  const addForm=connectHandle
+    ? '<form method="POST" action="/api/auth/google/start"><input type="hidden" name="purpose" value="link">'+
+      '<input type="hidden" name="connect" value="'+escapeHtml(connectHandle)+'">'+
+      '<button type="submit" style="background:#F7F5EC;color:#123C2D;border:1px solid #123C2D">'+
+      (accounts.length?'Add another Google account':'Connect a Google account')+'</button></form>'
+    : '<p class="alt"><a href="/api/account">'+(accounts.length?'Add another Google account':'Connect a Google account')+'</a></p>';
+  return `${loginHead()}
+    ${signedInAs?'<p class="note">Signed in with Google as <strong>'+escapeHtml(signedInAs)+'</strong>.</p>':''}
+    <p class="note"><strong>${app}</strong> is asking for access. It will be sent to <strong>${escapeHtml(hostOf(params.redirect_uri))}</strong>.</p>
+    ${reason?'<p class="error">That account was not added: '+escapeHtml(reason)+'</p>':''}
+    ${accounts.length?`<form method="POST">${keep}
+      <p class="note">This connection can use every Google account you have connected here. Pick the one it uses when you don't name one:</p>
+      ${list}
+      <label for="profile">Access level</label>
+      <select id="profile" name="profile"><option value="full" selected>Full</option><option value="everyday">Everyday</option><option value="read_only">Read only</option></select>
+      <button type="submit">Approve</button></form>`:
+      '<p class="note">No Google account is connected yet. Connect one to continue.</p>'}
+    ${addForm}
+    <p class="hint">Nothing is shared with ${app} until you tap Approve. Each account only ever shows its own data.</p>
     ${loginTail()}`;
 }
 
@@ -185,52 +245,65 @@ export default async function handler(req, res) {
       !/^[A-Za-z0-9_-]{43}$/.test(params.code_challenge||''))
       return res.status(400).send('V2 requires exact MCP resource and S256 PKCE.');
     headers(res);
-    let session;
-    try{session=await requireSession(req);}catch{session=null;}
-    if(!session){
-      if(req.method!=='GET')return res.status(401).send('Sign in before authorizing this client.');
-      if(params.returned==='1'){
-        console.warn('mc7_return_without_carried_value',{door:'authorize',kind:'google'});
+    // D-006 MC-7.0: after Google, the Approve page is reached with a one-use
+    // connect handle in the address (no cookie). It must match this exact
+    // client, redirect, resource and PKCE challenge, or it counts as absent.
+    const expect={clientId:client_id,redirectUri:redirect_uri,resource,codeChallenge:params.code_challenge};
+    const connectHandle=typeof params.connect==='string'&&params.connect?params.connect:null;
+    let connect=null;
+    if(connectHandle){try{connect=await readConnectHandle(connectHandle,expect);}catch{connect=null;}}
+    let session=null;
+    if(!connect){try{session=await requireSession(req);}catch{session=null;}}
+    if(!connect&&!session){
+      if(req.method!=='GET')return res.status(401).send(renderApproveProblem('Your approval step expired or was already used. Go back to your app and connect again.'));
+      if(params.returned==='1'||connectHandle){
+        console.warn('mc7_return_without_carried_value',{door:'authorize',kind:connectHandle?'connect':'google'});
         res.setHeader('Content-Type','text/html; charset=utf-8');
         return res.status(400).send(renderReturnProblemPage('google'));
       }
-      if(publicMode()==='off')return res.status(503).send('New public sign-in is currently disabled.');
+      if(publicMode()==='off')return res.status(503).send(renderApproveProblem('New sign-ups are switched off on this server right now.'));
       const next=new URL('/api/auth/google/start',publicResource());
       for(const key of ['client_id','redirect_uri','resource','code_challenge','state'])
         next.searchParams.set(key,key==='resource'?resourceParam:params[key]);
       next.searchParams.set('purpose','mcp_authorize');
-      return res.status(200).send('<!doctype html><h1>Google sign-in</h1><p>Authorize this registered MCP client using your Google account.</p><a href="'+escapeHtml(next.toString())+'">Continue securely with Google</a>');
+      res.setHeader('Content-Type','text/html; charset=utf-8');
+      return res.status(200).send(renderGoogleStartPage(next.toString(),client));
     }
-    const accounts=await listAccounts(session.principal_id);
+    const principalId=connect?connect.principal_id:session.principal_id;
+    const accounts=await listAccounts(principalId);
     if(req.method==='GET'){
       // MC-7.3: with duplicate cookies, use the copy that belongs to this session.
-      const csrfCandidates=readCookies(req,'p10_csrf');
-      const csrf=csrfCandidates.find(c=>digest(c)===session.csrf_hash)||csrfCandidates[0]||'';
-      const inputs=['client_id','redirect_uri','state','code_challenge','code_challenge_method','resource']
-        .map(key=>'<input type="hidden" name="'+key+'" value="'+escapeHtml(key==='resource'?resourceParam:params[key]||'')+'">').join('');
-      return res.status(200).send('<!doctype html><meta charset="utf-8"><h1>Authorize this agent</h1>'+
-        '<p>Only your own linked Google accounts and selected permissions are available. Agent access is issued but tool dispatch remains disabled pending cross-principal acceptance.</p>'+
-        (accounts.length?'<form method="POST">'+inputs+'<input type="hidden" name="auth_method" value="google">'+
-          '<input type="hidden" name="csrf" value="'+escapeHtml(csrf)+'">'+
-          '<select name="account_id">'+accounts.map(a=>'<option value="'+escapeHtml(a.id)+'">'+escapeHtml(a.label||a.email)+'</option>').join('')+'</select>'+
-          '<select name="profile"><option value="read_only">Read only</option><option value="everyday">Everyday</option><option value="full">Full</option></select>'+
-          '<button type="submit">Authorize selected account</button></form>':
-          '<p>No linked Google account. Open /api/account in this browser to add your own verified Google grant.</p>'));
+      let csrf='';
+      if(!connect){
+        const csrfCandidates=readCookies(req,'p10_csrf');
+        csrf=csrfCandidates.find(c=>digest(c)===session.csrf_hash)||csrfCandidates[0]||'';
+      }
+      const signedInAs=await principalSignInEmail(principalId).catch(()=>null);
+      const denial=params.link_refused==='1'?await getLatestLinkDenial(principalId).catch(()=>null):null;
+      res.setHeader('Content-Type','text/html; charset=utf-8');
+      res.setHeader('Referrer-Policy','no-referrer');
+      return res.status(200).send(renderApprovePage({params,resourceParam,client,accounts,signedInAs,
+        connectHandle:connect?connectHandle:null,csrf,denial}));
     }
     try{
-      requireCsrf(req,session,params);
+      if(connect){
+        // The handle is spent by this tap; it cannot approve twice.
+        const spent=await consumeConnectHandle(connectHandle,expect);
+        if(!spent)throw Error('outside_scope');
+      }else requireCsrf(req,session,params);
       const selected=accounts.find(a=>a.id===params.account_id);
       if(!selected)throw Error('outside_scope');
       const code=await issuePrincipalCode({
-        principalId:session.principal_id,accountId:selected.id,clientId:client_id,
+        principalId,accountId:selected.id,clientId:client_id,
         redirectUri:redirect_uri,resource,codeChallenge:params.code_challenge,
         profile:['read_only','everyday','full'].includes(params.profile)?params.profile:'read_only',
         listing:'compact',areas:null,costPolicy:{mode:'per_action'}
       });
       const redirect=new URL(redirect_uri);redirect.searchParams.set('code',code);
-      if(state)redirect.searchParams.set('state',state);
+      const clientState=connect?connect.client_state:state;
+      if(clientState)redirect.searchParams.set('state',clientState);
       res.writeHead(302,{Location:redirect.toString()});res.end();return;
-    }catch{return res.status(403).send('Authorization rejected for this principal/account.');}
+    }catch{return res.status(403).send(renderApproveProblem('This approval could not be completed. Go back to your app and connect again.'));}
   }
   // Existing bearer/refresh tokens are never changed by this branch.
   // A linked Google owner proof is one-use and protocol/client/PKCE-bound.

@@ -89,7 +89,7 @@ describe('every sign-in door accepts it',()=>{
  it('authorize → Google: omitted resource means this server, and the hand-off reaches Google',async()=>{
   const landing=await get(authorize,{...ask,auth_method:'google'});
   expect(landing.statusCode).toBe(200);
-  const href=landing.body.match(/href="([^"]+)"/)[1].replace(/&amp;/g,'&');
+  const href=landing.body.match(/class="button" href="([^"]+)"/)[1].replace(/&amp;/g,'&');
   const next=new URL(href);
   expect(next.pathname).toBe('/api/auth/google/start');
   expect(next.searchParams.get('client_id')).toBe(DOC);

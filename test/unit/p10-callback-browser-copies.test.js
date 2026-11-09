@@ -15,6 +15,7 @@ const s=vi.hoisted(()=>({tx:null,used:false}));
 vi.mock('../../src/db.js',()=>({initSchema:async()=>{}}));
 vi.mock('../../src/principals/store.js',()=>({
  consumeTransaction:async()=>null,
+ consumeCookieFreeTransaction:async()=>null,
  consumeBrowserTransaction:async({state,browsers,purpose})=>{
   for(const browser of browsers){
    if(s.used||s.tx?.state!==state||s.tx?.browser!==browser||purpose!==s.tx?.purpose)continue;
@@ -100,8 +101,10 @@ describe('P10 Google callback gate with duplicate browser cookies (MC-7.3)',()=>
  it('still refuses when the browser sends no flow cookie at all',async()=>{
   const out=res();
   await callback(request(undefined),out);
+  // D-006 MC-7.0: a missing cookie alone no longer decides it; only a
+  // transaction created cookie-free can match, and this one was not.
   expect(out.statusCode).toBe(400);
-  expect(out.body).toBe('Invalid Google sign-in.');
+  expect(out.body).toBe('Sign-in or account-link verification failed; restart the protected flow.');
   expect(s.used).toBe(false);
  });
 });
