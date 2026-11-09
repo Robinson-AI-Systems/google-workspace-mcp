@@ -16,6 +16,7 @@ vi.mock('../../src/db.js',()=>({
 }));
 vi.mock('../../src/principals/store.js',()=>({
  createTransaction:async input=>{h.started=input;h.consumed=false;return true;},
+ consumeBrowserTransaction:async({state,browsers,purpose})=>{for(const browser of browsers){const tx=await mocks.consumeTransaction({state,browser,purpose});if(tx)return tx;}return null;},
  consumeTransaction:async({state,browser,purpose})=>{
    if(h.consumed||!h.started||h.started.state!==state||h.started.browser!==browser||h.started.purpose!==purpose)return null;
    h.consumed=true;

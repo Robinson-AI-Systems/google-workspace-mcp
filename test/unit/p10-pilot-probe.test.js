@@ -3,6 +3,7 @@ const s=vi.hoisted(()=>({tx:null,used:false,bound:0,stored:0,session:0,owner:0,
   sub:'verified-subject-345',email:'tester@example.test',legacy:false,previewCalls:0,previewArgs:null}));
 vi.mock('../../src/db.js',()=>({initSchema:async()=>{}}));
 vi.mock('../../src/principals/store.js',()=>({
+ consumeBrowserTransaction:async({state,browsers,purpose})=>{for(const browser of browsers){const tx=await mocks.consumeTransaction({state,browser,purpose});if(tx)return tx;}return null;},
  consumeTransaction:async({state,browser,purpose})=>{
   if(s.used||s.tx?.state!==state||s.tx?.browser!==browser||purpose!==s.tx?.purpose)return null;
   s.used=true;return {...s.tx,principal_id:null,

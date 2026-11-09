@@ -15,6 +15,7 @@ vi.mock('../../src/principals/store.js',()=>({
  issuePrincipalCode:async()=>{h.issued++;return 'p10c_'+'c'.repeat(43);},
  createSession:async()=>({secret:'p10s_'+'n'.repeat(43),csrf:'p10x_'+'n'.repeat(43)}),revokeSession:async()=>0,
  readSession:async secret=>h.sessions.get(secret)||null,
+ consumeBrowserTransaction:async({purpose})=>h.tx&&h.tx.purpose===purpose?(()=>{const t=h.tx;h.tx=null;return t;})():null,
  consumeTransaction:async({purpose})=>h.tx&&h.tx.purpose===purpose?(()=>{const t=h.tx;h.tx=null;return t;})():null,
  bindVerifiedIdentity:async()=>'33333333-3333-4333-8333-333333333333',
  getBoundFullPrincipal:async()=>({id:'33333333-3333-4333-8333-333333333333'}),getBoundGraduatingPrincipal:async()=>null,
