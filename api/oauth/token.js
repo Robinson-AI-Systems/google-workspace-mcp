@@ -1,3 +1,4 @@
+import { isMuseClient } from '../../src/oauth/client-documents.js';
 import { randomToken, verifyPkce, parseBody } from '../../src/oauth/helpers.js';
 import { getOAuthClient, consumeAuthCode, createAccessToken, getTokenByRefreshToken, initSchema } from '../../src/db.js';
 import { connectionPolicyToDb } from '../../src/oauth/connection-settings.js';
@@ -17,7 +18,7 @@ export default async function handler(req, res) {
   if(body.grant_type==='authorization_code'&&typeof body.code==='string'&&body.code.startsWith('p10c_')){
     let resource;
     try{resource=publicResource()+'/api/mcp';}catch{return res.status(503).json({error:'temporarily_unavailable'});}
-    if(body.resource!==resource && !(body.client_id==='muse' && !body.resource))return res.status(400).json({error:'invalid_target'});
+    if(body.resource!==resource && !(isMuseClient(body.client_id) && !body.resource))return res.status(400).json({error:'invalid_target'});
     const client=await getOAuthClient(body.client_id);
     if(!client||client.client_secret&&client.client_secret!==body.client_secret)
       return res.status(401).json({error:'invalid_client'});
@@ -32,7 +33,7 @@ export default async function handler(req, res) {
   }
   if(body.grant_type==='refresh_token'&&typeof body.refresh_token==='string'&&body.refresh_token.startsWith('p10r_')){
     let resource;try{resource=publicResource()+'/api/mcp';}catch{return res.status(503).json({error:'temporarily_unavailable'});}
-    if(body.resource!==resource && !(body.client_id==='muse' && !body.resource))return res.status(400).json({error:'invalid_target'});
+    if(body.resource!==resource && !(isMuseClient(body.client_id) && !body.resource))return res.status(400).json({error:'invalid_target'});
     const client=await getOAuthClient(body.client_id);
     if(!client||client.client_secret&&client.client_secret!==body.client_secret)
       return res.status(401).json({error:'invalid_client'});

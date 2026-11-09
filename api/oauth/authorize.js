@@ -7,6 +7,7 @@
 // Claude connection should act as. That choice is baked into the token
 // Claude receives, so one Claude project can be "Appliance Rentals" and
 // another "AI Systems" without either seeing the other's inbox.
+import { isMuseClient } from '../../src/oauth/client-documents.js';
 import { randomToken, parseBody } from '../../src/oauth/helpers.js';
 import { PRODUCT_DISPLAY_NAME, PROVIDER_DISCLOSURE } from '../../src/branding.js';
 import {
@@ -124,7 +125,7 @@ export default async function handler(req, res) {
   await ensureMigrated().catch(() => {}); // best effort; the page still renders if Google is unreachable
   const params = req.method === 'GET' ? req.query : await parseBody(req);
   const { client_id, redirect_uri, state, code_challenge, code_challenge_method, response_type } = params;
-  const resourceParam = client_id === 'muse' && !params.resource ? publicResource() + '/api/mcp' : params.resource;
+  const resourceParam = isMuseClient(client_id) && !params.resource ? publicResource() + '/api/mcp' : params.resource;
   const hidden = { client_id, redirect_uri, state, code_challenge, code_challenge_method, resource: resourceParam,
     ...(params.auth_method==='owner_google'?{auth_method:'owner_google'}:{}) };
 

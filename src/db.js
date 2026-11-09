@@ -2,6 +2,7 @@
 // don't keep local files between requests, so anything that needs to survive
 // between calls -- your Google login tokens, and the connector's own OAuth
 // state -- lives in Postgres (Neon) instead.
+import { documentClient } from './oauth/client-documents.js';
 import { storeSql } from './db-transport.js';
 import crypto from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
@@ -618,6 +619,10 @@ export async function createOAuthClient({ clientId, clientSecret, redirectUris, 
 }
 
 export async function getOAuthClient(clientId) {
+  // This server's own published client documents (Muse) are built in, so
+  // the sign-in never depends on a registration row that could be revoked.
+  const published = documentClient(clientId);
+  if (published) return published;
   const q = db();
   const rows = await q`SELECT client_id, client_secret, redirect_uris, client_name FROM oauth_clients WHERE client_id = ${clientId}`;
   return rows[0] || null;
