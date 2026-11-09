@@ -43,7 +43,17 @@ export function listedTools(tools,c={},listing=c.listing||'catalog'){
  return tools.filter(t=>allowedTool(t.name,c)&&(listing!=='compact'||RTC_META.has(t.name)||t.name==='workspace_whoami'||t.name.startsWith('workflow_')))
   // Compact discovery stays under its 5,000-token budget. Full schemas are
   // available from workspace_describe_tool or the normal catalog.
-  .map(t=>listing==='compact'&&t.outputSchema?(({outputSchema,...small})=>small)(t):t);
+  .map(t=>listing==='compact'?compactTool(t):t);
+}
+// Compact listing keeps every field name, type, choice list and required
+// marker, but leaves out the output schema and the explanation text inside
+// input fields. workspace_describe_tool returns the full schema on request.
+const stripDescriptions=v=>Array.isArray(v)?v.map(stripDescriptions):
+ v&&typeof v==='object'?Object.fromEntries(Object.entries(v).filter(([k,x])=>!(k==='description'&&typeof x==='string')).map(([k,x])=>[k,k==='properties'||k==='items'||typeof x==='object'?stripDescriptions(x):x])):v;
+function compactTool(t){
+ const {outputSchema,...small}=t;
+ if(RTC_META.has(t.name)||!small.inputSchema)return small;
+ return {...small,inputSchema:stripDescriptions(small.inputSchema)};
 }
 export function audienceFor(name){
  if(name.startsWith('workspace_admin_overview')||name==='workspace_where_is_setting'||name==='workspace_plan_summary')return ['owner','builder'];
