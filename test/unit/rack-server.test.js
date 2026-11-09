@@ -12,6 +12,7 @@ import frontDoor from '../../api/index.js';
 import rtcGateway from '../../api/rtc-gateway.js';
 import wellKnownAS from '../../api/well-known/oauth-authorization-server.js';
 import wellKnownPR from '../../api/well-known/oauth-protected-resource.js';
+import wellKnownMuseClient from '../../api/well-known/muse-client.js';
 
 function apiFiles(dir = new URL('../../api/', import.meta.url), prefix = '/api') {
   const paths = [];
@@ -40,6 +41,8 @@ describe('rack entrypoint route table', () => {
     expect(resolveRoute('/.well-known/oauth-authorization-server').handler).toBe(wellKnownAS);
     expect(resolveRoute('/.well-known/oauth-protected-resource').handler).toBe(wellKnownPR);
     expect(resolveRoute('/.well-known/oauth-protected-resource/api/mcp').handler).toBe(wellKnownPR);
+    expect(resolveRoute('/.well-known/muse-client.json').handler).toBe(wellKnownMuseClient);
+    expect(bySource.get('/.well-known/muse-client.json')).toBe('/api/well-known/muse-client');
     const door = (path, query) => {
       const resolved = resolveRoute(path);
       expect(resolved.handler).toBe(rtcGateway);

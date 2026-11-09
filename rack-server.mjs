@@ -69,6 +69,7 @@ import rtcPasses from './api/rtc/passes.js';
 import support from './api/support.js';
 import wellKnownAS from './api/well-known/oauth-authorization-server.js';
 import wellKnownPR from './api/well-known/oauth-protected-resource.js';
+import wellKnownMuseClient from './api/well-known/muse-client.js';
 
 const SHA40 = /^[0-9a-f]{40}$/;
 
@@ -123,6 +124,7 @@ export const FILE_ROUTES = new Map([
   ['/api/rtc-gateway', route(rtcGateway)],
   ['/api/rtc/passes', route(rtcPasses)],
   ['/api/support', route(support)],
+  ['/api/well-known/muse-client', route(wellKnownMuseClient)],
   ['/api/well-known/oauth-authorization-server', route(wellKnownAS)],
   ['/api/well-known/oauth-protected-resource', route(wellKnownPR)],
 ]);
@@ -134,6 +136,11 @@ const REWRITE_ROUTES = new Map([
   // commonly request the protected-resource metadata at this scoped URL
   // first; the handler is path-agnostic and returns the same document.
   ['/.well-known/oauth-protected-resource/api/mcp', route(wellKnownPR)],
+  // Muse's hosted connector flow fetches the client document it
+  // connects as from the server itself (the client_id is this URL);
+  // the handler builds it from the canonical origin like the other
+  // discovery documents, and no OAuth flow reads it back.
+  ['/.well-known/muse-client.json', route(wellKnownMuseClient)],
 ]);
 
 // Resolves a request path to {handler, config, query} — query carries

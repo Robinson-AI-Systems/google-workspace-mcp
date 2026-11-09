@@ -1,6 +1,7 @@
 import {describe,it,expect,afterEach} from 'vitest';
 import authorizationMetadata from '../../api/well-known/oauth-authorization-server.js';
 import protectedResourceMetadata from '../../api/well-known/oauth-protected-resource.js';
+import museClientMetadata from '../../api/well-known/muse-client.js';
 
 const originalOrigin=process.env.PUBLIC_BASE_URL;
 afterEach(()=>{
@@ -49,6 +50,21 @@ describe('standalone MCP OAuth discovery has a canonical HTTPS issuer',()=>{
    authorization_servers:['https://workspace.example.test']
   });
  });
+ it('serves the Muse client document from the same canonical origin',()=>{
+  process.env.PUBLIC_BASE_URL='https://workspace.example.test/';
+  const out=request(museClientMetadata);
+  expect(out.statusCode).toBe(200);
+  expect(out.headers['Cache-Control']).toBe('no-store');
+  expect(out.body).toEqual({
+   client_id:'https://workspace.example.test/.well-known/muse-client.json',
+   client_name:'Muse',
+   grant_types:['authorization_code','refresh_token'],
+   redirect_uris:['https://agent.meta.ai/api/hatch/oauth/callback'],
+   response_types:['code'],
+   token_endpoint_auth_method:'none'
+  });
+  expect(JSON.stringify(out.body)).not.toMatch(/attacker|localhost/);
+ });
  it('returns no issuer or resource on missing or invalid operator configuration',()=>{
   const bad=[null,'','http://workspace.example.test',
    'https://user:pass@workspace.example.test','https://workspace.example.test:444',
@@ -57,7 +73,7 @@ describe('standalone MCP OAuth discovery has a canonical HTTPS issuer',()=>{
   for(const value of bad){
    if(value===null)delete process.env.PUBLIC_BASE_URL;
    else process.env.PUBLIC_BASE_URL=value;
-   for(const endpoint of [authorizationMetadata,protectedResourceMetadata]){
+   for(const endpoint of [authorizationMetadata,protectedResourceMetadata,museClientMetadata]){
     const out=request(endpoint);
     expect(out.statusCode).toBe(503);
     expect(out.body).toEqual({error:'public_origin_required'});
