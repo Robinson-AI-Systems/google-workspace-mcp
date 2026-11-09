@@ -1,15 +1,16 @@
 // Compact discovery and dispatch share the exact same wrapped registry as MCP.
 // A call cannot escape a connection's profile, areas, domain guards or write guards.
 import { ok, errorResult } from './util.js';
+import { takeAccount } from './account-choice.js';
 import { readStoredResult } from '../rtc/results.js';
 import { allowedTool, listedTools, toolMetadata, rtcArea, isWrite, RTC_META, LEGACY_OWNER_ONLY_TOOLS } from '../rtc/catalog.js';
 const schema = (props,required=[])=>({type:'object',properties:props,required});
 const str={type:'string'};
-const callSchema=schema({name:str,args:{type:'object',description:'Arguments accepted by the selected tool.',additionalProperties:true}},['name']);
+const callSchema=schema({name:str,args:{type:'object',description:'Arguments accepted by the selected tool.',additionalProperties:true},account:str},['name']);
 export const tools=[
  {name:'workspace_search_tools',description:'Search permitted Workspace tools, or include unavailable capabilities with an explicit needsReconnect notice. Page with nextOffset.',inputSchema:schema({query:str,area:str,includeUnavailable:{type:'boolean'},audience:{type:'string',enum:['builder','owner','operator']},limit:{type:'integer',default:10,minimum:1,maximum:30},offset:{type:'integer',minimum:0,description:'Zero-based position in the filtered catalog. Pass nextOffset to continue.'}})},
  {name:'workspace_describe_tool',description:'Describe an allowed tool; optional unavailable capability metadata can explain why the user must reconnect.',inputSchema:schema({name:str,includeUnavailable:{type:'boolean'}},['name'])},
- {name:'workspace_call',description:'Invoke an allowed Workspace tool using the same safety and domain guards as MCP direct calls.',inputSchema:callSchema},
+ {name:'workspace_call',description:'Invoke an allowed Workspace tool with the same guards as direct calls. account: a linked Google account (email/label).',inputSchema:callSchema},
  {name:'workspace_get_result',description:'Read one page of an oversized result owned by this connection.',inputSchema:schema({handle:str,page:{type:'integer',minimum:1},fields:str},['handle'])},
  {name:'workspace_batch',description:'Run up to ten read-only tool calls with the same connection permissions and guards.',inputSchema:schema({calls:{type:'array',items:callSchema,minItems:1,maxItems:10}},['calls'])}
 ];
@@ -56,14 +57,26 @@ export const handlers={
    }:{})});
  },
  async workspace_call(args={},clients){
-   try {const handler=await lookup(args.name,clients);return await handler(args.args||{},clients);}
+   try {
+     const handler=await lookup(args.name,clients);
+     // The account can be named beside name/args or inside args; both work.
+     const inner=takeAccount(args.args||{}),account=args.account??inner.account;
+     const target=account&&clients?.forAccount?await clients.forAccount(account):clients;
+     if(account&&!clients?.forAccount)throw new Error('outside_scope: This connection cannot switch accounts.');
+     return await handler(inner.rest,target);
+   }
    catch(e){return errorResult(e);}
  },
  async workspace_batch(args={},clients){
    if(!Array.isArray(args.calls)||!args.calls.length||args.calls.length>10)return errorResult(new Error('invalid_args: calls must have 1 to 10 items.'));
    try{
-     const resolved=await Promise.all(args.calls.map(async c=>({name:c.name,args:c.args||{},handler:await lookup(c.name,clients,{readsOnly:true})})));
-     const results=[];for(const c of resolved) results.push({name:c.name,response:await c.handler(c.args,clients)});
+     // Each call may name its own account, e.g. read three inboxes in one batch.
+     // Checked one by one (at most ten) before anything runs.
+     const resolved=[];for(const c of args.calls){const inner=takeAccount(c.args||{});
+       resolved.push({name:c.name,args:inner.rest,account:c.account??inner.account,handler:await lookup(c.name,clients,{readsOnly:true})});}
+     if(resolved.some(c=>c.account)&&!clients?.forAccount)throw new Error('outside_scope: This connection cannot switch accounts.');
+     const results=[];for(const c of resolved){const target=c.account?await clients.forAccount(c.account):clients;
+       results.push({name:c.name,...(c.account?{account:target.actingAs}:{}),response:await c.handler(c.args,target)});}
      return ok({results});
    }catch(e){return errorResult(e);}
  }
