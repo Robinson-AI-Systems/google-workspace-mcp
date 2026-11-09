@@ -550,6 +550,25 @@ export async function createTransaction({state,nonce,browser,verifier,purpose,pr
    RETURNING state_hash`;
  return rows.length===1;
 }
+// D-006 MC-7.3 (2026-11-09): the Google callback gate. A browser can hold
+// several copies of the flow cookie (an older attempt's cookie under the
+// same name and path survives alongside the current attempt's), and which
+// copies the browser sends is not guaranteed by any contract the server
+// controls. The gate therefore accepts ANY presented copy that matches a
+// live transaction for this state: the match is still an atomic
+// state+browser consume, so a copy is only ever good for the one flow
+// whose start issued it. Strict single-copy reading at this gate
+// (readCookie) killed real sign-ins whenever a stale copy rode along —
+// the 2026-11-09 22:22 UTC attempt died here with its transaction row
+// left unconsumed while clean single-copy rides passed. This mirrors how
+// requireSession and the owner-proof door already treat duplicates.
+export async function consumeBrowserTransaction({state,browsers,purpose,principalId=null}){
+ for(const browser of Array.isArray(browsers)?browsers:[]){
+  const tx=await consumeTransaction({state,browser,purpose,principalId});
+  if(tx)return tx;
+ }
+ return null;
+}
 export async function consumeTransaction({state,browser,purpose,principalId=null}){
  if(typeof state!=='string'||typeof browser!=='string'||!state||!browser)return null;
  const q=sql(),hash=digest(state);

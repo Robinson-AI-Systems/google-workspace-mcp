@@ -1,8 +1,8 @@
 import {initSchema} from '../../../src/db.js';
-import {consumeTransaction,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial,recordSigninDenial,getBoundFullPrincipal,getBoundGraduatingPrincipal,getBoundOwnerPrincipal,classifyBoundIdentity} from '../../../src/principals/store.js';
+import {consumeTransaction,consumeBrowserTransaction,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial,recordSigninDenial,getBoundFullPrincipal,getBoundGraduatingPrincipal,getBoundOwnerPrincipal,classifyBoundIdentity} from '../../../src/principals/store.js';
 import {publicGoogleClient,verifyGoogleCode,PUBLIC_SCOPE_GROUPS} from '../../../src/principals/google.js';
 import {admitted,digest,cookie,headers,requireScope} from '../../../src/principals/security.js';
-import {readCookie} from '../../../src/principals/security.js';
+import {readCookies} from '../../../src/principals/security.js';
 import {setSession,requireSession,BROWSER_COOKIE} from '../../../src/principals/session.js';
 import {linkVerifiedOwner,issueOwnerLoginProof,previewLegacyPilotMigration} from '../../../src/principals/owner-migration.js';
 import {redirectCanonicalCallbackGet} from '../../../src/principals/canonical-entry.js';
@@ -28,16 +28,21 @@ export default async function handler(req,res){
  // browser cookie is read or cleared, so the gate below only ever
  // judges the flow the canonical start issued (2026-11-09).
  if(redirectCanonicalCallbackGet(req,res,'/api/auth/google/callback'))return;
- const browser=readCookie(req,BROWSER_COOKIE),state=req.query?.state;
+ // MC-7.3: the browser may hold several copies of the flow cookie (a
+ // stale copy from an earlier attempt beside the current one). Try every
+ // copy against the live transactions below instead of refusing when
+ // more than one copy arrives — readCookie's strict single-copy rule
+ // killed real sign-ins here on 2026-11-09.
+ const browsers=readCookies(req,BROWSER_COOKIE),state=req.query?.state;
  res.setHeader('Set-Cookie',cookie(BROWSER_COOKIE,'','/api/auth/google',0));
- if(typeof state!=='string'||!browser){res.status(400).send('Invalid Google sign-in.');return;}
+ if(typeof state!=='string'||!browsers.length){res.status(400).send('Invalid Google sign-in.');return;}
  let phase='schema';
  let tx=null;
  try{
   await initSchema();
   phase='transaction';
   for(const purpose of ['login','link','mcp_authorize']){
-    tx=await consumeTransaction({state,browser,purpose});
+    tx=await consumeBrowserTransaction({state,browsers,purpose});
     if(tx)break;
   }
   requireScope(tx,'invalid_state');
