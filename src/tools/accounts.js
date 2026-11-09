@@ -16,7 +16,7 @@ export const tools = [
   },
   {
     name: 'workspace_list_accounts',
-    description: 'List every Google account this server holds a sign-in for (email, label, which is the default). Tokens are never returned.',
+    description: 'List the linked Google accounts (email, label, default). Pass one as `account` on any tool to use it. Tokens are never returned.',
     inputSchema: { type: 'object', properties: {} }
   },
   {

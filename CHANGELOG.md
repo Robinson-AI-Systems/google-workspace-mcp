@@ -4,6 +4,7 @@ Changes to the codebase, not claims of successful live Google or Hub provider ac
 
 ## Unreleased — post-2.0.0 source changes (October 12, 2026)
 
+- **Multi-account (November 9, 2026):** one owner connection can now work with every linked Google account. Any tool call may name `account` (email or label); leaving it out keeps the connection's own account. `workspace_call` and `workspace_batch` pass it through, and a batch may mix accounts (e.g. three inboxes in one request). Public sign-in connections still use their one account (naming another is refused) until per-account isolation for public sign-in is built. Undo still only reverses changes made by the same account.
 - **P7-3 / #51:** one allowlisted, paginated read-only Reports API for additional application audit streams using existing granted permissions; live plan coverage not yet verified.
 - **P7-4 / #52:** Postmaster v1 verified-domain and delivery-metric reads, guarded per connection; added already approved `postmaster.readonly` OAuth scope. Existing connected accounts need explicit new consent and real provider proof.
 - **P7-2 / #53–#54:** guarded read-only Cloud Identity organization policy inventory, configurable 21-rule baseline, honest missing/inherited-status handling and preservation of observed risks despite incomplete pagination. Added previously approved read-only policy OAuth scope; **not** a per-domain effective policy certification.

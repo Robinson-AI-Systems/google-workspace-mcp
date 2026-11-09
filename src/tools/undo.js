@@ -11,7 +11,7 @@ export async function prepareUndo(args,clients,lookup=getOwnedChange){
  if(!clients?.actingAs||!clients?.connection)throw Error('Undo requires an authenticated account and connection.');
  const entry=await (clients?.store?.getOwnedChange ?? lookup)(args.changeId,clients.actingAs,clients.connection);
  if(!entry||String(entry.acting_as).toLowerCase()!==clients.actingAs.toLowerCase()||entry.connection!==clients.connection)
-   throw Error('Change not found for this account and connection.');
+   throw Error('Change not found for this account and connection. If it was made on another of your linked accounts, run the undo again with account set to that account.');
  if(entry.dry_run)throw Error('A preview made no change and cannot be undone.');
  if(/could not confirm|does not show|unreadable/i.test(entry.summary||''))throw Error('Reconcile this unverified change before undoing it.');
  const repeated=entry.tool==='workspace_undo_change';
