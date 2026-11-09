@@ -20,12 +20,61 @@ import { RTC_AREAS } from '../../src/rtc/catalog.js';
 import { selectedBillingPolicy } from '../../src/rtc/billing-authority.js';
 import {getPrincipal,listAccounts,issuePrincipalCode} from '../../src/principals/store.js';
 import {requireSession,requireCsrf} from '../../src/principals/session.js';
-import {publicMode,publicResource,headers,readCookie,cookie} from '../../src/principals/security.js';
+import {publicMode,publicResource,headers,readCookie,readCookies,cookie,digest} from '../../src/principals/security.js';
 import {inspectOwnerLoginProof,consumeOwnerLoginProof,legacyNewLoginEnabled} from '../../src/principals/owner-migration.js';
 
 function publicSignInAvailable(){
  try{return publicMode()!=='off';}catch{return false;} // bad public config cannot lock out legacy owner
 }
+function loginHead() {
+  return `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  body { font-family: Manrope, -apple-system, 'Segoe UI', sans-serif; background: #F7F5EC; color: #17251E; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; box-sizing: border-box; }
+  .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 12px rgba(23,37,30,0.10); width: 380px; max-width: 100%; box-sizing: border-box; }
+  h1 { font-size: 1.15rem; margin: 0 0 0.5rem; color: #123C2D; }
+  label { display: block; font-size: 0.85rem; color: #333; margin: 1rem 0 0.35rem; }
+  input[type=email], input[type=password], input[type=text], select { width: 100%; padding: 0.6rem; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; background: white; font-family: inherit; }
+  button { width: 100%; padding: 0.65rem; background: #123C2D; color: #F7F5EC; border: none; border-radius: 6px; cursor: pointer; font: inherit; font-weight: 600; margin-top: 1.25rem; }
+  a.button { display: block; text-align: center; background: #123C2D; color: #F7F5EC; padding: 0.65rem; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 1rem 0 0.25rem; }
+  a { color: #123C2D; }
+  .error { color: #c00; font-size: 0.85rem; margin-bottom: 1rem; }
+  .note { font-size: 0.9rem; color: #444; margin: 0 0 0.5rem; }
+  .hint { font-size: 0.85rem; color: #666; margin: 0.35rem 0 0; }
+  .alt { font-size: 0.9rem; margin: 0.75rem 0 0; }
+  .divider { text-align: center; font-size: 0.8rem; color: #888; margin: 1.25rem 0 0; }
+  .advanced { margin-top: 1rem; font-size: 0.9rem; }
+  .advanced summary { cursor: pointer; color: #123C2D; font-weight: 600; }
+  .fineprint { font-size: 0.72rem; color: #888; margin: 1.5rem 0 0; }
+</style></head>
+<body>
+  <div class="card">
+    <h1>${escapeHtml(PRODUCT_DISPLAY_NAME)}</h1>`;
+}
+function loginTail() {
+  return `<p class="fineprint">${escapeHtml(PROVIDER_DISCLOSURE)}</p>
+  </div>
+</body></html>`;
+}
+
+// RAS MCP Standard D-006 MC-7: a browser that has just come back from Google
+// (the callback adds returned=1) but arrives without the sign-in it was
+// given never gets sent round again silently. It gets this page, which says
+// what happened and what to do. Retrying would loop the same way.
+function renderReturnProblemPage(kind) {
+  const what = kind === 'owner'
+    ? 'Google confirmed your account, but your browser did not keep the short-lived sign-in it was handed on the way back here.'
+    : 'Google signed you in, but your browser did not keep the sign-in on the way back here.';
+  return `${loginHead()}
+    <p class="note"><strong>Sign-in did not stick.</strong></p>
+    <p class="note">${what}</p>
+    <p class="note">This page stops here so you are not sent round in a loop.</p>
+    <p class="hint">Go back to your app and start connecting again. If it happens again, open this connection in your phone's normal browser, or allow cookies for this site, then try once more.</p>
+    ${loginTail()}`;
+}
+
 function renderLoginPage({ error, hidden, accounts, selected, profile, verifiedOwner=false, legacyEnabled=true }) {
   // The pre-picked access level is Full: the owner's own connections are
   // full-access, and a quieter default silently downgraded every new
@@ -57,34 +106,8 @@ function renderLoginPage({ error, hidden, accounts, selected, profile, verifiedO
     <label for="areas">Limit to certain areas (optional; leave blank for all)</label>
     <input type="text" name="areas" id="areas" placeholder="mail, files, calendar">
   </details>`;
-  const head = `<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
-<style>
-  body { font-family: Manrope, -apple-system, 'Segoe UI', sans-serif; background: #F7F5EC; color: #17251E; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; box-sizing: border-box; }
-  .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 12px rgba(23,37,30,0.10); width: 380px; max-width: 100%; box-sizing: border-box; }
-  h1 { font-size: 1.15rem; margin: 0 0 0.5rem; color: #123C2D; }
-  label { display: block; font-size: 0.85rem; color: #333; margin: 1rem 0 0.35rem; }
-  input[type=email], input[type=password], input[type=text], select { width: 100%; padding: 0.6rem; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; background: white; font-family: inherit; }
-  button { width: 100%; padding: 0.65rem; background: #123C2D; color: #F7F5EC; border: none; border-radius: 6px; cursor: pointer; font: inherit; font-weight: 600; margin-top: 1.25rem; }
-  a.button { display: block; text-align: center; background: #123C2D; color: #F7F5EC; padding: 0.65rem; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 1rem 0 0.25rem; }
-  a { color: #123C2D; }
-  .error { color: #c00; font-size: 0.85rem; margin-bottom: 1rem; }
-  .note { font-size: 0.9rem; color: #444; margin: 0 0 0.5rem; }
-  .hint { font-size: 0.85rem; color: #666; margin: 0.35rem 0 0; }
-  .alt { font-size: 0.9rem; margin: 0.75rem 0 0; }
-  .divider { text-align: center; font-size: 0.8rem; color: #888; margin: 1.25rem 0 0; }
-  .advanced { margin-top: 1rem; font-size: 0.9rem; }
-  .advanced summary { cursor: pointer; color: #123C2D; font-weight: 600; }
-  .fineprint { font-size: 0.72rem; color: #888; margin: 1.5rem 0 0; }
-</style></head>
-<body>
-  <div class="card">
-    <h1>${escapeHtml(PRODUCT_DISPLAY_NAME)}</h1>`;
-  const tail = `<p class="fineprint">${escapeHtml(PROVIDER_DISCLOSURE)}</p>
-  </div>
-</body></html>`;
+  const head = loginHead();
+  const tail = loginTail();
   if (!verifiedOwner && !legacyEnabled) {
     // Passphrase sign-in is off (a server setting, not something to
     // explain on the page): the one thing this page asks for is the
@@ -166,6 +189,11 @@ export default async function handler(req, res) {
     try{session=await requireSession(req);}catch{session=null;}
     if(!session){
       if(req.method!=='GET')return res.status(401).send('Sign in before authorizing this client.');
+      if(params.returned==='1'){
+        console.warn('mc7_return_without_carried_value',{door:'authorize',kind:'google'});
+        res.setHeader('Content-Type','text/html; charset=utf-8');
+        return res.status(400).send(renderReturnProblemPage('google'));
+      }
       if(publicMode()==='off')return res.status(503).send('New public sign-in is currently disabled.');
       const next=new URL('/api/auth/google/start',publicResource());
       for(const key of ['client_id','redirect_uri','resource','code_challenge','state'])
@@ -175,8 +203,9 @@ export default async function handler(req, res) {
     }
     const accounts=await listAccounts(session.principal_id);
     if(req.method==='GET'){
-      const csrfCookie=String(req.headers?.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('p10_csrf='));
-      const csrf=csrfCookie?decodeURIComponent(csrfCookie.split('=').slice(1).join('=')):'';
+      // MC-7.3: with duplicate cookies, use the copy that belongs to this session.
+      const csrfCandidates=readCookies(req,'p10_csrf');
+      const csrf=csrfCandidates.find(c=>digest(c)===session.csrf_hash)||csrfCandidates[0]||'';
       const inputs=['client_id','redirect_uri','state','code_challenge','code_challenge_method','resource']
         .map(key=>'<input type="hidden" name="'+key+'" value="'+escapeHtml(key==='resource'?resourceParam:params[key]||'')+'">').join('');
       return res.status(200).send('<!doctype html><meta charset="utf-8"><h1>Authorize this agent</h1>'+
@@ -210,11 +239,22 @@ export default async function handler(req, res) {
   const ownerMeta={clientId:client_id,redirectUri:redirect_uri,
     resource:resourceParam||'',codeChallenge:code_challenge||'',
     clientState:state||''};
-  const ownerProof=ownerGoogle?readCookie(req,'p10_owner_proof'):null;
+  // D-006 MC-7.3: try each owner-proof cookie the browser sent and keep the
+  // one that matches this connection.
+  let ownerProof=null;
+  if(ownerGoogle){for(const candidate of readCookies(req,'p10_owner_proof')){
+    if(await inspectOwnerLoginProof(candidate,ownerMeta)){ownerProof=candidate;break;}
+    ownerProof=ownerProof||candidate;
+  }}
   if(ownerGoogle){
     if(resourceParam!==publicResource()+'/api/mcp'||params.code_challenge_method!=='S256'||
        !/^[A-Za-z0-9_-]{43}$/.test(code_challenge||''))
       return res.status(400).send('Linked owner sign-in requires exact resource and S256 PKCE.');
+    if(!ownerProof&&req.method==='GET'&&params.returned==='1'){
+      console.warn('mc7_return_without_carried_value',{door:'authorize',kind:'owner_google'});
+      res.setHeader('Content-Type','text/html; charset=utf-8');
+      return res.status(400).send(renderReturnProblemPage('owner'));
+    }
     if(!ownerProof&&req.method==='GET'){
       const next=new URL('/api/auth/google/start',publicResource());
       for(const key of ['client_id','redirect_uri','resource','code_challenge','state'])
