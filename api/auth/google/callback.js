@@ -107,6 +107,9 @@ export default async function handler(req,res){
     next.searchParams.set('resource',meta.resource);
     next.searchParams.set('auth_method','owner_google');
     if(meta.clientState)next.searchParams.set('state',meta.clientState);
+    // D-006 MC-7: tells authorize this browser has just come back from
+    // Google, so a missing proof shows a plain page instead of a loop.
+    next.searchParams.set('returned','1');
     res.writeHead(302,{Location:next.toString()});res.end();return;
   }
   let principalId;
@@ -167,6 +170,7 @@ export default async function handler(req,res){
     next.searchParams.set('resource',tx.resource);
     next.searchParams.set('auth_method','google');
     if(tx.policy?.clientState)next.searchParams.set('state',tx.policy.clientState);
+    next.searchParams.set('returned','1'); // D-006 MC-7
     res.writeHead(302,{Location:next.toString()});res.end();return;
   }
   res.writeHead(302,{Location:'/api/account'});res.end();
