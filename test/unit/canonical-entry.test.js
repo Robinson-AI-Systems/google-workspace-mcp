@@ -7,7 +7,7 @@
 // is the 2026-11-08 ERR_TOO_MANY_REDIRECTS regression: every
 // canonical-checking door redirected the canonical name to itself.
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { requestHostIsCanonical, redirectCanonicalGet } from '../../src/principals/canonical-entry.js';
+import { requestHostIsCanonical, redirectCanonicalGet, redirectCanonicalCallbackGet } from '../../src/principals/canonical-entry.js';
 
 const ORIGIN = 'https://workspace.example.test';
 let saved;
@@ -77,5 +77,69 @@ describe('redirectCanonicalGet', () => {
     const r = res();
     expect(redirectCanonicalGet({ method: 'GET', headers: {}, query: {} }, r, '/api/account')).toBe(false);
     expect(r.headers.Location).toBeUndefined();
+  });
+});
+
+describe('redirectCanonicalCallbackGet', () => {
+  it('redirects an off-host callback to the canonical callback with provider params carried intact', () => {
+    const r = res();
+    const out = redirectCanonicalCallbackGet(
+      { method: 'GET', headers: { host: 'alias.example.test' },
+        query: { state: 'p10st_abc', code: '4/0Axyz', iss: 'https://accounts.google.com', scope: 'email openid', authuser: '1', hd: 'example.test', prompt: 'none' } },
+      r, '/api/auth/google/callback');
+    expect(out).toBe(true);
+    expect(r.statusCode).toBe(303);
+    expect(r.headers.Location).toBe('https://workspace.example.test/api/auth/google/callback?state=p10st_abc&code=4%2F0Axyz&iss=https%3A%2F%2Faccounts.google.com&scope=email+openid&authuser=1&hd=example.test&prompt=none');
+  });
+
+  it('redirects the rack shape when the gateway-preserved host was an alias', () => {
+    const r = res();
+    const out = redirectCanonicalCallbackGet(
+      { method: 'GET', headers: { host: '172.29.0.3:8787', 'x-forwarded-host': 'preview.example.test' },
+        query: { state: 'p10st_abc', code: '4/0Axyz' } },
+      r, '/api/auth/google/callback');
+    expect(out).toBe(true);
+    expect(r.statusCode).toBe(303);
+    expect(r.headers.Location).toBe('https://workspace.example.test/api/auth/google/callback?state=p10st_abc&code=4%2F0Axyz');
+  });
+
+  it('does not redirect the rack-shaped canonical callback', () => {
+    const r = res();
+    const out = redirectCanonicalCallbackGet(
+      { method: 'GET', headers: { host: '172.29.0.3:8787', 'x-forwarded-host': 'workspace.example.test' },
+        query: { state: 'p10st_abc', code: '4/0Axyz' } },
+      r, '/api/auth/google/callback');
+    expect(out).toBe(false);
+    expect(r.headers.Location).toBeUndefined();
+  });
+
+  it('does not redirect the platform-presented canonical callback', () => {
+    const r = res();
+    const out = redirectCanonicalCallbackGet(
+      { method: 'GET', headers: { host: 'workspace.example.test' },
+        query: { state: 'p10st_abc', code: '4/0Axyz' } },
+      r, '/api/auth/google/callback');
+    expect(out).toBe(false);
+    expect(r.headers.Location).toBeUndefined();
+  });
+
+  it('carries a provider error instead of dropping it', () => {
+    const r = res();
+    const out = redirectCanonicalCallbackGet(
+      { method: 'GET', headers: { host: 'alias.example.test' },
+        query: { state: 'p10st_abc', error: 'access_denied' } },
+      r, '/api/auth/google/callback');
+    expect(out).toBe(true);
+    expect(r.headers.Location).toBe('https://workspace.example.test/api/auth/google/callback?state=p10st_abc&error=access_denied');
+  });
+
+  it('drops params outside the callback whitelist and control-char values', () => {
+    const r = res();
+    const out = redirectCanonicalCallbackGet(
+      { method: 'GET', headers: { host: 'alias.example.test' },
+        query: { state: 'p10st_abc', code: '4/0Axyz', purpose: 'owner_login', evil: 'x', hd: 'bad\u0007host' } },
+      r, '/api/auth/google/callback');
+    expect(out).toBe(true);
+    expect(r.headers.Location).toBe('https://workspace.example.test/api/auth/google/callback?state=p10st_abc&code=4%2F0Axyz');
   });
 });

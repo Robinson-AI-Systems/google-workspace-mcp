@@ -5,6 +5,7 @@ import {admitted,digest,cookie,headers,requireScope} from '../../../src/principa
 import {readCookie} from '../../../src/principals/security.js';
 import {setSession,requireSession,BROWSER_COOKIE} from '../../../src/principals/session.js';
 import {linkVerifiedOwner,issueOwnerLoginProof,previewLegacyPilotMigration} from '../../../src/principals/owner-migration.js';
+import {redirectCanonicalCallbackGet} from '../../../src/principals/canonical-entry.js';
 // Audit only fixed callback phases and approved denial codes. Never log provider
 // exception messages: Google SDK errors may carry a code, account or token.
 const SAFE_DENIAL_CODES=new Set([
@@ -21,6 +22,12 @@ const SAFE_DENIAL_CODES=new Set([
 export default async function handler(req,res){
  headers(res);
  if(req.method!=='GET'){res.status(405).send('Method not allowed');return;}
+ // The callback gets the same canonical-host treatment as start: a
+ // browser that arrives off-host is redirected to the canonical
+ // callback address with Google's parameters intact BEFORE the
+ // browser cookie is read or cleared, so the gate below only ever
+ // judges the flow the canonical start issued (2026-11-09).
+ if(redirectCanonicalCallbackGet(req,res,'/api/auth/google/callback'))return;
  const browser=readCookie(req,BROWSER_COOKIE),state=req.query?.state;
  res.setHeader('Set-Cookie',cookie(BROWSER_COOKIE,'','/api/auth/google',0));
  if(typeof state!=='string'||!browser){res.status(400).send('Invalid Google sign-in.');return;}
