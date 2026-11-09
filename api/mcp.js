@@ -14,7 +14,7 @@ import { getAccessToken, initSchema, touchAccessToken, connectionId, getAllowedD
 import { ACCOUNT_PROPERTY, takeAccount, matchLinkedAccount, onlyThisAccount } from '../src/tools/account-choice.js';
 import { onceSuccessful } from '../src/once.js';
 import { listedTools, allowedTool, toolMetadata } from '../src/rtc/catalog.js';
-import {readPrincipalAccess,legacyOwnerContext} from '../src/principals/store.js';
+import {readPrincipalAccess,legacyOwnerContext,listAccounts,accountContext} from '../src/principals/store.js';
 import {scopedStore} from '../src/principals/store.js';
 import {buildPrincipalApiClients} from '../src/principals/clients.js';
 import {publicMode} from '../src/principals/security.js';
@@ -39,12 +39,14 @@ export function trustedMcpOrigin(value=process.env.PUBLIC_BASE_URL){
 const ensureSchemaReady = onceSuccessful(initSchema);
 const ensureLegacyMigration = onceSuccessful(ensureMigrated);
 
-// One connection can work with every Google account its owner has linked:
+// One connection can work with every Google account its person has linked:
 // any tool call may name an `account` (email or label). Leaving it out uses
 // the connection's own account, exactly as before. Owner connections switch
-// among the owner's linked accounts; public connections stay on their one
-// account until per-account isolation for public sign-in is built.
-function buildServer(googleAccount, connection, settings, makeClients=null, {multiAccount=false, actingAs=null}={}) {
+// among the owner's linked accounts; public connections switch among the
+// accounts THAT person linked (forAccount builds a scoped context for one),
+// never anyone else's (owner ruling 2026-11-09: no roster, add accounts in
+// the product).
+function buildServer(googleAccount, connection, settings, makeClients=null, {multiAccount=false, actingAs=null, forAccount=null}={}) {
   const server = new Server(
     { name: MCP_TECHNICAL_NAME, title: PRODUCT_DISPLAY_NAME, version: serverRelease().version },
     { capabilities: { tools: {} } }
@@ -62,6 +64,8 @@ function buildServer(googleAccount, connection, settings, makeClients=null, {mul
     let clients;
     if(account===undefined){
       clients=makeClients ? await makeClients() : await buildHostedApiClients(googleAccount);
+    }else if(forAccount){
+      clients=await forAccount(account);
     }else if(multiAccount){
       const email=matchLinkedAccount(account,await listGoogleAccounts());
       clients=await buildHostedApiClients(email);
@@ -105,7 +109,13 @@ export function createIsolatedPrincipalServer(context){
  const settings=Object.freeze({principalKind:'user',profile:context.profile,
   listing:context.listing,areas:context.areas,mode:context.mode,
   cost_policy:context.costPolicy});
- return buildServer(null,context.connectionId,settings,()=>buildPrincipalApiClients(context),{actingAs:context.actingAs});
+ return buildServer(null,context.connectionId,settings,()=>buildPrincipalApiClients(context),
+  {actingAs:context.actingAs,multiAccount:true,forAccount:async wanted=>{
+    const accounts=await listAccounts(context.principalId);
+    const email=matchLinkedAccount(wanted,accounts);
+    const chosen=accounts.find(a=>a.email===email);
+    return buildPrincipalApiClients(await accountContext(context,chosen.id));
+  }});
 }
 
 export function publicToolDispatchReady(env=process.env){

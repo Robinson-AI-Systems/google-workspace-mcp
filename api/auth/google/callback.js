@@ -1,5 +1,5 @@
 import {initSchema} from '../../../src/db.js';
-import {consumeTransaction,consumeBrowserTransaction,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial,recordSigninDenial,getBoundFullPrincipal,getBoundGraduatingPrincipal,getBoundOwnerPrincipal,classifyBoundIdentity} from '../../../src/principals/store.js';
+import {consumeTransaction,consumeBrowserTransaction,consumeCookieFreeTransaction,issueConnectHandle,bindVerifiedIdentity,upsertLinkedAccount,recordLinkDenial,recordSigninDenial,getBoundFullPrincipal,getBoundGraduatingPrincipal,getBoundOwnerPrincipal,classifyBoundIdentity} from '../../../src/principals/store.js';
 import {publicGoogleClient,verifyGoogleCode,PUBLIC_SCOPE_GROUPS} from '../../../src/principals/google.js';
 import {admitted,digest,cookie,headers,requireScope} from '../../../src/principals/security.js';
 import {readCookies} from '../../../src/principals/security.js';
@@ -35,7 +35,10 @@ export default async function handler(req,res){
  // killed real sign-ins here on 2026-11-09.
  const browsers=readCookies(req,BROWSER_COOKIE),state=req.query?.state;
  res.setHeader('Set-Cookie',cookie(BROWSER_COOKIE,'','/api/auth/google',0));
- if(typeof state!=='string'||!browsers.length){res.status(400).send('Invalid Google sign-in.');return;}
+ // D-006 MC-7.0: the public connect leg needs no cookie at all, so a
+ // missing flow cookie is no longer a refusal by itself. A transaction made
+ // WITH a browser binding still requires it (consumeBrowserTransaction).
+ if(typeof state!=='string'||!state){res.status(400).send('Invalid Google sign-in.');return;}
  let phase='schema';
  let tx=null;
  try{
@@ -45,6 +48,12 @@ export default async function handler(req,res){
     tx=await consumeBrowserTransaction({state,browsers,purpose});
     if(tx)break;
   }
+  // A cookie-free transaction (public connect, or adding an account from
+  // the Approve page) is found by its one-use state alone.
+  if(!tx)for(const purpose of ['mcp_authorize','link']){
+    tx=await consumeCookieFreeTransaction({state,purpose});
+    if(tx)break;
+  }
   requireScope(tx,'invalid_state');
   phase='provider_verification';
   if(req.query?.error || typeof req.query?.code!=='string' || !req.query.code)
@@ -52,7 +61,8 @@ export default async function handler(req,res){
   // Google SDK verifies signature/audience/expiry; compare nonce hash, never
   // accept unverified email/hd/client hints from request parameters.
   const verified=await verifyGoogleCode({client:publicGoogleClient(),code:req.query.code,
-    verifier:tx.verifier,nonceHash:tx.nonce_hash,resolveGrantedScopes:tx.purpose==='link'});
+    verifier:tx.verifier,nonceHash:tx.nonce_hash,
+    resolveGrantedScopes:tx.purpose==='link'||tx.policy?.group==='complete'});
   // Owner-passphrase authenticated identity discovery for a disposable pilot
   // tester: use a one-use, browser-bound OIDC transaction while normal public
   // enrollment is OFF. Reveal only the stable verified subject to that browser.
@@ -127,7 +137,11 @@ export default async function handler(req,res){
   let principalId;
   if(tx.purpose==='link'){
     phase='account_link';
-    const session=await requireSession(req);
+    // From the Approve page the one-use connect handle (spent at start)
+    // proved the person; the transaction carries their principal. Any other
+    // link still needs this browser's own signed-in session.
+    const session=tx.policy?.connect===true&&tx.principal_id
+      ?{principal_id:tx.principal_id}:await requireSession(req);
     requireScope(session.principal_id===tx.principal_id,'principal_mismatch');
     const scopes=tx.policy?.group&&PUBLIC_SCOPE_GROUPS[tx.policy.group];
     // God mode is a best-effort bundle: Google alone decides which of the
@@ -168,11 +182,33 @@ export default async function handler(req,res){
     phase='principal_bind';
     principalId=await bindVerifiedIdentity({issuer:verified.issuer,sub:verified.sub,
       verifiedEmail:verified.email,identityOnlyPilot:tx.purpose==='login'});
+    // Public connect asks Google for everything in the one sign-in, so the
+    // account it signed in with is linked right here: no second trip to an
+    // account page. Best effort: a refusal is recorded for the Approve page
+    // (which offers "add a Google account") and never blocks the sign-in.
+    if(tx.purpose==='mcp_authorize'&&tx.policy?.group==='complete'&&
+       PUBLIC_SCOPE_GROUPS.complete.some(scope=>verified.scopeList.includes(scope))){
+      phase='account_link';
+      try{
+        await upsertLinkedAccount({principalId,issuer:verified.issuer,sub:verified.sub,
+          verifiedEmail:verified.email,scopeList:verified.scopeList,tokens:verified.tokens});
+      }catch(error){
+        const code=SAFE_DENIAL_CODES.has(error?.message)?error.message:'unclassified';
+        console.warn('p10_google_callback_denied',{phase,code});
+        try{await recordLinkDenial({principalId,phase,code});}catch{}
+      }
+    }
     phase='session_creation';
     await setSession(res,principalId);
   }
   // Only protocol/client metadata (never Google token or service credentials)
   // may be returned in an OAuth resume location.
+  // D-006 MC-7.0: a cookie-free leg ends on the Approve page, reached with
+  // a fresh one-use connect handle in the address, not a session cookie.
+  if(tx.policy?.cookieFree===true&&(tx.purpose==='mcp_authorize'||tx.policy?.connect===true)){
+    phase='connect_handoff';
+    return redirectToApprove(res,tx,principalId);
+  }
   if(tx.purpose==='mcp_authorize'){
     const next=new URL('/api/oauth/authorize',process.env.PUBLIC_BASE_URL);
     next.searchParams.set('client_id',tx.client_id);
@@ -198,6 +234,11 @@ export default async function handler(req,res){
   // Recording is best-effort and never changes the refusal response.
   if(tx?.purpose==='link'&&tx.principal_id){
     try{await recordLinkDenial({principalId:tx.principal_id,phase,code});}catch{}
+    // Adding an account from the Approve page: go back to that page, which
+    // names the reason and still lets the person approve or try again.
+    if(tx.policy?.connect===true){
+      try{return await redirectToApprove(res,tx,tx.principal_id,true);}catch{}
+    }
   }
   // A refused browser sign-in likewise records its reason and lands on the
   // sign-in page, which displays it: the person at the browser restarts the
@@ -211,4 +252,22 @@ export default async function handler(req,res){
   // A consumed state may not be retried; never expose the internal reason.
   res.status(400).send('Sign-in or account-link verification failed; restart the protected flow.');
  }
+}
+
+async function redirectToApprove(res,tx,principalId,linkRefused=false){
+ const handle=await issueConnectHandle({principalId,clientId:tx.client_id,
+  redirectUri:tx.redirect_uri,resource:tx.resource,codeChallenge:tx.code_challenge,
+  clientState:tx.policy?.clientState||null});
+ const next=new URL('/api/oauth/authorize',process.env.PUBLIC_BASE_URL);
+ next.searchParams.set('client_id',tx.client_id);
+ next.searchParams.set('redirect_uri',tx.redirect_uri);
+ next.searchParams.set('code_challenge',tx.code_challenge);
+ next.searchParams.set('code_challenge_method','S256');
+ next.searchParams.set('resource',tx.resource);
+ next.searchParams.set('auth_method','google');
+ if(tx.policy?.clientState)next.searchParams.set('state',tx.policy.clientState);
+ next.searchParams.set('connect',handle);
+ if(linkRefused)next.searchParams.set('link_refused','1');
+ next.searchParams.set('returned','1'); // D-006 MC-7.5
+ res.writeHead(302,{Location:next.toString(),'Referrer-Policy':'no-referrer'});res.end();
 }

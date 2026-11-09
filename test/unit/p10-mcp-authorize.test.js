@@ -11,6 +11,7 @@ vi.mock('../../src/db.js',()=>({
 vi.mock('../../src/auth/google-auth-hosted.js',()=>({ensureMigrated:async()=>null}));
 vi.mock('../../src/principals/store.js',()=>({
  getPrincipal:async()=>null,
+ principalSignInEmail:async()=>null,getLatestLinkDenial:async()=>null,readConnectHandle:async()=>null,consumeConnectHandle:async()=>null,
  createSession:async()=>({secret:'',csrf:''}),revokeSession:async()=>0,
  listAccounts:async()=>h.accounts,
  issuePrincipalCode:async()=>{h.issued++;return 'p10c_'+'c'.repeat(43);},

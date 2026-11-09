@@ -11,6 +11,8 @@ vi.mock('../../src/db.js',async importActual=>({...(await importActual()),initSc
  recordLoginAttempt:async()=>{},countRecentFailedLogins:async()=>0,markLoginAttemptSucceeded:async()=>{}}));
 vi.mock('../../src/auth/google-auth-hosted.js',()=>({ensureMigrated:async()=>null}));
 vi.mock('../../src/principals/store.js',()=>({
+ principalSignInEmail:async()=>null,getLatestLinkDenial:async()=>null,readConnectHandle:async()=>null,consumeConnectHandle:async()=>null,
+ consumeCookieFreeTransaction:async()=>null,issueConnectHandle:async()=>'p10h_'+'h'.repeat(43),
  getPrincipal:async()=>null,listAccounts:async()=>[{id:'44444444-4444-4444-8444-444444444444',email:'me@example.test'}],
  issuePrincipalCode:async()=>{h.issued++;return 'p10c_'+'c'.repeat(43);},
  createSession:async()=>({secret:'p10s_'+'n'.repeat(43),csrf:'p10x_'+'n'.repeat(43)}),revokeSession:async()=>0,
@@ -90,7 +92,7 @@ describe('a return without its sign-in shows a plain page, never a loop (MC-7.2)
   const secret='p10s_'+'a'.repeat(43),csrf='p10x_'+'b'.repeat(43);
   h.sessions.set(secret,{principal_id:'33333333-3333-4333-8333-333333333333',csrf_hash:sha(csrf),kind:'user'});
   const pub=await get(authorize,{...ask,auth_method:'google',returned:'1'},`p10_session=${secret}; p10_csrf=${csrf}`);
-  expect(pub.statusCode).toBe(200);expect(pub.body).toContain('Authorize this agent');
+  expect(pub.statusCode).toBe(200);expect(pub.body).toContain('>Approve<');
  });
 });
 
@@ -105,7 +107,7 @@ describe('duplicate cookies never read as signed out (MC-7.3)',()=>{
   const page=await get(authorize,{...ask,auth_method:'google'},
    `p10_session=p10s_${'z'.repeat(43)}; p10_csrf=p10x_${'y'.repeat(43)}; p10_session=${secret}; p10_csrf=${csrf}`);
   expect(page.statusCode).toBe(200);
-  expect(page.body).toContain('Authorize this agent');
+  expect(page.body).toContain('>Approve<');
   expect(page.body).toContain('name="csrf" value="'+csrf+'"');
  });
  it('a stale owner proof beside the real one is skipped',async()=>{

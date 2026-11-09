@@ -1,3 +1,19 @@
+## November 9, 2026 — owner ruling: Workspace sign-in is truly public (supersedes every pilot/roster note below)
+
+**The ruling (Chris, 2026-11-09):** anybody signs in with any Google account they control. No pre-approved roster, pilot list, developer grant or pre-built email. A second or third Google account is added the same way, **inside the product**. Acceptance test: someone who is not Chris, with a Google account that was never pre-approved, connects cold and unaided.
+
+**How it works now (PUBLIC-1):**
+- `PUBLIC_SIGNIN_MODE=public` lets anyone in; `PUBLIC_PILOT_GOOGLE_SUBJECTS` is ignored in that mode. The rack already runs `public` (Vivienne, 2026-11-09).
+- Connecting: app → one "Continue with Google" page → Google (asks for every permission the product supports; Google decides what this account may grant) → **one Approve page** showing who is signed in and which site gets access → Approve → back to the app. The account used to sign in is linked during that same sign-in.
+- **Add another Google account** is a button on the Approve page: same Google sign-in, back to the same page, every linked account listed. The person picks which one the connection uses by default; any tool call may name another of *their* accounts with `account`.
+- **No cookies on this leg (D-006 MC-7.0).** Each step's state is a one-use handle kept hashed in the database and carried in the address, bound to the exact app, return address, resource and PKCE challenge. Nothing reaches an app until the person taps Approve. This is the GitHub Unleashed public-connect safety shape, and it removes the Muse in-app browser loop.
+- **Isolation:** a connection only ever reaches accounts its own person linked. Results, change log and rate limits stay keyed to the connection; the change log names the account each call acted as.
+
+**Still needed outside the code (owner checklist, never blocking):**
+1. `PUBLIC_P10_TOOL_EXECUTION_VERIFIED=true` on the rack. It was set on the Vercel deployment on October 19 and is missing on the rack since the November 8 move; without it public users sign in but every tool call is refused.
+2. Google Cloud: the public OAuth app's publishing status must be **In production**, not Testing (Testing only admits listed test users).
+3. Google verification for the Gmail/Drive restricted permissions. Until Google approves it, strangers see "Google hasn't verified this app" and the app is capped at 100 users.
+
 ## October 20 current acceptance recovery
 
 The original owner connection is held by ChatGPT; Primary and RAR are both connected in this space and independently verified. Production remains READY on `fbac5349`; pilot/Stage2 configuration is unchanged. Two independent disposable native clients, lifecycle/revocation/isolation, reversible owner Google-link/login/unlink, signed nonce refusals and limited direct RTC checks have genuine receipts. [Current recovery evidence](plan/evidence/2026-10-20-failed-thread-recovery.json) distinguishes these completed tests from the still-open original client-managed owner refresh and authenticated browser identity matrix. The authoritative queue remains 33 PASSED/7 PENDING, five mandatory v1 rows pending. Do not repeat completed consent/probes or require Hub live acceptance. Older OFF/zero-client instructions below are historical preparation, not current observations. ChatGPT's metadata Refresh is not token-refresh proof; no force-token-refresh management tool was exposed in this session.
