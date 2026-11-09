@@ -75,3 +75,40 @@ export function redirectCanonicalGet(req,res,path,includeOAuthParams=false){
   res.end();
   return true;
 }
+
+// The Google callback hop carries provider parameters, not start
+// parameters: the one-use state and code, plus the advisory fields
+// Google appends (iss/scope/authuser/hd/prompt) and its error field.
+// The callback handler had no canonical guard at all (2026-11-09):
+// start redirected non-canonical arrivals, but a callback that
+// arrived off-host walked straight into the browser-cookie gate
+// holding a state the canonical hop never issued, and the sign-in
+// died there as a generic refusal. This variant gives the callback
+// the same treatment as start: arrive off-host and the browser is
+// redirected to the canonical callback address with the provider
+// parameters carried intact, so the gate sees the flow the canonical
+// start actually issued. Targets are built only from the configured
+// canonical origin, exactly as above.
+const CALLBACK_PARAMS=Object.freeze({
+  state:2048,code:2048,error:128,iss:256,scope:2048,
+  authuser:16,hd:256,prompt:64
+});
+
+export function redirectCanonicalCallbackGet(req,res,path){
+  if(req.method!=='GET')return false;
+  const requestedHost=typeof req.headers?.host==='string'?req.headers.host.trim().toLowerCase():'';
+  // Internal test adapters can omit Host. Real browser HTTP requests supply it.
+  if(!requestedHost)return false;
+  const canonical=publicResource();
+  if(requestHostIsCanonical(req,canonical))return false;
+  const target=new URL(path,canonical);
+  for(const [key,max] of Object.entries(CALLBACK_PARAMS)){
+    const value=req.query?.[key];
+    if(typeof value==='string'&&value.length<=max&&!/[\u0000-\u001f\u007f]/.test(value))
+      target.searchParams.set(key,value);
+  }
+  res.setHeader('Cache-Control','no-store');
+  res.writeHead(303,{Location:target.toString()});
+  res.end();
+  return true;
+}
