@@ -39,6 +39,7 @@ describe('rack entrypoint route table', () => {
     expect(bySource.get('/')).toBe('/api/index');
     expect(resolveRoute('/.well-known/oauth-authorization-server').handler).toBe(wellKnownAS);
     expect(resolveRoute('/.well-known/oauth-protected-resource').handler).toBe(wellKnownPR);
+    expect(resolveRoute('/.well-known/oauth-protected-resource/api/mcp').handler).toBe(wellKnownPR);
     const door = (path, query) => {
       const resolved = resolveRoute(path);
       expect(resolved.handler).toBe(rtcGateway);

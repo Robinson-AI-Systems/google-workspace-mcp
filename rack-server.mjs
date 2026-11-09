@@ -130,6 +130,10 @@ export const FILE_ROUTES = new Map([
 const REWRITE_ROUTES = new Map([
   ['/.well-known/oauth-authorization-server', route(wellKnownAS)],
   ['/.well-known/oauth-protected-resource', route(wellKnownPR)],
+  // RFC 9728 path-insertion form for the /api/mcp resource: MCP clients
+  // commonly request the protected-resource metadata at this scoped URL
+  // first; the handler is path-agnostic and returns the same document.
+  ['/.well-known/oauth-protected-resource/api/mcp', route(wellKnownPR)],
 ]);
 
 // Resolves a request path to {handler, config, query} — query carries
