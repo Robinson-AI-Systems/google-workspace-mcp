@@ -39,7 +39,9 @@ export const handlers={
    const visible=args.includeUnavailable===true?tools:listedTools(tools,policy,'catalog');
    const matches=visible.map(t=>({...toolMetadata(t,policy),
      available:allowedTool(t.name,policy),
-     ...(!allowedTool(t.name,policy)?{needsReconnect:true,reason:policy.principalKind==='user'&&LEGACY_OWNER_ONLY_TOOLS.has(t.name)?'requires_customer_specific_setup':'connection_policy_or_test_mode_restricts_capability'}:{})})).filter(t=>(!args.area||t.area===args.area)&&(!args.audience||t.audience.includes(args.audience))&&(!query||(t.name+' '+t.description).toLowerCase().includes(query)));
+     ...(!allowedTool(t.name,policy)?{needsReconnect:true,reason:policy.principalKind==='user'&&LEGACY_OWNER_ONLY_TOOLS.has(t.name)?'requires_customer_specific_setup':'connection_policy_or_test_mode_restricts_capability'}:{})})).filter(t=>(!args.area||t.area===args.area)&&(!args.audience||t.audience.includes(args.audience))&&(!query||queryMatches(t,query)));
+   // Exact phrase matches first (unchanged order), then every-word matches.
+   if(query)matches.sort((a,b)=>Number(!phraseMatch(a,query))-Number(!phraseMatch(b,query)));
    const found=matches.slice(offset,offset+limit), next=offset+found.length;
    return ok({tools:found.map(({inputSchema,...metadata})=>metadata),count:found.length,totalMatched:matches.length,offset,nextOffset:next<matches.length?next:null});
  },
@@ -81,3 +83,29 @@ export const handlers={
    }catch(e){return errorResult(e);}
  }
 };
+
+// Tool search in plain words (2026-11-10 live test: "drive list files" and
+// "create draft email" found nothing because only an exact phrase matched).
+// A tool matches when it contains the exact phrase, or every meaningful word
+// of the query (in any order), allowing for the words people actually use.
+const STOP=new Set(['a','an','the','my','me','to','of','for','in','on','and','or','with','from','please','all','some']);
+const SYNONYMS={email:['gmail','mail'],emails:['gmail','mail'],mail:['gmail'],inbox:['gmail','mail'],
+ file:['drive','files'],files:['drive'],folder:['drive'],doc:['docs','document'],document:['docs'],
+ sheet:['sheets','spreadsheet'],spreadsheet:['sheets'],slide:['slides','presentation'],
+ event:['calendar'],events:['calendar'],meeting:['calendar'],todo:['tasks','task'],contact:['contacts','people'],
+ user:['users','admin'],group:['groups'],make:['create'],new:['create'],add:['create','insert'],remove:['delete'],show:['list','get'],find:['search','list']};
+const toolText=t=>(t.name.replace(/_/g,' ')+' '+t.name+' '+(t.area||'')+' '+(t.description||'')).toLowerCase();
+const phraseMatch=(t,query)=>(t.name+' '+t.description).toLowerCase().includes(query);
+function wordMatches(text,word){
+ if(text.includes(word))return true;
+ const singular=word.length>3&&word.endsWith('s')?word.slice(0,-1):null;
+ if(singular&&text.includes(singular))return true;
+ return (SYNONYMS[word]||[]).some(alt=>text.includes(alt));
+}
+function queryMatches(t,query){
+ if(phraseMatch(t,query))return true;
+ const words=query.split(/[^a-z0-9]+/).filter(w=>w&&!STOP.has(w));
+ if(!words.length)return false;
+ const text=toolText(t);
+ return words.every(w=>wordMatches(text,w));
+}

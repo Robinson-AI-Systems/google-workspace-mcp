@@ -367,11 +367,15 @@ export async function findAccount(principalId,accountId){
 export async function listAccounts(principalId){
  requireScope(validUuid(principalId));
  const q=sql();
- return q`SELECT a.id,a.email,a.label,a.scope_list,a.token_version,a.status,
+ const rows=await q`SELECT a.id,a.email,a.label,a.scope_list,a.token_version,a.status,
    d.account_id IS NOT NULL AS is_default FROM principal_google_accounts a
    LEFT JOIN principal_defaults d ON d.principal_id=a.principal_id AND d.account_id=a.id
    WHERE a.principal_id=${principalId}::uuid AND a.status='active'
    ORDER BY is_default DESC,a.created_at ASC`;
+ // Until a person picks a default, their first connected account is it
+ // (2026-11-10 live test: a person's only account showed as not default).
+ if(rows.length&&!rows.some(r=>r.is_default))rows[0]={...rows[0],is_default:true};
+ return rows;
 }
 // The legacy tester's new user principal has no owner mailbox authority. This
 // immutable persisted principal classification blocks linking *any* Google
