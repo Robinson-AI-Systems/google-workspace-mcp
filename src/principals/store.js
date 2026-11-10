@@ -79,7 +79,18 @@ export async function initPrincipalSchema(q=sql()){
  // The installation's existing rows belong only to the explicit owner; never
  // derive an owner from whichever public browser happens to arrive first.
  await q`INSERT INTO principal_legacy_accounts(email,principal_id)
-   SELECT email,${OWNER_ID}::uuid FROM google_accounts ON CONFLICT(email) DO NOTHING`;
+   SELECT a.email,${OWNER_ID}::uuid FROM google_accounts a
+   WHERE NOT EXISTS(SELECT 1 FROM principal_google_accounts g
+     WHERE lower(g.email)=lower(a.email) AND g.status='active'
+       AND g.principal_id<>${OWNER_ID}::uuid)
+   ON CONFLICT(email) DO NOTHING`;
+ // ADOPT-1 (2026-11-09): the seed above maps every legacy mailbox the
+ // OWNER does not itself actively hold as a V2 account: a mailbox the
+ // owner links as its own account (the owner linking its legacy
+ // mailboxes is the reservation working as designed) is not legacy-held
+ // against the owner, while a mailbox adopted onto ANOTHER profile
+ // carries its live claim as that profile's active grant and must not
+ // be re-mapped — re-mapping would resurrect its reservation.
  await q`CREATE TABLE IF NOT EXISTS user_sessions (
    token_hash TEXT PRIMARY KEY,principal_id UUID NOT NULL REFERENCES principals(id),
    csrf_hash TEXT NOT NULL,expires_at TIMESTAMPTZ NOT NULL,revoked_at TIMESTAMPTZ,
@@ -162,7 +173,8 @@ export async function legacyOwnerContext(accessToken){
 export async function getVerifiedPrincipal(issuer,sub){
  if(!validSub(sub))return null;
  const q=sql();
- const rows=await q`SELECT i.principal_id,p.kind,p.status,i.verified_email FROM principal_google_identities i
+ const rows=await q`SELECT i.principal_id,p.kind,p.status,i.verified_email,
+   p.legacy_pilot_identity_only FROM principal_google_identities i
    JOIN principals p ON p.id=i.principal_id
    WHERE i.issuer=${issuer} AND i.google_sub=${sub}`;
  // ADOPT-1 (2026-11-09): the same identity may now be bound to more than
@@ -186,11 +198,17 @@ export async function getVerifiedPrincipal(issuer,sub){
 // identity with a different mailbox never steals the first one's sign-in.
 export async function getVerifiedPrincipalForEmail(issuer,sub,verifiedEmail){
  if(!validSub(sub)||!validEmail(verifiedEmail))return null;
- const rows=await sql()`SELECT i.principal_id FROM principal_google_identities i
+ const rows=await sql()`SELECT i.principal_id,p.kind,p.legacy_pilot_identity_only
+   FROM principal_google_identities i
    JOIN principals p ON p.id=i.principal_id
    WHERE i.issuer=${issuer} AND i.google_sub=${sub} AND p.status='active'
      AND lower(i.verified_email)=lower(${verifiedEmail})`;
- return rows.length===1?rows[0].principal_id:null;
+ if(rows.length===1)return rows[0].principal_id;
+ // An identity-only shell must never win over a full profile carrying
+ // the same email-exact binding (the resolution rule getVerifiedPrincipal
+ // states for twin bindings applies here too).
+ const full=rows.filter(r=>r.kind==='user'&&!r.legacy_pilot_identity_only);
+ return full.length===1?full[0].principal_id:null;
 }
 // The principal an already-bound identity signs in to on its own record: the
 // binding itself is the vetting (owner ruling, 2026-11-05 — an account with a
@@ -484,7 +502,25 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
      (matching.length===1&&legacyPilotFreshConsentAllowed(sub));
    requireScope(independentlyEligible,'legacy_pilot_identity_only');
  }
- const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
+ // ADOPT-1 (2026-11-09): the LINK reservation for a mailbox is its
+ // legacy MAPPING — or, where no mapping row exists (a legacy row
+ // created after the last schema init), the legacy row itself UNLESS
+ // the owner principal already holds that mailbox as its own active
+ // V2 account: the reservation exists to stop OTHER profiles from
+ // linking the owner's legacy mailboxes, and the owner linking one of
+ // its own — or a profile that already adopted it — is not a stranger
+ // it guards against. An adopted mailbox keeps its legacy grant row
+ // (the holder's connections read it) and carries an active grant on
+ // the adopting profile, so it stays unreserved either way. (Sign-in
+ // binding keeps the plain presence probe: a legacy-row mailbox's
+ // identity binds only through the established-profile and pilot
+ // paths in bindVerifiedIdentity.)
+ const reserved=await q`SELECT 1 WHERE EXISTS(
+   SELECT 1 FROM principal_legacy_accounts WHERE lower(email)=lower(${verifiedEmail}))
+   OR (EXISTS(SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}))
+     AND NOT EXISTS(SELECT 1 FROM principal_google_accounts
+       WHERE issuer=${issuer} AND google_sub=${sub} AND status='active'
+         AND principal_id=${OWNER_ID}::uuid)) LIMIT 1`;
  requireScope(!reserved.length||independentlyEligible||adoption,'reserved_identity');
  // Ownership is an ACTIVE grant on another profile. A revoked grant there
  // is history, not ownership: the holder disconnected the account, and a
@@ -509,17 +545,21 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
        WHERE principal_id=${adoption}::uuid AND account_id=${row.id}::uuid`;
    }
    if(reserved.length){
-     // Retire the legacy reservation for THIS mailbox only, and for the
-     // ADOPTED mailbox only: the row is deleted from both legacy tables,
-     // so the reservation releases exactly the identity whose verified
-     // holder claimed it — never another mailbox, never by another hand.
-     // Legacy execution does not read these tables for tokens (validated
-     // tokens live in google_accounts.tokens/tokens_enc, mirrored by the
-     // refresh path in db.js), so the holder's live connections keep
-     // their grants; the deletion also ends the sign-in reservation the
-     // mailbox carried into bindVerifiedIdentity.
+     // Retire the legacy RESERVATION for THIS mailbox only: the mapping
+     // row in principal_legacy_accounts is what makes the mailbox
+     // legacy-held (initPrincipalSchema seeds it from google_accounts,
+     // and bindVerifiedIdentity's reservation reads google_accounts
+     // itself only as the legacy-presence probe). The google_accounts
+     // ROW ITSELF is NOT deleted: it is the legacy grant store
+     // (tokens/tokens_enc) that the hosted execution path reads via
+     // getGoogleTokensFor for every legacy connection naming this
+     // mailbox, so deleting it would break the holder's live legacy
+     // connections — the exact material this change must not touch.
+     // The reservation this mailbox carried is the MAPPING; removing
+     // the mapping retires the claim for exactly this mailbox, and the
+     // presenter's own active V2 grant (inserted below) is what any
+     // later link of the same mailbox resolves against.
      await q`DELETE FROM principal_legacy_accounts WHERE lower(email)=lower(${verifiedEmail})`;
-     await q`DELETE FROM google_accounts WHERE lower(email)=lower(${verifiedEmail})`;
    }
  }
  // A sign-in identity binding on another profile does not block this link

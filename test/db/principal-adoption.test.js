@@ -90,10 +90,16 @@ describe.skipIf(!url)('ADOPT-1: identity-proven adoption of legacy-held accounts
   expect(accounts.map(x=>x.id)).toContain(id);
   expect(accounts.find(x=>x.id===id).email).toBe(SYS.email);
   expect(await store.getLinkedGrant(me,id)).toMatchObject({access_token:'fresh-'+SYS.sub});
-  // The reservation for THIS mailbox is retired; the other legacy mailbox
-  // and its validated grant bytes are untouched.
+  // The reservation MAPPING for THIS mailbox is retired; the legacy row
+  // itself survives — it is the grant store the holder's legacy
+  // connections read — and the other legacy mailbox is untouched.
   expect((await pool.query('SELECT count(*)::int AS n FROM principal_legacy_accounts WHERE lower(email)=lower($1)',[SYS.email])).rows[0].n).toBe(0);
-  expect((await pool.query('SELECT count(*)::int AS n FROM google_accounts WHERE lower(email)=lower($1)',[SYS.email])).rows[0].n).toBe(0);
+  expect((await pool.query('SELECT count(*)::int AS n FROM google_accounts WHERE lower(email)=lower($1)',[SYS.email])).rows[0].n).toBe(1);
+  // ...and it STAYS retired across a schema re-init: the seed must not
+  // resurrect the mapping for a mailbox another profile actively holds.
+  await store.initPrincipalSchema();
+  expect((await pool.query('SELECT count(*)::int AS n FROM principal_legacy_accounts WHERE lower(email)=lower($1)',[SYS.email])).rows[0].n).toBe(0);
+  expect((await pool.query('SELECT count(*)::int AS n FROM principal_legacy_accounts WHERE lower(email)=lower($1)',[RENT.email])).rows[0].n).toBe(1);
   expect((await pool.query('SELECT count(*)::int AS n FROM google_accounts WHERE lower(email)=lower($1)',[RENT.email])).rows[0].n).toBe(1);
  });
 
@@ -108,9 +114,14 @@ describe.skipIf(!url)('ADOPT-1: identity-proven adoption of legacy-held accounts
   expect(await store.getLinkedGrant(me,meRentalsAccount)).toMatchObject({access_token:'fresh-'+RENT.sub});
   const old=(await pool.query('SELECT status FROM principal_google_accounts WHERE id=$1',[ownerRentalsRow])).rows[0];
   expect(old.status).toBe('revoked');
-  // The rentals reservation retires with the adoption; the legacy bearer
-  // material that rides the mailbox name is untouched (asserted in (e)).
-  expect((await pool.query('SELECT count(*)::int AS n FROM google_accounts WHERE lower(email)=lower($1)',[RENT.email])).rows[0].n).toBe(0);
+  // The rentals reservation MAPPING retires with the adoption; the
+  // legacy row (grant store) and the bearer material that rides the
+  // mailbox name are untouched (asserted in (e)).
+  expect((await pool.query('SELECT count(*)::int AS n FROM principal_legacy_accounts WHERE lower(email)=lower($1)',[RENT.email])).rows[0].n).toBe(0);
+  expect((await pool.query('SELECT count(*)::int AS n FROM google_accounts WHERE lower(email)=lower($1)',[RENT.email])).rows[0].n).toBe(1);
+  // The legacy grant for the adopted mailbox is still readable through
+  // the legacy read path — the holder's connections keep working.
+  expect(await db.getGoogleTokensFor(RENT.email)).toMatchObject({access_token:'legacy-rentals-access'});
  });
 
  it('(b2) adopts the owner-held non-legacy account (personal) the same way',async()=>{
@@ -138,9 +149,10 @@ describe.skipIf(!url)('ADOPT-1: identity-proven adoption of legacy-held accounts
   expect(await store.getVerifiedPrincipal(issuer,SYS.sub)).toBe(OWNER);
   expect((await pool.query('SELECT kind,status FROM principals WHERE id=$1',[OWNER])).rows[0])
     .toEqual({kind:'legacy_owner',status:'active'});
-  // The untouched legacy mailbox bytes from setup are still provable where
-  // a mailbox row remains; both adopted mailboxes' rows are gone by design.
-  expect(legacyBefore).toHaveLength(2);
+  // Both legacy mailbox rows survive adoption byte-for-byte (they are
+  // the grant store); only their reservation mappings retired.
+  const legacyAfter=(await pool.query('SELECT email,is_default,tokens,tokens_enc FROM google_accounts ORDER BY email')).rows;
+  expect(legacyAfter).toEqual(legacyBefore);
  });
 
  it('(c) a stranger profile still gets reserved_identity for a legacy-held mailbox',async()=>{
@@ -168,5 +180,31 @@ describe.skipIf(!url)('ADOPT-1: identity-proven adoption of legacy-held accounts
     tokens:{access_token:'cross-claim',expiry_date:later}})).rejects.toThrow('identity_owned_elsewhere');
   const row=(await pool.query('SELECT status,principal_id FROM principal_google_accounts WHERE id=$1',[freshOwnerRow])).rows[0];
   expect(row).toEqual({status:'active',principal_id:OWNER});
+ });
+
+ it('(f) an identity-only shell never wins sign-in resolution over a full profile',async()=>{
+  // Review Second Shift finding on PR #301 (2026-11-09): getVerifiedPrincipal
+  // filtered twin bindings on legacy_pilot_identity_only but its SELECT
+  // never fetched that column, so the filter read undefined and the shell
+  // counted as full — with a shell and a full profile both bound, the
+  // 'shell never wins' rule silently collapsed into a tie (null). The
+  // SELECT now fetches the column; this case pins the behavior.
+  const twinSub='adopt-twin-subject',twinEmail='adopt-twin@example.test';
+  const shell=crypto.randomUUID(),full=crypto.randomUUID();
+  await pool.query(`INSERT INTO principals(id,kind,legacy_pilot_identity_only)
+    VALUES ($1,'user',true)`,[shell]);
+  await pool.query(`INSERT INTO principals(id,kind) VALUES ($1,'user')`,[full]);
+  await pool.query(`INSERT INTO principal_google_identities(issuer,google_sub,principal_id,verified_email)
+    VALUES ($1,$2,$3,$4)`,[issuer,twinSub,shell,twinEmail]);
+  await pool.query(`INSERT INTO principal_google_identities(issuer,google_sub,principal_id,verified_email)
+    VALUES ($1,$2,$3,$4)`,[issuer,twinSub,full,twinEmail]);
+  expect(await store.getVerifiedPrincipal(issuer,twinSub)).toBe(full);
+  expect(await store.getVerifiedPrincipalForEmail(issuer,twinSub,twinEmail)).toBe(full);
+  // A LONE shell binding still resolves — the shell is a real sign-in
+  // (the legacy-pilot shape); it loses only to a full profile.
+  const loneSub='adopt-lone-shell-subject';
+  await pool.query(`INSERT INTO principal_google_identities(issuer,google_sub,principal_id,verified_email)
+    VALUES ($1,$2,$3,$4)`,[issuer,loneSub,shell,'adopt-lone@example.test']);
+  expect(await store.getVerifiedPrincipal(issuer,loneSub)).toBe(shell);
  });
 });
