@@ -169,7 +169,8 @@ export async function legacyOwnerContext(accessToken){
 export async function getVerifiedPrincipal(issuer,sub){
  if(!validSub(sub))return null;
  const q=sql();
- const rows=await q`SELECT i.principal_id,p.kind,p.status,i.verified_email FROM principal_google_identities i
+ const rows=await q`SELECT i.principal_id,p.kind,p.status,i.verified_email,
+   p.legacy_pilot_identity_only FROM principal_google_identities i
    JOIN principals p ON p.id=i.principal_id
    WHERE i.issuer=${issuer} AND i.google_sub=${sub}`;
  // ADOPT-1 (2026-11-09): the same identity may now be bound to more than
@@ -193,11 +194,17 @@ export async function getVerifiedPrincipal(issuer,sub){
 // identity with a different mailbox never steals the first one's sign-in.
 export async function getVerifiedPrincipalForEmail(issuer,sub,verifiedEmail){
  if(!validSub(sub)||!validEmail(verifiedEmail))return null;
- const rows=await sql()`SELECT i.principal_id FROM principal_google_identities i
+ const rows=await sql()`SELECT i.principal_id,p.kind,p.legacy_pilot_identity_only
+   FROM principal_google_identities i
    JOIN principals p ON p.id=i.principal_id
    WHERE i.issuer=${issuer} AND i.google_sub=${sub} AND p.status='active'
      AND lower(i.verified_email)=lower(${verifiedEmail})`;
- return rows.length===1?rows[0].principal_id:null;
+ if(rows.length===1)return rows[0].principal_id;
+ // An identity-only shell must never win over a full profile carrying
+ // the same email-exact binding (the resolution rule getVerifiedPrincipal
+ // states for twin bindings applies here too).
+ const full=rows.filter(r=>r.kind==='user'&&!r.legacy_pilot_identity_only);
+ return full.length===1?full[0].principal_id:null;
 }
 // The principal an already-bound identity signs in to on its own record: the
 // binding itself is the vetting (owner ruling, 2026-11-05 — an account with a

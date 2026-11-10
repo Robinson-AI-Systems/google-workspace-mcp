@@ -177,4 +177,30 @@ describe.skipIf(!url)('ADOPT-1: identity-proven adoption of legacy-held accounts
   const row=(await pool.query('SELECT status,principal_id FROM principal_google_accounts WHERE id=$1',[freshOwnerRow])).rows[0];
   expect(row).toEqual({status:'active',principal_id:OWNER});
  });
+
+ it('(f) an identity-only shell never wins sign-in resolution over a full profile',async()=>{
+  // Review Second Shift finding on PR #301 (2026-11-09): getVerifiedPrincipal
+  // filtered twin bindings on legacy_pilot_identity_only but its SELECT
+  // never fetched that column, so the filter read undefined and the shell
+  // counted as full — with a shell and a full profile both bound, the
+  // 'shell never wins' rule silently collapsed into a tie (null). The
+  // SELECT now fetches the column; this case pins the behavior.
+  const twinSub='adopt-twin-subject',twinEmail='adopt-twin@example.test';
+  const shell=crypto.randomUUID(),full=crypto.randomUUID();
+  await pool.query(`INSERT INTO principals(id,kind,legacy_pilot_identity_only)
+    VALUES ($1,'user',true)`,[shell]);
+  await pool.query(`INSERT INTO principals(id,kind) VALUES ($1,'user')`,[full]);
+  await pool.query(`INSERT INTO principal_google_identities(issuer,google_sub,principal_id,verified_email)
+    VALUES ($1,$2,$3,$4)`,[issuer,twinSub,shell,twinEmail]);
+  await pool.query(`INSERT INTO principal_google_identities(issuer,google_sub,principal_id,verified_email)
+    VALUES ($1,$2,$3,$4)`,[issuer,twinSub,full,twinEmail]);
+  expect(await store.getVerifiedPrincipal(issuer,twinSub)).toBe(full);
+  expect(await store.getVerifiedPrincipalForEmail(issuer,twinSub,twinEmail)).toBe(full);
+  // A LONE shell binding still resolves — the shell is a real sign-in
+  // (the legacy-pilot shape); it loses only to a full profile.
+  const loneSub='adopt-lone-shell-subject';
+  await pool.query(`INSERT INTO principal_google_identities(issuer,google_sub,principal_id,verified_email)
+    VALUES ($1,$2,$3,$4)`,[issuer,loneSub,shell,'adopt-lone@example.test']);
+  expect(await store.getVerifiedPrincipal(issuer,loneSub)).toBe(shell);
+ });
 });
