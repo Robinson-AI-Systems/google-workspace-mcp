@@ -22,7 +22,6 @@ import * as adminDirectory from './admin-directory.js';
 import * as adminReports from './admin-reports.js';
 import * as licensing from './licensing.js';
 import * as chat from './chat.js';
-import * as classroom from './classroom.js';
 import * as extraAdminApis from './extra-admin-apis.js';
 import * as workflows from './workflows.js';
 import * as accounts from './accounts.js';
@@ -43,5 +42,5 @@ import { applyResultRules } from '../rtc/results.js';
 
 export const registry = applyResultRules(applyDomainGuard(applyGuards(mergeNamespaces([
   rtcMeta, bulk, undo, adminOverview, adminConsoleVerify, devIntegration, devFixtures, devCalendarSnapshot, gmail, drive, sharedDrives, calendar, sheets, docs, slides, forms, tasks, people,
-  adminDirectory, adminReports, licensing, chat, classroom, extraAdminApis, workflows, accounts, mailboxBranding, ops, emailHealth, healthReport, digest, inbox, staff, business, dnsTools, postmaster, policyAudit, businessResources
+  adminDirectory, adminReports, licensing, chat, extraAdminApis, workflows, accounts, mailboxBranding, ops, emailHealth, healthReport, digest, inbox, staff, business, dnsTools, postmaster, policyAudit, businessResources
 ]))));

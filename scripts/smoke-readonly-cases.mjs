@@ -22,10 +22,7 @@ datatransfer_list_transfers directory_list_people drive_list_changes
 drive_list_permissions drive_list_revisions drive_search_files gmail_list_history
 gmail_search identity_list_policies licensing_list_assignments
 licensing_list_product_assignments
-postmaster_list_domains postmaster_list_traffic_stats
-classroom_list_courses classroom_list_course_aliases classroom_list_students
-classroom_list_teachers classroom_list_invitations classroom_list_coursework
-classroom_list_submissions`,
+postmaster_list_domains postmaster_list_traffic_stats`,
  resource: `
 admin_get_2sv_status admin_get_alert
 admin_get_building admin_get_calendar_resource admin_get_chrome_device
@@ -35,9 +32,7 @@ admin_get_token admin_get_user admin_get_user_photo chat_get_space contacts_get
 datatransfer_get_transfer_status drive_get_revision forms_get_response
 gmail_get_attachment gmail_get_draft gmail_get_filter gmail_get_message_body
 identity_check_membership identity_get_security_settings licensing_get_assignment
-sheets_batch_get sheets_get_values slides_get_slide slides_get_thumbnail
-classroom_get_course classroom_get_student classroom_get_teacher
-classroom_get_invitation classroom_get_coursework classroom_get_submission`,
+sheets_batch_get sheets_get_values slides_get_slide slides_get_thumbnail`,
  report: `
 calendar_get_freebusy calendar_dev_snapshot calendar_verify_calendar_deletion
 dns_list_records gmail_find_unanswered gmail_inbox_summary identity_policy_audit
@@ -256,7 +251,7 @@ export function parseReviewedReadCases(input) {
   if(input.length>100000)throw Error('reviewed_read_manifest_too_large');
   try {input=JSON.parse(input)}catch{throw Error('invalid_reviewed_read_manifest')}
  }
- if(!Array.isArray(input)||!input.length||input.length>137)
+ if(!Array.isArray(input)||!input.length||input.length>124)
   throw Error('invalid_reviewed_read_manifest');
  const found=new Set();
  return input.map(entry=>{

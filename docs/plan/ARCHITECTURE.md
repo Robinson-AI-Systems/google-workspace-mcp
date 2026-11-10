@@ -106,9 +106,9 @@ copy and re-encrypts it, so a wrong or lost key never locks anyone out. The
 plain copy keeps being written until card P5-2.
 
 Scope notes (`src/auth/scopes.js`): the Alert Center permission is deliberately
-absent from ordinary user OAuth because Google requires service-account domain-wide delegation instead. The separate owner-approved `apps.alerts` path and runtime opt-in are documented in DEPLOY.md. The four Classroom
-permissions are requested and, since 2026-11-09, used by the 35 `classroom_*`
-tools (see "Known gaps").
+absent from ordinary user OAuth because Google requires service-account domain-wide delegation instead. The separate owner-approved `apps.alerts` path and runtime opt-in are documented in DEPLOY.md. Classroom was removed entirely on 2026-11-09 by the owner's decision: its
+four permissions are no longer requested and no Classroom tools ship (see
+"Known gaps").
 
 ## Delegation (acting inside another user's mailbox)
 
@@ -182,7 +182,7 @@ export const handlers = { [name]: async (args, clients) => ok(...) };
   server-about-itself tools are `workspace_*`; Vercel DNS tools are `dns_*`.
 - Handlers receive `clients` from `buildHostedApiClients` (`gmail`, `drive`,
   `calendar`, `sheets`, `docs`, `slides`, `forms`, `tasks`, `people`, `chat`,
-  `classroom`, `admin`, `adminReports`, `groupssettings`, `licensing`,
+  `admin`, `adminReports`, `groupssettings`, `licensing`,
   `datatransfer`, `alertcenter`, `chromepolicy`, `cloudidentity`,
   `siteVerification`, `vault`; built on first use) plus `actingAs` (email).
 - Return `ok(value)`; throw or let Google throw and `api/mcp.js` wraps it with
@@ -264,7 +264,7 @@ Historical initial inventory: the current completed ledger and final developer c
 | --- | --- | --- |
 | `gmail_untrash_message`, `gmail_untrash_thread`, `sheets_duplicate_sheet`, `sheets_format_cells`, `sheets_freeze_rows`, `sheets_autoresize_columns`, `sheets_sort_range`, `sheets_merge_cells`, `sheets_unmerge_cells`, `sheets_protect_range`, `domain_confirm_verification` | Change things with no `dryRun`, read-back or change-log row, and `check-writes.mjs` does not catch them because their verbs are not in its list. None deletes anything | P5-1 (finish) |
 | `admin_list_alerts`, `admin_get_alert`, `admin_delete_alert` | Requires separately approved service-account DWD and runtime opt-in; user OAuth cannot authorize it | Corrected in PR194; activation evidence in `evidence/2026-10-16-alert-center-activation.json` |
-| `src/auth/scopes.js` `classroom` group | Resolved 2026-11-09: the 35 `classroom_*` tools now use the four requested permissions (courses, aliases, rosters, invitations, coursework, submissions). Announcements/topics/materials need scopes never requested and remain untooled | Built on the owner's order; no scope change, no re-authorization needed |
+| Classroom (tools and scopes) | Removed 2026-11-09 by owner decision: the four Classroom permissions were requested and 35 tools were built the same day (PR #297), then the owner ruled the feature out because no Classroom use exists in his organizations. Implementation remains in git history at ccdd860e if ever wanted back | Removed, not deferred |
 | Read-only smoke test (`scripts/smoke-readonly.mjs`) | Does not exist yet, so tools that never worked against a real account are not yet found | P0-2 |
 | `google_accounts.tokens` | Original gap resolved: encrypted-only storage active, both account/legacy plaintext counts zero | P5-2 complete; owner removed the waiting date, readiness and protected activation proof retained |
 | Version, changelog, generated tool catalog | `package.json` is 2.0.0; generated README catalog and changelog maintained by `npm run gen:catalog` and semantic CI | P5-4 |

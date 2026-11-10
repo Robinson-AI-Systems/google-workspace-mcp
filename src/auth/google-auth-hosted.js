@@ -192,7 +192,6 @@ export function buildApiClients(auth, {tenantDelegation}={}) {
     tasks: () => google.tasks({ version: 'v1', auth }),
     people: () => google.people({ version: 'v1', auth }),
     chat: () => google.chat({ version: 'v1', auth }),
-    classroom: () => google.classroom({ version: 'v1', auth }),
     admin: () => google.admin({ version: 'directory_v1', auth }),
     adminReports: () => google.admin({ version: 'reports_v1', auth }),
     // Legacy discovery advertises Atom by default; guards and reads need JSON.
