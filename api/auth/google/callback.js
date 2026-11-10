@@ -16,7 +16,7 @@ const SAFE_DENIAL_CODES=new Set([
  'principal_mismatch','grant_scope_missing','identity_owned_elsewhere',
  'session_required','invalid_grant','version_conflict','outside_scope',
  'legacy_pilot_identity_only','invalid_link',
- 'bound_issuer_form_mismatch','bound_not_user_principal','bound_principal_inactive',
+ 'bound_issuer_form_mismatch','bound_not_user_principal','bound_owner_principal','bound_principal_inactive',
  'bound_shell_no_fresh_grant','bound_shell_email_mismatch',
  'account_without_identity_binding','bound_not_admissible'
 ]);
