@@ -232,10 +232,7 @@ export async function getBoundGraduatingPrincipal(issuer,sub,verifiedEmail){
      AND p.legacy_pilot_fresh_grant=true
      AND lower(i.verified_email)=lower(${verifiedEmail})
      AND EXISTS(SELECT 1 FROM google_accounts a
-       WHERE lower(a.email)=lower(${verifiedEmail}))
-     AND EXISTS(SELECT 1 FROM principal_google_accounts a
-       WHERE a.principal_id=p.id AND a.issuer=${issuer} AND a.google_sub=${sub}
-         AND a.status='active' AND a.grant_ciphertext IS NOT NULL)`;
+       WHERE lower(a.email)=lower(${verifiedEmail}))`;
  return rows.length===1?rows[0].principal_id:null;
 }
 // Coarse shape of whatever IS bound to a Google subject whose sign-in was
@@ -434,21 +431,35 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
  // ADOPT-1 (owner-ordered, 2026-11-09): the adoption test runs BEFORE the
  // reservation and foreign-grant refusals below, because it decides from
  // the holding profile's own bound identity — the one fact those refusals
- // exist to protect. The presenter must be signed in as the identity the
- // HOLDING profile is bound to (for the owner profile: the identity bound
- // by the owner-migration ceremony — the systems mailbox itself), and the
- // consent being presented must be for that SAME identity (issuer+subject
- // exact). A session plus a fresh verified consent for the exact identity
- // IS the proof — the self-move doctrine the foreign-grant check below
- // already states. Any presenter short of that proof falls through to the
- // refusals unchanged, byte for byte.
+ // exist to protect. TWO proofs, both required: (1) the presenter is
+ // twin-bound to the HOLDING profile's bound identity — it signed in as
+ // the very identity the holder is bound to (for the owner profile: the
+ // identity bound by the owner-migration ceremony — the systems mailbox
+ // itself), proven by matching binding rows on both profiles; and (2)
+ // this call itself carries a FRESH VERIFIED consent for the EXACT
+ // mailbox identity being claimed (the callback reaches this function
+ // only after Google verified that consent inside this profile's own
+ // browser-bound transaction). A presenter short of either proof falls
+ // through to the refusals unchanged, byte for byte — a stranger cannot
+ // produce a twin binding, and consent for mailbox X can never adopt
+ // mailbox Y because the consent and the claim are the same identity.
  const adoptableHolder=await q`SELECT h.id AS holder_id FROM principals h
-   JOIN principal_google_identities hi ON hi.principal_id=h.id
-   WHERE hi.issuer=${issuer} AND hi.google_sub=${sub} AND h.status='active'
-     AND h.id<>${principalId}::uuid
-     AND EXISTS(SELECT 1 FROM principal_google_identities mi
-       WHERE mi.principal_id=${principalId}::uuid AND mi.issuer=hi.issuer
-         AND mi.google_sub=hi.google_sub)`;
+   WHERE h.status='active' AND h.id<>${principalId}::uuid
+     AND (
+       EXISTS(SELECT 1 FROM principal_google_identities hi
+         JOIN principal_google_identities mi
+           ON mi.principal_id=${principalId}::uuid AND mi.issuer=hi.issuer
+           AND mi.google_sub=hi.google_sub
+         WHERE hi.principal_id=h.id AND hi.issuer=${issuer} AND hi.google_sub=${sub})
+       OR EXISTS(SELECT 1 FROM principal_google_accounts held
+         WHERE held.principal_id=h.id AND held.issuer=${issuer}
+           AND held.google_sub=${sub} AND held.status='active')
+     )
+     AND EXISTS(SELECT 1 FROM principal_google_identities hb
+       JOIN principal_google_identities mb
+         ON mb.principal_id=${principalId}::uuid AND mb.issuer=hb.issuer
+         AND mb.google_sub=hb.google_sub
+       WHERE hb.principal_id=h.id)`;
  const adoption=adoptableHolder.length===1?adoptableHolder[0].holder_id:null;
  // The reservation below protects the original connection's legacy
  // mailboxes from OTHER profiles. The owner profile IS the original
