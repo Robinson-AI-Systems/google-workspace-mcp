@@ -35,16 +35,7 @@ const CALLS = {
   calendar_add_attendee: { eventId: 'e1', email: 'g@b.test' },
   chat_create_space: { displayName: 'Ops' },
   chat_add_member: { spaceName: 'spaces/S', memberEmail: 'g@b.test' },
-  chat_send_message: { spaceName: 'spaces/S', text: 'hello team' },
-  classroom_delete_course: { courseId: 'c1' },
-  classroom_delete_course_alias: { courseId: 'c1', alias: 'd:math-101' },
-  classroom_add_student: { courseId: 'c1', userId: 'sam@example.test' },
-  classroom_remove_student: { courseId: 'c1', userId: 'sam@example.test' },
-  classroom_add_teacher: { courseId: 'c1', userId: 'pat@example.test' },
-  classroom_remove_teacher: { courseId: 'c1', userId: 'pat@example.test' },
-  classroom_create_invitation: { userId: 'sam@example.test', courseId: 'c1', role: 'STUDENT' },
-  classroom_delete_invitation: { invitationId: 'inv1' },
-  classroom_delete_coursework: { courseId: 'c1', courseWorkId: 'w1' }
+  chat_send_message: { spaceName: 'spaces/S', text: 'hello team' }
 };
 // Calls that are risky only in some uses.
 const RISKY_SOMETIMES = {

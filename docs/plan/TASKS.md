@@ -2158,7 +2158,7 @@ per user and does not stop the rest, the cap is enforced.
 | --- | --- | --- |
 | Meet records (transcripts, attendance) | On hold | Already on hold above |
 | Search Console, Business Profile | Not scheduled | Useful for the businesses' search presence. Business Profile needs Google's approval first, so apply early if Chris wants it |
-| Classroom tools | Built 2026-11-09 | Owner ordered the surface completed rather than the permissions removed: 35 `classroom_*` tools cover every method the four requested scopes allow |
+| Classroom tools and permissions | Removed 2026-11-09 (owner decision) | Tools built in PR #297 and removed the same day together with the four Classroom scopes: nobody in the owner's organizations uses Google Classroom. Implementation remains in git history at ccdd860e if ever wanted back |
 | Apps Script control | Not planned | Google does not allow it with a service account |
 | Live change notifications (Workspace Events) | Not planned | Needs extra Google Cloud plumbing (Pub/Sub) for little gain |
 | Chat bots, Alert Center | Not planned | Alert Center cannot work with the permissions we deliberately do not request |
@@ -2654,7 +2654,7 @@ original source/CI/provider observations remain unchanged.
 | P8-7 fixtures and app readiness | Existing Drive/Calendar/Gmail reservation, ownership, exact-ID cleanup and uncertainty/recovery designs govern. Reuse the authorized saved developer connection when suitable; new consent is needed only for genuinely missing/revoked authority. No invented fixture IDs or unrelated mailbox changes. |
 | P8-8 owner overview and console inventory | Existing output states, readback mappings and tests govern. The dated complete Admin console walk remains actual coverage work, not another abstract design task; record unavailable pages and permission limits without claiming completeness from the 50-topic inventory alone. |
 | Appliance Desk app-side Gmail | Reference spec explicitly leaves `gmail.readonly` and `gmail.send` delegation unapproved for that separate app identity. Do not widen them here or treat this service-design review as their approval. |
-| Considered/on-hold extensions | Keep Meet records, Search Console/Business Profile, Classroom, Alert Center and other unplanned items in their recorded disposition. This review does not schedule them or add scopes. |
+| Considered/on-hold extensions | Keep Meet records, Search Console/Business Profile, Alert Center and other unplanned items in their recorded disposition. (Classroom left this list on 2026-11-09: removed outright by owner decision, recorded above.) This review does not schedule them or add scopes. |
 
 **Implementation authority:** proceed with the approved ordered service work and
 routine design details without redundant owner approval. Ask only for a newly

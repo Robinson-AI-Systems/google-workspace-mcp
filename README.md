@@ -43,7 +43,7 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 <!-- BEGIN GENERATED TOOL CATALOG -->
 <!-- Registry-derived; regenerate with `npm run gen:catalog`. Do not edit this section by hand. -->
 
-**422 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
+**387 registered tools** from the assembled server registry. The names below include read-only operations, guarded writes and five protected meta-tools; listing a tool does not grant permission to call it. For current descriptions, required inputs and account restrictions, use `workspace_describe_tool`.
 
 | Area | Registered tools |
 | --- | ---: |
@@ -51,7 +51,6 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 | calendar | 24 |
 | chat | 8 |
 | chrome | 3 |
-| classroom | 35 |
 | datatransfer | 3 |
 | dns | 3 |
 | domain | 3 |
@@ -221,44 +220,6 @@ npm run test:db   # database tests; needs TEST_DATABASE_URL pointing at disposab
 - `chrome_list_policy_schemas`
 - `chrome_resolve_policies`
 - `chrome_set_policy`
-
-### classroom (35)
-
-- `classroom_accept_invitation`
-- `classroom_add_student`
-- `classroom_add_teacher`
-- `classroom_create_course`
-- `classroom_create_course_alias`
-- `classroom_create_coursework`
-- `classroom_create_invitation`
-- `classroom_delete_course`
-- `classroom_delete_course_alias`
-- `classroom_delete_coursework`
-- `classroom_delete_invitation`
-- `classroom_get_course`
-- `classroom_get_coursework`
-- `classroom_get_invitation`
-- `classroom_get_student`
-- `classroom_get_submission`
-- `classroom_get_teacher`
-- `classroom_grade_submission`
-- `classroom_list_course_aliases`
-- `classroom_list_courses`
-- `classroom_list_coursework`
-- `classroom_list_invitations`
-- `classroom_list_students`
-- `classroom_list_submissions`
-- `classroom_list_teachers`
-- `classroom_modify_submission_attachments`
-- `classroom_patch_course`
-- `classroom_patch_coursework`
-- `classroom_reclaim_submission`
-- `classroom_remove_student`
-- `classroom_remove_teacher`
-- `classroom_return_submission`
-- `classroom_turn_in_submission`
-- `classroom_update_course`
-- `classroom_update_coursework`
 
 ### datatransfer (3)
 
