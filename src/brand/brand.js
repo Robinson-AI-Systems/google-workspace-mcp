@@ -52,8 +52,15 @@ button.secondary{background:transparent;color:var(--accent);border:1px solid var
 .error,p[role=alert]{color:var(--err)}details{margin:12px 0}summary{cursor:pointer;color:var(--accent);font-weight:600}
 footer{margin-top:28px;color:var(--muted);font-size:14px}footer nav{margin-top:8px}`;
 
-export const brandHeader=()=>`<header class="brand"><img src="${PRODUCT_MARK_PATH}" alt="" width="44" height="44"><div><b>${esc(BRAND.product)}</b><small>${esc(BRAND.tagline)}</small></div></header>`;
-export const brandFooter=()=>`<footer>${esc(BRAND.disclaimer)} ${esc(BRAND.reassurance)}<nav><a href="/">Home</a> · <a href="/api/account">My Workspace connections</a> · <a href="/api/privacy">Privacy</a> · <a href="/api/support">Support</a> · <a href="/api/data-deletion">Disconnect and delete</a> · <a href="${BRAND.website}" rel="noopener noreferrer">${esc(BRAND.name)}</a></nav></footer>`;
+// Cloudflare (in front of the server) rewrites every email address in a page
+// to "[email protected]" and relies on a script to put it back; our pages'
+// Content-Security-Policy blocks that script, so people saw the placeholder
+// instead of their own accounts (owner-raised, 2026-11-10). Every branded
+// page opens with the header and closes with the footer, so these carry
+// Cloudflare's documented opt-out around everything between them.
+export const EMAIL_OFF='<!--email_off-->',EMAIL_ON='<!--/email_off-->';
+export const brandHeader=()=>EMAIL_OFF+`<header class="brand"><img src="${PRODUCT_MARK_PATH}" alt="" width="44" height="44"><div><b>${esc(BRAND.product)}</b><small>${esc(BRAND.tagline)}</small></div></header>`;
+export const brandFooter=()=>`<footer>${esc(BRAND.disclaimer)} ${esc(BRAND.reassurance)}<nav><a href="/">Home</a> · <a href="/api/account">My Workspace connections</a> · <a href="/api/privacy">Privacy</a> · <a href="/api/support">Support</a> · <a href="/api/data-deletion">Disconnect and delete</a> · <a href="${BRAND.website}" rel="noopener noreferrer">${esc(BRAND.name)}</a></nav></footer>`+EMAIL_ON;
 
 // One shell for every page and every state (approve, problem, expired, info).
 export function brandPage(title,body,{wide=false}={}){
