@@ -95,13 +95,16 @@ export async function linkVerifiedOwner({issuer,sub,email},q=sql()){
  // Deny any public principal's account or login subject. Never reassign.
  const foreign=await q`SELECT 1 FROM principal_google_accounts
    WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id<>${OWNER_ID}::uuid LIMIT 1`;
- // ADOPT-1 (2026-11-09): the foreign guard below denies a PUBLIC
- // principal's ACCOUNT for this identity — an active GRANT row. A second
- // profile's bare identity BINDING for the same Google identity is the
- // adoption twin (the same person, proven by Google, on their public
- // profile) and is not a foreign account; the owner's binding itself is
- // still never reassigned (the upsert below keys on the owner).
  requireScope(foreign.length===0,'identity_owned_elsewhere');
+ // ADOPT-1 (2026-11-09): the widened binding key lets the same Google
+ // identity be bound to a public profile too (the adoption twin). The
+ // owner ceremony must never mint a SECOND owner binding for an identity
+ // a user principal already owns: refuse that shape outright, exactly
+ // as before the widening, so an owner proof can never be issued for a
+ // subject that belongs to a user principal's sign-in.
+ const foreignBinding=await q`SELECT 1 FROM principal_google_identities
+   WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id<>${OWNER_ID}::uuid LIMIT 1`;
+ requireScope(foreignBinding.length===0,'identity_owned_elsewhere');
  const saved=await q`INSERT INTO principal_google_identities
    (issuer,google_sub,principal_id,verified_email)
    VALUES (${issuer},${sub},${OWNER_ID}::uuid,${email.toLowerCase()})
