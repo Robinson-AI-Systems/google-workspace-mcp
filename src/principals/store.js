@@ -519,7 +519,7 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
    SELECT 1 FROM principal_legacy_accounts WHERE lower(email)=lower(${verifiedEmail}))
    OR (EXISTS(SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}))
      AND NOT EXISTS(SELECT 1 FROM principal_google_accounts
-       WHERE lower(email)=lower(${verifiedEmail}) AND status='active'
+       WHERE issuer=${issuer} AND google_sub=${sub} AND status='active'
          AND principal_id=${OWNER_ID}::uuid)) LIMIT 1`;
  requireScope(!reserved.length||independentlyEligible||adoption,'reserved_identity');
  // Ownership is an ACTIVE grant on another profile. A revoked grant there
