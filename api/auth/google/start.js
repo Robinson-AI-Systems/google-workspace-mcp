@@ -7,6 +7,7 @@ import {publicMode,publicResource,requireScope,mint,cookie,headers} from '../../
 import {requireSession,requireCsrf,BROWSER_COOKIE} from '../../../src/principals/session.js';
 import {redirectCanonicalGet} from '../../../src/principals/canonical-entry.js';
 import {redirectAllowed} from '../../../src/oauth/client-compat.js';
+import {acceptedResource} from '../../../src/oauth/connector-address.js';
 export default async function handler(req,res){
  headers(res);
  if(!['GET','POST'].includes(req.method)){res.status(405).json({error:'method_not_allowed'});return;}
@@ -57,7 +58,7 @@ export default async function handler(req,res){
     resource=params.resource;codeChallenge=params.code_challenge;
     const client=await getOAuthClient(clientId);
     requireScope(client&&redirectAllowed(client,redirectUri)
-      &&resource===publicResource()+'/api/mcp'
+      &&(ownerLogin?resource===publicResource()+'/api/mcp':acceptedResource(resource)===resource)
       &&/^[A-Za-z0-9_-]{43}$/.test(codeChallenge),'invalid_mcp_authorization');
   }
   await initSchema();

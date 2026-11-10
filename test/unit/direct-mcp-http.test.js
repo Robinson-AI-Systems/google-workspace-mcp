@@ -37,6 +37,7 @@ beforeAll(async()=>{
   const chunks=[];for await(const chunk of req)chunks.push(chunk);
   if(chunks.length){try{req.body=JSON.parse(Buffer.concat(chunks).toString('utf8'));}
    catch{res.statusCode=400;res.end();return;}}
+  req.query=Object.fromEntries(new URL(req.url,'http://local').searchParams);
   res.status=function(n){this.statusCode=n;return this;};
   res.json=function(v){this.setHeader('content-type','application/json');this.end(JSON.stringify(v));return this;};
   try{await handler(req,res);}catch{
@@ -67,6 +68,13 @@ describe('standalone direct MCP owner-origin and bearer trust',()=>{
   expect(r.status).toBe(401);
   expect(r.headers.get('www-authenticate')).toBe('Bearer resource_metadata="https://workspace.example.test/.well-known/oauth-protected-resource"');
   expect(await r.json()).toMatchObject({error:'unauthorized'});
+ });
+ it('a named connector address (/api/mcp/<name>) points unsigned callers at its own metadata',async()=>{
+  const r=await fetch(origin+'/api/mcp?connector=test',{method:'POST',
+   headers:{'content-type':'application/json',accept:'application/json, text/event-stream'},
+   body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/list',params:{}})});
+  expect(r.status).toBe(401);
+  expect(r.headers.get('www-authenticate')).toBe('Bearer resource_metadata="https://workspace.example.test/.well-known/oauth-protected-resource/api/mcp/test"');
  });
  it('never uses an untrusted Host as fallback when owner has no origin configured',async()=>{
   const saved=process.env.PUBLIC_BASE_URL;

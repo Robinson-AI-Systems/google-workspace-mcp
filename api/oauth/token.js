@@ -5,6 +5,7 @@ import { connectionPolicyToDb } from '../../src/oauth/connection-settings.js';
 import {consumePrincipalCode,issuePrincipalConnection,rotatePrincipalRefresh} from '../../src/principals/store.js';
 import {publicResource} from '../../src/principals/security.js';
 import {applyCors,withBasicClientAuth} from '../../src/oauth/client-compat.js';
+import {acceptedResource} from '../../src/oauth/connector-address.js';
 
 export default async function handler(req, res) {
   if (applyCors(req, res, 'POST, OPTIONS')) return;
@@ -20,9 +21,9 @@ export default async function handler(req, res) {
   // submitted to legacy owner tables. Original issued owner tokens are unchanged.
   if(body.grant_type==='authorization_code'&&typeof body.code==='string'&&body.code.startsWith('p10c_')){
     let resource;
-    try{resource=publicResource()+'/api/mcp';}catch{return res.status(503).json({error:'temporarily_unavailable'});}
-    // D-006 MC-4: an omitted resource means this server, for every client.
-    if(body.resource!==undefined&&body.resource!==''&&body.resource!==resource)return res.status(400).json({error:'invalid_target'});
+    // The plain address or a named connector address; omitted = plain (MC-4).
+    try{resource=acceptedResource(body.resource);}catch{return res.status(503).json({error:'temporarily_unavailable'});}
+    if(!resource)return res.status(400).json({error:'invalid_target'});
     const client=await getOAuthClient(body.client_id);
     if(!client||client.client_secret&&client.client_secret!==body.client_secret)
       return res.status(401).json({error:'invalid_client'});
@@ -36,9 +37,10 @@ export default async function handler(req, res) {
     }catch{return res.status(400).json({error:'invalid_grant'});}
   }
   if(body.grant_type==='refresh_token'&&typeof body.refresh_token==='string'&&body.refresh_token.startsWith('p10r_')){
-    let resource;try{resource=publicResource()+'/api/mcp';}catch{return res.status(503).json({error:'temporarily_unavailable'});}
-    // D-006 MC-4: an omitted resource means this server, for every client.
-    if(body.resource!==undefined&&body.resource!==''&&body.resource!==resource)return res.status(400).json({error:'invalid_target'});
+    let resource;
+    // The plain address or a named connector address; omitted = plain (MC-4).
+    try{resource=acceptedResource(body.resource);}catch{return res.status(503).json({error:'temporarily_unavailable'});}
+    if(!resource)return res.status(400).json({error:'invalid_target'});
     const client=await getOAuthClient(body.client_id);
     if(!client||client.client_secret&&client.client_secret!==body.client_secret)
       return res.status(401).json({error:'invalid_client'});

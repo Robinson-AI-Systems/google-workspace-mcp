@@ -19,6 +19,7 @@ import {scopedStore} from '../src/principals/store.js';
 import {buildPrincipalApiClients} from '../src/principals/clients.js';
 import {publicMode} from '../src/principals/security.js';
 import {applyCors} from '../src/oauth/client-compat.js';
+import {connectorNameFrom} from '../src/oauth/connector-address.js';
 
 export const config = { api: { bodyParser: true } };
 
@@ -136,7 +137,7 @@ export default async function handler(req, res) {
   const base = trustedMcpOrigin();
 
   if (!token) {
-    if(base)res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
+    if(base)res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource${connectorNameFrom(req)?'/api/mcp/'+connectorNameFrom(req):''}"`);
     res.status(401).json({ error: 'unauthorized', error_description: 'Missing bearer token.' });
     return;
   }
@@ -146,7 +147,7 @@ export default async function handler(req, res) {
   if(token.startsWith('p10a_')){
     const user=await readPrincipalAccess(token);
     if(!user){
-      if(base)res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
+      if(base)res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource${connectorNameFrom(req)?'/api/mcp/'+connectorNameFrom(req):''}"`);
       res.status(401).json({error:'invalid_token'});return;
     }
     // Strict rollout: source isolation and owner-authorized pilot must BOTH
@@ -168,7 +169,7 @@ export default async function handler(req, res) {
   }
   const tokenRecord = await getAccessToken(token);
   if (!tokenRecord) {
-    if(base)res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource"`);
+    if(base)res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource${connectorNameFrom(req)?'/api/mcp/'+connectorNameFrom(req):''}"`);
     res.status(401).json({ error: 'invalid_token' });
     return;
   }

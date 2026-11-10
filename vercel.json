@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/mcp/:connector",
+      "destination": "/api/mcp?connector=:connector"
+    },
+    {
       "source": "/api/contract",
       "destination": "/api/rtc-gateway?door=contract"
     },
@@ -35,6 +39,10 @@
     {
       "source": "/.well-known/oauth-protected-resource/api/mcp",
       "destination": "/api/well-known/oauth-protected-resource"
+    },
+    {
+      "source": "/.well-known/oauth-protected-resource/api/mcp/:connector",
+      "destination": "/api/well-known/oauth-protected-resource?connector=:connector"
     },
     {
       "source": "/.well-known/muse-client.json",

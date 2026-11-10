@@ -170,6 +170,25 @@ describe('a stranger connects cold, with no roster and no cookies',()=>{
   expect(h.issued).toHaveLength(0);
  });
 
+ it('a named connector address (/api/mcp/test) goes through the same door and binds the code to that address',async()=>{
+  const named={...ask,resource:BASE+'/api/mcp/test'};
+  const landing=await get(authorize,named);
+  expect(landing.statusCode).toBe(200);
+  const href=landing.body.match(/class="button" href="([^"]+)"/)[1].replace(/&amp;/g,'&');
+  expect(query(href).resource).toBe(BASE+'/api/mcp/test');
+  const toGoogle=await get(start,query(href));
+  expect(toGoogle.statusCode).toBe(302);
+  const back=await get(callback,{state:new URL(toGoogle.headers.Location).searchParams.get('state'),code:'g'});
+  const page=await get(authorize,query(back.headers.Location));
+  expect(page.statusCode).toBe(200);
+  const done=await post(authorize,{...named,resource:hidden(page.body,'resource'),connect:hidden(page.body,'connect'),
+   account_id:h.accounts[0].id,profile:'read_only'},{form:true});
+  expect(done.statusCode).toBe(302);
+  expect(h.issued[0]).toMatchObject({resource:BASE+'/api/mcp/test',profile:'read_only'});
+  // A name that is not a valid label is refused at the door.
+  const bad=await get(authorize,{...ask,resource:BASE+'/api/mcp/Not_OK'});
+  expect(bad.statusCode).toBe(400);
+ });
  it('a made-up handle starts nothing on the add-account door',async()=>{
   const add=await post(start,{purpose:'link',connect:'p10h_'+'z'.repeat(43)});
   expect(add.statusCode).toBe(400);
