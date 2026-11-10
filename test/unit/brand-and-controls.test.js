@@ -54,11 +54,14 @@ describe('public pages: outcome first, plain words, nothing internal',()=>{
   expect(home).toContain('Let your AI assistant work with your Google Workspace, safely');
   expect(home).toContain('https://ws.example.test/api/mcp');
   expect(home.indexOf('safely')).toBeLessThan(home.indexOf('Connect your AI app'));
-  expect(home).toContain('Start here — connect your Google account');
-  expect(home.indexOf('Start here — connect your Google account')).toBeLessThan(home.indexOf('Connect your AI app'));
+  expect(home).toContain('How connecting works');
+  expect(home.indexOf('How connecting works')).toBeLessThan(home.indexOf('Connect your AI app'));
   expect(home).toContain('/api/auth/google/start?purpose=login');
   expect(home).toContain('href="#connect"');
-  for(const app of ['Claude','ChatGPT','Muse','Claude Code'])expect(home).toContain('<h3>'+app);
+  // Every command and file snippet carries the real address.
+  expect(home).not.toContain('YOUR-ADDRESS');
+  expect((home.match(/https:\/\/ws\.example\.test\/api\/mcp/g)||[]).length).toBeGreaterThanOrEqual(6);
+  for(const app of ['Claude','ChatGPT','Muse','Claude Code','OpenAI Codex','Cursor','VS Code','Gemini CLI','Windsurf','Any other app'])expect(home).toContain('<h3>'+app);
  });
  it('no public page shows internal language or an operator to-do',()=>{
   for(const page of pages()){
