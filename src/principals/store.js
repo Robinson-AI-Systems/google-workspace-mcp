@@ -365,6 +365,25 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
    AND (p.kind='user' OR p.id=${OWNER_ID}::uuid)`;
  requireScope(prior.length===1,'invalid_identity');
  const historical=prior[0].historical===true;
+ // ADOPT-1 (owner-ordered, 2026-11-09): the adoption test runs BEFORE the
+ // reservation and foreign-grant refusals below, because it decides from
+ // the holding profile's own bound identity — the one fact those refusals
+ // exist to protect. The presenter must be signed in as the identity the
+ // HOLDING profile is bound to (for the owner profile: the identity bound
+ // by the owner-migration ceremony — the systems mailbox itself), and the
+ // consent being presented must be for that SAME identity (issuer+subject
+ // exact). A session plus a fresh verified consent for the exact identity
+ // IS the proof — the self-move doctrine the foreign-grant check below
+ // already states. Any presenter short of that proof falls through to the
+ // refusals unchanged, byte for byte.
+ const adoptableHolder=await q`SELECT h.id AS holder_id FROM principals h
+   JOIN principal_google_identities hi ON hi.principal_id=h.id
+   WHERE hi.issuer=${issuer} AND hi.google_sub=${sub} AND h.status='active'
+     AND h.id<>${principalId}::uuid
+     AND EXISTS(SELECT 1 FROM principal_google_identities mi
+       WHERE mi.principal_id=${principalId}::uuid AND mi.issuer=hi.issuer
+         AND mi.google_sub=hi.google_sub)`;
+ const adoption=adoptableHolder.length===1?adoptableHolder[0].holder_id:null;
  // The reservation below protects the original connection's legacy
  // mailboxes from OTHER profiles. The owner profile IS the original
  // connection's own record: its holder claiming one of those mailboxes
@@ -389,15 +408,43 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
    requireScope(independentlyEligible,'legacy_pilot_identity_only');
  }
  const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
- requireScope(!reserved.length||independentlyEligible,'reserved_identity');
+ requireScope(!reserved.length||independentlyEligible||adoption,'reserved_identity');
  // Ownership is an ACTIVE grant on another profile. A revoked grant there
  // is history, not ownership: the holder disconnected the account, and a
  // fresh consent here may attach it to this profile (self-move doctrine
  // below). An actively linked account can never be taken.
- const foreign=await q`SELECT id FROM principal_google_accounts
+ const foreign=await q`SELECT id,principal_id FROM principal_google_accounts
    WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id<>${principalId}::uuid
      AND status='active'`;
- requireScope(!foreign.length,'identity_owned_elsewhere');
+ requireScope(!foreign.length||(adoption&&foreign.every(row=>row.principal_id===adoption)),
+   'identity_owned_elsewhere');
+ if(adoption){
+   // Adoption moves the ACCOUNT, never the holding profile's execution
+   // material: the holder's agent connections keep pointing at the old
+   // account row, and its OAuth tokens are a legacy table this function
+   // never touches. The adopted row is retired (not deleted) and
+   // principal_defaults rows that named it are dropped, exactly as a
+   // disconnect on the holder would leave them.
+   for(const row of foreign){
+     await q`UPDATE principal_google_accounts SET status='revoked',updated_at=now()
+       WHERE id=${row.id}::uuid AND principal_id=${adoption}::uuid AND status='active'`;
+     await q`DELETE FROM principal_defaults
+       WHERE principal_id=${adoption}::uuid AND account_id=${row.id}::uuid`;
+   }
+   if(reserved.length){
+     // Retire the legacy reservation for THIS mailbox only, and for the
+     // ADOPTED mailbox only: the row is deleted from both legacy tables,
+     // so the reservation releases exactly the identity whose verified
+     // holder claimed it — never another mailbox, never by another hand.
+     // Legacy execution does not read these tables for tokens (validated
+     // tokens live in google_accounts.tokens/tokens_enc, mirrored by the
+     // refresh path in db.js), so the holder's live connections keep
+     // their grants; the deletion also ends the sign-in reservation the
+     // mailbox carried into bindVerifiedIdentity.
+     await q`DELETE FROM principal_legacy_accounts WHERE lower(email)=lower(${verifiedEmail})`;
+     await q`DELETE FROM google_accounts WHERE lower(email)=lower(${verifiedEmail})`;
+   }
+ }
  // A sign-in identity binding on another profile does not block this link
  // either. Binding governs SIGN-IN; attaching the account as data is proven
  // by this flow itself — a session on this profile plus a fresh, verified
