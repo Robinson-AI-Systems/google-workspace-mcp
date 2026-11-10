@@ -5,7 +5,7 @@ import { READ_ONLY_TOOL_NAMES } from './read-only-semantics.js';
 // read_only connections. Unknown names fail closed as writes, regardless of
 // their spelling (get/resolve/untrash/etc); the CI audit proves provenance.
 export const RTC_META = new Set(['workspace_search_tools','workspace_describe_tool','workspace_call','workspace_batch','workspace_get_result']);
-export const RTC_AREAS = ['mail','files','calendar','tasks','chat','admin','workspace','workflows','dns','people','business','identity','datatransfer','licensing','chrome','domain'];
+export const RTC_AREAS = ['mail','files','calendar','tasks','chat','admin','workspace','workflows','dns','people','business','identity','datatransfer','licensing','chrome','domain','classroom'];
 // These workflows are bound to the *installation owner's* business map,
 // saved DNS credential, policy baseline or TEST-only fixture ledger. A user's
 // unrelated Google OAuth account does not authorize reading those resources.

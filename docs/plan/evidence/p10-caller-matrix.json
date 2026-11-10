@@ -1,7 +1,7 @@
 {
   "version": 1,
   "source": "src/tools/index.js",
-  "expectedModuleCount": 37,
+  "expectedModuleCount": 38,
   "reviewedAgainst": "P10-4 section2 registry and persisted-provider caller audit",
   "scope": "Registry module classification under a server-minted V2 principal; native MCP, RTC meta/batch, guards, result and database constructors are additionally tested by dedicated suites.",
   "nonRegistryCritical": [
@@ -170,6 +170,11 @@
     },
     {
       "path": "src/tools/chat.js",
+      "classification": "oauthProvider",
+      "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
+    },
+    {
+      "path": "src/tools/classroom.js",
       "classification": "oauthProvider",
       "boundary": "No legacy database or owner business configuration import; all provider service clients injected from the bearer-bound principal OAuth client, and domain/guard policies apply."
     },
