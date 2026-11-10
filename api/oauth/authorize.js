@@ -23,7 +23,7 @@ import { ensureMigrated } from '../../src/auth/google-auth-hosted.js';
 import { RTC_AREAS } from '../../src/rtc/catalog.js';
 import { selectedBillingPolicy } from '../../src/rtc/billing-authority.js';
 import {getPrincipal,listAccounts,issuePrincipalCode,readConnectHandle,consumeConnectHandle,principalSignInEmail,getLatestLinkDenial} from '../../src/principals/store.js';
-import {requireSession,requireCsrf} from '../../src/principals/session.js';
+import {requireSession,requireCsrf,clearSession} from '../../src/principals/session.js';
 import {publicMode,publicResource,headers,readCookie,readCookies,cookie,digest} from '../../src/principals/security.js';
 import {inspectOwnerLoginProof,consumeOwnerLoginProof,legacyNewLoginEnabled} from '../../src/principals/owner-migration.js';
 
@@ -109,8 +109,12 @@ function renderApprovePage({params,resourceParam,client,accounts,signedInAs,conn
       '<button type="submit" class="secondary">'+
       (accounts.length?'Add another Google account':'Connect a Google account')+'</button></form>'
     : '<p class="alt"><a href="/api/account">'+(accounts.length?'Add another Google account':'Connect a Google account')+'</a></p>';
+  const switchUrl='/api/oauth/authorize?'+new URLSearchParams({
+    ...Object.fromEntries(['client_id','redirect_uri','state','code_challenge','code_challenge_method','response_type']
+      .filter(k=>typeof params[k]==='string'&&params[k]).map(k=>[k,params[k]])),
+    ...(resourceParam?{resource:resourceParam}:{}),switch:'1'}).toString();
   return `${loginHead()}
-    ${signedInAs?'<p class="note">Signed in with Google as <strong>'+escapeHtml(signedInAs)+'</strong>.</p>':''}
+    ${signedInAs?'<p class="note">Signed in with Google as <strong>'+escapeHtml(signedInAs)+'</strong>. <a href="'+escapeHtml(switchUrl)+'">Not you? Use a different Google account</a></p>':''}
     <p class="note"><strong>${app}</strong> is asking for access. It will be sent to <strong>${escapeHtml(hostOf(params.redirect_uri))}</strong>.</p>
     ${reason?'<p class="error">That account was not added: '+escapeHtml(reason)+'</p>':''}
     ${accounts.length?`<form method="POST">${keep}
@@ -256,7 +260,14 @@ export default async function handler(req, res) {
     let connect=null;
     if(connectHandle){try{connect=await readConnectHandle(connectHandle,expect);}catch{connect=null;}}
     let session=null;
-    if(!connect){try{session=await requireSession(req);}catch{session=null;}}
+    // "Not you?": the browser's earlier sign-in is set aside and Google's
+    // account chooser runs again, so a browser signed in as one person never
+    // silently connects an app for them (owner-raised, 2026-11-10: a reconnect
+    // landed on the test account still signed in from an earlier test).
+    const switching=req.method==='GET'&&params.switch==='1';
+    if(switching){await clearSession(req,res).catch(()=>{});}
+    else if(!connect){try{session=await requireSession(req);}catch{session=null;}}
+    if(switching)connect=null;
     if(!connect&&!session){
       if(req.method!=='GET')return res.status(401).send(renderApproveProblem('Your approval step expired or was already used. Go back to your app and connect again.'));
       if(params.returned==='1'||connectHandle){
