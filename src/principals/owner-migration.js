@@ -96,12 +96,20 @@ export async function linkVerifiedOwner({issuer,sub,email},q=sql()){
  const foreign=await q`SELECT 1 FROM principal_google_accounts
    WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id<>${OWNER_ID}::uuid LIMIT 1`;
  requireScope(foreign.length===0,'identity_owned_elsewhere');
+ // ADOPT-1 (2026-11-09): the widened binding key lets the same Google
+ // identity be bound to a public profile too (the adoption twin). The
+ // owner ceremony must never mint a SECOND owner binding for an identity
+ // a user principal already owns: refuse that shape outright, exactly
+ // as before the widening, so an owner proof can never be issued for a
+ // subject that belongs to a user principal's sign-in.
+ const foreignBinding=await q`SELECT 1 FROM principal_google_identities
+   WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id<>${OWNER_ID}::uuid LIMIT 1`;
+ requireScope(foreignBinding.length===0,'identity_owned_elsewhere');
  const saved=await q`INSERT INTO principal_google_identities
    (issuer,google_sub,principal_id,verified_email)
    VALUES (${issuer},${sub},${OWNER_ID}::uuid,${email.toLowerCase()})
-   ON CONFLICT(issuer,google_sub) DO UPDATE
+   ON CONFLICT(principal_id,issuer,google_sub) DO UPDATE
      SET verified_email=excluded.verified_email,updated_at=now()
-   WHERE principal_google_identities.principal_id=${OWNER_ID}::uuid
    RETURNING principal_id`;
  requireScope(saved.length===1,'identity_owned_elsewhere');
  return {linked:true,principalKind:'legacy_owner',idempotent:true,
