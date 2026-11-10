@@ -3,6 +3,7 @@
 // housekeeping like renaming or removing one. Nothing here talks to Google
 // except workspace_whoami, which confirms the identity with Gmail itself.
 import { ok } from './util.js';
+const err = (text) => ({ content: [{ type: 'text', text }], isError: true });
 import { listGoogleAccounts, setDefaultGoogleAccount, removeGoogleAccount, listConnections, revokeConnection, listRecentChanges, setAllowedDomains, getAllowedDomains } from '../db.js';
 import { recordChange } from '../changelog.js';
 import { serverRelease } from '../release.js';
@@ -18,6 +19,11 @@ export const tools = [
     name: 'workspace_list_accounts',
     description: 'List the linked Google accounts (email, label, default). Pass one as `account` on any tool to use it. Tokens are never returned.',
     inputSchema: { type: 'object', properties: {} }
+  },
+  {
+    name: 'workspace_pause_changes',
+    description: 'Pause or resume changes on ALL of this person\'s app connections at once (their own "Make all my apps read-only" switch). paused:true stops every change right away; reading still works. paused:false lets apps make changes again, each at its own access level: only do that when the person asks, and pass confirm:true. workspace_whoami shows the current state (changesPaused).',
+    inputSchema: { type: 'object', properties: { paused: { type: 'boolean', description: 'true = stop all changes; false = allow changes again.' }, dryRun: { type: 'boolean', description: 'Preview without changing anything.' } }, required: ['paused'] }
   },
   {
     name: 'workspace_set_default_account',
@@ -63,11 +69,22 @@ export const handlers = {
       label: me?.label || null,
       isDefaultAccount: !!me?.is_default,
       messagesTotal: profile.data.messagesTotal,
+      ...(typeof clients?.store?.getChangesPaused === 'function' ? { changesPaused: await clients.store.getChangesPaused().catch(() => null) } : {}),
       server_release: serverRelease()
     });
   },
   async workspace_list_accounts(_args,clients) {
     return ok(clients?.store ? await clients.store.listAccounts() : await listGoogleAccounts());
+  },
+  async workspace_pause_changes(args = {}, clients) {
+    if (typeof clients?.store?.setChangesPaused !== 'function')
+      return err('This connection cannot use the pause switch. Pause changes on My Workspace connections instead.');
+    if (typeof args.paused !== 'boolean') return err('invalid_args: paused must be true (stop all changes) or false (allow changes again).');
+    // Turning changes back on asks for confirm: true (guard confirmWhen).
+    const paused = await clients.store.setChangesPaused(args.paused);
+    return ok({ changesPaused: paused,
+      says: paused ? 'All of this person\'s apps are now read-only. They can still look, but nothing can be changed until changes are turned back on.'
+        : 'Apps can make changes again, each at its own access level.' });
   },
   async workspace_set_default_account(args,clients) {
     if (clients?.store) {

@@ -3,7 +3,7 @@ import {initSchema,getOAuthClient} from '../src/db.js';
 import {listAccounts,listConnections,revokeConnection,disconnectAccount,deletionPreview,
   setPrincipalDefault,requestDeletion,cancelDeletion,isLegacyPilotIdentityPrincipal,
   canLegacyPilotStartFreshConsent,getLinkedGrant,getLatestLinkDenial,
-  getSigninDenial,deleteSigninDenial,setConnectionProfile,setWritesPaused,getWritesPaused} from '../src/principals/store.js';
+  getSigninDenial,deleteSigninDenial,setConnectionProfile,setWritesPaused,getWritesPaused,principalSignInEmail} from '../src/principals/store.js';
 import {brandPage,BRAND_CSP} from '../src/brand/brand.js';
 import {ACCESS_LEVELS} from '../src/brand/access-levels.js';
 import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.js';
@@ -205,9 +205,10 @@ const appName=async clientId=>{
  return 'App '+String(clientId).slice(0,10);
 };
 export async function renderPortal({principalId,csrf,identityOnly,freshConsentAvailable,notice}){
- const [accounts,allConnections,delegations,linkDenial,writesPaused]=await Promise.all([
+ const [accounts,allConnections,delegations,linkDenial,writesPaused,signedInAs]=await Promise.all([
   listAccounts(principalId),listConnections(principalId),listCustomerDelegations(principalId),
-  getLatestLinkDenial(principalId).catch(()=>null),getWritesPaused(principalId).catch(()=>false)]);
+  getLatestLinkDenial(principalId).catch(()=>null),getWritesPaused(principalId).catch(()=>false),
+  principalSignInEmail(principalId).catch(()=>null)]);
  const now=Date.now();
  const connections=allConnections.filter(c=>!c.revoked_at&&(!c.expires_at||new Date(c.expires_at).getTime()>now));
  const emailOf=id=>accounts.find(a=>a.id===id)?.email||'a disconnected account';
@@ -246,8 +247,11 @@ export async function renderPortal({principalId,csrf,identityOnly,freshConsentAv
  const pause='<form method="POST">'+hidden(writesPaused?'resume_writes':'pause_writes')+
   (writesPaused?'<p><b>All your apps are read-only right now.</b> They can look but cannot change anything.</p><button>Let my apps make changes again</button>'
    :'<p>Need a pause? One tap stops every app from changing anything, until you turn it back.</p><button class="secondary">Make all my apps read-only</button>')+'</form>';
- const appsSection='<section><h2>Your AI apps</h2>'+(connections.length?pause+appCards.join(''):
-  '<p>No AI app is connected yet. Add Workspace Unleashed as a connector in your AI app; the <a href="/#connect">home page</a> shows how.</p>')+'</section>';
+ // The switch always shows (2026-11-10: it was hidden when this sign-in had
+ // no apps, e.g. an owner's older connections, which live elsewhere).
+ const appsSection='<section><h2>Your AI apps</h2>'+pause+(connections.length?appCards.join(''):
+  '<p>No AI app is connected with this sign-in yet. Add Workspace Unleashed as a connector in your AI app; the <a href="/#connect">home page</a> shows how. Connections made before the new sign-in are not listed here.</p>')+
+  '<p class="hint">Your AI app can flip this switch for you too: ask it to pause or allow changes.</p></section>';
 
  // Google accounts
  const accountCards=accounts.map(a=>{
@@ -302,6 +306,7 @@ export async function renderPortal({principalId,csrf,identityOnly,freshConsentAv
   '<p class="hint">Signing out here does not disconnect your apps. Read more: <a href="/api/privacy">privacy</a> · <a href="/api/data-deletion">disconnecting and deleting</a>.</p></section>';
 
  return brandPage('My Workspace connections','<h1>My Workspace connections</h1>'+banner+
+  (signedInAs?'<p>Signed in with Google as <strong>'+escape(signedInAs)+'</strong>. Not you? <a href="/api/auth/google/start?purpose=login">Sign in with another account</a>.</p>':'')+
   '<p>Everything you have connected, and what each app may do. Only you can see this page.</p>'+
   appsSection+addSection+delegationSection+dataSection,{wide:true});
 }

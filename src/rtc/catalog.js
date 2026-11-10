@@ -27,8 +27,13 @@ export function isWrite(name) {
  if(RTC_META.has(name))return name==='workspace_call'; // dispatcher checks actual target
  return !READ_ONLY_TOOL_NAMES.has(name);
 }
+// The person's own brake (CONTROLS-2): always callable, even while changes
+// are paused or on a Read-only connection, so an agent can always stop
+// changes for its person; turning changes back on needs confirm (handler).
+export const ALWAYS_AVAILABLE_CONTROLS=new Set(['workspace_pause_changes']);
 export function allowedTool(name, c={}) {
  if(c.principalKind==='user'&&LEGACY_OWNER_ONLY_TOOLS.has(name))return false;
+ if(ALWAYS_AVAILABLE_CONTROLS.has(name))return true;
  // The developer fixture creation/cleanup tools are TEST-only; ordinary
  // Workspace operations and non-writing integration checks remain live-capable.
  if(c.mode==='live'&&['workspace_dev_create_fixtures','workspace_dev_cleanup'].includes(name))return false;
@@ -40,7 +45,7 @@ export function allowedTool(name, c={}) {
  return true;
 }
 export function listedTools(tools,c={},listing=c.listing||'catalog'){
- return tools.filter(t=>allowedTool(t.name,c)&&(listing!=='compact'||RTC_META.has(t.name)||t.name==='workspace_whoami'||t.name.startsWith('workflow_')))
+ return tools.filter(t=>allowedTool(t.name,c)&&(listing!=='compact'||RTC_META.has(t.name)||t.name==='workspace_whoami'||ALWAYS_AVAILABLE_CONTROLS.has(t.name)||t.name.startsWith('workflow_')))
   // Compact discovery stays under its 5,000-token budget. Full schemas are
   // available from workspace_describe_tool or the normal catalog.
   .map(t=>listing==='compact'?compactTool(t):t);
