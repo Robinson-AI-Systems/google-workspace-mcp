@@ -101,6 +101,20 @@ async function signInToApprove(){
 }
 
 describe('a stranger connects cold, with no roster and no cookies',()=>{
+ it('"Not you?" sets the earlier sign-in aside and starts Google\'s account chooser again',async()=>{
+  const page=await signInToApprove();
+  const link=page.body.match(/<a href="([^"]+)">Not you\? Use a different Google account<\/a>/);
+  expect(link).toBeTruthy();
+  const url=new URL(link[1].replace(/&amp;/g,'&'),BASE);
+  expect(url.searchParams.get('switch')).toBe('1');
+  expect(url.searchParams.get('connect')).toBeNull();
+  const again=await get(authorize,Object.fromEntries(url.searchParams));
+  expect(again.statusCode).toBe(200);
+  expect(again.body).toContain('Continue with Google');
+  expect(again.body).not.toContain('Approve</button>');
+  // The old browser sign-in is cleared.
+  expect(String(again.headers['Set-Cookie'])).toMatch(/Max-Age=0/);
+ });
  it('signs in, lands on Approve with the account already linked, and approves',async()=>{
   const page=await signInToApprove();
   expect(page.statusCode).toBe(200);
