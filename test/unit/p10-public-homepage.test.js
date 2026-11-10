@@ -28,6 +28,9 @@ describe('P10 anonymous root entrypoint respects legacy-owner account privacy',(
     expect(out.body).toContain('trademark of Google LLC');
     expect(out.body).toContain('/api/account');
     expect(out.body).toContain('/api/mcp');
+    // D-006 MC-8: the one Muse instruction, Client ID `muse`, secret blank.
+    expect(out.body).toContain('<code id="muse-client-id">muse</code>');
+    expect(out.body).toContain('Client Secret: leave blank.');
     expect(out.body).not.toContain(privateMarker);
     expect(out.body).not.toContain('Connected Google accounts');
     expect(out.headers['Content-Type']).toBe('text/html; charset=utf-8');
