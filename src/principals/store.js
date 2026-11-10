@@ -39,6 +39,18 @@ export async function initPrincipalSchema(q=sql()){
  await q`CREATE UNIQUE INDEX IF NOT EXISTS principal_google_identities_one_per_principal
    ON principal_google_identities(principal_id,issuer,google_sub)`;
  await q`ALTER TABLE principal_google_identities DROP CONSTRAINT IF EXISTS principal_google_identities_pkey`;
+ // Databases whose table was created by THIS widened definition have no
+ // primary key at all after the drop above; give them the widened key
+ // explicitly (a no-op where the original key was already replaced).
+ await q`DO $$ BEGIN
+   IF NOT EXISTS (SELECT 1 FROM pg_constraint
+     WHERE conname='principal_google_identities_pkey'
+       AND conrelid='principal_google_identities'::regclass) THEN
+     ALTER TABLE principal_google_identities
+       ADD CONSTRAINT principal_google_identities_pkey
+       PRIMARY KEY(issuer,google_sub,principal_id);
+   END IF;
+ END $$`;
  await q`CREATE TABLE IF NOT EXISTS principal_google_accounts (
    id UUID PRIMARY KEY,principal_id UUID NOT NULL REFERENCES principals(id),
    issuer TEXT NOT NULL,google_sub TEXT NOT NULL,email TEXT NOT NULL,label TEXT,
