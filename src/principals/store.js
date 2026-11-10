@@ -288,11 +288,7 @@ export async function getBoundOwnerPrincipal(issuer,sub){
 export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnlyPilot=false}){
  requireScope(['accounts.google.com','https://accounts.google.com'].includes(issuer)&&validSub(sub)&&validEmail(verifiedEmail),'invalid_identity');
  const q=sql();
- const reserved=await q`SELECT 1 FROM principal_legacy_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
- // ADOPT-1 (2026-11-09): the reservation is the legacy MAPPING, not the
- // mere presence of a legacy row — an adopted mailbox keeps its legacy
- // grant row (the holder's connections read it) but its mapping, and
- // therefore its reservation, stays retired.
+ const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
  const legacyIdentityOnly=reserved.length>0&&identityOnlyPilot===true&&legacyPilotLoginAllowed(sub);
  const old=await getVerifiedPrincipalForEmail(issuer,sub,verifiedEmail)??await getVerifiedPrincipal(issuer,sub);
  // A full principal's bound identity binds on its own record, even when its
@@ -382,7 +378,7 @@ export async function canLegacyPilotStartFreshConsent(principalId){
  requireScope(validUuid(principalId),'invalid_identity');
  const rows=await sql()`SELECT i.google_sub FROM principals p
    JOIN principal_google_identities i ON i.principal_id=p.id
-   JOIN google_accounts old ON lower(old.email)=lower(i.verified_email)
+   JOIN principal_legacy_accounts old ON lower(old.email)=lower(i.verified_email)
    WHERE p.id=${principalId}::uuid AND p.kind='user' AND p.status='active'
      AND p.legacy_pilot_identity_only=true
      AND p.legacy_pilot_fresh_grant=false`;
@@ -495,7 +491,14 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
      (matching.length===1&&legacyPilotFreshConsentAllowed(sub));
    requireScope(independentlyEligible,'legacy_pilot_identity_only');
  }
- const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
+ // ADOPT-1 (2026-11-09): the LINK reservation is the legacy MAPPING,
+ // not mere legacy-row presence — an adopted mailbox keeps its legacy
+ // grant row (the holder's connections read it) but its mapping, and
+ // therefore the reservation that would refuse a later owner link,
+ // stays retired. (Sign-in binding keeps the presence-based probe:
+ // a legacy-row mailbox's identity still binds only through the
+ // established-profile and pilot paths in bindVerifiedIdentity.)
+ const reserved=await q`SELECT 1 FROM principal_legacy_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
  requireScope(!reserved.length||independentlyEligible||adoption,'reserved_identity');
  // Ownership is an ACTIVE grant on another profile. A revoked grant there
  // is history, not ownership: the holder disconnected the account, and a
