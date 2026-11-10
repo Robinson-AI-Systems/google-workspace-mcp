@@ -32,6 +32,22 @@ describe('client ID cards (CIMD, D-006 MC-3)',()=>{
   const client=await resolveCimdClient(CARD,{fetchImpl:fetchOf(card()),lookupImpl:publicDns});
   expect(client).toMatchObject({client_id:CARD,client_name:'Example Client',cimd:true,token_endpoint_auth_method:'none'});
  });
+ it("accepts Claude's real card, which lists a grant type this server does not offer (2026-11-09 live refusal)",async()=>{
+  clearCimdCache();
+  const claude={client_id:'https://claude.ai/oauth/mcp-oauth-client-metadata',client_name:'Claude',client_uri:'https://claude.ai',
+   redirect_uris:['https://claude.ai/api/mcp/auth_callback'],
+   grant_types:['authorization_code','refresh_token','urn:ietf:params:oauth:grant-type:jwt-bearer'],
+   response_types:['code'],token_endpoint_auth_method:'none'};
+  const client=await resolveCimdClient(claude.client_id,{fetchImpl:fetchOf(claude),lookupImpl:publicDns});
+  expect(client).toMatchObject({client_id:claude.client_id,client_name:'Claude',redirect_uris:['https://claude.ai/api/mcp/auth_callback'],cimd:true});
+  clearCimdCache();
+  const code={client_id:'https://claude.ai/oauth/claude-code-client-metadata',client_name:'Claude Code',client_uri:'https://claude.ai',
+   redirect_uris:['http://localhost/callback','http://127.0.0.1/callback'],grant_types:['authorization_code','refresh_token'],
+   response_types:['code'],token_endpoint_auth_method:'none'};
+  expect(await resolveCimdClient(code.client_id,{fetchImpl:fetchOf(code),lookupImpl:publicDns})).toMatchObject({client_name:'Claude Code'});
+  clearCimdCache();
+  expect(await resolveCimdClient(CARD,{fetchImpl:fetchOf(card({grant_types:['refresh_token']})),lookupImpl:publicDns})).toBeNull();
+ });
  it('refuses cards that lie about their address, hold a secret, or live on a private network',async()=>{
   clearCimdCache();
   expect(await resolveCimdClient(CARD,{fetchImpl:fetchOf(card({client_id:'https://other.example/x'})),lookupImpl:publicDns})).toBeNull();
