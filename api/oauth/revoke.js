@@ -4,15 +4,17 @@
 import {parseBody} from '../../src/oauth/helpers.js';
 import {getOAuthClient,initSchema,revokeClientOAuthToken} from '../../src/db.js';
 import {revokeClientPrincipalToken} from '../../src/principals/store.js';
+import {applyCors,withBasicClientAuth} from '../../src/oauth/client-compat.js';
 
 export default async function handler(req,res) {
+ if(applyCors(req,res,'POST, OPTIONS'))return;
  res.setHeader('Cache-Control','no-store');
  if(req.method!=='POST') {
   res.setHeader('Allow','POST');
   return res.status(405).json({error:'method_not_allowed'});
  }
  let body;
- try {body=await parseBody(req);}
+ try {body=withBasicClientAuth(req,await parseBody(req));}
  catch {return res.status(400).json({error:'invalid_request'});}
  if(typeof body?.client_id!=='string'||!body.client_id) {
   return res.status(401).json({error:'invalid_client'});

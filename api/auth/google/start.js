@@ -6,6 +6,7 @@ import {publicGoogleClient,providerUrl,PUBLIC_SCOPE_GROUPS} from '../../../src/p
 import {publicMode,publicResource,requireScope,mint,cookie,headers} from '../../../src/principals/security.js';
 import {requireSession,requireCsrf,BROWSER_COOKIE} from '../../../src/principals/session.js';
 import {redirectCanonicalGet} from '../../../src/principals/canonical-entry.js';
+import {redirectAllowed} from '../../../src/oauth/client-compat.js';
 export default async function handler(req,res){
  headers(res);
  if(!['GET','POST'].includes(req.method)){res.status(405).json({error:'method_not_allowed'});return;}
@@ -55,7 +56,7 @@ export default async function handler(req,res){
     clientId=params.client_id;redirectUri=params.redirect_uri;
     resource=params.resource;codeChallenge=params.code_challenge;
     const client=await getOAuthClient(clientId);
-    requireScope(client&&client.redirect_uris.includes(redirectUri)
+    requireScope(client&&redirectAllowed(client,redirectUri)
       &&resource===publicResource()+'/api/mcp'
       &&/^[A-Za-z0-9_-]{43}$/.test(codeChallenge),'invalid_mcp_authorization');
   }

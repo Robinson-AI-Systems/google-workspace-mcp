@@ -18,6 +18,7 @@ import {readPrincipalAccess,legacyOwnerContext,listAccounts,accountContext} from
 import {scopedStore} from '../src/principals/store.js';
 import {buildPrincipalApiClients} from '../src/principals/clients.js';
 import {publicMode} from '../src/principals/security.js';
+import {applyCors} from '../src/oauth/client-compat.js';
 
 export const config = { api: { bodyParser: true } };
 
@@ -126,6 +127,8 @@ export function publicToolDispatchReady(env=process.env){
   }catch{return false;}
 }
 export default async function handler(req, res) {
+  // Browser-based MCP clients: bearer-authenticated, never cookie-read.
+  if (applyCors(req, res, 'GET, POST, DELETE, OPTIONS')) return;
   await ensureSchemaReady();
 
   const authHeader = req.headers['authorization'] || '';

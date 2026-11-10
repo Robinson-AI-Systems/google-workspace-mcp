@@ -68,6 +68,14 @@ describe('P10 MCP user authorization and original owner mailbox privacy',()=>{
     expect(redirected.statusCode).toBe(400);
     expect(h.issued).toBe(1);
   });
+ it('D-006 MC-4: any client that leaves out resource is connecting to this server (Cursor, Gemini CLI and others)',async()=>{
+  const q={...base};delete q.resource;
+  const door=await call('GET',q);
+  expect(door.statusCode).toBe(200);
+  expect(door.body).toContain('resource=https%3A%2F%2Fmcp.example.test%2Fapi%2Fmcp');
+  const foreign=await call('GET',{...base,resource:'https://evil.example.test/api/mcp'});
+  expect(foreign.statusCode).toBe(400);
+ });
  it('ONE-DOOR: the default door is the public Google sign-in; the owner page answers only by name, labelled dev/test',async()=>{
   const door=await call('GET',base);
   expect(door.statusCode).toBe(200);

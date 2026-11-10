@@ -1,6 +1,8 @@
+import {applyCors} from '../../src/oauth/client-compat.js';
 import {publicResource} from '../../src/principals/security.js';
 
 export default function handler(req, res) {
+  if(applyCors(req,res,'GET, OPTIONS'))return;
   res.setHeader('Cache-Control','no-store');
   let base;
   try{base=publicResource();}
