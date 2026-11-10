@@ -150,10 +150,35 @@ export async function legacyOwnerContext(accessToken){
 export async function getVerifiedPrincipal(issuer,sub){
  if(!validSub(sub))return null;
  const q=sql();
- const rows=await q`SELECT i.principal_id,p.status FROM principal_google_identities i
+ const rows=await q`SELECT i.principal_id,p.kind,p.status,i.verified_email FROM principal_google_identities i
    JOIN principals p ON p.id=i.principal_id
    WHERE i.issuer=${issuer} AND i.google_sub=${sub}`;
- return rows.length===1&&rows[0].status==='active'?rows[0].principal_id:null;
+ // ADOPT-1 (2026-11-09): the same identity may now be bound to more than
+ // one profile (a holding profile and the public profile that adopted
+ // its mailboxes). Resolution stays deterministic and conservative: the
+ // owner profile's binding wins, then a full user principal, then the
+ // lone binding; an identity-only shell among full bindings never wins,
+ // and a tie between full user principals resolves to nothing rather
+ // than a guess.
+ const active=rows.filter(r=>r.status==='active');
+ if(active.length===1)return active[0].principal_id;
+ const owner=active.filter(r=>r.principal_id===OWNER_ID);
+ if(owner.length===1)return owner[0].principal_id;
+ const full=active.filter(r=>r.kind==='user'&&!r.legacy_pilot_identity_only);
+ if(full.length===1)return full[0].principal_id;
+ return null;
+}
+// The principal whose binding carries THIS verified email for the identity
+// (ADOPT-1): bindVerifiedIdentity prefers the binding recorded for the
+// exact email Google just verified, so a second profile bound to the same
+// identity with a different mailbox never steals the first one's sign-in.
+async function getVerifiedPrincipalForEmail(issuer,sub,verifiedEmail){
+ if(!validSub(sub)||!validEmail(verifiedEmail))return null;
+ const rows=await sql()`SELECT i.principal_id FROM principal_google_identities i
+   JOIN principals p ON p.id=i.principal_id
+   WHERE i.issuer=${issuer} AND i.google_sub=${sub} AND p.status='active'
+     AND lower(i.verified_email)=lower(${verifiedEmail})`;
+ return rows.length===1?rows[0].principal_id:null;
 }
 // The principal an already-bound identity signs in to on its own record: the
 // binding itself is the vetting (owner ruling, 2026-11-05 — an account with a
@@ -231,7 +256,7 @@ export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnl
  const q=sql();
  const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
  const legacyIdentityOnly=reserved.length>0&&identityOnlyPilot===true&&legacyPilotLoginAllowed(sub);
- const old=await getVerifiedPrincipal(issuer,sub);
+ const old=await getVerifiedPrincipalForEmail(issuer,sub,verifiedEmail)??await getVerifiedPrincipal(issuer,sub);
  // A full principal's bound identity binds on its own record, even when its
  // email is a legacy-reserved mailbox and its subject is on no pilot list:
  // the reservation below guards NEW bindings and the identity-only
@@ -249,7 +274,10 @@ export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnl
      WHERE p.id=${old}::uuid AND p.kind='user' AND p.status='active'
        AND p.legacy_pilot_identity_only=true AND p.legacy_pilot_fresh_grant=true
        AND i.issuer=${issuer} AND i.google_sub=${sub}
-       AND lower(i.verified_email)=lower(${verifiedEmail}) LIMIT 1`;
+       AND lower(i.verified_email)=lower(${verifiedEmail})
+       AND EXISTS(SELECT 1 FROM principal_google_accounts a
+         WHERE a.principal_id=p.id AND a.issuer=${issuer} AND a.google_sub=${sub}
+           AND a.status='active' AND a.grant_ciphertext IS NOT NULL) LIMIT 1`;
    if(independent.length===1){
    // Graduation (the separately approved owner migration, 2026-11-05): a
    // LOGIN — never an authorize — by the shell's own holder, with the bound
@@ -274,7 +302,7 @@ export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnl
  ), enrolled AS (
    INSERT INTO principal_google_identities(issuer,google_sub,principal_id,verified_email)
    SELECT ${issuer},${sub},id,${verifiedEmail} FROM candidate
-   ON CONFLICT(issuer,google_sub) DO NOTHING RETURNING principal_id
+   ON CONFLICT(principal_id,issuer,google_sub) DO NOTHING RETURNING principal_id
  ), rolled_back AS (
    DELETE FROM principals WHERE id=${id}::uuid AND NOT EXISTS(SELECT 1 FROM enrolled) RETURNING id
  ) SELECT principal_id FROM enrolled`;
@@ -414,7 +442,10 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
    // ordinary — requiring every later account to also match a legacy
    // mailbox would bar the owner from ever adding a non-legacy account
    // (owner-raised defect, 2026-11-05: a personal Gmail could never link).
-   independentlyEligible=prior[0].fresh===true||
+   const ownGrant=prior[0].fresh===true?await q`SELECT 1 FROM principal_google_accounts
+     WHERE principal_id=${principalId}::uuid AND issuer=${issuer} AND google_sub=${sub}
+       AND status='active' AND grant_ciphertext IS NOT NULL LIMIT 1`:[];
+   independentlyEligible=(prior[0].fresh===true&&ownGrant.length===1)||
      (matching.length===1&&legacyPilotFreshConsentAllowed(sub));
    requireScope(independentlyEligible,'legacy_pilot_identity_only');
  }

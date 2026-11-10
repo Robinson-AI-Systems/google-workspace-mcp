@@ -98,6 +98,11 @@ describe.skipIf(!url)('ADOPT-1: identity-proven adoption of legacy-held accounts
  });
 
  it('(b) adopts an owner-held account (rentals): fresh grant lands, holder row retires',async()=>{
+  // The rentals identity becomes the presenter's own too once Google has
+  // verified the presenter controls it (the same off-band binding the
+  // ceremony gives the holder) — adoption is keyed on that twin binding.
+  await pool.query(`INSERT INTO principal_google_identities(issuer,google_sub,principal_id,verified_email)
+    VALUES ($1,$2,$3,$4)`,[issuer,RENT.sub,me,RENT.email]);
   meRentalsAccount=await link(RENT);
   expect((await store.listAccounts(me)).map(x=>x.email)).toContain(RENT.email);
   expect(await store.getLinkedGrant(me,meRentalsAccount)).toMatchObject({access_token:'fresh-'+RENT.sub});
@@ -109,6 +114,8 @@ describe.skipIf(!url)('ADOPT-1: identity-proven adoption of legacy-held accounts
  });
 
  it('(b2) adopts the owner-held non-legacy account (personal) the same way',async()=>{
+  await pool.query(`INSERT INTO principal_google_identities(issuer,google_sub,principal_id,verified_email)
+    VALUES ($1,$2,$3,$4)`,[issuer,PERS.sub,me,PERS.email]);
   const id=await link(PERS);
   expect((await store.listAccounts(me)).map(x=>x.email)).toContain(PERS.email);
   expect(await store.getLinkedGrant(me,id)).toMatchObject({access_token:'fresh-'+PERS.sub});
