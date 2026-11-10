@@ -81,12 +81,16 @@ export async function initPrincipalSchema(q=sql()){
  await q`INSERT INTO principal_legacy_accounts(email,principal_id)
    SELECT a.email,${OWNER_ID}::uuid FROM google_accounts a
    WHERE NOT EXISTS(SELECT 1 FROM principal_google_accounts g
-     WHERE lower(g.email)=lower(a.email) AND g.status='active')
+     WHERE lower(g.email)=lower(a.email) AND g.status='active'
+       AND g.principal_id<>${OWNER_ID}::uuid)
    ON CONFLICT(email) DO NOTHING`;
- // ADOPT-1 (2026-11-09): the seed above maps only mailboxes with NO
- // active V2 grant: a mailbox whose legacy reservation was retired by an
- // adoption carries its live claim as the adopter's active grant, and
- // re-mapping it on the next init would resurrect the reservation.
+ // ADOPT-1 (2026-11-09): the seed above maps every legacy mailbox the
+ // OWNER does not itself actively hold as a V2 account: a mailbox the
+ // owner links as its own account (the owner linking its legacy
+ // mailboxes is the reservation working as designed) is not legacy-held
+ // against the owner, while a mailbox adopted onto ANOTHER profile
+ // carries its live claim as that profile's active grant and must not
+ // be re-mapped — re-mapping would resurrect its reservation.
  await q`CREATE TABLE IF NOT EXISTS user_sessions (
    token_hash TEXT PRIMARY KEY,principal_id UUID NOT NULL REFERENCES principals(id),
    csrf_hash TEXT NOT NULL,expires_at TIMESTAMPTZ NOT NULL,revoked_at TIMESTAMPTZ,
@@ -385,7 +389,7 @@ export async function canLegacyPilotStartFreshConsent(principalId){
  requireScope(validUuid(principalId),'invalid_identity');
  const rows=await sql()`SELECT i.google_sub FROM principals p
    JOIN principal_google_identities i ON i.principal_id=p.id
-   JOIN principal_legacy_accounts old ON lower(old.email)=lower(i.verified_email)
+   JOIN google_accounts old ON lower(old.email)=lower(i.verified_email)
    WHERE p.id=${principalId}::uuid AND p.kind='user' AND p.status='active'
      AND p.legacy_pilot_identity_only=true
      AND p.legacy_pilot_fresh_grant=false`;
@@ -498,14 +502,25 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
      (matching.length===1&&legacyPilotFreshConsentAllowed(sub));
    requireScope(independentlyEligible,'legacy_pilot_identity_only');
  }
- // ADOPT-1 (2026-11-09): the LINK reservation is the legacy MAPPING,
- // not mere legacy-row presence — an adopted mailbox keeps its legacy
- // grant row (the holder's connections read it) but its mapping, and
- // therefore the reservation that would refuse a later owner link,
- // stays retired. (Sign-in binding keeps the presence-based probe:
- // a legacy-row mailbox's identity still binds only through the
- // established-profile and pilot paths in bindVerifiedIdentity.)
- const reserved=await q`SELECT 1 FROM principal_legacy_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
+ // ADOPT-1 (2026-11-09): the LINK reservation for a mailbox is its
+ // legacy MAPPING — or, where no mapping row exists (a legacy row
+ // created after the last schema init), the legacy row itself UNLESS
+ // the owner principal already holds that mailbox as its own active
+ // V2 account: the reservation exists to stop OTHER profiles from
+ // linking the owner's legacy mailboxes, and the owner linking one of
+ // its own — or a profile that already adopted it — is not a stranger
+ // it guards against. An adopted mailbox keeps its legacy grant row
+ // (the holder's connections read it) and carries an active grant on
+ // the adopting profile, so it stays unreserved either way. (Sign-in
+ // binding keeps the plain presence probe: a legacy-row mailbox's
+ // identity binds only through the established-profile and pilot
+ // paths in bindVerifiedIdentity.)
+ const reserved=await q`SELECT 1 WHERE EXISTS(
+   SELECT 1 FROM principal_legacy_accounts WHERE lower(email)=lower(${verifiedEmail}))
+   OR (EXISTS(SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}))
+     AND NOT EXISTS(SELECT 1 FROM principal_google_accounts
+       WHERE lower(email)=lower(${verifiedEmail}) AND status='active'
+         AND principal_id=${OWNER_ID}::uuid)) LIMIT 1`;
  requireScope(!reserved.length||independentlyEligible||adoption,'reserved_identity');
  // Ownership is an ACTIVE grant on another profile. A revoked grant there
  // is history, not ownership: the holder disconnected the account, and a

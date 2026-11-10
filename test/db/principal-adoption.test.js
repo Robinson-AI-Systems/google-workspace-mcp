@@ -95,6 +95,10 @@ describe.skipIf(!url)('ADOPT-1: identity-proven adoption of legacy-held accounts
   // connections read — and the other legacy mailbox is untouched.
   expect((await pool.query('SELECT count(*)::int AS n FROM principal_legacy_accounts WHERE lower(email)=lower($1)',[SYS.email])).rows[0].n).toBe(0);
   expect((await pool.query('SELECT count(*)::int AS n FROM google_accounts WHERE lower(email)=lower($1)',[SYS.email])).rows[0].n).toBe(1);
+  // ...and it STAYS retired across a schema re-init: the seed must not
+  // resurrect the mapping for a mailbox another profile actively holds.
+  await store.initPrincipalSchema();
+  expect((await pool.query('SELECT count(*)::int AS n FROM principal_legacy_accounts WHERE lower(email)=lower($1)',[SYS.email])).rows[0].n).toBe(0);
   expect((await pool.query('SELECT count(*)::int AS n FROM principal_legacy_accounts WHERE lower(email)=lower($1)',[RENT.email])).rows[0].n).toBe(1);
   expect((await pool.query('SELECT count(*)::int AS n FROM google_accounts WHERE lower(email)=lower($1)',[RENT.email])).rows[0].n).toBe(1);
  });
