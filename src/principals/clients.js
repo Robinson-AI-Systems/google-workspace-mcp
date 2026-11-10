@@ -54,7 +54,8 @@ export async function buildPrincipalApiClients(context){
  clients.connection=context.connectionId;
  clients.credentialVersion=context.accountVersion;
  clients.rtcPolicy=Object.freeze({principalKind:'user',profile:context.profile,listing:context.listing,
-  areas:context.areas,mode:context.mode,cost_policy:context.costPolicy});
+  areas:context.areas,mode:context.mode,cost_policy:context.costPolicy,
+  ...(context.writesPaused?{allow_writes:false}:{})});
  // A domain-bound UI guard is not proof of Google Workspace administration;
  // privilege requires the customer's independently verified OAuth/DWD grant.
  const domain=domainOfEmail(account.email);

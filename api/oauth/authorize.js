@@ -10,6 +10,8 @@
 import { isMuseClient } from '../../src/oauth/client-documents.js';
 import { randomToken, parseBody } from '../../src/oauth/helpers.js';
 import { PRODUCT_DISPLAY_NAME, PROVIDER_DISCLOSURE } from '../../src/branding.js';
+import { BRAND, BRAND_CSS, BRAND_CSP, brandHeader, brandFooter } from '../../src/brand/brand.js';
+import { ACCESS_LEVELS } from '../../src/brand/access-levels.js';
 import {
   getOAuthClient, createAuthCode, initSchema, listGoogleAccounts,
   recordLoginAttempt, countRecentFailedLogins, markLoginAttemptSucceeded
@@ -26,37 +28,18 @@ import {inspectOwnerLoginProof,consumeOwnerLoginProof,legacyNewLoginEnabled} fro
 function publicSignInAvailable(){
  try{return publicMode()!=='off';}catch{return false;} // bad public config cannot lock out legacy owner
 }
+// BRAND-1 (2026-11-09): the sign-in pages use the one Workspace Unleashed
+// shell (company tokens, Violet accent). The Robinson Appliance Rentals kit
+// that had been used here (Manrope, evergreen/ivory) is gone: wrong business.
+const LOGIN_CSS = '.note{margin:0 0 10px}.alt{font-size:15px;margin:12px 0 0}.divider{text-align:center;font-size:14px;color:var(--muted);margin:18px 0 0}'+
+  '.advanced{margin-top:12px;font-size:15px}.fineprint{font-size:13px;color:var(--muted);margin:18px 0 0}.devonly{border:1px dashed var(--accent);border-radius:12px;padding:10px 12px;color:var(--accent);font-size:14px}';
 function loginHead() {
-  return `<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sign in</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
-<style>
-  body { font-family: Manrope, -apple-system, 'Segoe UI', sans-serif; background: #F7F5EC; color: #17251E; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; box-sizing: border-box; }
-  .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 12px rgba(23,37,30,0.10); width: 380px; max-width: 100%; box-sizing: border-box; }
-  h1 { font-size: 1.15rem; margin: 0 0 0.5rem; color: #123C2D; }
-  label { display: block; font-size: 0.85rem; color: #333; margin: 1rem 0 0.35rem; }
-  input[type=email], input[type=password], input[type=text], select { width: 100%; padding: 0.6rem; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 0.95rem; background: white; font-family: inherit; }
-  button { width: 100%; padding: 0.65rem; background: #123C2D; color: #F7F5EC; border: none; border-radius: 6px; cursor: pointer; font: inherit; font-weight: 600; margin-top: 1.25rem; }
-  a.button { display: block; text-align: center; background: #123C2D; color: #F7F5EC; padding: 0.65rem; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 1rem 0 0.25rem; }
-  a { color: #123C2D; }
-  .error { color: #c00; font-size: 0.85rem; margin-bottom: 1rem; }
-  .note { font-size: 0.9rem; color: #444; margin: 0 0 0.5rem; }
-  .hint { font-size: 0.85rem; color: #666; margin: 0.35rem 0 0; }
-  .alt { font-size: 0.9rem; margin: 0.75rem 0 0; }
-  .divider { text-align: center; font-size: 0.8rem; color: #888; margin: 1.25rem 0 0; }
-  .advanced { margin-top: 1rem; font-size: 0.9rem; }
-  .advanced summary { cursor: pointer; color: #123C2D; font-weight: 600; }
-  .fineprint { font-size: 0.72rem; color: #888; margin: 1.5rem 0 0; }
-</style></head>
-<body>
-  <div class="card">
-    <h1>${escapeHtml(PRODUCT_DISPLAY_NAME)}</h1>`;
+  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
+    '<title>Sign in — '+escapeHtml(BRAND.productShort)+'</title><link rel="icon" type="image/png" href="/brand/icon-256.png">'+
+    '<style>'+BRAND_CSS+LOGIN_CSS+'</style></head><body><main>'+brandHeader();
 }
 function loginTail() {
-  return `<p class="fineprint">${escapeHtml(PROVIDER_DISCLOSURE)}</p>
-  </div>
-</body></html>`;
+  return brandFooter()+'</main></body></html>';
 }
 
 // RAS MCP Standard D-006 MC-7: a browser that has just come back from Google
@@ -94,6 +77,11 @@ function renderGoogleStartPage(href,client){
     <p class="hint">Use any Google account you control. You can add more accounts on the next page.</p>
     ${loginTail()}`;
 }
+// A refusal names what happened and the next step in plain words (D-001
+// Public sign-in); the technical reason follows in small print for support.
+function renderRefusal(message,technical){
+  return `${loginHead()}<p class="note"><strong>This connection could not start.</strong></p><p class="note">${escapeHtml(message)}</p><p class="hint">For support: ${escapeHtml(technical)}</p>${loginTail()}`;
+}
 function renderApproveProblem(message){
   return `${loginHead()}<p class="note">${escapeHtml(message)}</p>${loginTail()}`;
 }
@@ -106,9 +94,9 @@ function renderApprovePage({params,resourceParam,client,accounts,signedInAs,conn
     (connectHandle?'<input type="hidden" name="connect" value="'+escapeHtml(connectHandle)+'">':
       '<input type="hidden" name="csrf" value="'+escapeHtml(csrf)+'">');
   const pick=accounts.find(a=>a.is_default)||accounts[0];
-  const list=accounts.map(a=>'<label style="display:flex;gap:.5rem;align-items:center;margin:.4rem 0;font-size:.95rem">'+
-    '<input type="radio" name="account_id" value="'+escapeHtml(a.id)+'"'+(a===pick?' checked':'')+'> '+
-    escapeHtml(a.label?a.label+' ('+a.email+')':a.email)+'</label>').join('');
+  const list=accounts.map(a=>'<label class="choice">'+
+    '<input type="radio" name="account_id" value="'+escapeHtml(a.id)+'"'+(a===pick?' checked':'')+'><div><b>'+
+    escapeHtml(a.label||a.email)+'</b>'+(a.label?'<span>'+escapeHtml(a.email)+'</span>':'')+'</div></label>').join('');
   const reason=denial?(DENIAL_WORDS[denial.code]||'Google did not confirm that account.'):null;
   // Adding an account: the same Google sign-in, from this page, coming back
   // to this page. Without a handle (an ordinary signed-in browser) the
@@ -116,7 +104,7 @@ function renderApprovePage({params,resourceParam,client,accounts,signedInAs,conn
   const addForm=connectHandle
     ? '<form method="POST" action="/api/auth/google/start"><input type="hidden" name="purpose" value="link">'+
       '<input type="hidden" name="connect" value="'+escapeHtml(connectHandle)+'">'+
-      '<button type="submit" style="background:#F7F5EC;color:#123C2D;border:1px solid #123C2D">'+
+      '<button type="submit" class="secondary">'+
       (accounts.length?'Add another Google account':'Connect a Google account')+'</button></form>'
     : '<p class="alt"><a href="/api/account">'+(accounts.length?'Add another Google account':'Connect a Google account')+'</a></p>';
   return `${loginHead()}
@@ -124,10 +112,11 @@ function renderApprovePage({params,resourceParam,client,accounts,signedInAs,conn
     <p class="note"><strong>${app}</strong> is asking for access. It will be sent to <strong>${escapeHtml(hostOf(params.redirect_uri))}</strong>.</p>
     ${reason?'<p class="error">That account was not added: '+escapeHtml(reason)+'</p>':''}
     ${accounts.length?`<form method="POST">${keep}
-      <p class="note">This connection can use every Google account you have connected here. Pick the one it uses when you don't name one:</p>
+      <p class="note"><strong>Which Google account?</strong> ${app} can use every Google account you have connected here. Pick the one it uses when you don't name one:</p>
       ${list}
-      <label for="profile">Access level</label>
-      <select id="profile" name="profile"><option value="full" selected>Full</option><option value="everyday">Everyday</option><option value="read_only">Read only</option></select>
+      <p class="note"><strong>What may it do?</strong></p>
+      ${ACCESS_LEVELS.map(l=>'<label class="choice"><input type="radio" name="profile" value="'+l.id+'"'+(l.id==='full'?' checked':'')+'><div><b>'+escapeHtml(l.label)+'</b><span>'+escapeHtml(l.says)+'</span></div></label>').join('')}
+      <p class="hint">You can change this later on My Workspace connections.</p>
       <button type="submit">Approve</button></form>`:
       '<p class="note">No Google account is connected yet. Connect one to continue.</p>'}
     ${addForm}
@@ -166,7 +155,10 @@ function renderLoginPage({ error, hidden, accounts, selected, profile, verifiedO
     <label for="areas">Limit to certain areas (optional; leave blank for all)</label>
     <input type="text" name="areas" id="areas" placeholder="mail, files, calendar">
   </details>`;
-  const head = loginHead();
+  // ONE-DOOR (owner ruling 2026-11-09): people, the owner included, connect
+  // through the public sign-in. This owner page stays for development and
+  // testing only, says so, and nothing public links here.
+  const head = loginHead()+'<p class="devonly"><strong>Development and testing only.</strong> To connect an app, use the normal Google sign-in.</p>';
   const tail = loginTail();
   if (!verifiedOwner && !legacyEnabled) {
     // Passphrase sign-in is off (a server setting, not something to
@@ -210,20 +202,20 @@ export default async function handler(req, res) {
   const { client_id, redirect_uri, state, code_challenge, code_challenge_method, response_type } = params;
   const resourceParam = isMuseClient(client_id) && !params.resource ? publicResource() + '/api/mcp' : params.resource;
   const hidden = { client_id, redirect_uri, state, code_challenge, code_challenge_method, resource: resourceParam,
-    ...(params.auth_method==='owner_google'?{auth_method:'owner_google'}:{}) };
+    auth_method: params.auth_method==='owner_google'?'owner_google':'owner' };
 
   if (response_type && response_type !== 'code') {
-    res.status(400).send('Only response_type=code is supported.');
+    res.status(400).send(renderRefusal('Your app asked to connect in a way this service does not support.','Only response_type=code is supported.'));
     return;
   }
 
   const client = await getOAuthClient(client_id);
   if (!client) {
-    res.status(400).send('Unknown client_id. This connector needs to register first (this normally happens automatically).');
+    res.status(400).send(renderRefusal('This service does not recognise your app. Remove the connector in your app and add it again; if your app asks for a Client ID, use muse for Muse and leave it blank everywhere else.','Unknown client_id. This connector needs to register first (this normally happens automatically).'));
     return;
   }
   if (!client.redirect_uris.includes(redirect_uri)) {
-    res.status(400).send('redirect_uri does not match what this client registered.');
+    res.status(400).send(renderRefusal('Your app tried to send the sign-in somewhere it did not register. Remove the connector in your app and add it again.','redirect_uri does not match what this client registered.'));
     return;
   }
 
@@ -232,18 +224,23 @@ export default async function handler(req, res) {
   // Already-issued access and refresh tokens remain valid and unchanged.
   if (code_challenge_method !== 'S256' ||
       !/^[A-Za-z0-9_-]{43}$/.test(code_challenge || '')) {
-    res.status(400).send('This connector requires S256 PKCE with a valid code challenge.');
+    res.status(400).send(renderRefusal('Your app started the sign-in without the safety check this service requires. Update the app, or remove the connector and add it again.','This connector requires S256 PKCE with a valid code challenge.'));
     return;
   }
 
   // New Google sign-in is a separate auth path. Never enumerate the original
   // owner's mailboxes before passphrase authentication or to a V2 principal.
-  if(params.auth_method==='google'){
+  // ONE-DOOR: the public Google sign-in is the default door for every app
+  // and every person. The owner pages answer only when asked for by name
+  // (auth_method=owner / owner_google), for development and testing, or
+  // when new sign-ups are switched off on this server.
+  const ownerDoor=params.auth_method==='owner'||params.auth_method==='owner_google'||!publicSignInAvailable();
+  if(!ownerDoor){
     let resource;
     try{resource=publicResource()+'/api/mcp';}catch{return res.status(503).send('MCP origin unavailable.');}
     if(resourceParam!==resource||params.code_challenge_method!=='S256'||
       !/^[A-Za-z0-9_-]{43}$/.test(params.code_challenge||''))
-      return res.status(400).send('V2 requires exact MCP resource and S256 PKCE.');
+      return res.status(400).send(renderRefusal('Your app asked to connect to a different address than this service. Check the connector address ends in /api/mcp, then try again.','V2 requires exact MCP resource and S256 PKCE.'));
     headers(res);
     // D-006 MC-7.0: after Google, the Approve page is reached with a one-use
     // connect handle in the address (no cookie). It must match this exact

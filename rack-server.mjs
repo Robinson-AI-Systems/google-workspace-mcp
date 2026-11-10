@@ -70,6 +70,7 @@ import support from './api/support.js';
 import wellKnownAS from './api/well-known/oauth-authorization-server.js';
 import wellKnownPR from './api/well-known/oauth-protected-resource.js';
 import wellKnownMuseClient from './api/well-known/muse-client.js';
+import brandAsset from './api/brand.js';
 
 const SHA40 = /^[0-9a-f]{40}$/;
 
@@ -100,6 +101,7 @@ const route = (handler, config) => Object.freeze({ handler, config });
 export const FILE_ROUTES = new Map([
   ['/api/account', route(account)],
   ['/api/auth/google/callback', route(authGoogleCallback)],
+  ['/api/brand', route(brandAsset)],
   ['/api/auth/google/start', route(authGoogleStart)],
   ['/api/auth/logout', route(authLogout)],
   ['/api/auth/session', route(authSession)],
@@ -153,6 +155,10 @@ export function resolveRoute(pathname) {
   if (pathname === '/api/openapi.json') return { ...route(rtcGateway), query: { door: 'openapi' } };
   if (pathname === '/api/whoami') return { ...route(rtcGateway), query: { door: 'whoami' } };
   if (pathname === '/api/tools') return { ...route(rtcGateway), query: { door: 'tools' } };
+  // vercel.json: /brand/:asset and /favicon.ico onto api/brand.js.
+  if (pathname === '/favicon.ico') return { ...route(brandAsset), query: { asset: 'favicon.ico' } };
+  let brand = /^\/brand\/([^/]+)$/.exec(pathname);
+  if (brand) return { ...route(brandAsset), query: { asset: decodeURIComponent(brand[1]) } };
   let match = /^\/api\/tools\/([^/]+)$/.exec(pathname);
   if (match) return { ...route(rtcGateway), query: { tool: decodeURIComponent(match[1]) } };
   match = /^\/api\/results\/([^/]+)$/.exec(pathname);
