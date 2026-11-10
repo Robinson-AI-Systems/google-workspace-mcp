@@ -188,7 +188,7 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    await db.saveGoogleTokensFor(identity.verifiedEmail,
      {access_token:'owner-record-access',refresh_token:'owner-record-refresh'});
    await migration.linkVerifiedOwner({issuer:identity.issuer,sub:identity.sub,email:identity.verifiedEmail});
-   expect(await store.classifyBoundIdentity(identity.issuer,identity.sub)).toBe('bound_not_user_principal');
+   expect(await store.classifyBoundIdentity(identity.issuer,identity.sub)).toBe('bound_owner_principal');
    expect(await store.getBoundOwnerPrincipal(identity.issuer,identity.sub)).toBe(security.OWNER_ID);
    expect(await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).toBe(security.OWNER_ID);
    expect(await store.bindVerifiedIdentity({...identity,identityOnlyPilot:false})).toBe(security.OWNER_ID);
