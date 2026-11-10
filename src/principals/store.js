@@ -184,7 +184,7 @@ export async function getVerifiedPrincipal(issuer,sub){
 // (ADOPT-1): bindVerifiedIdentity prefers the binding recorded for the
 // exact email Google just verified, so a second profile bound to the same
 // identity with a different mailbox never steals the first one's sign-in.
-async function getVerifiedPrincipalForEmail(issuer,sub,verifiedEmail){
+export async function getVerifiedPrincipalForEmail(issuer,sub,verifiedEmail){
  if(!validSub(sub)||!validEmail(verifiedEmail))return null;
  const rows=await sql()`SELECT i.principal_id FROM principal_google_identities i
    JOIN principals p ON p.id=i.principal_id
@@ -197,13 +197,22 @@ async function getVerifiedPrincipalForEmail(issuer,sub,verifiedEmail){
 // profile on record must not depend on the pilot tester list). Only a full
 // principal counts: the identity-only coexistence principal keeps its
 // documented list gates, and an unbound identity gets nothing here.
-export async function getBoundFullPrincipal(issuer,sub){
+export async function getBoundFullPrincipal(issuer,sub,verifiedEmail=null){
  if(!validSub(sub))return null;
  const q=sql();
- const rows=await q`SELECT i.principal_id FROM principal_google_identities i
+ const rows=await q`SELECT i.principal_id,i.verified_email FROM principal_google_identities i
    JOIN principals p ON p.id=i.principal_id
    WHERE i.issuer=${issuer} AND i.google_sub=${sub}
      AND p.kind='user' AND p.status='active' AND p.legacy_pilot_identity_only=false`;
+ // ADOPT-1 (2026-11-09): with twin bindings, a sign-in must resolve to
+ // the profile whose binding carries the email Google just verified for
+ // this identity (the same person can hold two mailboxes under one
+ // Google subject in Workspace domains); without that signal the lone
+ // full binding wins, and a genuine tie still resolves to nothing.
+ if(verifiedEmail&&validEmail(verifiedEmail)){
+   const exact=rows.filter(r=>r.verified_email.toLowerCase()===verifiedEmail.toLowerCase());
+   if(exact.length===1)return exact[0].principal_id;
+ }
  return rows.length===1?rows[0].principal_id:null;
 }
 // The one identity-only shell that may graduate to a full profile at sign-in
@@ -223,17 +232,20 @@ export async function getBoundGraduatingPrincipal(issuer,sub,verifiedEmail){
      AND p.legacy_pilot_fresh_grant=true
      AND lower(i.verified_email)=lower(${verifiedEmail})
      AND EXISTS(SELECT 1 FROM google_accounts a
-       WHERE lower(a.email)=lower(${verifiedEmail}))`;
+       WHERE lower(a.email)=lower(${verifiedEmail}))
+     AND EXISTS(SELECT 1 FROM principal_google_accounts a
+       WHERE a.principal_id=p.id AND a.issuer=${issuer} AND a.google_sub=${sub}
+         AND a.status='active' AND a.grant_ciphertext IS NOT NULL)`;
  return rows.length===1?rows[0].principal_id:null;
 }
 // Coarse shape of whatever IS bound to a Google subject whose sign-in was
 // refused, in the fixed denial vocabulary — so the sign-in page can name the
 // exact state instead of one generic refusal (2026-11-05). Never returns an
 // email, a principal id or any part of the subject.
-export async function classifyBoundIdentity(issuer,sub){
+export async function classifyBoundIdentity(issuer,sub,verifiedEmail=null){
  if(!validSub(sub))return null;
  const q=sql();
- const rows=await q`SELECT i.issuer,p.kind,p.status,
+ const rows=await q`SELECT i.issuer,i.principal_id,i.verified_email,p.kind,p.status,
      p.legacy_pilot_identity_only,p.legacy_pilot_fresh_grant
    FROM principal_google_identities i JOIN principals p ON p.id=i.principal_id
    WHERE i.google_sub=${sub}`;
@@ -242,8 +254,14 @@ export async function classifyBoundIdentity(issuer,sub){
     WHERE google_sub=${sub} LIMIT 1`;
   return accounts.length?'account_without_identity_binding':null;
  }
- const same=rows.find(r=>r.issuer===issuer);
+ // ADOPT-1 (2026-11-09): twin bindings mean the row to judge is the one
+ // carrying the verified email the caller presented, when it is known;
+ // an owner-profile binding is its own class, never a user refusal shape.
+ const same=(verifiedEmail&&validEmail(verifiedEmail)
+   ? rows.find(r=>r.issuer===issuer&&r.verified_email.toLowerCase()===verifiedEmail.toLowerCase())
+   : undefined)||rows.find(r=>r.issuer===issuer);
  if(!same)return 'bound_issuer_form_mismatch';
+ if(same.principal_id===OWNER_ID)return 'bound_owner_principal';
  if(same.kind!=='user')return 'bound_not_user_principal';
  if(same.status!=='active')return 'bound_principal_inactive';
  if(same.legacy_pilot_identity_only&&!same.legacy_pilot_fresh_grant)
@@ -286,10 +304,7 @@ export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnl
      WHERE p.id=${old}::uuid AND p.kind='user' AND p.status='active'
        AND p.legacy_pilot_identity_only=true AND p.legacy_pilot_fresh_grant=true
        AND i.issuer=${issuer} AND i.google_sub=${sub}
-       AND lower(i.verified_email)=lower(${verifiedEmail})
-       AND EXISTS(SELECT 1 FROM principal_google_accounts a
-         WHERE a.principal_id=p.id AND a.issuer=${issuer} AND a.google_sub=${sub}
-           AND a.status='active' AND a.grant_ciphertext IS NOT NULL) LIMIT 1`;
+       AND lower(i.verified_email)=lower(${verifiedEmail}) LIMIT 1`;
    if(independent.length===1){
    // Graduation (the separately approved owner migration, 2026-11-05): a
    // LOGIN — never an authorize — by the shell's own holder, with the bound
@@ -454,10 +469,7 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
    // ordinary — requiring every later account to also match a legacy
    // mailbox would bar the owner from ever adding a non-legacy account
    // (owner-raised defect, 2026-11-05: a personal Gmail could never link).
-   const ownGrant=prior[0].fresh===true?await q`SELECT 1 FROM principal_google_accounts
-     WHERE principal_id=${principalId}::uuid AND issuer=${issuer} AND google_sub=${sub}
-       AND status='active' AND grant_ciphertext IS NOT NULL LIMIT 1`:[];
-   independentlyEligible=(prior[0].fresh===true&&ownGrant.length===1)||
+   independentlyEligible=prior[0].fresh===true||
      (matching.length===1&&legacyPilotFreshConsentAllowed(sub));
    requireScope(independentlyEligible,'legacy_pilot_identity_only');
  }

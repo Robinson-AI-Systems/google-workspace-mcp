@@ -5,6 +5,7 @@ import {admitted,digest,cookie,headers,requireScope} from '../../../src/principa
 import {readCookies} from '../../../src/principals/security.js';
 import {setSession,requireSession,BROWSER_COOKIE} from '../../../src/principals/session.js';
 import {linkVerifiedOwner,issueOwnerLoginProof,previewLegacyPilotMigration} from '../../../src/principals/owner-migration.js';
+import {OWNER_ID} from '../../../src/principals/security.js';
 import {redirectCanonicalCallbackGet} from '../../../src/principals/canonical-entry.js';
 // Audit only fixed callback phases and approved denial codes. Never log provider
 // exception messages: Google SDK errors may carry a code, account or token.
@@ -19,6 +20,21 @@ const SAFE_DENIAL_CODES=new Set([
  'bound_shell_no_fresh_grant','bound_shell_email_mismatch',
  'account_without_identity_binding','bound_not_admissible'
 ]);
+// ADOPT-1 helper: decide whether a sign-in that resolved to the holding
+// (owner) profile is actually an adoption ceremony by a DIFFERENT,
+// already-signed-in presenter profile. Returns the presenter's principal
+// id when every proof lines up: a live session on a non-owner user
+// profile, and that profile bound to the exact identity just verified
+// (its twin binding). Any gap returns null and the caller falls back to
+// the ordinary admission path unchanged.
+async function adoptionPresenterSession(req,verified){
+  const {requireSession}=await import('../../../src/principals/session.js');
+  const session=await requireSession(req).catch(()=>null);
+  if(!session?.principal_id||session.principal_id===OWNER_ID)return null;
+  const {getVerifiedPrincipalForEmail}=await import('../../../src/principals/store.js');
+  const bound=await getVerifiedPrincipalForEmail(verified.issuer,verified.sub,verified.email).catch(()=>null);
+  return bound===session.principal_id?session.principal_id:null;
+}
 export default async function handler(req,res){
  headers(res);
  if(req.method!=='GET'){res.status(405).send('Method not allowed');return;}
@@ -170,13 +186,48 @@ export default async function handler(req,res){
     // bindVerifiedIdentity performs that promotion at this same login. A
     // refusal classifies whatever IS bound, so the sign-in page names the
     // exact state rather than one generic refusal.
-    const boundFull=await getBoundFullPrincipal(verified.issuer,verified.sub).catch(()=>null);
+    const boundFull=await getBoundFullPrincipal(verified.issuer,verified.sub,verified.email).catch(()=>null);
     const boundShell=boundFull?null:
       await getBoundGraduatingPrincipal(verified.issuer,verified.sub,verified.email).catch(()=>null);
     const boundOwner=boundFull||boundShell?null:
       await getBoundOwnerPrincipal(verified.issuer,verified.sub).catch(()=>null);
+    // ADOPT-1 (2026-11-09): the adoption ceremony — a signed-in profile
+    // claims a legacy-held mailbox whose holding profile is bound to the
+    // identity being presented. The link leg, not this sign-in, is where
+    // the account moves; here the ONE thing that must not happen is the
+    // sign-in landing on the HOLDING profile (its session would carry
+    // the owner's own connections). When the presenter's session already
+    // exists, let it stand and record nothing; otherwise mint the
+    // presenter a session of its own, bound to the identity it just
+    // proved, and let the account page's add-account leg run the move.
+    const adoptionSession=(!boundFull&&boundOwner)?await adoptionPresenterSession(req,verified).catch(()=>null):null;
+    if(adoptionSession){
+      // Ceremony leg: the presenter keeps its own session; the bind and
+      // the best-effort auto-link below are SKIPPED for this sign-in (the
+      // bind would resolve to the holding profile, and the auto-link
+      // would move the account before the person confirms on their own
+      // account page). The add-account leg there runs the adoption.
+      principalId=adoptionSession;phase='session_creation';
+      await setSession(res,principalId);
+      if(tx.policy?.cookieFree===true&&(tx.purpose==='mcp_authorize'||tx.policy?.connect===true)){
+        return redirectToApprove(res,tx,principalId);
+      }
+      if(tx.purpose==='mcp_authorize'){
+        const next=new URL('/api/oauth/authorize',process.env.PUBLIC_BASE_URL);
+        next.searchParams.set('client_id',tx.client_id);
+        next.searchParams.set('redirect_uri',tx.redirect_uri);
+        next.searchParams.set('code_challenge',tx.code_challenge);
+        next.searchParams.set('code_challenge_method','S256');
+        next.searchParams.set('resource',tx.resource);
+        next.searchParams.set('auth_method','google');
+        if(tx.policy?.clientState)next.searchParams.set('state',tx.policy.clientState);
+        next.searchParams.set('returned','1');
+        res.writeHead(302,{Location:next.toString()});res.end();return;
+      }
+      res.writeHead(302,{Location:'/api/account'});res.end();return;
+    }
     if(!(admitted(verified.sub)||boundFull||boundShell||boundOwner)){
-      const shape=await classifyBoundIdentity(verified.issuer,verified.sub).catch(()=>null);
+      const shape=await classifyBoundIdentity(verified.issuer,verified.sub,verified.email).catch(()=>null);
       requireScope(false,shape||'public_signin_not_admitted');
     }
     phase='principal_bind';
