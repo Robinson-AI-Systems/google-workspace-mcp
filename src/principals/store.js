@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import {storeSql} from '../db-transport.js';
 import {sealV2,openV2} from './crypto.js';
 import {OWNER_ID,digest,mint,validUuid,validEmail,requireScope,legacyPilotLoginAllowed,legacyPilotFreshConsentAllowed} from './security.js';
-import {normalizeConnectionPolicy} from '../oauth/connection-settings.js';
+import {normalizeConnectionPolicy,CONNECTION_PROFILES} from '../oauth/connection-settings.js';
 import {initTenantSchema,makeTenantStore} from './tenant-store.js';
 import {loadCustomerDelegation} from './delegation.js';
 import {initOwnerMigrationSchema} from './owner-migration.js';
@@ -114,6 +114,13 @@ export async function initPrincipalSchema(q=sql()){
    expires_at TIMESTAMPTZ NOT NULL,consumed_at TIMESTAMPTZ,
    created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
  await q`CREATE INDEX IF NOT EXISTS principal_connect_handles_expiry ON principal_connect_handles(expires_at)`;
+ // CONTROLS-1 (2026-11-09): a person's own switch to pause changes on every
+ // app connection at once ("Make all my apps read-only"), GitHub Unleashed's
+ // global action. Each connection keeps its own access level underneath.
+ await q`CREATE TABLE IF NOT EXISTS principal_settings (
+   principal_id UUID PRIMARY KEY REFERENCES principals(id),
+   writes_paused BOOLEAN NOT NULL DEFAULT false,
+   updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
  await initTenantSchema(q);
  await initOwnerMigrationSchema(q);
 }
@@ -717,9 +724,10 @@ export async function readPrincipalAccess(token){
  const rows=await q`SELECT c.id AS connection_id,c.principal_id,c.account_id,c.resource,
    c.client_id,c.profile,c.listing,c.areas,c.mode,c.cost_policy,
    a.email AS account_email,a.token_version AS account_version,p.kind AS principal_kind,
-   p.status AS principal_status
+   p.status AS principal_status,COALESCE(st.writes_paused,false) AS writes_paused
    FROM principal_connections c JOIN principals p ON p.id=c.principal_id
    JOIN principal_google_accounts a ON a.id=c.account_id AND a.principal_id=c.principal_id
+   LEFT JOIN principal_settings st ON st.principal_id=c.principal_id
    WHERE c.access_hash=${digest(token)} AND c.expires_at>now()
    AND c.revoked_at IS NULL AND p.status='active' AND a.status='active'`;
  if(rows.length!==1)return null;
@@ -729,6 +737,7 @@ export async function readPrincipalAccess(token){
    profile:settings.profile,listing:settings.listing,areas:settings.areas,
    resource:row.resource,clientId:row.client_id,
    accountVersion:row.account_version,actingAs:row.account_email,
+   writesPaused:row.writes_paused===true,
    costPolicy:Object.freeze({...settings.cost_policy})});
  trustedContexts.add(context);
  return context;
@@ -785,6 +794,32 @@ export async function listConnections(principalId){
  return q`SELECT id,account_id,client_id,resource,profile,listing,areas,
    mode,version,created_at,expires_at,revoked_at FROM principal_connections
    WHERE principal_id=${principalId}::uuid ORDER BY created_at DESC`;
+}
+// CONTROLS-1: a person changes one of their own app connections' access
+// level (Read only / Everyday / Full) from My Workspace connections. Effective
+// on the connection's next request; only a live connection this person holds.
+export async function setConnectionProfile(principalId,connectionId,profile){
+ requireScope(validUuid(principalId)&&validUuid(connectionId)&&
+  CONNECTION_PROFILES.includes(profile),'invalid_profile');
+ const rows=await sql()`UPDATE principal_connections SET profile=${profile}
+   WHERE id=${connectionId}::uuid AND principal_id=${principalId}::uuid
+   AND revoked_at IS NULL AND expires_at>now() RETURNING profile`;
+ requireScope(rows.length===1,'outside_scope');
+ return rows[0].profile;
+}
+export async function setWritesPaused(principalId,paused){
+ requireScope(validUuid(principalId)&&typeof paused==='boolean','invalid_setting');
+ const rows=await sql()`INSERT INTO principal_settings(principal_id,writes_paused)
+   SELECT id,${paused} FROM principals WHERE id=${principalId}::uuid AND status='active'
+   ON CONFLICT(principal_id) DO UPDATE SET writes_paused=excluded.writes_paused,updated_at=now()
+   RETURNING writes_paused`;
+ requireScope(rows.length===1,'outside_scope');
+ return rows[0].writes_paused;
+}
+export async function getWritesPaused(principalId){
+ if(!validUuid(principalId))return false;
+ const rows=await sql()`SELECT writes_paused FROM principal_settings WHERE principal_id=${principalId}::uuid`;
+ return rows[0]?.writes_paused===true;
 }
 /**
  * OAuth RFC 7009: an access or refresh token can revoke ONLY its registered

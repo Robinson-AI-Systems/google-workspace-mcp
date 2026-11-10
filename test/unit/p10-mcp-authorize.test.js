@@ -68,10 +68,17 @@ describe('P10 MCP user authorization and original owner mailbox privacy',()=>{
     expect(redirected.statusCode).toBe(400);
     expect(h.issued).toBe(1);
   });
- it('anonymous owner choice never enumerates connected private mailboxes',async()=>{
-  const page=await call('GET',base);
+ it('ONE-DOOR: the default door is the public Google sign-in; the owner page answers only by name, labelled dev/test',async()=>{
+  const door=await call('GET',base);
+  expect(door.statusCode).toBe(200);
+  expect(door.body).toContain('Continue with Google');
+  expect(door.body).toContain('/api/auth/google/start');
+  expect(door.body).not.toContain('passphrase');
+  expect(h.enumerations).toBe(0);
+  const page=await call('GET',{...base,auth_method:'owner'});
   expect(page.statusCode).toBe(200);
   expect(page.body).toContain('passphrase');
+  expect(page.body).toContain('Development and testing only.');
   expect(page.body).not.toContain('owner-private@example.test');
   expect(h.enumerations).toBe(0);
   expect(page.body).toContain('Sign in with a separate Google account');

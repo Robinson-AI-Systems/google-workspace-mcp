@@ -106,9 +106,11 @@ function buildServer(googleAccount, connection, settings, makeClients=null, {mul
 export {buildServer as _buildServerForTest};
 export function createIsolatedPrincipalServer(context){
  scopedStore(context); // trusted mint check, not a caller assertion
+ // "Make all my apps read-only" (CONTROLS-1) is the person's own switch:
+ // while it is on, no write runs on any of their connections.
  const settings=Object.freeze({principalKind:'user',profile:context.profile,
   listing:context.listing,areas:context.areas,mode:context.mode,
-  cost_policy:context.costPolicy});
+  cost_policy:context.costPolicy,...(context.writesPaused?{allow_writes:false}:{})});
  return buildServer(null,context.connectionId,settings,()=>buildPrincipalApiClients(context),
   {actingAs:context.actingAs,multiAccount:true,forAccount:async wanted=>{
     const accounts=await listAccounts(context.principalId);

@@ -41,6 +41,14 @@
       "destination": "/api/well-known/muse-client"
     },
     {
+      "source": "/brand/:asset",
+      "destination": "/api/brand?asset=:asset"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/api/brand?asset=favicon.ico"
+    },
+    {
       "source": "/",
       "destination": "/api/index"
     }

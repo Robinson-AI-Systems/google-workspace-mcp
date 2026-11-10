@@ -56,6 +56,11 @@ describe('rack entrypoint route table', () => {
     door('/api/results/res_abc123', { result: 'res_abc123' });
     expect(bySource.get('/api/tools/:tool')).toBe('/api/rtc-gateway?tool=:tool');
     expect(bySource.get('/api/results/:result')).toBe('/api/rtc-gateway?result=:result');
+    // Brand images (BRAND-1): logo, company icon, favicon.
+    expect(bySource.get('/brand/:asset')).toBe('/api/brand?asset=:asset');
+    expect(bySource.get('/favicon.ico')).toBe('/api/brand?asset=favicon.ico');
+    expect(resolveRoute('/brand/unleashed-workspace.png').query).toEqual({asset:'unleashed-workspace.png'});
+    expect(resolveRoute('/favicon.ico').query).toEqual({asset:'favicon.ico'});
     expect(resolveRoute('/api/definitely-not-a-route')).toBeNull();
   });
 

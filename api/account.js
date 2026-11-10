@@ -1,14 +1,15 @@
 // User-owned account portal. No global owner mailbox/connection listing.
-import {initSchema} from '../src/db.js';
-import {PRODUCT_DISPLAY_NAME,PROVIDER_DISCLOSURE} from '../src/branding.js';
+import {initSchema,getOAuthClient} from '../src/db.js';
 import {listAccounts,listConnections,revokeConnection,disconnectAccount,deletionPreview,
   setPrincipalDefault,requestDeletion,cancelDeletion,isLegacyPilotIdentityPrincipal,
   canLegacyPilotStartFreshConsent,getLinkedGrant,getLatestLinkDenial,
-  getSigninDenial,deleteSigninDenial} from '../src/principals/store.js';
+  getSigninDenial,deleteSigninDenial,setConnectionProfile,setWritesPaused,getWritesPaused} from '../src/principals/store.js';
+import {brandPage,BRAND_CSP} from '../src/brand/brand.js';
+import {ACCESS_LEVELS} from '../src/brand/access-levels.js';
 import {requireSession,requireCsrf,CSRF_COOKIE} from '../src/principals/session.js';
 import {configureCustomerDelegation,listCustomerDelegations,revokeCustomerDelegation,
   addVerifiedDelegationSubject,removeDelegationSubject} from '../src/principals/delegation.js';
-import {readCookie,headers,publicMode,requireScope} from '../src/principals/security.js';
+import {readCookie,headers,requireScope} from '../src/principals/security.js';
 import {PUBLIC_SCOPE_GROUPS,publicGoogleClient} from '../src/principals/google.js';
 import {redirectCanonicalGet} from '../src/principals/canonical-entry.js';
 const escape=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -33,34 +34,33 @@ export default async function handler(req,res){
        if(signinDenial){
          deleteSigninDenial(denialId).catch(()=>{});
          const signinLabels={
-           public_signin_not_admitted:'That Google account is not on the approved sign-in list and has no profile on record.',
-           bound_issuer_form_mismatch:'Your profile is on record under an older form of Google\u2019s sign-in address.',
-           bound_not_user_principal:'That sign-in belongs to a different kind of profile.',
-           bound_principal_inactive:'The profile on record for that account is not active.',
-           bound_shell_no_fresh_grant:'Your profile is on record, but its one-time full-access consent was never recorded.',
-           bound_shell_email_mismatch:'Your profile is on record, but the sign-in email does not match its record.',
-           account_without_identity_binding:'That account is linked, but has no sign-in profile binding.',
-           bound_not_admissible:'A profile is on record, but it is not admissible as it stands.',
-           reserved_identity:'That account is reserved by the original connection.',
-           invalid_state:'The sign-in attempt expired or was already used — start again.',
-           consent_declined:'The Google consent was not completed.',
-           invalid_verified_identity:'Google could not verify that sign-in.',
-           invalid_identity:'Google could not verify that sign-in.',
-           invalid_grant:'The Google sign-in code was refused — start again.'};
-         signinNote='<p><strong>Most recent sign-in attempt:</strong> refused at the '+
-           escape(signinDenial.phase)+' step — '+
-           escape(signinLabels[signinDenial.code]||'The verification did not pass.')+
-           ' (Reason code: '+escape(signinDenial.code)+', '+
-           escape(new Date(signinDenial.created_at).toISOString())+')</p>';
+           public_signin_not_admitted:'New sign-ups are switched off on this server right now.',
+           bound_issuer_form_mismatch:'Your account is on record under an older form of Google\u2019s sign-in.',
+           bound_not_user_principal:'That Google account is set up for a different kind of access here.',
+           bound_principal_inactive:'The account on record for that Google sign-in is not active.',
+           bound_shell_no_fresh_grant:'Your account is on record, but it never finished its first permission step.',
+           bound_shell_email_mismatch:'Your account is on record, but the email Google returned does not match it.',
+           account_without_identity_binding:'That Google account is connected, but cannot be used to sign in.',
+           bound_not_admissible:'That account is on record, but cannot sign in as it stands.',
+           reserved_identity:'That Google account is held by this server\u2019s original connection.',
+           invalid_state:'That sign-in expired or was already used. Start again.',
+           consent_declined:'The Google sign-in was cancelled.',
+           invalid_verified_identity:'Google could not confirm that sign-in.',
+           invalid_identity:'Google could not confirm that sign-in.',
+           invalid_grant:'Google refused the sign-in code. Start again.'};
+         signinNote='<p class="error" role="alert"><strong>That sign-in did not go through.</strong> '+
+           escape(signinLabels[signinDenial.code]||'Google could not confirm it.')+'</p>'+
+           '<p class="hint">For support: refused at the '+escape(signinDenial.phase)+' step. Reason code: '+
+           escape(signinDenial.code)+', '+escape(new Date(signinDenial.created_at).toISOString())+'.</p>';
        }
      }
      res.setHeader('Content-Type','text/html; charset=utf-8');
-     return res.status(401).send('<!doctype html><html lang="en"><meta charset="utf-8">'+
-       '<title>Sign in — '+escape(PRODUCT_DISPLAY_NAME)+'</title>'+
-       '<main style="font:16px/1.5 system-ui;max-width:42rem;margin:3rem auto">'+
-       '<h1>Sign in to your Workspace account</h1>'+signinNote+
-       '<p>This browser has no active pilot account session. Your existing owner MCP connections are separate and unchanged.</p>'+
-       '<p><a href="/api/auth/google/start?purpose=login">Sign in with your approved Google account</a></p></main>');
+     res.setHeader('Content-Security-Policy',BRAND_CSP);
+     return res.status(401).send(brandPage('Sign in','<h1>My Workspace connections</h1>'+signinNote+
+       '<p>Sign in to see the Google accounts and AI apps you have connected, change what each app may do, '+
+       'add another Google account, disconnect anything, or remove your data.</p>'+
+       '<p><a class="button" href="/api/auth/google/start?purpose=login">Sign in with Google</a></p>'+
+       '<p class="hint">Use any Google account you control. You never type a password here; Google handles the sign-in.</p>'));
    }
    const principalId=session.principal_id;
    const identityOnly=await isLegacyPilotIdentityPrincipal(principalId);
@@ -70,178 +70,238 @@ export default async function handler(req,res){
      const body=req.body&&typeof req.body==='object'?req.body:{};
      requireCsrf(req,session,body);
      const action=body.action;
-     if(action==='revoke_connection'){
-       return res.status(200).json({revoked:await revokeConnection(principalId,body.id)});
+     let status,result;
+     try{[status,result]=await runAction(principalId,body);}
+     catch(error){if(body.return!=='page')throw error;status=400;result=null;}
+     // Buttons on the page send return=page: answer with a page, not raw JSON.
+     if(body.return==='page'){
+       res.setHeader('Content-Security-Policy',BRAND_CSP);
+       return sendActionPage(res,status,result,action);
      }
-     if(action==='disconnect_account'){
-       return res.status(200).json({disconnected:await disconnectAccount(principalId,body.id),
-         note:'Local account and agent connections disabled. Google provider revocation not claimed.'});
-     }
-     if(action==='disable_god_mode'){
-       requireScope(body.confirm===true||body.confirm==='true','owner_confirmation_required');
-       const owned=(await listAccounts(principalId)).find(a=>a.id===body.id);
-       requireScope(owned&&PUBLIC_SCOPE_GROUPS.complete.every(scope=>owned.scope_list.includes(scope)),
-         'god_mode_not_enabled');
-       // Best-effort provider-side revocation is never equated with local
-       // account revocation. This is this principal's own independent Google
-       // grant from the PUBLIC OAuth client, never the legacy owner client.
-       // The local stop must work even when Google is temporarily unreachable.
-       // Stop local account/client dispatch before any external provider
-       // network request. A slow/failing Google revocation cannot leave the
-       // owner's native agent access active while the request waits.
-       let token=null;
-       try {
-         const grant=await getLinkedGrant(principalId,body.id);
-         token=grant?.refresh_token||grant?.access_token||null;
-       }catch{ /* local revocation still proceeds */ }
-       const disconnected=await disconnectAccount(principalId,body.id);
-       let providerRevoked=false;
-       if(disconnected>0&&token){
-         try {
-           await publicGoogleClient().revokeToken(token);
-           providerRevoked=true;
-         }catch{ /* Google revocation is unverified: report precisely */ }
-       }
-       return res.status(200).json({godMode:false,disconnected,
-         agentConnectionsRevoked:disconnected>0,providerRevoked,
-         note:providerRevoked
-           ?'Google app permission revocation was confirmed. This account and its agents are also disabled locally. To resume, authorize only the services you choose and reconnect your agent.'
-           :'Account and agent access are stopped locally. Google provider-wide authorization could not be confirmed revoked. Review your Google Account third-party access settings to revoke this app at Google, then reauthorize only the services you choose.'});
-     }
-     if(action==='set_default'){
-       return res.status(200).json({defaultAccountId:await setPrincipalDefault(principalId,body.id)});
-     }
-     if(action==='setup_delegation'){
-       if(body.confirm!==true&&body.confirm!=='true')return res.status(400).json({error:'owner_confirmation_required'});
-       const scopes=Array.isArray(body.scopes)?body.scopes:String(body.scopes||'').split(/[\s,]+/).filter(Boolean);
-       const receipt=await configureCustomerDelegation({principalId,accountId:body.id,
-         credentialJson:body.credential,scopes});
-       return res.status(200).json(receipt);
-     }
-     if(action==='revoke_delegation')return res.status(200).json(await revokeCustomerDelegation(principalId,body.id,body.customerId));
-     if(action==='verify_delegated_subject')return res.status(200).json(await addVerifiedDelegationSubject(principalId,body.id,body.customerId,body.subject));
-     if(action==='remove_delegated_subject')return res.status(200).json(await removeDelegationSubject(principalId,body.id,body.customerId,body.subject));
-     if(action==='delete_preview')return res.status(200).json(await deletionPreview(principalId));
-     if(action==='request_delete')return res.status(200).json(await requestDeletion(principalId));
-     if(action==='cancel_delete')return res.status(200).json(await cancelDeletion(principalId));
-     return res.status(400).json({error:'unknown_action'});
+     return res.status(status).json(result);
    }
-   const accounts=await listAccounts(principalId),connections=await listConnections(principalId),
-     delegations=await listCustomerDelegations(principalId),
-     linkDenial=await getLatestLinkDenial(principalId).catch(()=>null);
-   // A refused link used to say only "verification failed" — the exact
-   // reason is fixed-vocabulary and safe to show the account holder here.
-   const denialLabels={
-     grant_scope_missing:'Google did not confirm the permissions this link needs.',
-     legacy_pilot_identity_only:'A pilot-era restriction refused this account.',
-     identity_owned_elsewhere:'That Google account is already tied to a different profile.',
-     reserved_identity:'That account is reserved by the original connection.',
-     session_required:'The sign-in session was missing — sign in again and retry.',
-     principal_mismatch:'The sign-in session did not match this link — sign in again and retry.',
-     consent_declined:'The Google consent was not completed.',
-     invalid_link:'The link request was incomplete.'};
-   const denialNote=linkDenial
-     ? '<p><strong>Most recent link attempt:</strong> refused — '+
-       escape(denialLabels[linkDenial.code]||'The verification did not pass.')+
-       ' (Reason code: '+escape(linkDenial.code)+', '+
-       escape(new Date(linkDenial.created_at).toISOString())+')</p>'
-     : '';
    const csrf=readCookie(req,CSRF_COOKIE)||'';
    if(!csrf)return res.status(401).send('Session CSRF state missing.');
    res.setHeader('Content-Type','text/html; charset=utf-8');
-   const form=(action,id,label)=>'<form method="POST"><input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
-      '<input type="hidden" name="action" value="'+escape(action)+'">'+
-      '<input type="hidden" name="id" value="'+escape(id)+'"><button>'+escape(label)+'</button></form>';
-   // Pilot accepts broad Google scopes in one pass. Ordinary customers begin
-   // with a single service, and may optionally request broader Google consent.
-   // This is still the user's actual Google consent, not a bypass of OAuth.
-   const mode=publicMode();
-   const services=Object.keys(PUBLIC_SCOPE_GROUPS).filter(group=>group!=='complete');
-   const authorizeForm=pilot=>'<form action="/api/auth/google/start" method="POST">'+
-     '<input type="hidden" name="purpose" value="link">'+
-     '<input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
-     '<label>Google service <select name="group">'+
-     services.map(group=>'<option value="'+escape(group)+'">'+escape(group)+'</option>').join('')+
-     '</select></label>'+
-     '<p><label><input type="checkbox" name="godMode" value="true"'+(pilot?' checked':'')+'>'+
-     ' <strong>God mode — request all supported Google permissions together</strong></label></p>'+
-     '<p>God mode asks Google for all '+PUBLIC_SCOPE_GROUPS.complete.length+
-     ' direct-user OAuth permissions this MCP supports, including powerful administrator-related permissions. '+
-     'Google still requires your consent and may require restricted-scope verification, a real admin role, separate customer delegation or paid licensing. '+
-     'You can turn off God mode later; doing so locally disconnects this Google grant and its connected agents. '+
-     'You can revoke the Google permission at Google when turning it off, and separately check or remove the app from your Google Account third-party access settings if the provider cannot confirm revocation.</p>'+
-     '<button>Continue to Google consent</button></form>';
-   const accessNote=a=>{
-     const granted=PUBLIC_SCOPE_GROUPS.complete.filter(scope=>a.scope_list.includes(scope)).length;
-     if(granted===PUBLIC_SCOPE_GROUPS.complete.length)
-       return ' · God mode active locally'+disableGodMode(a);
-     if(granted>0)
-       return ' · Google granted '+granted+' of '+PUBLIC_SCOPE_GROUPS.complete.length+
-         ' supported permissions to this account. Permissions Google did not grant — for example '+
-         'administrator permissions, which require a Google Workspace account — are unavailable '+
-         'for this account.'+form('disconnect_account',a.id,'Disconnect locally');
-     return form('disconnect_account',a.id,'Disconnect locally');
-   };
-   const disableGodMode=a=>'<form method="POST">'+
-     '<input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
-     '<input type="hidden" name="action" value="disable_god_mode">'+
-     '<input type="hidden" name="id" value="'+escape(a.id)+'">'+
-     '<label><input type="checkbox" name="confirm" value="true" required>'+
-     ' I understand this revokes the broad provider authorization where Google permits, stops this account locally, revokes its agent connections, '+
-     'and requires new selected-service consent to continue. Google may require manual third-party access removal if revocation fails.</label>'+
-     '<button>Turn off God mode</button></form>';
-   const consentChoice=mode==='pilot'
-     ? '<h3>Approved pilot: comprehensive Google acceptance setup</h3>'+
-       '<p>For the approved development testers, God mode starts checked so all supported scopes can be requested together before live testing. Uncheck it for one service only. Google must still approve each requested scope.</p>'+
-       authorizeForm(true)
-     : '<h3>Authorize Google permissions as needed</h3>'+
-       '<p>Select the service you want. God mode is optional and off by default. You can enable it at any time to request all supported direct-user permissions at once.</p>'+
-       authorizeForm(false);
-   const html='<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
-     '<title>My Workspace connections</title><main style="max-width:720px;margin:auto;font:16px/1.5 system-ui;padding:1rem">'+
-     '<h1>'+escape(PRODUCT_DISPLAY_NAME)+'</h1><p>'+escape(PROVIDER_DISCLOSURE)+'</p><p>Only this authenticated principal’s accounts and agent connections appear here.</p>'+
-     '<p>Before linking mail, files or administrator scopes, review how Google data is used by your selected agent: '+
-     '<a href="/api/privacy">privacy and data use</a>, <a href="/api/support">support</a> and '+
-     '<a href="/api/data-deletion">local disconnection and deletion limits</a>. Google controls which requested permissions you approve.</p>'+
-     '<h2>Google connections</h2><ul>'+accounts.map(a=>'<li>'+escape(a.label||a.email)+' · '+
-       escape(a.scope_list.join(', '))+' · '+(a.is_default?'Default':'Linked')+
-       form('set_default',a.id,'Make default')+
-       accessNote(a)+'</li>').join('')+'</ul>'+denialNote+
-     (identityOnly&&!freshConsentAvailable
-       ? '<h2>Identity-only legacy tester</h2><p>This verified pilot login is intentionally separate from your original owner MCP. Existing Google connections stay with the original owner. This pilot identity cannot link Google data or issue MCP tool connections until a separately approved fresh consent.</p>'
-       : '<h2>Link an account / add permissions</h2>'+
-         (freshConsentAvailable?'<p>You may now independently consent for your own Google account. This does not transfer, share or revoke original owner grants.</p>':'')+consentChoice)+
-     '<h2>Customer administrator delegation</h2>'+
-     '<p>This is optional and only for administrators of their own verified Google Workspace customer. First link the separate read-only Admin Verification permission above. An existing login and its grants stay intact. Domain name or email alone never grants authority.</p>'+
-     '<p>A service-account key is submitted only over this signed-in HTTPS form with CSRF protection, encrypted per account in the database, and never shown again. The Google administrator must separately authorize the selected scopes for this service account in their own Admin Console. Enter only scopes required for the intended operations. Missing configuration does not disable ordinary Google access.</p>'+
-     '<ul>'+delegations.map(d=>'<li>'+escape(d.customer_id)+' · '+escape(d.subject_rule)+' · '+
-       'Verified delegated mailboxes: '+escape((d.subjects||[]).join(', ')||'(none)')+' · '+
-       escape(d.scopes.join(', '))+' · '+(d.configured?'Configured':'Disabled')+
-       '<form method="POST"><input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
-       '<input type="hidden" name="action" value="revoke_delegation">'+
-       '<input type="hidden" name="id" value="'+escape(d.account_id)+'">'+
-       '<input type="hidden" name="customerId" value="'+escape(d.customer_id)+'">'+
-       '<button>Revoke this delegation locally</button></form>'+ 
-       '<form method="POST"><input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
-       '<input type="hidden" name="action" value="verify_delegated_subject">'+
-       '<input type="hidden" name="id" value="'+escape(d.account_id)+'">'+
-       '<input type="hidden" name="customerId" value="'+escape(d.customer_id)+'">'+
-       '<label>Add a mailbox independently verified by Google Directory <input name="subject" type="email" required></label>'+ 
-       '<button>Verify mailbox</button></form></li>').join('')+'</ul>'+
-     '<form method="POST"><input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
-       '<input type="hidden" name="action" value="setup_delegation">'+
-       '<label>Owned linked account <select name="id">'+accounts.map(a=>'<option value="'+escape(a.id)+'">'+escape(a.email)+'</option>').join('')+'</select></label><p>'+ 
-       '<label>Service-account key JSON (never returned) <textarea name="credential" rows="5" required autocomplete="off"></textarea></label></p>'+ 
-       '<p><label>Selected authorized Google OAuth scope URLs (comma or newline separated) <textarea name="scopes" rows="3" required></textarea></label></p>'+ 
-       '<label><input type="checkbox" name="confirm" value="true" required> I administer this Google customer and authorized the exact service-account scopes in its Admin Console.</label>'+ 
-       '<p><button>Verify and save encrypted delegation</button></p></form>'+
-     '<h2>Agent access</h2><ul>'+connections.map(c=>'<li>'+escape(c.client_id)+' / '+escape(c.profile)+
-       ' · '+escape(c.id)+form('revoke_connection',c.id,'Revoke this agent connection')+'</li>').join('')+'</ul>'+
-     '<h2>Account deletion</h2><p>Preview counts before any irreversible decision. No deletion occurs on this page; Google grants and retained audit data may require separate treatment.</p>'+
-       form('delete_preview','','Preview deletion')+
-       form('request_delete','','Request recoverable deletion (no irreversible removal)')+
-       form('cancel_delete','','Cancel pending deletion')+
-     '<form action="/api/auth/logout" method="POST"><input type="hidden" name="csrf" value="'+escape(csrf)+'"><button>Log out of this browser (agents remain)</button></form></main>';
-   return res.status(200).send(html);
+   res.setHeader('Content-Security-Policy',BRAND_CSP);
+   return res.status(200).send(await renderPortal({principalId,csrf,identityOnly,freshConsentAvailable,
+     notice:typeof req.query?.notice==='string'?req.query.notice:null}));
  }catch{return res.status(403).json({error:'invalid_session_or_scope'});}
+}
+
+const reply=(status,result)=>[status,result];
+async function runAction(principalId,body){
+ const action=body.action;
+     if(action==='set_profile'){
+   return reply(200,{profile:await setConnectionProfile(principalId,body.id,body.profile)});
+ }
+ if(action==='pause_writes'||action==='resume_writes'){
+   return reply(200,{writesPaused:await setWritesPaused(principalId,action==='pause_writes')});
+ }
+ if(action==='revoke_connection'){
+   return reply(200,{revoked:await revokeConnection(principalId,body.id)});
+ }
+ if(action==='disconnect_account'){
+   return reply(200,{disconnected:await disconnectAccount(principalId,body.id),
+     note:'Local account and agent connections disabled. Google provider revocation not claimed.'});
+ }
+ if(action==='disable_god_mode'){
+   requireScope(body.confirm===true||body.confirm==='true','owner_confirmation_required');
+   const owned=(await listAccounts(principalId)).find(a=>a.id===body.id);
+   requireScope(owned&&PUBLIC_SCOPE_GROUPS.complete.every(scope=>owned.scope_list.includes(scope)),
+     'god_mode_not_enabled');
+   // Best-effort provider-side revocation is never equated with local
+   // account revocation. This is this principal's own independent Google
+   // grant from the PUBLIC OAuth client, never the legacy owner client.
+   // The local stop must work even when Google is temporarily unreachable.
+   // Stop local account/client dispatch before any external provider
+   // network request. A slow/failing Google revocation cannot leave the
+   // owner's native agent access active while the request waits.
+   let token=null;
+   try {
+     const grant=await getLinkedGrant(principalId,body.id);
+     token=grant?.refresh_token||grant?.access_token||null;
+   }catch{ /* local revocation still proceeds */ }
+   const disconnected=await disconnectAccount(principalId,body.id);
+   let providerRevoked=false;
+   if(disconnected>0&&token){
+     try {
+       await publicGoogleClient().revokeToken(token);
+       providerRevoked=true;
+     }catch{ /* Google revocation is unverified: report precisely */ }
+   }
+   return reply(200,{godMode:false,disconnected,
+     agentConnectionsRevoked:disconnected>0,providerRevoked,
+     note:providerRevoked
+       ?'Google app permission revocation was confirmed. This account and its agents are also disabled locally. To resume, authorize only the services you choose and reconnect your agent.'
+       :'Account and agent access are stopped locally. Google provider-wide authorization could not be confirmed revoked. Review your Google Account third-party access settings to revoke this app at Google, then reauthorize only the services you choose.'});
+ }
+ if(action==='set_default'){
+   return reply(200,{defaultAccountId:await setPrincipalDefault(principalId,body.id)});
+ }
+ if(action==='setup_delegation'){
+   if(body.confirm!==true&&body.confirm!=='true')return reply(400,{error:'owner_confirmation_required'});
+   const scopes=Array.isArray(body.scopes)?body.scopes:String(body.scopes||'').split(/[\s,]+/).filter(Boolean);
+   const receipt=await configureCustomerDelegation({principalId,accountId:body.id,
+     credentialJson:body.credential,scopes});
+   return reply(200,receipt);
+ }
+ if(action==='revoke_delegation')return reply(200,await revokeCustomerDelegation(principalId,body.id,body.customerId));
+ if(action==='verify_delegated_subject')return reply(200,await addVerifiedDelegationSubject(principalId,body.id,body.customerId,body.subject));
+ if(action==='remove_delegated_subject')return reply(200,await removeDelegationSubject(principalId,body.id,body.customerId,body.subject));
+ if(action==='delete_preview')return reply(200,await deletionPreview(principalId));
+ if(action==='request_delete')return reply(200,await requestDeletion(principalId));
+ if(action==='cancel_delete')return reply(200,await cancelDeletion(principalId));
+ return reply(400,{error:'unknown_action'});
+}
+
+// ---- BRAND-1 / CONTROLS-1 (2026-11-09): the page people actually see.
+// Plain words, one consequence sentence per control, nothing internal.
+
+const SERVICE_NAMES={mail:'Gmail',files:'Drive, Docs, Sheets, Slides and Forms',calendar:'Calendar',tasks:'Tasks',
+ contacts:'Contacts',chat:'Chat',classroom:'Classroom',adminVerify:'Admin check',
+ adminDirectory:'Admin: users, groups and security',reports:'Admin reports',groups:'Group settings',
+ licensing:'Licensing',dataTransfer:'Data transfer',cloudIdentity:'Organisation policies',
+ chromePolicy:'Chrome policies',vault:'Vault',siteVerification:'Site verification',postmaster:'Email delivery statistics'};
+export function servicesInWords(scopeList=[]){
+ return Object.entries(PUBLIC_SCOPE_GROUPS).filter(([group])=>group!=='complete')
+  .filter(([,scopes])=>scopes.some(scope=>scopeList.includes(scope)))
+  .map(([group])=>SERVICE_NAMES[group]||group);
+}
+const NOTICES={
+ set_profile:'Saved. The new access level applies from the app’s next request.',
+ pause_writes:'All your apps are now read-only. They can still look, but nothing can be changed until you turn changes back on.',
+ resume_writes:'Your apps can make changes again, each at its own access level.',
+ revoke_connection:'That app is disconnected. Remove the connector in the app too if you no longer want it listed there.',
+ disconnect_account:'That Google account is disconnected here, together with the apps connected through it.',
+ disable_god_mode:'All permissions are turned off for that account, and its apps are disconnected.',
+ set_default:'Default account updated.',
+ setup_delegation:'Organisation access is saved.',
+ revoke_delegation:'Organisation access is turned off.',
+ verify_delegated_subject:'Mailbox added.',
+ remove_delegated_subject:'Mailbox removed.',
+ request_delete:'Your deletion request is in. You can cancel it on this page.',
+ cancel_delete:'Your deletion request is cancelled.'
+};
+export function sendActionPage(res,status,result,action){
+ res.setHeader('Content-Type','text/html; charset=utf-8');
+ if(status>=400)return res.status(status).send(brandPage('Not done','<h1>That was not done</h1>'+
+  '<p>Nothing was changed. Go back and try again.</p><p><a class="button" href="/api/account">Back to My Workspace connections</a></p>'));
+ if(action==='delete_preview'){
+  const rows=Object.entries(result||{}).filter(([,v])=>typeof v==='number'||typeof v==='boolean'||typeof v==='string');
+  return res.status(200).send(brandPage('What is stored','<h1>What is stored for you</h1>'+
+   '<p>This is only a preview. Nothing has been removed.</p><ul>'+
+   rows.map(([k,v])=>'<li>'+escape(k.replace(/_/g,' '))+': '+escape(String(v))+'</li>').join('')+'</ul>'+
+   '<p><a class="button" href="/api/account">Back to My Workspace connections</a></p>'));
+ }
+ if(action==='disable_god_mode'&&result&&result.providerRevoked===false){
+  res.writeHead(303,{Location:'/api/account?notice=disable_god_mode_unconfirmed'});return res.end();
+ }
+ res.writeHead(303,{Location:'/api/account?notice='+encodeURIComponent(NOTICES[action]?action:'done')});return res.end();
+}
+const appName=async clientId=>{
+ if(clientId==='muse'||/muse-client\.json$/.test(String(clientId)))return 'Muse';
+ try{const c=await getOAuthClient(clientId);if(c?.client_name)return c.client_name;}catch{}
+ return 'App '+String(clientId).slice(0,10);
+};
+export async function renderPortal({principalId,csrf,identityOnly,freshConsentAvailable,notice}){
+ const [accounts,allConnections,delegations,linkDenial,writesPaused]=await Promise.all([
+  listAccounts(principalId),listConnections(principalId),listCustomerDelegations(principalId),
+  getLatestLinkDenial(principalId).catch(()=>null),getWritesPaused(principalId).catch(()=>false)]);
+ const now=Date.now();
+ const connections=allConnections.filter(c=>!c.revoked_at&&(!c.expires_at||new Date(c.expires_at).getTime()>now));
+ const emailOf=id=>accounts.find(a=>a.id===id)?.email||'a disconnected account';
+ const hidden=(action,id='')=>'<input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
+  '<input type="hidden" name="return" value="page"><input type="hidden" name="action" value="'+escape(action)+'">'+
+  (id?'<input type="hidden" name="id" value="'+escape(id)+'">':'');
+ const button=(action,id,label,cls='secondary small')=>'<form method="POST" class="inline">'+hidden(action,id)+
+  '<button class="'+cls+'">'+escape(label)+'</button></form>';
+ const complete=PUBLIC_SCOPE_GROUPS.complete;
+ const notices={...NOTICES,disable_god_mode_unconfirmed:'All permissions are turned off here and the apps are disconnected, but Google did not confirm it. To be sure, remove Workspace Unleashed from your Google Account’s third-party access page.',done:'Done.'};
+ const banner=notice&&notices[notice]?'<p class="card" role="status">'+escape(notices[notice])+'</p>':'';
+ const denialWords={grant_scope_missing:'Google did not grant any of the permissions asked for.',
+  legacy_pilot_identity_only:'This sign-in is a test identity that cannot add accounts.',
+  identity_owned_elsewhere:'That Google account is already connected to a different person here.',
+  reserved_identity:'That Google account is held by this server’s original connection.',
+  session_required:'You were signed out part-way. Sign in and try again.',
+  principal_mismatch:'You were signed out part-way. Sign in and try again.',
+  consent_declined:'The Google sign-in was cancelled.',invalid_link:'The request was incomplete. Try again.'};
+ const denialNote=linkDenial?'<p class="error">Your last attempt to add a Google account did not go through: '+
+  escape(denialWords[linkDenial.code]||'Google could not confirm it.')+
+  ' <span class="hint">(Reason code '+escape(linkDenial.code)+', '+escape(new Date(linkDenial.created_at).toISOString())+')</span></p>':'';
+
+ // Apps
+ const appCards=await Promise.all(connections.map(async c=>{
+  const name=await appName(c.client_id);
+  const level=ACCESS_LEVELS.find(l=>l.id===c.profile)||ACCESS_LEVELS[2];
+  const tag=writesPaused?'<span class="tag warn">changes paused</span>':
+   c.profile==='read_only'?'<span class="tag">read-only</span>':'<span class="tag good">can make changes</span>';
+  return '<div class="card"><div class="row"><b>'+escape(name)+'</b>'+tag+'</div>'+
+   '<p class="hint">Uses '+escape(emailOf(c.account_id))+' unless told otherwise. Access level: '+escape(level.label)+'.</p>'+
+   '<details><summary>Change what '+escape(name)+' may do</summary><form method="POST">'+hidden('set_profile',c.id)+
+   ACCESS_LEVELS.map(l=>'<label class="choice"><input type="radio" name="profile" value="'+l.id+'"'+(l.id===c.profile?' checked':'')+'>'+
+    '<div><b>'+escape(l.label)+'</b><span>'+escape(l.says)+'</span></div></label>').join('')+
+   '<button>Save</button></form></details>'+button('revoke_connection',c.id,'Disconnect this app')+'</div>';
+ }));
+ const pause='<form method="POST">'+hidden(writesPaused?'resume_writes':'pause_writes')+
+  (writesPaused?'<p><b>All your apps are read-only right now.</b> They can look but cannot change anything.</p><button>Let my apps make changes again</button>'
+   :'<p>Need a pause? One tap stops every app from changing anything, until you turn it back.</p><button class="secondary">Make all my apps read-only</button>')+'</form>';
+ const appsSection='<section><h2>Your AI apps</h2>'+(connections.length?pause+appCards.join(''):
+  '<p>No AI app is connected yet. Add Workspace Unleashed as a connector in your AI app; the <a href="/#connect">home page</a> shows how.</p>')+'</section>';
+
+ // Google accounts
+ const accountCards=accounts.map(a=>{
+  const services=servicesInWords(a.scope_list);
+  const granted=complete.filter(scope=>a.scope_list.includes(scope)).length;
+  const all=granted===complete.length;
+  return '<div class="card"><div class="row"><b>'+escape(a.label||a.email)+'</b>'+(a.is_default?'<span class="tag good">default</span>':'')+
+   (all?'<span class="tag warn">all permissions</span>':'')+'</div>'+
+   (a.label?'<p class="hint">'+escape(a.email)+'</p>':'')+
+   '<p class="hint">'+(services.length?'Connected: '+escape(services.join(', '))+'.':'Signed in, but no Google services are connected yet.')+
+   (!all&&granted>0?' Google did not grant everything this service supports for this account (for example, admin permissions need a Google Workspace administrator).':'')+'</p>'+
+   '<div class="row">'+(a.is_default?'':button('set_default',a.id,'Make default'))+button('disconnect_account',a.id,'Disconnect')+'</div>'+
+   (all?'<details><summary>Turn off all permissions</summary><form method="POST">'+hidden('disable_god_mode',a.id)+
+    '<p>This asks Google to withdraw everything this service was allowed for '+escape(a.email)+', disconnects it here, and disconnects its apps. You can connect it again later.</p>'+
+    '<label class="choice"><input type="checkbox" name="confirm" value="true" required><div><b>I understand</b></div></label>'+
+    '<button>Turn off all permissions</button></form></details>':'')+'</div>';
+ }).join('');
+ const services=Object.keys(PUBLIC_SCOPE_GROUPS).filter(group=>group!=='complete');
+ const addForm=identityOnly&&!freshConsentAvailable
+  ?'<p>This sign-in is a test identity. It cannot connect Google data or apps.</p>'
+  :'<form action="/api/auth/google/start" method="POST"><input type="hidden" name="purpose" value="link">'+
+   '<input type="hidden" name="csrf" value="'+escape(csrf)+'">'+
+   '<label class="choice"><input type="radio" name="godMode" value="true" checked><div><b>All permissions at once</b>'+
+   '<span>Ask Google for every permission this service supports, in one go, including powerful administrator permissions. Google still decides what your account may grant.</span></div></label>'+
+   '<label class="choice"><input type="radio" name="godMode" value="false"><div><b>Just one service</b>'+
+   '<span>Pick it here: <select name="group" aria-label="Google service">'+
+   services.map(group=>'<option value="'+escape(group)+'">'+escape(SERVICE_NAMES[group]||group)+'</option>').join('')+'</select></span></div></label>'+
+   '<button>Continue with Google</button>'+
+   '<p class="hint">Use this to add a second or third Google account, or more permissions for one you have. Google shows you exactly what you are allowing.</p></form>';
+ const addSection='<section><h2>Your Google accounts</h2>'+denialNote+
+  (freshConsentAvailable?'<p>You can now connect your own Google account. This does not move or change the original connection.</p>':'')+(accountCards||'<p>No Google account is connected yet.</p>')+
+  '<h3>Add a Google account or more permissions</h3>'+addForm+'</section>';
+
+ // Organisation access (admins only)
+ const delegationSection='<section><details><summary>Organisation access for Google Workspace administrators</summary>'+
+  '<p>Only if you administer a Google Workspace organisation and want your assistant to act across it with a service account you set up in your own Google Admin console. Most people never need this.</p>'+
+  delegations.map(d=>'<div class="card"><b>'+escape(d.customer_id)+'</b> '+(d.configured?'<span class="tag good">on</span>':'<span class="tag">off</span>')+
+   '<p class="hint">Mailboxes confirmed by Google: '+escape((d.subjects||[]).join(', ')||'none yet')+'.</p>'+
+   '<form method="POST">'+hidden('verify_delegated_subject',d.account_id)+'<input type="hidden" name="customerId" value="'+escape(d.customer_id)+'">'+
+   '<label>Add a mailbox in your organisation <input name="subject" type="email" required></label><button class="secondary">Add mailbox</button></form>'+
+   '<form method="POST" class="inline">'+hidden('revoke_delegation',d.account_id)+'<input type="hidden" name="customerId" value="'+escape(d.customer_id)+'"><button class="secondary small">Turn off organisation access</button></form></div>').join('')+
+  (accounts.length?'<form method="POST">'+hidden('setup_delegation')+
+   '<label>Your administrator account <select name="id">'+accounts.map(a=>'<option value="'+escape(a.id)+'">'+escape(a.email)+'</option>').join('')+'</select></label>'+
+   '<label>Service-account key (JSON). It is encrypted and never shown again. <textarea name="credential" rows="5" required autocomplete="off"></textarea></label>'+
+   '<label>The Google permissions you allowed for it in your Admin console (one per line) <textarea name="scopes" rows="3" required></textarea></label>'+
+   '<label class="choice"><input type="checkbox" name="confirm" value="true" required><div><b>I administer this organisation</b><span>and allowed exactly these permissions for this service account in its Admin console.</span></div></label>'+
+   '<button class="secondary">Save organisation access</button></form>':'')+'</details></section>';
+
+ const dataSection='<section><h2>Your data</h2><p>See what is stored for you, or ask for it to be removed. A removal request can be cancelled.</p>'+
+  '<div class="row">'+button('delete_preview','','Show what is stored')+button('request_delete','','Ask to remove my data')+button('cancel_delete','','Cancel a removal request')+
+  '<form action="/api/auth/logout" method="POST" class="inline"><input type="hidden" name="csrf" value="'+escape(csrf)+'"><button class="secondary small">Sign out of this browser</button></form></div>'+
+  '<p class="hint">Signing out here does not disconnect your apps. Read more: <a href="/api/privacy">privacy</a> · <a href="/api/data-deletion">disconnecting and deleting</a>.</p></section>';
+
+ return brandPage('My Workspace connections','<h1>My Workspace connections</h1>'+banner+
+  '<p>Everything you have connected, and what each app may do. Only you can see this page.</p>'+
+  appsSection+addSection+delegationSection+dataSection,{wide:true});
 }

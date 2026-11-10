@@ -133,6 +133,37 @@ describe.skipIf(!url)('public sign-in: one person, several Google accounts, one 
   expect(await store.consumeCookieFreeTransaction({state:free,purpose:'mcp_authorize'})).toBeNull();
  });
 
+ it('CONTROLS-1: a person changes an app\'s access level and pauses every change, enforced at the server',async()=>{
+  const {createIsolatedPrincipalServer}=await import('../../api/mcp.js');
+  const open=async()=>{
+   const server=createIsolatedPrincipalServer(await store.readPrincipalAccess(ca.accessToken));
+   const [st,ct]=InMemoryTransport.createLinkedPair();
+   const client=new Client({name:'controls',version:'1.0.0'},{capabilities:{}});
+   await server.connect(st);await client.connect(ct);return {server,client};
+  };
+  const writeRefused=async()=>{const {server,client}=await open();try{
+    const r=await client.callTool({name:'workspace_call',arguments:{name:'workspace_set_default_account',args:{email:'a1@example.test'}}});
+    return r.isError===true&&/not allowed by the connection|outside_scope/.test(r.content[0].text);
+   }finally{await client.close();await server.close();}};
+  expect(await writeRefused()).toBe(false);
+  // Read only on this one connection.
+  expect(await store.setConnectionProfile(a,ca.connectionId,'read_only')).toBe('read_only');
+  expect((await store.readPrincipalAccess(ca.accessToken)).profile).toBe('read_only');
+  expect(await writeRefused()).toBe(true);
+  // Another person cannot change it, and nonsense levels are refused.
+  await expect(store.setConnectionProfile(b,ca.connectionId,'full')).rejects.toThrow('outside_scope');
+  await expect(store.setConnectionProfile(a,ca.connectionId,'root')).rejects.toThrow('invalid_profile');
+  // Back to Full, then the person-wide pause: still refused, at every level.
+  await store.setConnectionProfile(a,ca.connectionId,'full');
+  expect(await writeRefused()).toBe(false);
+  expect(await store.setWritesPaused(a,true)).toBe(true);
+  expect((await store.readPrincipalAccess(ca.accessToken)).writesPaused).toBe(true);
+  expect(await writeRefused()).toBe(true);
+  expect(await store.getWritesPaused(b)).toBe(false);
+  await store.setWritesPaused(a,false);
+  expect(await writeRefused()).toBe(false);
+ });
+
  it('the sign-in address shown on the Approve page is the person\'s own',async()=>{
   expect(await store.principalSignInEmail(a)).toBe('a1@example.test');
   expect(await store.principalSignInEmail(b)).toBe('b1@example.test');
