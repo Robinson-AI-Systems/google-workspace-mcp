@@ -123,9 +123,12 @@ describe.skipIf(!url)('ADOPT-1: identity-proven adoption of legacy-held accounts
   // The owner's V2 agent connection still reads (execution resolves its
   // home through the retired row via the live-connection read path).
   expect((await store.listConnections(OWNER)).filter(x=>x.revoked_at===null)).toHaveLength(1);
-  // The owner principal itself and its identity binding survive.
+  // The owner principal itself survives, and its identity binding is
+  // still THE binding that resolves its sign-in (the widened key lets the
+  // presenter's own binding coexist; the owner's row is untouched).
   const binding=(await pool.query('SELECT principal_id FROM principal_google_identities WHERE issuer=$1 AND google_sub=$2',[issuer,SYS.sub])).rows;
   expect(binding.map(x=>x.principal_id).sort()).toEqual([OWNER,me].sort());
+  expect(await store.getVerifiedPrincipal(issuer,SYS.sub)).toBe(OWNER);
   expect((await pool.query('SELECT kind,status FROM principals WHERE id=$1',[OWNER])).rows[0])
     .toEqual({kind:'legacy_owner',status:'active'});
   // The untouched legacy mailbox bytes from setup are still provable where

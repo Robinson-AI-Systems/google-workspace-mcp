@@ -27,7 +27,18 @@ export async function initPrincipalSchema(q=sql()){
  await q`CREATE TABLE IF NOT EXISTS principal_google_identities (
    issuer TEXT NOT NULL,google_sub TEXT NOT NULL,principal_id UUID NOT NULL REFERENCES principals(id),
    verified_email TEXT NOT NULL,updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-   PRIMARY KEY(issuer,google_sub),UNIQUE(principal_id,issuer,google_sub))`;
+   PRIMARY KEY(issuer,google_sub,principal_id))`;
+ // ADOPT-1 (2026-11-09): identity-proven adoption needs the SAME Google
+ // identity bound to two profiles at once — the holding profile and the
+ // public profile claiming its own mailboxes — so the binding key widens
+ // from (issuer,google_sub) to (issuer,google_sub,principal_id): one row
+ // per identity PER profile. The one-binding-per-profile rule becomes an
+ // explicit unique index, and databases created under the old key are
+ // migrated by dropping that primary key (every row it ever held
+ // satisfies the widened key, so the drop cannot create duplicates).
+ await q`CREATE UNIQUE INDEX IF NOT EXISTS principal_google_identities_one_per_principal
+   ON principal_google_identities(principal_id,issuer,google_sub)`;
+ await q`ALTER TABLE principal_google_identities DROP CONSTRAINT IF EXISTS principal_google_identities_pkey`;
  await q`CREATE TABLE IF NOT EXISTS principal_google_accounts (
    id UUID PRIMARY KEY,principal_id UUID NOT NULL REFERENCES principals(id),
    issuer TEXT NOT NULL,google_sub TEXT NOT NULL,email TEXT NOT NULL,label TEXT,
