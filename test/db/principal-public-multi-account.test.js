@@ -58,6 +58,9 @@ describe.skipIf(!url)('public sign-in: one person, several Google accounts, one 
  it('a person holds both accounts; the other person holds only their own',async()=>{
   expect((await store.listAccounts(a)).map(x=>x.email).sort()).toEqual(['a1@example.test','a2@example.test']);
   expect((await store.listAccounts(b)).map(x=>x.email)).toEqual(['b1@example.test']);
+  // A person's first account is their default until they pick another (2026-11-10 live test).
+  expect((await store.listAccounts(b))[0].is_default).toBe(true);
+  expect((await store.listAccounts(a)).filter(x=>x.is_default).map(x=>x.email)).toEqual(['a1@example.test']);
  });
 
  it('a call naming the second account acts as it, and keeps the connection as its home',async()=>{
