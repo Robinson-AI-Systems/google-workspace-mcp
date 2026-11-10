@@ -24,6 +24,13 @@ export function explainError(err) {
   const has = (re) => re.test(message) || re.test(reason); // wording Google puts in the message or the reason
   const reasonIs = (re) => re.test(reason);                 // Google's own reason code only
 
+  if (/google_reconnect_required/.test(message)) {
+    return {
+      what: 'Google would not renew the saved sign-in for this Google account.',
+      cause: 'The sign-in was revoked or expired, or it was saved by an older version of this connection.',
+      todo: 'Remove this connector in your app and add it again, signing in with this Google account; or open My Workspace connections and connect the account again.'
+    };
+  }
   if (/Postmaster Tools API/i.test(message) && /no longer supported/i.test(message)) {
     return {
       what: 'Google no longer supports this version of the Postmaster Tools API.',

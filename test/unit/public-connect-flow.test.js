@@ -101,6 +101,19 @@ async function signInToApprove(){
 }
 
 describe('a stranger connects cold, with no roster and no cookies',()=>{
+ it('when the account just signed in with cannot be attached, Approve says so',async()=>{
+  h.linkFailure='identity_owned_elsewhere';
+  h.denial={code:'identity_owned_elsewhere'};
+  const landing=await get(authorize,ask);
+  const href=landing.body.match(/class="button" href="([^"]+)"/)[1].replace(/&amp;/g,'&');
+  const toGoogle=await get(start,query(href));
+  const state=new URL(toGoogle.headers.Location).searchParams.get('state');
+  const back=await get(callback,{state,code:'google-code'});
+  const approve=new URL(back.headers.Location);
+  expect(approve.searchParams.get('link_refused')).toBe('1');
+  const page=await get(authorize,Object.fromEntries(approve.searchParams));
+  expect(page.body).toContain('That account was not added');
+ });
  it('"Not you?" sets the earlier sign-in aside and starts Google\'s account chooser again',async()=>{
   const page=await signInToApprove();
   const link=page.body.match(/<a href="([^"]+)">Not you\? Use a different Google account<\/a>/);

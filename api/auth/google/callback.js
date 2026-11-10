@@ -231,6 +231,7 @@ export default async function handler(req,res){
       requireScope(false,shape||'public_signin_not_admitted');
     }
     phase='principal_bind';
+    var signInLinkRefused=false;
     principalId=await bindVerifiedIdentity({issuer:verified.issuer,sub:verified.sub,
       verifiedEmail:verified.email,identityOnlyPilot:tx.purpose==='login'});
     // Public connect asks Google for everything in the one sign-in, so the
@@ -244,6 +245,7 @@ export default async function handler(req,res){
         await upsertLinkedAccount({principalId,issuer:verified.issuer,sub:verified.sub,
           verifiedEmail:verified.email,scopeList:verified.scopeList,tokens:verified.tokens});
       }catch(error){
+        signInLinkRefused=true;
         const code=SAFE_DENIAL_CODES.has(error?.message)?error.message:'unclassified';
         console.warn('p10_google_callback_denied',{phase,code});
         try{await recordLinkDenial({principalId,phase,code});}catch{}
@@ -258,7 +260,10 @@ export default async function handler(req,res){
   // a fresh one-use connect handle in the address, not a session cookie.
   if(tx.policy?.cookieFree===true&&(tx.purpose==='mcp_authorize'||tx.policy?.connect===true)){
     phase='connect_handoff';
-    return redirectToApprove(res,tx,principalId);
+    // The Approve page says so when the account just signed in with could
+    // not be attached (owner-raised, 2026-11-10: a silent refusal left the
+    // connection on an older saved sign-in that Google then refused).
+    return redirectToApprove(res,tx,principalId,typeof signInLinkRefused!=='undefined'&&signInLinkRefused===true);
   }
   if(tx.purpose==='mcp_authorize'){
     const next=new URL('/api/oauth/authorize',process.env.PUBLIC_BASE_URL);

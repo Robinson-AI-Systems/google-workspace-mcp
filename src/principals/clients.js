@@ -24,7 +24,11 @@ export async function buildPrincipalApiClients(context){
  auth.setCredentials(tokens);
  if(Number.isFinite(tokens.expiry_date)&&tokens.expiry_date<Date.now()+60000){
    requireScope(tokens.refresh_token,'google_reconnect_required');
-   const {credentials}=await auth.refreshAccessToken();
+   // A saved sign-in Google will not renew (revoked, expired, or issued to
+   // another app) is a reconnect, not a server-setup problem.
+   let credentials;
+   try{({credentials}=await auth.refreshAccessToken());}
+   catch{throw Error('google_reconnect_required');}
    requireScope(credentials?.access_token&&credentials.expiry_date>Date.now(),
      'google_refresh_unavailable');
    const saved=await persistPrincipalGoogleRefresh(context,credentials);
