@@ -29,6 +29,10 @@ Every app below connects the standard MCP way: it finds the sign-in from the ser
 3. **Secrets sent as HTTP Basic** are accepted at the token and revocation doors (the standard's other way of sending them), and advertised.
 4. **Browser-based apps** may call discovery, registration, token, revocation and the MCP door (CORS). These doors never read cookies, so this opens nothing to a web page that it could not already do.
 
+## More than one connector in the same app
+
+Claude (and some other apps) allow only one connector per address. Add a short name to the end of the address to get another: `…/api/mcp/work`, `…/api/mcp/personal`, `…/api/mcp/test`. Every name reaches the same service and the same rules; each connector signs in on its own and is bound to its own address.
+
 ## Known limits
 
 - Every app still gets its connection only through a person's own Google sign-in and the Approve page; no app can skip them.

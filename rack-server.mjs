@@ -155,6 +155,11 @@ export function resolveRoute(pathname) {
   if (pathname === '/api/openapi.json') return { ...route(rtcGateway), query: { door: 'openapi' } };
   if (pathname === '/api/whoami') return { ...route(rtcGateway), query: { door: 'whoami' } };
   if (pathname === '/api/tools') return { ...route(rtcGateway), query: { door: 'tools' } };
+  // Named connector addresses: /api/mcp/<name> and its own metadata document.
+  let named = /^\/api\/mcp\/([a-z0-9][a-z0-9-]{0,30})$/.exec(pathname);
+  if (named) return { ...route(mcp, mcpConfig), query: { connector: named[1] } };
+  named = /^\/\.well-known\/oauth-protected-resource\/api\/mcp\/([a-z0-9][a-z0-9-]{0,30})$/.exec(pathname);
+  if (named) return { ...route(wellKnownPR), query: { connector: named[1] } };
   // vercel.json: /brand/:asset and /favicon.ico onto api/brand.js.
   if (pathname === '/favicon.ico') return { ...route(brandAsset), query: { asset: 'favicon.ico' } };
   let brand = /^\/brand\/([^/]+)$/.exec(pathname);

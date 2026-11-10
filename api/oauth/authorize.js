@@ -9,6 +9,7 @@
 // another "AI Systems" without either seeing the other's inbox.
 import { isMuseClient } from '../../src/oauth/client-documents.js';
 import { redirectAllowed } from '../../src/oauth/client-compat.js';
+import { acceptedResource } from '../../src/oauth/connector-address.js';
 import { randomToken, parseBody } from '../../src/oauth/helpers.js';
 import { PRODUCT_DISPLAY_NAME, PROVIDER_DISCLOSURE } from '../../src/branding.js';
 import { BRAND, BRAND_CSS, BRAND_CSP, brandHeader, brandFooter } from '../../src/brand/brand.js';
@@ -241,8 +242,9 @@ export default async function handler(req, res) {
   const ownerDoor=params.auth_method==='owner'||params.auth_method==='owner_google'||!publicSignInAvailable();
   if(!ownerDoor){
     let resource;
-    try{resource=publicResource()+'/api/mcp';}catch{return res.status(503).send('MCP origin unavailable.');}
-    if(resourceParam!==resource||params.code_challenge_method!=='S256'||
+    // The plain address or a named connector address (/api/mcp/<name>).
+    try{resource=acceptedResource(resourceParam);}catch{return res.status(503).send('MCP origin unavailable.');}
+    if(!resource||params.code_challenge_method!=='S256'||
       !/^[A-Za-z0-9_-]{43}$/.test(params.code_challenge||''))
       return res.status(400).send(renderRefusal('Your app asked to connect to a different address than this service. Check the connector address ends in /api/mcp, then try again.','V2 requires exact MCP resource and S256 PKCE.'));
     headers(res);
