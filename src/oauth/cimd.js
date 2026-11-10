@@ -123,10 +123,14 @@ function validateCard(doc, clientId) {
     new Set(doc.redirect_uris).size !== doc.redirect_uris.length ||
     !doc.redirect_uris.every((x) => typeof x === 'string' &&
       Buffer.byteLength(x, 'utf8') <= 2048 && validRedirectUri(x))) return null;
+  // A card must offer authorization_code. Other grants it lists are ignored,
+  // never refused and never granted: Claude's own card (2026-11-09) also lists
+  // urn:ietf:params:oauth:grant-type:jwt-bearer, and refusing it locked Claude
+  // out ("Unknown client_id"). This server only ever runs code + refresh.
   if (doc.grant_types !== undefined && (!Array.isArray(doc.grant_types) ||
-    !doc.grant_types.includes('authorization_code') || doc.grant_types.length > 2 ||
-    new Set(doc.grant_types).size !== doc.grant_types.length ||
-    !doc.grant_types.every((x) => ['authorization_code', 'refresh_token'].includes(x)))) return null;
+    doc.grant_types.length < 1 || doc.grant_types.length > 10 ||
+    !doc.grant_types.every((x) => typeof x === 'string' && x.length > 0 && x.length <= 200) ||
+    !doc.grant_types.includes('authorization_code'))) return null;
   if (doc.response_types !== undefined && (!Array.isArray(doc.response_types) ||
     doc.response_types.length !== 1 || doc.response_types[0] !== 'code')) return null;
   return {

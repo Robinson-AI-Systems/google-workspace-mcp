@@ -32,6 +32,17 @@ describe('client ID cards (CIMD, D-006 MC-3)',()=>{
   const client=await resolveCimdClient(CARD,{fetchImpl:fetchOf(card()),lookupImpl:publicDns});
   expect(client).toMatchObject({client_id:CARD,client_name:'Example Client',cimd:true,token_endpoint_auth_method:'none'});
  });
+ it("accepts Claude's real card, which also lists a grant this server never uses (live defect 2026-11-09)",async()=>{
+  clearCimdCache();
+  const claude={client_id:'https://claude.ai/oauth/mcp-oauth-client-metadata',client_name:'Claude',client_uri:'https://claude.ai',
+   redirect_uris:['https://claude.ai/api/mcp/auth_callback'],
+   grant_types:['authorization_code','refresh_token','urn:ietf:params:oauth:grant-type:jwt-bearer'],
+   response_types:['code'],token_endpoint_auth_method:'none'};
+  const client=await resolveCimdClient(claude.client_id,{fetchImpl:fetchOf(claude),lookupImpl:publicDns});
+  expect(client).toMatchObject({client_id:claude.client_id,client_name:'Claude',redirect_uris:['https://claude.ai/api/mcp/auth_callback'],cimd:true});
+  clearCimdCache();
+  expect(await resolveCimdClient(CARD,{fetchImpl:fetchOf(card({grant_types:['refresh_token']})),lookupImpl:publicDns})).toBeNull();
+ });
  it('refuses cards that lie about their address, hold a secret, or live on a private network',async()=>{
   clearCimdCache();
   expect(await resolveCimdClient(CARD,{fetchImpl:fetchOf(card({client_id:'https://other.example/x'})),lookupImpl:publicDns})).toBeNull();
@@ -82,5 +93,20 @@ describe('browser-based clients (CORS)',()=>{
  it('never claims credentials (no cookies are ever read by these endpoints)',()=>{
   const out=res();applyCors({method:'GET'},out);
   expect(out.headers['Access-Control-Allow-Credentials']).toBeUndefined();
+ });
+});
+
+describe('known client cards',()=>{
+ it('Claude still connects when its card cannot be fetched, with only its own callback',async()=>{
+  vi.resetModules();
+  vi.doMock('../../src/oauth/cimd.js',async importActual=>({...(await importActual()),resolveCimdClient:async()=>null}));
+  vi.doMock('../../src/db-transport.js',()=>({storeSql:()=>Object.assign(async()=>[],{query:async()=>({rows:[]})})}));
+  process.env.DATABASE_URL='postgres://unused@127.0.0.1/none';
+  const {getOAuthClient}=await import('../../src/db.js');
+  const client=await getOAuthClient('https://claude.ai/oauth/mcp-oauth-client-metadata');
+  expect(client).toMatchObject({client_name:'Claude',client_secret:null,cimd:true});
+  expect(client.redirect_uris).toEqual(['https://claude.ai/api/mcp/auth_callback']);
+  expect(await getOAuthClient('https://stranger.example/card.json')).toBeNull();
+  vi.doUnmock('../../src/oauth/cimd.js');vi.doUnmock('../../src/db-transport.js');
  });
 });

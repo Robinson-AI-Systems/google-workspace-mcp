@@ -619,6 +619,15 @@ export async function createOAuthClient({ clientId, clientSecret, redirectUris, 
   `;
 }
 
+// Cards of the major clients, used ONLY when fetching the live card fails
+// (a network hiccup or a bot check in front of the card host must not lock
+// people out). Values copied from the published cards on 2026-11-09; the
+// live card always wins when it can be fetched.
+const KNOWN_CARDS = Object.freeze({
+  'https://claude.ai/oauth/mcp-oauth-client-metadata': Object.freeze({
+    client_id: 'https://claude.ai/oauth/mcp-oauth-client-metadata', client_name: 'Claude',
+    redirect_uris: Object.freeze(['https://claude.ai/api/mcp/auth_callback']), cimd: true })
+});
 export async function getOAuthClient(clientId) {
   // This server's own published client documents (Muse) are built in, so
   // the sign-in never depends on a registration row that could be revoked.
@@ -631,7 +640,7 @@ export async function getOAuthClient(clientId) {
   // the client's own metadata document, fetched and validated (public HTTPS
   // only, size and time bounded, no secrets). Same record shape as a
   // registration, marked cimd so loopback ports may vary.
-  const card = await resolveCimdClient(clientId).catch(() => null);
+  const card = await resolveCimdClient(clientId).catch(() => null) || KNOWN_CARDS[clientId] || null;
   return card ? { client_id: card.client_id, client_secret: null, redirect_uris: card.redirect_uris,
     client_name: card.client_name, cimd: true } : null;
 }
