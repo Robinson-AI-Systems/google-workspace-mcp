@@ -1,6 +1,6 @@
 import { describe,it,expect } from 'vitest';
 import { registry } from '../../src/tools/index.js';
-import {allowedTool,listedTools,isWrite,toolMetadata,RTC_AREAS} from '../../src/rtc/catalog.js';
+import {allowedTool,listedTools,isWrite,toolMetadata,RTC_AREAS,ALWAYS_AVAILABLE_CONTROLS} from '../../src/rtc/catalog.js';
 describe('RTC connection policy',()=>{
  it('can explicitly issue every area advertised by the real registry',async()=>{
   const {passOptions}=await import('../../src/rtc/pass-options.js');
@@ -26,9 +26,10 @@ describe('RTC connection policy',()=>{
    expect(allowedTool(read,{profile:'full',areas:['mail']})).toBe(false);
   }
  });
- it('refuses every known mutation when read only',()=>{for(const t of registry.tools)if(isWrite(t.name)&&t.name!=='workspace_call')expect(allowedTool(t.name,{profile:'read_only'}),t.name).toBe(false);});
+ it('refuses every known mutation when read only',()=>{for(const t of registry.tools)if(isWrite(t.name)&&t.name!=='workspace_call'&&!ALWAYS_AVAILABLE_CONTROLS.has(t.name))expect(allowedTool(t.name,{profile:'read_only'}),t.name).toBe(false);});
+ it('keeps the person\'s own pause switch callable everywhere (CONTROLS-2), and nothing else',()=>{expect([...ALWAYS_AVAILABLE_CONTROLS]).toEqual(['workspace_pause_changes']);for(const c of [{profile:'read_only'},{profile:'everyday',areas:['mail']},{profile:'full',allow_writes:false}])expect(allowedTool('workspace_pause_changes',c)).toBe(true);});
  it('classifies the preexisting unguarded changes conservatively',()=>{for(const n of ['workflow_weekly_digest','gmail_untrash_message','sheets_format_cells','domain_confirm_verification','workspace_set_allowed_domains','unknown_do_something'])expect(isWrite(n)).toBe(true);});
- it('narrows by domain area and profile',()=>{expect(allowedTool('gmail_list_messages',{profile:'read_only',areas:['calendar']})).toBe(false);expect(allowedTool('gmail_list_messages',{profile:'read_only',areas:['mail']})).toBe(true);expect(listedTools(registry.tools,{profile:'read_only'}).every(t=>!isWrite(t.name)||t.name==='workspace_call')).toBe(true);});
+ it('narrows by domain area and profile',()=>{expect(allowedTool('gmail_list_messages',{profile:'read_only',areas:['calendar']})).toBe(false);expect(allowedTool('gmail_list_messages',{profile:'read_only',areas:['mail']})).toBe(true);expect(listedTools(registry.tools,{profile:'read_only'}).every(t=>!isWrite(t.name)||t.name==='workspace_call'||ALWAYS_AVAILABLE_CONTROLS.has(t.name))).toBe(true);});
  it('publishes billing-sensitive tools with unambiguous warnings and keeps RTC money-out semantics distinct',()=>{
   const risky=['workspace_bulk_operation','licensing_assign_license','licensing_update_assignment'];
   for(const name of risky){

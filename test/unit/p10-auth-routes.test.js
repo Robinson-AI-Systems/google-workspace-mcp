@@ -42,6 +42,7 @@ vi.mock('../../src/principals/store.js',()=>({
  getSigninDenial:async()=>h.signinDenial,deleteSigninDenial:async()=>{},
  getLatestLinkDenial:async()=>h.linkDenial,
  getWritesPaused:async()=>h.writesPaused===true,
+ principalSignInEmail:async()=>null,
  setWritesPaused:async(_id,v)=>{h.writesPaused=v;return v;},
  setConnectionProfile:async(_id,_c,p)=>{h.profileSet=p;return p;},
  listAccounts:async()=>h.linkedAccounts,listConnections:async()=>[],isLegacyPilotIdentityPrincipal:async()=>h.legacyPilot,

@@ -17,7 +17,7 @@ vi.mock('../../src/principals/store.js',()=>({
   {id:C,account_id:A,client_id:'claude-client',profile:h.profiles[C]||'full',created_at:new Date(),expires_at:new Date(Date.now()+86400e3),revoked_at:null},
   {id:'66666666-6666-4666-8666-666666666666',account_id:A,client_id:'muse',profile:'read_only',expires_at:new Date(Date.now()+86400e3),revoked_at:null},
   {id:'77777777-7777-4777-8777-777777777777',account_id:A,client_id:'gone-client',profile:'full',revoked_at:new Date()}],
- getLatestLinkDenial:async()=>null,getWritesPaused:async()=>h.paused,
+ getLatestLinkDenial:async()=>null,getWritesPaused:async()=>h.paused,principalSignInEmail:async()=>'me@example.test',
  setWritesPaused:async(_p,v)=>{h.calls.push(['pause',v]);h.paused=v;return v;},
  setConnectionProfile:async(_p,id,profile)=>{if(!['full','everyday','read_only'].includes(profile))throw Error('invalid_profile');h.profiles[id]=profile;return profile;},
  revokeConnection:async(_p,id)=>{h.revoked.push(id);return 1;},
@@ -48,6 +48,7 @@ describe('My Workspace connections',()=>{
   expect(page.body).toContain('Connected: Gmail.');
   expect(page.body).not.toContain('gmail.modify');
   expect(page.body).toContain('Make all my apps read-only');
+  expect(page.body).toContain('Signed in with Google as <strong>me@example.test</strong>');
  });
  it('changing one app\'s access level answers with the page again and a plain notice',async()=>{
   const out=await call('POST',{action:'set_profile',id:C,profile:'everyday',return:'page'});

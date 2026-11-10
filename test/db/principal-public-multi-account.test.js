@@ -167,6 +167,42 @@ describe.skipIf(!url)('public sign-in: one person, several Google accounts, one 
   expect(await writeRefused()).toBe(false);
  });
 
+ it('CONTROLS-2: the person\'s agent flips their pause switch; it works even while paused and on Read only',async()=>{
+  const {createIsolatedPrincipalServer}=await import('../../api/mcp.js');
+  const call=async(name,args)=>{
+   const server=createIsolatedPrincipalServer(await store.readPrincipalAccess(ca.accessToken));
+   const [st,ct]=InMemoryTransport.createLinkedPair();
+   const client=new Client({name:'pause',version:'1.0.0'},{capabilities:{}});
+   await server.connect(st);await client.connect(ct);
+   try{return await client.callTool({name:'workspace_call',arguments:{name,args}});}finally{await client.close();await server.close();}
+  };
+  const writeRefused=async()=>{const r=await call('workspace_set_default_account',{email:'a1@example.test'});return r.isError===true;};
+  expect(await writeRefused()).toBe(false);
+  const paused=await call('workspace_pause_changes',{paused:true});
+  expect(paused.isError).toBeFalsy();
+  expect(paused.content[0].text).toContain('"changesPaused": true');
+  expect(await store.getWritesPaused(a)).toBe(true);
+  expect(await store.getWritesPaused(b)).toBe(false);
+  expect(await writeRefused()).toBe(true);
+  // Still callable while paused; turning changes back on needs confirm.
+  const noConfirm=await call('workspace_pause_changes',{paused:false});
+  expect(noConfirm.content[0].text).toContain('"needsConfirmation": true');
+  expect(await store.getWritesPaused(a)).toBe(true);
+  const resumed=await call('workspace_pause_changes',{paused:false,confirm:true});
+  expect(resumed.isError).toBeFalsy();
+  expect(await store.getWritesPaused(a)).toBe(false);
+  expect(await writeRefused()).toBe(false);
+  // A Read-only connection can still pull the brake.
+  await store.setConnectionProfile(a,ca.connectionId,'read_only');
+  expect((await call('workspace_pause_changes',{paused:true})).isError).toBeFalsy();
+  expect(await store.getWritesPaused(a)).toBe(true);
+  await store.setWritesPaused(a,false);await store.setConnectionProfile(a,ca.connectionId,'full');
+  // Both flips are in the change log, under this connection.
+  const rows=(await pool.query("SELECT summary FROM principal_changes WHERE tool='workspace_pause_changes' AND connection_id=$1 AND NOT dry_run ORDER BY id",[ca.connectionId])).rows.map(r=>r.summary);
+  expect(rows.some(x=>/Pause all changes/.test(x))).toBe(true);
+  expect(rows.some(x=>/Allow changes again/.test(x))).toBe(true);
+ });
+
  it('the sign-in address shown on the Approve page is the person\'s own',async()=>{
   expect(await store.principalSignInEmail(a)).toBe('a1@example.test');
   expect(await store.principalSignInEmail(b)).toBe('b1@example.test');
