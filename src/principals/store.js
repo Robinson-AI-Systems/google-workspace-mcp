@@ -79,7 +79,14 @@ export async function initPrincipalSchema(q=sql()){
  // The installation's existing rows belong only to the explicit owner; never
  // derive an owner from whichever public browser happens to arrive first.
  await q`INSERT INTO principal_legacy_accounts(email,principal_id)
-   SELECT email,${OWNER_ID}::uuid FROM google_accounts ON CONFLICT(email) DO NOTHING`;
+   SELECT a.email,${OWNER_ID}::uuid FROM google_accounts a
+   WHERE NOT EXISTS(SELECT 1 FROM principal_google_accounts g
+     WHERE lower(g.email)=lower(a.email) AND g.status='active')
+   ON CONFLICT(email) DO NOTHING`;
+ // ADOPT-1 (2026-11-09): the seed above maps only mailboxes with NO
+ // active V2 grant: a mailbox whose legacy reservation was retired by an
+ // adoption carries its live claim as the adopter's active grant, and
+ // re-mapping it on the next init would resurrect the reservation.
  await q`CREATE TABLE IF NOT EXISTS user_sessions (
    token_hash TEXT PRIMARY KEY,principal_id UUID NOT NULL REFERENCES principals(id),
    csrf_hash TEXT NOT NULL,expires_at TIMESTAMPTZ NOT NULL,revoked_at TIMESTAMPTZ,
@@ -281,7 +288,11 @@ export async function getBoundOwnerPrincipal(issuer,sub){
 export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnlyPilot=false}){
  requireScope(['accounts.google.com','https://accounts.google.com'].includes(issuer)&&validSub(sub)&&validEmail(verifiedEmail),'invalid_identity');
  const q=sql();
- const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
+ const reserved=await q`SELECT 1 FROM principal_legacy_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
+ // ADOPT-1 (2026-11-09): the reservation is the legacy MAPPING, not the
+ // mere presence of a legacy row — an adopted mailbox keeps its legacy
+ // grant row (the holder's connections read it) but its mapping, and
+ // therefore its reservation, stays retired.
  const legacyIdentityOnly=reserved.length>0&&identityOnlyPilot===true&&legacyPilotLoginAllowed(sub);
  const old=await getVerifiedPrincipalForEmail(issuer,sub,verifiedEmail)??await getVerifiedPrincipal(issuer,sub);
  // A full principal's bound identity binds on its own record, even when its
@@ -509,17 +520,21 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
        WHERE principal_id=${adoption}::uuid AND account_id=${row.id}::uuid`;
    }
    if(reserved.length){
-     // Retire the legacy reservation for THIS mailbox only, and for the
-     // ADOPTED mailbox only: the row is deleted from both legacy tables,
-     // so the reservation releases exactly the identity whose verified
-     // holder claimed it — never another mailbox, never by another hand.
-     // Legacy execution does not read these tables for tokens (validated
-     // tokens live in google_accounts.tokens/tokens_enc, mirrored by the
-     // refresh path in db.js), so the holder's live connections keep
-     // their grants; the deletion also ends the sign-in reservation the
-     // mailbox carried into bindVerifiedIdentity.
+     // Retire the legacy RESERVATION for THIS mailbox only: the mapping
+     // row in principal_legacy_accounts is what makes the mailbox
+     // legacy-held (initPrincipalSchema seeds it from google_accounts,
+     // and bindVerifiedIdentity's reservation reads google_accounts
+     // itself only as the legacy-presence probe). The google_accounts
+     // ROW ITSELF is NOT deleted: it is the legacy grant store
+     // (tokens/tokens_enc) that the hosted execution path reads via
+     // getGoogleTokensFor for every legacy connection naming this
+     // mailbox, so deleting it would break the holder's live legacy
+     // connections — the exact material this change must not touch.
+     // The reservation this mailbox carried is the MAPPING; removing
+     // the mapping retires the claim for exactly this mailbox, and the
+     // presenter's own active V2 grant (inserted below) is what any
+     // later link of the same mailbox resolves against.
      await q`DELETE FROM principal_legacy_accounts WHERE lower(email)=lower(${verifiedEmail})`;
-     await q`DELETE FROM google_accounts WHERE lower(email)=lower(${verifiedEmail})`;
    }
  }
  // A sign-in identity binding on another profile does not block this link
