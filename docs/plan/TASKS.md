@@ -2158,7 +2158,7 @@ per user and does not stop the rest, the cap is enforced.
 | --- | --- | --- |
 | Meet records (transcripts, attendance) | On hold | Already on hold above |
 | Search Console, Business Profile | Not scheduled | Useful for the businesses' search presence. Business Profile needs Google's approval first, so apply early if Chris wants it |
-| Classroom tools | Not scheduled | Permission is requested but unused; only worth it if Chris uses Classroom |
+| Classroom tools | Built 2026-11-09 | Owner ordered the surface completed rather than the permissions removed: 35 `classroom_*` tools cover every method the four requested scopes allow |
 | Apps Script control | Not planned | Google does not allow it with a service account |
 | Live change notifications (Workspace Events) | Not planned | Needs extra Google Cloud plumbing (Pub/Sub) for little gain |
 | Chat bots, Alert Center | Not planned | Alert Center cannot work with the permissions we deliberately do not request |
