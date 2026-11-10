@@ -4,21 +4,25 @@ import { getOAuthClient, consumeAuthCode, createAccessToken, getTokenByRefreshTo
 import { connectionPolicyToDb } from '../../src/oauth/connection-settings.js';
 import {consumePrincipalCode,issuePrincipalConnection,rotatePrincipalRefresh} from '../../src/principals/store.js';
 import {publicResource} from '../../src/principals/security.js';
+import {applyCors,withBasicClientAuth} from '../../src/oauth/client-compat.js';
 
 export default async function handler(req, res) {
+  if (applyCors(req, res, 'POST, OPTIONS')) return;
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'method_not_allowed' });
     return;
   }
   await initSchema();
-  const body = await parseBody(req);
+  // RFC 6749 §2.3.1: id and secret may arrive as HTTP Basic credentials.
+  const body = withBasicClientAuth(req, await parseBody(req));
 
   // V2 codes and refresh grants have distinguishable prefixes and are never
   // submitted to legacy owner tables. Original issued owner tokens are unchanged.
   if(body.grant_type==='authorization_code'&&typeof body.code==='string'&&body.code.startsWith('p10c_')){
     let resource;
     try{resource=publicResource()+'/api/mcp';}catch{return res.status(503).json({error:'temporarily_unavailable'});}
-    if(body.resource!==resource && !(isMuseClient(body.client_id) && !body.resource))return res.status(400).json({error:'invalid_target'});
+    // D-006 MC-4: an omitted resource means this server, for every client.
+    if(body.resource!==undefined&&body.resource!==''&&body.resource!==resource)return res.status(400).json({error:'invalid_target'});
     const client=await getOAuthClient(body.client_id);
     if(!client||client.client_secret&&client.client_secret!==body.client_secret)
       return res.status(401).json({error:'invalid_client'});
@@ -33,7 +37,8 @@ export default async function handler(req, res) {
   }
   if(body.grant_type==='refresh_token'&&typeof body.refresh_token==='string'&&body.refresh_token.startsWith('p10r_')){
     let resource;try{resource=publicResource()+'/api/mcp';}catch{return res.status(503).json({error:'temporarily_unavailable'});}
-    if(body.resource!==resource && !(isMuseClient(body.client_id) && !body.resource))return res.status(400).json({error:'invalid_target'});
+    // D-006 MC-4: an omitted resource means this server, for every client.
+    if(body.resource!==undefined&&body.resource!==''&&body.resource!==resource)return res.status(400).json({error:'invalid_target'});
     const client=await getOAuthClient(body.client_id);
     if(!client||client.client_secret&&client.client_secret!==body.client_secret)
       return res.status(401).json({error:'invalid_client'});

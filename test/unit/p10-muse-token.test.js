@@ -27,7 +27,7 @@ async function call(body){
 }
 describe('Muse public OAuth token compatibility',()=>{
  const old=process.env.PUBLIC_BASE_URL;
- it('accepts only Muse with omitted resource, proper registered callback and PKCE verifier',async()=>{
+ it('accepts an omitted resource as this server (MC-4), with proper registered callback and PKCE verifier',async()=>{
   process.env.PUBLIC_BASE_URL='https://mcp.example.test';
   try{
    h.principalConsume=0;
@@ -41,9 +41,11 @@ describe('Muse public OAuth token compatibility',()=>{
    const badCallback=await call({...base,redirect_uri:'https://evil.example.test/callback'});
    expect(badCallback.statusCode).toBe(400);
    expect(h.principalConsume).toBe(2);
+   // D-006 MC-4 (2026-11-09): an omitted resource means this server for
+   // EVERY client, not only Muse; the code's own client binding still decides.
    const legacy=await call({...base,client_id:'legacy'});
-   expect(legacy.statusCode).toBe(400);
-   expect(legacy.body.error).toBe('invalid_target');
+   expect(legacy.body.error).not.toBe('invalid_target');
+   expect(legacy.body.access_token).toBeUndefined();
   }finally{
    if(old===undefined)delete process.env.PUBLIC_BASE_URL;else process.env.PUBLIC_BASE_URL=old;
   }

@@ -8,6 +8,7 @@
 // Claude receives, so one Claude project can be "Appliance Rentals" and
 // another "AI Systems" without either seeing the other's inbox.
 import { isMuseClient } from '../../src/oauth/client-documents.js';
+import { redirectAllowed } from '../../src/oauth/client-compat.js';
 import { randomToken, parseBody } from '../../src/oauth/helpers.js';
 import { PRODUCT_DISPLAY_NAME, PROVIDER_DISCLOSURE } from '../../src/branding.js';
 import { BRAND, BRAND_CSS, BRAND_CSP, brandHeader, brandFooter } from '../../src/brand/brand.js';
@@ -200,7 +201,10 @@ export default async function handler(req, res) {
   await ensureMigrated().catch(() => {}); // best effort; the page still renders if Google is unreachable
   const params = req.method === 'GET' ? req.query : await parseBody(req);
   const { client_id, redirect_uri, state, code_challenge, code_challenge_method, response_type } = params;
-  const resourceParam = isMuseClient(client_id) && !params.resource ? publicResource() + '/api/mcp' : params.resource;
+  // D-006 MC-4: an omitted resource means this server's MCP, for every client
+  // (Muse, Cursor, Gemini CLI and others leave it out).
+  let resourceParam = params.resource;
+  if (!resourceParam) { try { resourceParam = publicResource() + '/api/mcp'; } catch { resourceParam = params.resource; } }
   const hidden = { client_id, redirect_uri, state, code_challenge, code_challenge_method, resource: resourceParam,
     auth_method: params.auth_method==='owner_google'?'owner_google':'owner' };
 
@@ -214,7 +218,7 @@ export default async function handler(req, res) {
     res.status(400).send(renderRefusal('This service does not recognise your app. Remove the connector in your app and add it again; if your app asks for a Client ID, use muse for Muse and leave it blank everywhere else.','Unknown client_id. This connector needs to register first (this normally happens automatically).'));
     return;
   }
-  if (!client.redirect_uris.includes(redirect_uri)) {
+  if (!redirectAllowed(client, redirect_uri)) {
     res.status(400).send(renderRefusal('Your app tried to send the sign-in somewhere it did not register. Remove the connector in your app and add it again.','redirect_uri does not match what this client registered.'));
     return;
   }

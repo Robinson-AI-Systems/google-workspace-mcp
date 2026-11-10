@@ -2,6 +2,7 @@
 // don't keep local files between requests, so anything that needs to survive
 // between calls -- your Google login tokens, and the connector's own OAuth
 // state -- lives in Postgres (Neon) instead.
+import { resolveCimdClient } from './oauth/cimd.js';
 import { documentClient } from './oauth/client-documents.js';
 import { storeSql } from './db-transport.js';
 import crypto from 'node:crypto';
@@ -625,7 +626,14 @@ export async function getOAuthClient(clientId) {
   if (published) return published;
   const q = db();
   const rows = await q`SELECT client_id, client_secret, redirect_uris, client_name FROM oauth_clients WHERE client_id = ${clientId}`;
-  return rows[0] || null;
+  if (rows[0]) return rows[0];
+  // D-006 MC-3: a visiting client card (CIMD) — the client_id is the URL of
+  // the client's own metadata document, fetched and validated (public HTTPS
+  // only, size and time bounded, no secrets). Same record shape as a
+  // registration, marked cimd so loopback ports may vary.
+  const card = await resolveCimdClient(clientId).catch(() => null);
+  return card ? { client_id: card.client_id, client_secret: null, redirect_uris: card.redirect_uris,
+    client_name: card.client_name, cimd: true } : null;
 }
 
 // Owner administration of the client registry (capability-completeness fix,

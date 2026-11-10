@@ -38,8 +38,9 @@ describe('standalone MCP OAuth discovery has a canonical HTTPS issuer',()=>{
    grant_types_supported:['authorization_code','refresh_token'],
    code_challenge_methods_supported:['S256'],
    revocation_endpoint:'https://workspace.example.test/api/oauth/revoke',
-   revocation_endpoint_auth_methods_supported:['client_secret_post','none'],
-   token_endpoint_auth_methods_supported:['client_secret_post','none']
+   revocation_endpoint_auth_methods_supported:['client_secret_post','client_secret_basic','none'],
+   token_endpoint_auth_methods_supported:['client_secret_post','client_secret_basic','none'],
+   client_id_metadata_document_supported:true
   });
   expect(JSON.stringify(auth.body)).not.toMatch(/attacker|localhost/);
   const resource=request(protectedResourceMetadata);

@@ -2,8 +2,10 @@
 // flow uses to register itself with your server the first time you add it.
 import { randomToken } from '../../src/oauth/helpers.js';
 import { createOAuthClient, initSchema } from '../../src/db.js';
+import { applyCors } from '../../src/oauth/client-compat.js';
 
 export default async function handler(req, res) {
+  if (applyCors(req, res, 'POST, OPTIONS')) return;
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'method_not_allowed' });
     return;
@@ -24,7 +26,8 @@ export default async function handler(req, res) {
     // stored secret the public client never agreed to hold. Absent or other
     // values fall back to the RFC default 'client_secret_post', and the
     // response always names the method that was actually set up.
-    const authMethod = body.token_endpoint_auth_method === 'none' ? 'none' : 'client_secret_post';
+    const authMethod = body.token_endpoint_auth_method === 'none' ? 'none'
+      : body.token_endpoint_auth_method === 'client_secret_basic' ? 'client_secret_basic' : 'client_secret_post';
     const clientId = randomToken(16);
     const clientSecret = authMethod === 'none' ? null : randomToken(32);
     await createOAuthClient({ clientId, clientSecret, redirectUris, clientName: body.client_name });
