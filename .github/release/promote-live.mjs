@@ -16,10 +16,19 @@ export function denverMinute(now = new Date()) {
     Number(parts.find(p => p.type === 'minute')?.value);
 }
 
+export function ownerReleaseInvocation(env) {
+  // Owner-ordered release (Chris, 2026-11-04): caps bind the automatic
+  // promoter only. This path is owner-only and pinned to an exact main SHA.
+  return env.GITHUB_EVENT_NAME === 'workflow_dispatch' &&
+    env.GITHUB_ACTOR === 'christcr2012' && env.GITHUB_TRIGGERING_ACTOR === 'christcr2012' &&
+    env.OWNER_RELEASE === 'true' && /^[a-f0-9]{40}$/.test(env.EXPECTED_MAIN_SHA || '');
+}
+
 export function authorizedReleaseInvocation(env, repository, now = new Date()) {
   if (env.GITHUB_REPOSITORY !== repository ||
     env.GITHUB_REF !== 'refs/heads/main' || !env.GH_TOKEN) return false;
   if (env.GITHUB_EVENT_NAME === 'schedule') return true;
+  if (ownerReleaseInvocation(env)) return true;
   // No default dispatch or automated production override; GitHub owner only.
   return env.GITHUB_EVENT_NAME === 'workflow_dispatch' &&
     env.GITHUB_ACTOR === 'christcr2012' && env.GITHUB_TRIGGERING_ACTOR === 'christcr2012' &&
@@ -42,8 +51,18 @@ export function checksFailed(runs, required, sha) {
   });
 }
 
-export function decide({ main, live, alreadyToday, ancestor, green }) {
+export function decide({ main, live, alreadyToday, ancestor, green, ownerRelease = false, expectedMainSha }) {
   if (![main, live].every(s => /^[a-f0-9]{40}$/.test(s))) throw Error('Invalid commit identity');
+  if (ownerRelease) {
+    // The daily cap never binds an owner-ordered release of the exact
+    // expected SHA; ancestry and green checks are never bypassed.
+    if (!/^[a-f0-9]{40}$/.test(expectedMainSha || '') || expectedMainSha !== main)
+      throw Error('Owner release expected main SHA does not match the release candidate');
+    if (!ancestor) throw Error('live has diverged; refusing to rewrite history');
+    if (!green) throw Error('Main checks are missing, pending or failed');
+    if (main === live) return 'skip';
+    return 'promote';
+  }
   if (alreadyToday || main === live) return 'skip';
   if (!ancestor) throw Error('live has diverged; refusing to rewrite history');
   if (!green) throw Error('Main checks are missing, pending or failed');
@@ -59,6 +78,8 @@ export async function run(policy = JSON.parse(readFileSync(new URL('./policy.jso
   const repo = process.env.GITHUB_REPOSITORY;
   if (!authorizedReleaseInvocation(process.env, policy.repository))
     throw Error('Scheduled or explicitly owner-recovered main only');
+  const ownerRelease = ownerReleaseInvocation(process.env);
+  const expectedMainSha = process.env.EXPECTED_MAIN_SHA;
   const deadline = Date.now() + 10 * 60 * 1000;
   const day = denverDay();
   const marker = 'live-promotion/' + day;
@@ -74,14 +95,18 @@ export async function run(policy = JSON.parse(readFileSync(new URL('./policy.jso
   const remoteHead = ref => git(['ls-remote', 'origin', 'refs/heads/' + ref]).split(/\s+/)[0];
   for (let attempt = 0; attempt < attempts && Date.now() < deadline; attempt++) {
     if (attempt) await pause();
-    if (alreadyToday()) { console.log('Already promoted today'); return; }
+    // The daily marker binds only the automatic (non-owner) promoter.
+    if (!ownerRelease && alreadyToday()) { console.log('Already promoted today'); return; }
     git(['fetch', '--no-tags', 'origin', '+refs/heads/main:refs/remotes/origin/main',
       '+refs/heads/live:refs/remotes/origin/live']);
     const main = git(['rev-parse', 'origin/main']);
     const live = git(['rev-parse', 'origin/live']);
-    if (alreadyToday()) { console.log('Already processed today'); return; }
+    if (ownerRelease && main !== expectedMainSha)
+      throw Error('Owner release refused: main is ' + main + ', expected ' + expectedMainSha);
+    if (!ownerRelease && alreadyToday()) { console.log('Already processed today'); return; }
     let ancestor = false;
     try { git(['merge-base', '--is-ancestor', live, main]); ancestor = true; } catch { /* fail closed */ }
+    if (ownerRelease && !ancestor) throw Error('live has diverged; refusing to rewrite history');
     const runs = [];
     // Paginate; never silently ignore checks after page one.
     for (let page = 1; page <= 20; page++) {
@@ -104,6 +129,32 @@ export async function run(policy = JSON.parse(readFileSync(new URL('./policy.jso
     if (checksFailed(runs, policy.requiredChecks, main)) throw Error('Required main check failed for ' + main);
     if (!checksPass(runs, policy.requiredChecks, main)) {
       console.log('Waiting for required checks on ' + main); continue;
+    }
+    if (ownerRelease) {
+      // Separate receipt tag; the daily marker is never touched on this path.
+      const receipt = 'owner-release/' + day + '-' + main.slice(0, 8);
+      const receiptHead = () => git(['ls-remote', '--tags', 'origin', 'refs/tags/' + receipt]).split(/\s+/)[0];
+      if (main === live) {
+        if (remoteHead('main') !== main || remoteHead('live') !== live) continue;
+        try {
+          git(['push', 'origin', main + ':refs/tags/' + receipt]);
+        } catch (error) {
+          if (receiptHead() !== main) throw error; // Safe only if the receipt already names this SHA.
+        }
+        if (receiptHead() !== main) throw Error('Owner release no-op receipt read-back failed');
+        console.log('Recorded checked owner release no-op for ' + receipt);
+        return;
+      }
+      const action = decide({ main, live, alreadyToday: alreadyToday(), ancestor,
+        green: checksPass(runs, policy.requiredChecks, main), ownerRelease: true, expectedMainSha });
+      if (action !== 'promote') return;
+      if (remoteHead('main') !== main || remoteHead('live') !== live) continue;
+      // Atomic push refuses both updates if live diverges; nothing is forced.
+      git(['push', '--atomic', 'origin', main + ':refs/heads/live', main + ':refs/tags/' + receipt]);
+      if (remoteHead('live') !== main || receiptHead() !== main)
+        throw Error('Owner release read-back failed');
+      console.log('Promoted checked main to live for owner release ' + receipt);
+      return;
     }
     // A successful no-op at the primary time also consumes this Denver day's
     // release opportunity. Otherwise a fallback could deploy a later merge

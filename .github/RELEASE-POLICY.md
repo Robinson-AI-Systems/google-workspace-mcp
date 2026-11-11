@@ -5,7 +5,9 @@
 
 Owner-approved 2026-10-12. Pull requests target `main`; `main` is the default development branch. Do not merge PRs into `live` or push directly to it. Do not run Vercel CLI production deployments or manually promote a preview during routine development.
 
-`.github/workflows/daily-live.yml` alone promotes a checked main snapshot to `live`, at most once per America/Denver calendar day. The primary scheduled trigger remains 20:19 Denver with off-minute 20:35 and 21:35 recovery triggers if GitHub drops or delays a scheduled event. All three use the same checked release script and its atomic branch + dated tag operation; whichever trigger succeeds first wins and later invocations skip. Trigger redundancy is not permission to make extra releases. No changes means no release; failed, pending or missing required checks or diverged history refuse promotion. Nothing force-pushes. Existing customer billing and MCP production-access gates remain unchanged.
+live is promoted automatically once a day as a floor; an agent may promote an exact green main SHA any additional time, with no cap.
+
+`.github/workflows/daily-live.yml` alone promotes a checked main snapshot to `live`. The primary scheduled trigger remains 20:19 Denver with off-minute 20:35 and 21:35 recovery triggers if GitHub drops or delays a scheduled event. All three use the same checked release script and its atomic branch + dated tag operation; whichever trigger succeeds first wins and later invocations skip. Trigger redundancy is not permission to make extra releases. No changes means no release; failed, pending or missing required checks or diverged history refuse promotion. Nothing force-pushes. Existing customer billing and MCP production-access gates remain unchanged.
 
 Vercel projects linked to this repository must track `live` for production and have automatic preview deployments disabled. `vercel.json` permits Git deployments only for `live`, including future linked projects. Keep existing GitHub CI and any existing local browser/build tests enabled; use local fixtures rather than paid Vercel previews. Emergency releases require a separate explicit owner instruction. The release schedule is independent of development PR batch counts.
 
@@ -37,6 +39,29 @@ branches and invocations fail closed. Recovery retains exact-main CI, ancestry,
 atomic marker and read-back checks and skips if a release already occurred that day.
 No provider production permission, plan, spending limit or preview setting changes.
 
+
+## Owner-ordered releases (owner ruling, 2026-11-04; ported 2026-11-11)
+
+live is promoted automatically once a day as a floor; an agent may promote an exact green main SHA any additional time, with no cap.
+
+Release caps bind the automatic promoter only. An owner-ordered release is not
+bound by the once-per-Denver-day cap: the signed-in owner `christcr2012` can Run
+workflow on `main` with `owner_release` checked and `expected_main_sha` set to
+the exact 40-character main commit to release. The promoter refuses unless
+remote main still equals that SHA, `live` is an ancestor of main and the
+required checks are green at that exact SHA; it then fast-forwards `live` and
+writes a separate receipt tag `owner-release/<Denver day>-<first 8 of the
+released SHA>` atomically with the branch update, reading both back before
+reporting success. The owner path never creates, modifies or deletes the daily
+`live-promotion/<day>` marker or the `release-markers/<day>` recovery receipt,
+and a release whose `live` already equals the expected SHA succeeds as a
+recorded no-op with the receipt tag written. Owner releases through this
+workflow path supersede the older manual-exception route
+(`.github/release/manual-exception.mjs`, retained as a guard for connector
+operators); the workflow/promoter no longer routes owner releases through
+that manual path. This does not authorize automatic releases at agent batch
+boundaries, new provider production permissions or spending beyond the
+owner's own order.
 
 ## Explicit owner-authorized emergency extra release on a consumed Denver day (October 19, 2026)
 
