@@ -35,6 +35,103 @@ function buildRawMessage({ to, from, subject, body, html, cc, bcc, attachments, 
   return raw;
 }
 
+// ---- Threaded-reply recipient computation (shared by the handler and the
+// write guard's preview, so what the preview shows is exactly what sends) ----
+
+// Split an address header into its mailbox tokens, keeping display names.
+// A comma inside a quoted display name does not split.
+export function splitAddressList(value) {
+  if (!value) return [];
+  const out = [];
+  let cur = '', quoted = false;
+  for (const ch of String(value)) {
+    if (ch === '"') quoted = !quoted;
+    if (ch === ',' && !quoted) { out.push(cur); cur = ''; } else cur += ch;
+  }
+  out.push(cur);
+  return out.map((s) => s.trim()).filter(Boolean);
+}
+
+const emailOf = (token) => (String(token).match(/[^\s<>,;"']+@[^\s<>,;"']+/) || [])[0]?.toLowerCase();
+
+// Who a reply goes to, computed the way Gmail's own Reply / Reply all does:
+//  - plain reply: the answered message's sender, exactly as this tool has
+//    always behaved;
+//  - replyAll: the sender plus everyone on the answered message's To line
+//    (as To) and Cc line (as Cc), with this account's own address taken out —
+//    so replying in a thread whose newest message is your own reaches the
+//    other participants instead of yourself.
+// Explicit to/cc replace the computed lists; addTo/addCc append to them.
+// When the account's own address is unknown, nothing is taken out.
+export function computeReplyRecipients({ headers, ownEmail, replyAll = false, addTo, addCc, to, cc }) {
+  const header = (name) => (headers || []).find((h) => String(h?.name).toLowerCase() === name.toLowerCase())?.value;
+  const own = ownEmail ? String(ownEmail).toLowerCase() : null;
+  const dedupe = (tokens) => {
+    const seen = new Set();
+    const out = [];
+    for (const token of tokens) {
+      const key = emailOf(token) || token.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(token);
+    }
+    return out;
+  };
+  const notOwn = (tokens) => (own ? tokens.filter((t) => emailOf(t) !== own) : tokens);
+
+  let toTokens;
+  if (to !== undefined) toTokens = splitAddressList(to);
+  else if (replyAll) toTokens = dedupe(notOwn([...splitAddressList(header('from')), ...splitAddressList(header('to'))]));
+  else toTokens = splitAddressList(header('from'));
+  if (addTo !== undefined) toTokens = dedupe([...toTokens, ...notOwn(splitAddressList(addTo))]);
+
+  const toEmails = new Set(toTokens.map((t) => emailOf(t)).filter(Boolean));
+  let ccTokens;
+  if (cc !== undefined) ccTokens = splitAddressList(cc);
+  else if (replyAll) ccTokens = dedupe(notOwn(splitAddressList(header('cc'))));
+  else ccTokens = [];
+  if (addCc !== undefined) ccTokens = dedupe([...ccTokens, ...notOwn(splitAddressList(addCc))]);
+  ccTokens = ccTokens.filter((t) => { const e = emailOf(t); return !e || !toEmails.has(e); });
+
+  return { to: toTokens.join(', '), cc: ccTokens.length ? ccTokens.join(', ') : undefined };
+}
+
+// Resolve everything a threaded reply needs from the thread itself: the
+// anchor message (the one being answered — the latest, or the message named
+// by replyToMessageId), the recipients, the subject and the reply headers.
+export async function resolveThreadReply(gmail, args, actingAs) {
+  const thread = await gmail.users.threads.get({ userId: 'me', id: args.threadId, format: 'metadata', metadataHeaders: ['Subject', 'From', 'To', 'Cc', 'Message-ID', 'References'] });
+  const messages = thread.data.messages || [];
+  let anchor = messages[messages.length - 1];
+  if (args.replyToMessageId !== undefined) {
+    anchor = messages.find((m) => m.id === args.replyToMessageId);
+    if (!anchor) throw Error(`invalid_args: replyToMessageId ${args.replyToMessageId} is not a message in thread ${args.threadId}`);
+  }
+  if (!anchor) throw Error(`invalid_args: thread ${args.threadId} has no message to reply to`);
+  const headers = anchor.payload?.headers || [];
+  const header = (name) => headers.find((h) => String(h?.name).toLowerCase() === name.toLowerCase())?.value;
+
+  let ownEmail;
+  if (args.replyAll) {
+    ownEmail = (await gmail.users.getProfile({ userId: 'me' })).data?.emailAddress;
+    if (!ownEmail && typeof actingAs === 'string' && emailOf(actingAs)) ownEmail = actingAs;
+  }
+  const { to, cc } = computeReplyRecipients({ headers, ownEmail, replyAll: args.replyAll === true, addTo: args.addTo, addCc: args.addCc, to: args.to, cc: args.cc });
+
+  const subject = header('Subject') || '';
+  const messageId = header('Message-ID');
+  const anchorRefs = header('References');
+  return {
+    messages: messages.length,
+    anchorId: anchor.id,
+    to,
+    cc,
+    subject: subject.startsWith('Re:') ? subject : 'Re: ' + subject,
+    inReplyTo: messageId,
+    references: messageId ? (anchorRefs ? `${anchorRefs} ${messageId}` : messageId) : anchorRefs
+  };
+}
+
 export const tools = [
   { name: 'gmail_send_email', description: 'Send an email via Gmail', inputSchema: { type: 'object', properties: { to: { type: 'string' }, subject: { type: 'string' }, body: { type: 'string' }, html: { type: 'boolean', default: false }, cc: { type: 'string' }, bcc: { type: 'string' } }, required: ['to', 'subject', 'body'] } },
   { name: 'gmail_send_with_attachment', description: 'Send an email with one or more attachments', inputSchema: { type: 'object', properties: { to: { type: 'string' }, subject: { type: 'string' }, body: { type: 'string' }, html: { type: 'boolean', default: false }, cc: { type: 'string' }, bcc: { type: 'string' }, attachments: { type: 'array', items: { type: 'object', properties: { filename: { type: 'string' }, mimeType: { type: 'string' }, base64Data: { type: 'string' } }, required: ['filename', 'base64Data'] } } }, required: ['to', 'subject', 'body', 'attachments'] } },
@@ -51,7 +148,7 @@ export const tools = [
   { name: 'gmail_mark_read', description: 'Mark a Gmail message as read', inputSchema: { type: 'object', properties: { messageId: { type: 'string' } }, required: ['messageId'] } },
   { name: 'gmail_mark_unread', description: 'Mark a Gmail message as unread', inputSchema: { type: 'object', properties: { messageId: { type: 'string' } }, required: ['messageId'] } },
   { name: 'gmail_forward_message', description: 'Forward an existing Gmail message to new recipients', inputSchema: { type: 'object', properties: { messageId: { type: 'string' }, to: { type: 'string' }, comment: { type: 'string' } }, required: ['messageId', 'to'] } },
-  { name: 'gmail_reply_to_thread', description: 'Reply to the most recent message in a Gmail thread', inputSchema: { type: 'object', properties: { threadId: { type: 'string' }, body: { type: 'string' }, html: { type: 'boolean', default: false } }, required: ['threadId', 'body'] } },
+  { name: 'gmail_reply_to_thread', description: 'Reply in a Gmail thread, staying in the thread with proper reply headers. By default the reply goes to the most recent message\'s sender only. Pass replyAll: true to answer the way Gmail\'s Reply all does (the answered message\'s sender and its To/Cc participants, minus this account), replyToMessageId to answer an earlier message in the thread instead of the most recent, addTo/addCc to add recipients, or to/cc to set the recipient lists outright.', inputSchema: { type: 'object', properties: { threadId: { type: 'string' }, body: { type: 'string' }, html: { type: 'boolean', default: false }, replyAll: { type: 'boolean', default: false }, replyToMessageId: { type: 'string' }, addTo: { type: 'string' }, addCc: { type: 'string' }, to: { type: 'string' }, cc: { type: 'string' } }, required: ['threadId', 'body'] } },
   { name: 'gmail_get_thread', description: 'Get a full Gmail thread (all messages in the conversation)', inputSchema: { type: 'object', properties: { threadId: { type: 'string' } }, required: ['threadId'] } },
   { name: 'gmail_list_threads', description: 'List Gmail threads', inputSchema: { type: 'object', properties: { q: { type: 'string' }, maxResults: { type: 'number', default: 10 } } } },
   { name: 'gmail_trash_thread', description: 'Move a whole Gmail thread to trash', inputSchema: { type: 'object', properties: { threadId: { type: 'string' } }, required: ['threadId'] } },
@@ -168,15 +265,10 @@ export const handlers = {
     const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw, threadId: undefined } });
     return ok(res.data);
   },
-  gmail_reply_to_thread: async (args, { gmail }) => {
-    const thread = await gmail.users.threads.get({ userId: 'me', id: args.threadId, format: 'metadata', metadataHeaders: ['Subject', 'From', 'Message-ID'] });
-    const lastMsg = thread.data.messages[thread.data.messages.length - 1];
-    const headers = lastMsg.payload.headers;
-    const subject = headers.find(h => h.name === 'Subject')?.value || '';
-    const to = headers.find(h => h.name === 'From')?.value || '';
-    const messageId = headers.find(h => h.name === 'Message-ID')?.value;
-    const raw = toBase64Url(buildRawMessage({ to, subject: subject.startsWith('Re:') ? subject : 'Re: ' + subject, body: args.body, html: args.html, inReplyTo: messageId, references: messageId }));
-    const res = await gmail.users.messages.send({ userId: 'me', requestBody: { raw, threadId: args.threadId } });
+  gmail_reply_to_thread: async (args, clients) => {
+    const plan = await resolveThreadReply(clients.gmail, args, clients.actingAs);
+    const raw = toBase64Url(buildRawMessage({ to: plan.to, cc: plan.cc, subject: plan.subject, body: args.body, html: args.html, inReplyTo: plan.inReplyTo, references: plan.references }));
+    const res = await clients.gmail.users.messages.send({ userId: 'me', requestBody: { raw, threadId: args.threadId } });
     return ok(res.data);
   },
   gmail_get_thread: async (args, { gmail }) => {
