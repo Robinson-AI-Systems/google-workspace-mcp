@@ -38,3 +38,7 @@ Claude (and some other apps) allow only one connector per address. Add a short n
 - Every app still gets its connection only through a person's own Google sign-in and the Approve page; no app can skip them.
 - An app that only supports a pasted static API key (no OAuth) cannot connect yet.
 - Google may show an "unverified app" warning to new people until Google finishes reviewing the app's Gmail and Drive permissions.
+
+## ChatGPT's client ID card (2026-11-10)
+
+ChatGPT names itself by the card at `https://chatgpt.com/oauth/client.json`. That card prefers `private_key_jwt` and also lists `none` in `token_endpoint_auth_methods_supported`. Until this date the card reader (`src/oauth/cimd.js`) accepted only cards whose preferred method was `none`, so ChatGPT's sign-in was refused (checked live: HTTP 400 for ChatGPT's card, 200 for Claude's). A card that offers `none` is now accepted as a public client (PKCE only; its signing keys are never fetched). Cards offering only key- or secret-based methods, and any card carrying a secret, stay refused. Test: `test/unit/real-client-cards.test.js` uses copies of the live Claude and ChatGPT cards. Not tested: a real ChatGPT account completing sign-in end to end.
