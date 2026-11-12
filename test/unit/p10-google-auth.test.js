@@ -158,6 +158,26 @@ describe('P10 Google OIDC, no legacy fallback, provider PKCE and encrypted scope
   delete process.env.TOKEN_ENCRYPTION_KEY;
   expect(()=>sealV2(content,p,a,'google-grant')).toThrow('v2_encryption_key_missing');
  });
+ it('reads v2 envelopes sealed under a previous key during a key change, and seals only under the current key',()=>{
+  const p=crypto.randomUUID(),a=crypto.randomUUID(),content={access_token:'previous-key-token'};
+  process.env.TOKEN_ENCRYPTION_KEY=crypto.randomBytes(32).toString('base64');
+  const oldKey=process.env.TOKEN_ENCRYPTION_KEY;
+  const sealedBefore=sealV2(content,p,a,'google-grant');
+  const newKey=crypto.randomBytes(32).toString('base64');
+  process.env.TOKEN_ENCRYPTION_KEY=newKey;
+  process.env.TOKEN_ENCRYPTION_KEY_PREVIOUS=oldKey;
+  expect(openV2(sealedBefore,p,a,'google-grant')).toEqual(content);
+  const sealedAfter=sealV2(content,p,a,'google-grant');
+  delete process.env.TOKEN_ENCRYPTION_KEY_PREVIOUS;
+  expect(openV2(sealedAfter,p,a,'google-grant')).toEqual(content);
+  process.env.TOKEN_ENCRYPTION_KEY=oldKey;
+  expect(()=>openV2(sealedAfter,p,a,'google-grant')).toThrow();
+  process.env.TOKEN_ENCRYPTION_KEY=newKey;
+  process.env.TOKEN_ENCRYPTION_KEY_PREVIOUS='not-a-key';
+  expect(openV2(sealedAfter,p,a,'google-grant')).toEqual(content);
+  delete process.env.TOKEN_ENCRYPTION_KEY_PREVIOUS;
+  process.env.TOKEN_ENCRYPTION_KEY=oldKey;
+ });
  it('uses secure HttpOnly SameSite cookies and rejects duplicated name values',()=>{
   const value=cookie('p10_session','p10s_protected');
   expect(value).toContain('HttpOnly; Secure; SameSite=Lax');
