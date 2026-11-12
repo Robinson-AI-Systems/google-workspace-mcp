@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import crypto from 'node:crypto';
-import { encryptJson, decryptJson, loadKey, resetWarning } from '../../src/crypto.js';
+import { encryptJson, decryptJson, loadKey, loadPreviousKeys, resetWarning } from '../../src/crypto.js';
 
 const key = () => crypto.randomBytes(32);
 const sample = { access_token: 'fake-access', refresh_token: 'fake-refresh', expiry_date: 1790000000000, scope: 'a b' };
@@ -59,5 +59,45 @@ describe('loadKey', () => {
     const short = crypto.randomBytes(16).toString('base64');
     expect(loadKey({ TOKEN_ENCRYPTION_KEY: short })).toBeNull();
     expect(JSON.stringify(warn.mock.calls)).not.toContain(short);
+  });
+});
+
+describe('decryptJson with TOKEN_ENCRYPTION_KEY_PREVIOUS (dual-key rotation)', () => {
+  const b64 = (buf) => buf.toString('base64');
+  it('opens a value sealed under the old key when it is listed as previous', () => {
+    const oldKey = key(); const newKey = key();
+    const stored = encryptJson(sample, oldKey);
+    expect(decryptJson(stored, newKey, { TOKEN_ENCRYPTION_KEY_PREVIOUS: b64(oldKey) })).toEqual(sample);
+  });
+  it('still throws for an old-key value when no previous key is configured', () => {
+    const oldKey = key(); const newKey = key();
+    const stored = encryptJson(sample, oldKey);
+    expect(() => decryptJson(stored, newKey, {})).toThrow();
+  });
+  it('tries each listed previous key (up to two)', () => {
+    const k1 = key(); const k2 = key(); const newKey = key();
+    const env = { TOKEN_ENCRYPTION_KEY_PREVIOUS: `${b64(k1)}, ${b64(k2)}` };
+    expect(decryptJson(encryptJson(sample, k2), newKey, env)).toEqual(sample);
+    expect(decryptJson(encryptJson(sample, k1), newKey, env)).toEqual(sample);
+  });
+  it('ignores malformed previous-key entries and never weakens the current key', () => {
+    const newKey = key();
+    const env = { TOKEN_ENCRYPTION_KEY_PREVIOUS: 'not-base64!!, AAA=' };
+    expect(decryptJson(encryptJson(sample, newKey), newKey, env)).toEqual(sample);
+    expect(() => decryptJson(encryptJson(sample, key()), newKey, env)).toThrow();
+  });
+  it('encryptJson always seals under the given (current) key only', () => {
+    const oldKey = key(); const newKey = key();
+    const stored = encryptJson(sample, newKey);
+    expect(() => decryptJson(stored, oldKey, {})).toThrow();
+    expect(decryptJson(stored, newKey, { TOKEN_ENCRYPTION_KEY_PREVIOUS: b64(oldKey) })).toEqual(sample);
+  });
+  it('loadPreviousKeys parses at most two valid 32-byte keys', () => {
+    const k1 = key(); const k2 = key(); const k3 = key();
+    const keys = loadPreviousKeys({ TOKEN_ENCRYPTION_KEY_PREVIOUS: `${b64(k1)},${b64(k2)},${b64(k3)}` });
+    expect(keys).toHaveLength(2);
+    expect(keys[0].equals(k1)).toBe(true);
+    expect(loadPreviousKeys({})).toEqual([]);
+    expect(loadPreviousKeys({ TOKEN_ENCRYPTION_KEY_PREVIOUS: '  ' })).toEqual([]);
   });
 });
