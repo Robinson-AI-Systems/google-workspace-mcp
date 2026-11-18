@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { STORE_TRANSPORTS, selectStoreTransport, storeSql, pgStoreSql } from '../../src/db-transport.js';
+import { STORE_TRANSPORTS, selectStoreTransport, storeSql, pgStoreSql, createStorePool } from '../../src/db-transport.js';
 
 const NEON_URL = 'postgres://fixture@ep-example-123.us-east-1.neon.tech/neondb';
 const LOCAL_URL = 'postgres://localhost:5432/neondb';
@@ -46,5 +46,21 @@ describe('store transport selection', () => {
     const direct = pgStoreSql(LOCAL_URL);
     expect(typeof direct).toBe('function');
     await direct.end();
+  });
+
+  it('survives an idle client dropped by the server instead of crashing the process', async () => {
+    // Regression test for incident inc-4bf7cc58ef702b6c-0b799f: Postgres
+    // terminated an idle pooled connection (57P01, administrator
+    // command) and, with no pool 'error' listener, Node threw the
+    // event and killed the production server. Emitting that same
+    // error on a store pool must be logged, never thrown.
+    const logged = [];
+    const pool = createStorePool(LOCAL_URL, { error: (line) => logged.push(line) });
+    const dropped = Object.assign(
+      new Error('terminating connection due to administrator command'), { code: '57P01' });
+    expect(() => pool.emit('error', dropped)).not.toThrow();
+    expect(logged).toHaveLength(1);
+    expect(logged[0]).toContain('57P01');
+    await pool.end();
   });
 });
