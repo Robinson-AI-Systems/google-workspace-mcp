@@ -43,6 +43,28 @@ export function selectStoreTransport(env = process.env) {
 
 const pools = new Map();
 
+// Build one store pool. Exported so tests can prove the idle-client
+// behaviour without a live database.
+//
+// An idle pooled client whose connection the server drops — for
+// example Postgres error 57P01, "terminating connection due to
+// administrator command", when the database is restarted or a
+// connection is terminated during maintenance — surfaces as an
+// 'error' event on the pool (pg-pool's idle listener). With no
+// listener attached, Node throws that event and the whole process
+// dies; that crash took the production Workspace server down on
+// 2026-11-13 and again on 2026-11-18 (incident
+// inc-4bf7cc58ef702b6c-0b799f). The pool has already removed the dead
+// client by the time the event fires and opens a fresh connection
+// for the next query, so the handler only has to log the loss.
+export function createStorePool(url, log = console) {
+  const pool = new pg.Pool({ connectionString: url, max: 5, idleTimeoutMillis: 30_000 });
+  pool.on('error', (err) => {
+    log.error(`[store] idle database connection lost (${err?.code || 'no code'}): ${err?.message || err}`);
+  });
+  return pool;
+}
+
 function poolFor(url) {
   let entry = pools.get(url);
   if (!entry) {
@@ -51,7 +73,7 @@ function poolFor(url) {
     // independent HTTP request. Handles are created per caller (several
     // modules keep their own), so the pool — and its ended state — is
     // shared by every handle for a URL.
-    entry = { pool: new pg.Pool({ connectionString: url, max: 5, idleTimeoutMillis: 30_000 }), ended: false };
+    entry = { pool: createStorePool(url), ended: false };
     pools.set(url, entry);
   }
   return entry;
