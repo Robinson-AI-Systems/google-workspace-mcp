@@ -5,7 +5,7 @@
   "type": "module",
   "main": "api/mcp.js",
   "scripts": {
-    "check": "find src api -name '*.js' -exec node --check {} \\; && node scripts/check-writes.mjs && node scripts/check-rtc-budget.mjs && node scripts/gen-catalog.mjs --check && npm run check:developer-evidence && npm run check:session",
+    "check": "node scripts/check-map-counts.mjs && find src api -name '*.js' -exec node --check {} \\; && node scripts/check-writes.mjs && node scripts/check-rtc-budget.mjs && node scripts/gen-catalog.mjs --check && npm run check:developer-evidence && npm run check:session",
     "test": "vitest run",
     "test:db": "vitest run --config vitest.db.config.js",
     "test:rtc": "vitest run --config vitest.rtc.config.js",
