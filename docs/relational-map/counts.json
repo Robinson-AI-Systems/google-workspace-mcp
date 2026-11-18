@@ -1,0 +1,171 @@
+{
+  "about": "MAP-COUNTS-1: every number the map states about the code, checked in CI by scripts/check-map-counts.mjs. Per-area counts are read from the README catalog that gen-catalog.mjs --check has just proven equal to the registry.",
+  "counts": [
+    {
+      "name": "registered tools",
+      "value": 388,
+      "files": [
+        "00-overview.md",
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check",
+        "match": "matches (\\d+) registered tools"
+      }
+    },
+    {
+      "name": "admin area tools",
+      "value": 112,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### admin (' README.md",
+        "match": "### admin \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "files area tools",
+      "value": 103,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### files (' README.md",
+        "match": "### files \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "mail area tools",
+      "value": 60,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### mail (' README.md",
+        "match": "### mail \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "workspace area tools",
+      "value": 29,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### workspace (' README.md",
+        "match": "### workspace \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "calendar area tools",
+      "value": 24,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### calendar (' README.md",
+        "match": "### calendar \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "tasks area tools",
+      "value": 14,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### tasks (' README.md",
+        "match": "### tasks \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "workflows area tools",
+      "value": 12,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### workflows (' README.md",
+        "match": "### workflows \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "people area tools",
+      "value": 9,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### people (' README.md",
+        "match": "### people \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "chat area tools",
+      "value": 8,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### chat (' README.md",
+        "match": "### chat \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "identity area tools",
+      "value": 5,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### identity (' README.md",
+        "match": "### identity \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "chrome area tools",
+      "value": 3,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### chrome (' README.md",
+        "match": "### chrome \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "dns area tools",
+      "value": 3,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### dns (' README.md",
+        "match": "### dns \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "domain area tools",
+      "value": 3,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### domain (' README.md",
+        "match": "### domain \\((\\d+)\\)"
+      }
+    },
+    {
+      "name": "datatransfer area tools",
+      "value": 3,
+      "files": [
+        "03-tool-registry-and-guards.md"
+      ],
+      "how": {
+        "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### datatransfer (' README.md",
+        "match": "### datatransfer \\((\\d+)\\)"
+      }
+    }
+  ]
+}
