@@ -3,6 +3,7 @@
 import {createHash, randomBytes, publicEncrypt, constants} from 'node:crypto';
 import {validateStart} from './handoff.js';
 import {MAX_FAILED_LOGINS, LOCKOUT_WINDOW_MINUTES} from '../oauth/login-guard.js';
+import {requestHostIsCanonical} from '../principals/canonical-entry.js';
 const digest = v => createHash('sha256').update(v).digest('hex');
 const statePattern = /^[A-Za-z0-9_-]{43}$/;
 const passIdPattern = /^pass_[a-f0-9]{20}$/;
@@ -47,7 +48,7 @@ export function createTestPassHandoff({store, origin, getClient, getPass, loginS
         return json(200,{status:'authorized',sealed_pass:result.sealed_code});
       }
       if(req.method==='GET') {
-        if(req.headers.host!==new URL(origin).host){res.writeHead(303,{Location:origin+testPassPath+'?state='+p.state});return res.end();}
+        if(!requestHostIsCanonical(req,origin)){res.writeHead(303,{Location:origin+testPassPath+'?state='+p.state});return res.end();}
         res.setHeader('Referrer-Policy','same-origin');
         return page(200,'<h1>Sign in with your existing TEST pass</h1><p>This connects the pass to the requesting test runner. It does not create a pass or change its permissions or expiry. Use only a request your agent prepared.</p><p>Expected pass identifier: <code>'+escape(row.challenge)+'</code></p><form method="POST"><input type="hidden" name="state" value="'+escape(p.state)+'"><label>Existing TEST pass <input type="password" name="token" autocomplete="off" required></label><button type="submit">Connect existing pass</button></form>');
       }

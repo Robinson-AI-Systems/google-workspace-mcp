@@ -65,7 +65,7 @@ describe('passphrase page lockout', () => {
   it('prefills requested access and preserves the owner choice after errors',async()=>{
     for(const profile of ['full','everyday',undefined]){
       const res=fakeRes();await handler({method:'GET',headers:{},query:{client_id:'claude',redirect_uri:REDIRECT,...PKCE,profile}},res);
-      expect(res.body).toContain(`<option value="${profile||'read_only'}" selected>`);
+      expect(res.body).toContain(`<option value="${profile||'full'}" selected>`);
       expect(res.body).not.toContain('type="hidden" name="profile"');
       expect(res.body).not.toContain('ops@example.test');
       expect(res.body).not.toMatch(/<option[^>]*>AI Systems<\/option>/);
@@ -85,10 +85,15 @@ describe('passphrase page lockout', () => {
     expect(code.google_account).toBe('rentals@example.test');
   });
 
-  it('persists an explicitly selected live owner policy and unknown-billing cost consent in a one-time code',async()=>{
+  it('keeps licensing choices off the sign-in page, defaults a plain sign-in to per-action approval, and still honors an explicitly posted standing policy',async()=>{
     const page=fakeRes();await handler({method:'GET',query:{client_id:'claude',redirect_uri:REDIRECT,...PKCE},headers:{}},page);
-    expect(page.body).toContain('name="cost_consent"');
-    expect(page.body).toContain('name="ack_unknown_charges"');
+    expect(page.body).not.toContain('name="cost_consent"');
+    expect(page.body).not.toContain('name="ack_unknown_charges"');
+    expect(page.body).not.toContain('Licensing and possible charges');
+    const plain=await login({passphrase:PASSPHRASE,profile:'full'});
+    expect(plain.statusCode).toBe(302);
+    const plainCode=new URL(plain.headers.Location).searchParams.get('code');
+    expect((await fake.consumeAuthCode(plainCode,AUTH)).cost_policy).toMatchObject({mode:'per_action'});
     const signed=await login({passphrase:PASSPHRASE,profile:'full',areas:'admin,workspace',
       cost_consent:'standing_assign',ack_unknown_charges:'yes'});
     expect(signed.statusCode).toBe(302);

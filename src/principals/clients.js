@@ -11,22 +11,30 @@ import {requireScope} from './security.js';
 export async function buildPrincipalApiClients(context){
  const store=scopedStore(context); // checks private server minting WeakSet
  await store.assertActive(); // denies revoked/expired/rotated grants before any provider client construction
- const account=await store.getAccount(context.accountId);
- requireScope(account&&account.id===context.accountId&&
-  account.token_version===context.accountVersion,'outside_scope');
- const tokens=await store.getGrant(context.accountId);
+ // The Google account this call acts as: the connection's own, or another
+ // account the same person linked (a context derived by accountContext).
+ const googleId=context.googleAccountId||context.accountId;
+ const googleVersion=context.googleAccountId?context.googleAccountVersion:context.accountVersion;
+ const account=await store.getAccount(googleId);
+ requireScope(account&&account.id===googleId&&
+  account.token_version===googleVersion,'outside_scope');
+ const tokens=await store.getGrant(googleId);
  requireScope(tokens&&(tokens.access_token||tokens.refresh_token),'google_account_not_linked');
  const auth=publicGoogleClient(); // separate PUBLIC_* app only
  auth.setCredentials(tokens);
  if(Number.isFinite(tokens.expiry_date)&&tokens.expiry_date<Date.now()+60000){
    requireScope(tokens.refresh_token,'google_reconnect_required');
-   const {credentials}=await auth.refreshAccessToken();
+   // A saved sign-in Google will not renew (revoked, expired, or issued to
+   // another app) is a reconnect, not a server-setup problem.
+   let credentials;
+   try{({credentials}=await auth.refreshAccessToken());}
+   catch{throw Error('google_reconnect_required');}
    requireScope(credentials?.access_token&&credentials.expiry_date>Date.now(),
      'google_refresh_unavailable');
    const saved=await persistPrincipalGoogleRefresh(context,credentials);
    if(!saved){
      await store.assertActive();
-     const winner=await store.getGrant(context.accountId);
+     const winner=await store.getGrant(googleId);
      requireScope(winner?.access_token&&winner.expiry_date>Date.now(),
        'google_refresh_conflict_reconnect');
      auth.setCredentials(winner);
@@ -46,11 +54,12 @@ export async function buildPrincipalApiClients(context){
   {configured:false,scopes:Object.freeze([]),verifiedSubjects:Object.freeze([])});
  clients.store=store;
  clients.principal=context.principalId;
- clients.accountId=context.accountId;
+ clients.accountId=googleId;
  clients.connection=context.connectionId;
  clients.credentialVersion=context.accountVersion;
  clients.rtcPolicy=Object.freeze({principalKind:'user',profile:context.profile,listing:context.listing,
-  areas:context.areas,mode:context.mode,cost_policy:context.costPolicy});
+  areas:context.areas,mode:context.mode,cost_policy:context.costPolicy,
+  ...(context.writesPaused?{allow_writes:false}:{})});
  // A domain-bound UI guard is not proof of Google Workspace administration;
  // privilege requires the customer's independently verified OAuth/DWD grant.
  const domain=domainOfEmail(account.email);

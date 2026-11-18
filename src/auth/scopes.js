@@ -1,6 +1,6 @@
 // Every OAuth scope this server can use, grouped by the Google service it unlocks.
 // The sign-in page requests ALL of these at once so you only ever log in once.
-// If you don't use a service (e.g. Classroom), Google simply never gets asked to use it.
+// If you don't use a service, Google simply never gets asked to use it.
 
 export const SCOPE_GROUPS = {
   gmail: [
@@ -40,12 +40,6 @@ export const SCOPE_GROUPS = {
   chat: [
     'https://www.googleapis.com/auth/chat.spaces',
     'https://www.googleapis.com/auth/chat.messages'
-  ],
-  classroom: [
-    'https://www.googleapis.com/auth/classroom.courses',
-    'https://www.googleapis.com/auth/classroom.rosters',
-    'https://www.googleapis.com/auth/classroom.coursework.students',
-    'https://www.googleapis.com/auth/classroom.coursework.me'
   ],
   // --- Admin SDK: everything needed for "manage the whole Workspace" ---
   adminDirectory: [

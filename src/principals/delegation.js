@@ -165,7 +165,8 @@ export async function revokeCustomerDelegation(principalId,accountId,customerId)
  return {revoked:rows.length===1,providerRevocationClaimed:false};
 }
 export async function loadCustomerDelegation(context){
- const {principalId,accountId}=context||{};
+ // A call acting as another linked account uses THAT account's delegation.
+ const principalId=context?.principalId,accountId=context?.googleAccountId||context?.accountId;
  requireScope(validUuid(principalId)&&validUuid(accountId),'invalid_scoped_context');
  const rows=await sql()`SELECT d.customer_id,d.scopes,d.subject_rule,d.credential_ciphertext
    FROM principal_delegations d JOIN principal_google_accounts a

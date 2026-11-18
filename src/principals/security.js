@@ -34,6 +34,12 @@ export function legacyPilotFreshConsentAllowed(sub,env=process.env){
    legacyPilotLoginAllowed(sub,env);
 }
 export const cookie=(name,value,path='/',ttl=3600)=>name+'='+encodeURIComponent(value)+'; Path='+path+'; Max-Age='+ttl+'; HttpOnly; Secure; SameSite=Lax';
+// D-006 MC-7.3: every value sent under one cookie name (a browser can hold
+// two copies, e.g. from an older path). Callers that verify a value
+// server-side may try each; readCookie stays strict for everything else.
+export const readCookies=(req,name)=>String(req?.headers?.cookie||'').split(';').map(x=>x.trim())
+ .filter(x=>x.startsWith(name+'=')).map(x=>{try{return decodeURIComponent(x.slice(name.length+1));}catch{return null;}})
+ .filter(x=>typeof x==='string'&&x.length>0).slice(0,4);
 export const readCookie=(req,name)=>{
  const a=String(req?.headers?.cookie||'').split(';').map(x=>x.trim()).filter(x=>x.startsWith(name+'='));
  if(a.length!==1)return null;

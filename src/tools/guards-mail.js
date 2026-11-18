@@ -2,6 +2,7 @@
 // Same entry shape as guards.js (describe / before / after / destructive / confirmWhen / verify); see write.js.
 // Descriptions show who and how big, never the text of a message (or any secret).
 import { pick, data, D, same, SCALARS } from './guard-helpers.js';
+import { resolveThreadReply } from './gmail.js';
 
 // ---------- small helpers ----------
 const hdr = (headers, name) => (headers || []).find((h) => String(h?.name).toLowerCase() === name.toLowerCase())?.value;
@@ -85,11 +86,10 @@ export const GUARDS_MAIL = {
     before: (a, { gmail }) => msgMeta(gmail, a.messageId),
     after: sentAfter },
   gmail_reply_to_thread: { destructive: D, verify: sentVerify,
-    describe: (a) => ({ target: a.threadId, summary: `SEND a reply (${size(a.body)}) to the most recent message in the thread ${a.threadId}; it goes to that message's sender` }),
-    before: async (a, { gmail }) => {
-      const t = await data(gmail.users.threads.get({ userId: 'me', id: a.threadId, format: 'metadata', metadataHeaders: ['Subject', 'From'] }));
-      const last = list(t.messages).at(-1);
-      return { messages: list(t.messages).length, repliesGoTo: hdr(last?.payload?.headers, 'From'), subject: hdr(last?.payload?.headers, 'Subject') };
+    describe: (a) => ({ target: a.threadId, summary: `SEND a reply (${size(a.body)}) in the thread ${a.threadId}${a.replyToMessageId ? ` answering message ${a.replyToMessageId}` : ' answering its most recent message'}${a.replyAll ? '; as a reply-all it goes to the answered message\'s participants (sender and To/Cc, minus this account)' : '; it goes to the answered message\'s sender'}${a.to ? `; To set to ${a.to}` : ''}${a.addTo ? `; adding ${a.addTo}` : ''}${a.cc ? `; Cc set to ${a.cc}` : ''}${a.addCc ? `; adding Cc ${a.addCc}` : ''}` }),
+    before: async (a, { gmail, actingAs }) => {
+      const plan = await resolveThreadReply(gmail, a, actingAs);
+      return { messages: plan.messages, repliesGoTo: plan.to, ...(plan.cc ? { repliesCcTo: plan.cc } : {}), subject: plan.subject };
     },
     after: sentAfter },
   gmail_send_draft: { destructive: D, verify: sentVerify,

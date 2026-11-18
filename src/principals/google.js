@@ -15,7 +15,6 @@ const DIRECT_SCOPE_GROUPS=Object.freeze({
  calendar:SCOPE_GROUPS.calendar,tasks:SCOPE_GROUPS.tasks,
  contacts:SCOPE_GROUPS.contacts,
  chat:[...SCOPE_GROUPS.chat,'https://www.googleapis.com/auth/chat.memberships.readonly'],
- classroom:SCOPE_GROUPS.classroom,
  adminVerify:['https://www.googleapis.com/auth/admin.directory.user.readonly'],
  adminDirectory:[...SCOPE_GROUPS.adminDirectory,...SCOPE_GROUPS.adminSecurity],
  reports:SCOPE_GROUPS.adminReports,groups:SCOPE_GROUPS.groupsSettings,

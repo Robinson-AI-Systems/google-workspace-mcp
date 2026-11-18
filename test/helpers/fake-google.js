@@ -48,7 +48,7 @@ export function makeFakeClients({ actingAs = 'ops@example.test' } = {}) {
     rejects(error) { ruleFor(path).fallback = { type: 'reject', error }; }
   });
 
-  const services = ['gmail', 'drive', 'calendar', 'sheets', 'docs', 'slides', 'forms', 'tasks', 'people', 'chat', 'classroom',
+  const services = ['gmail', 'drive', 'calendar', 'sheets', 'docs', 'slides', 'forms', 'tasks', 'people', 'chat',
     'admin', 'adminReports', 'groupssettings', 'licensing', 'datatransfer', 'alertcenter', 'chromepolicy', 'cloudidentity',
     'siteVerification', 'vault'];
   const clients = { auth: {}, actingAs };

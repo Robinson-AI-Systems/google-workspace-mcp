@@ -131,6 +131,24 @@ export function makeTenantStore(context) {
 
   return Object.freeze({
     async assertActive(){await assertCurrent(sql());return true;},
+    // CONTROLS-2 (owner ruling 2026-11-10): the person's agent can flip the
+    // person's own "pause all changes" switch for them. Scoped to this
+    // connection's own person; nobody else's setting is reachable.
+    async getChangesPaused(){
+      const q=sql();await assertCurrent(q);
+      const rows=await q`SELECT writes_paused FROM principal_settings WHERE principal_id=${principalId}::uuid`;
+      return rows[0]?.writes_paused===true;
+    },
+    async setChangesPaused(paused){
+      requireScope(typeof paused==='boolean','invalid_setting');
+      const q=sql();await assertCurrent(q);
+      const rows=await q`INSERT INTO principal_settings(principal_id,writes_paused)
+        SELECT id,${paused} FROM principals WHERE id=${principalId}::uuid AND status='active'
+        ON CONFLICT(principal_id) DO UPDATE SET writes_paused=excluded.writes_paused,updated_at=now()
+        RETURNING writes_paused`;
+      requireScope(rows.length===1,'invalid_scoped_context');
+      return rows[0].writes_paused;
+    },
     async storeResult({handle, connection: _ignored, payload, ttlHours = 24}) {
       requireScope(typeof handle === 'string' && handlePattern.test(handle) &&
         positiveInt(ttlHours, 24) && payload !== undefined, 'invalid_result');

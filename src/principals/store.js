@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import {storeSql} from '../db-transport.js';
 import {sealV2,openV2} from './crypto.js';
 import {OWNER_ID,digest,mint,validUuid,validEmail,requireScope,legacyPilotLoginAllowed,legacyPilotFreshConsentAllowed} from './security.js';
-import {normalizeConnectionPolicy} from '../oauth/connection-settings.js';
+import {normalizeConnectionPolicy,CONNECTION_PROFILES} from '../oauth/connection-settings.js';
 import {initTenantSchema,makeTenantStore} from './tenant-store.js';
 import {loadCustomerDelegation} from './delegation.js';
 import {initOwnerMigrationSchema} from './owner-migration.js';
@@ -27,7 +27,30 @@ export async function initPrincipalSchema(q=sql()){
  await q`CREATE TABLE IF NOT EXISTS principal_google_identities (
    issuer TEXT NOT NULL,google_sub TEXT NOT NULL,principal_id UUID NOT NULL REFERENCES principals(id),
    verified_email TEXT NOT NULL,updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-   PRIMARY KEY(issuer,google_sub),UNIQUE(principal_id,issuer,google_sub))`;
+   PRIMARY KEY(issuer,google_sub,principal_id))`;
+ // ADOPT-1 (2026-11-09): identity-proven adoption needs the SAME Google
+ // identity bound to two profiles at once — the holding profile and the
+ // public profile claiming its own mailboxes — so the binding key widens
+ // from (issuer,google_sub) to (issuer,google_sub,principal_id): one row
+ // per identity PER profile. The one-binding-per-profile rule becomes an
+ // explicit unique index, and databases created under the old key are
+ // migrated by dropping that primary key (every row it ever held
+ // satisfies the widened key, so the drop cannot create duplicates).
+ await q`CREATE UNIQUE INDEX IF NOT EXISTS principal_google_identities_one_per_principal
+   ON principal_google_identities(principal_id,issuer,google_sub)`;
+ await q`ALTER TABLE principal_google_identities DROP CONSTRAINT IF EXISTS principal_google_identities_pkey`;
+ // Databases whose table was created by THIS widened definition have no
+ // primary key at all after the drop above; give them the widened key
+ // explicitly (a no-op where the original key was already replaced).
+ await q`DO $$ BEGIN
+   IF NOT EXISTS (SELECT 1 FROM pg_constraint
+     WHERE conname='principal_google_identities_pkey'
+       AND conrelid='principal_google_identities'::regclass) THEN
+     ALTER TABLE principal_google_identities
+       ADD CONSTRAINT principal_google_identities_pkey
+       PRIMARY KEY(issuer,google_sub,principal_id);
+   END IF;
+ END $$`;
  await q`CREATE TABLE IF NOT EXISTS principal_google_accounts (
    id UUID PRIMARY KEY,principal_id UUID NOT NULL REFERENCES principals(id),
    issuer TEXT NOT NULL,google_sub TEXT NOT NULL,email TEXT NOT NULL,label TEXT,
@@ -56,7 +79,18 @@ export async function initPrincipalSchema(q=sql()){
  // The installation's existing rows belong only to the explicit owner; never
  // derive an owner from whichever public browser happens to arrive first.
  await q`INSERT INTO principal_legacy_accounts(email,principal_id)
-   SELECT email,${OWNER_ID}::uuid FROM google_accounts ON CONFLICT(email) DO NOTHING`;
+   SELECT a.email,${OWNER_ID}::uuid FROM google_accounts a
+   WHERE NOT EXISTS(SELECT 1 FROM principal_google_accounts g
+     WHERE lower(g.email)=lower(a.email) AND g.status='active'
+       AND g.principal_id<>${OWNER_ID}::uuid)
+   ON CONFLICT(email) DO NOTHING`;
+ // ADOPT-1 (2026-11-09): the seed above maps every legacy mailbox the
+ // OWNER does not itself actively hold as a V2 account: a mailbox the
+ // owner links as its own account (the owner linking its legacy
+ // mailboxes is the reservation working as designed) is not legacy-held
+ // against the owner, while a mailbox adopted onto ANOTHER profile
+ // carries its live claim as that profile's active grant and must not
+ // be re-mapped — re-mapping would resurrect its reservation.
  await q`CREATE TABLE IF NOT EXISTS user_sessions (
    token_hash TEXT PRIMARY KEY,principal_id UUID NOT NULL REFERENCES principals(id),
    csrf_hash TEXT NOT NULL,expires_at TIMESTAMPTZ NOT NULL,revoked_at TIMESTAMPTZ,
@@ -104,6 +138,23 @@ export async function initPrincipalSchema(q=sql()){
    customer_id TEXT NOT NULL,scopes TEXT[] NOT NULL,subject_rule TEXT NOT NULL,
    credential_ciphertext TEXT NOT NULL,enabled BOOLEAN NOT NULL DEFAULT false,
    revoked_at TIMESTAMPTZ,UNIQUE(principal_id,customer_id))`;
+ // D-006 MC-7.0 (2026-11-09): the cookie-free connect step. After Google
+ // sign-in the person lands on ONE Approve page; its state is this one-use
+ // handle (kept hashed) carried in the address, never a browser cookie.
+ await q`CREATE TABLE IF NOT EXISTS principal_connect_handles (
+   handle_hash TEXT PRIMARY KEY,principal_id UUID NOT NULL REFERENCES principals(id),
+   client_id TEXT NOT NULL,redirect_uri TEXT NOT NULL,resource TEXT NOT NULL,
+   code_challenge TEXT NOT NULL,client_state TEXT,
+   expires_at TIMESTAMPTZ NOT NULL,consumed_at TIMESTAMPTZ,
+   created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
+ await q`CREATE INDEX IF NOT EXISTS principal_connect_handles_expiry ON principal_connect_handles(expires_at)`;
+ // CONTROLS-1 (2026-11-09): a person's own switch to pause changes on every
+ // app connection at once ("Make all my apps read-only"), GitHub Unleashed's
+ // global action. Each connection keeps its own access level underneath.
+ await q`CREATE TABLE IF NOT EXISTS principal_settings (
+   principal_id UUID PRIMARY KEY REFERENCES principals(id),
+   writes_paused BOOLEAN NOT NULL DEFAULT false,
+   updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
  await initTenantSchema(q);
  await initOwnerMigrationSchema(q);
 }
@@ -122,23 +173,64 @@ export async function legacyOwnerContext(accessToken){
 export async function getVerifiedPrincipal(issuer,sub){
  if(!validSub(sub))return null;
  const q=sql();
- const rows=await q`SELECT i.principal_id,p.status FROM principal_google_identities i
+ const rows=await q`SELECT i.principal_id,p.kind,p.status,i.verified_email,
+   p.legacy_pilot_identity_only FROM principal_google_identities i
    JOIN principals p ON p.id=i.principal_id
    WHERE i.issuer=${issuer} AND i.google_sub=${sub}`;
- return rows.length===1&&rows[0].status==='active'?rows[0].principal_id:null;
+ // ADOPT-1 (2026-11-09): the same identity may now be bound to more than
+ // one profile (a holding profile and the public profile that adopted
+ // its mailboxes). Resolution stays deterministic and conservative: the
+ // owner profile's binding wins, then a full user principal, then the
+ // lone binding; an identity-only shell among full bindings never wins,
+ // and a tie between full user principals resolves to nothing rather
+ // than a guess.
+ const active=rows.filter(r=>r.status==='active');
+ if(active.length===1)return active[0].principal_id;
+ const owner=active.filter(r=>r.principal_id===OWNER_ID);
+ if(owner.length===1)return owner[0].principal_id;
+ const full=active.filter(r=>r.kind==='user'&&!r.legacy_pilot_identity_only);
+ if(full.length===1)return full[0].principal_id;
+ return null;
+}
+// The principal whose binding carries THIS verified email for the identity
+// (ADOPT-1): bindVerifiedIdentity prefers the binding recorded for the
+// exact email Google just verified, so a second profile bound to the same
+// identity with a different mailbox never steals the first one's sign-in.
+export async function getVerifiedPrincipalForEmail(issuer,sub,verifiedEmail){
+ if(!validSub(sub)||!validEmail(verifiedEmail))return null;
+ const rows=await sql()`SELECT i.principal_id,p.kind,p.legacy_pilot_identity_only
+   FROM principal_google_identities i
+   JOIN principals p ON p.id=i.principal_id
+   WHERE i.issuer=${issuer} AND i.google_sub=${sub} AND p.status='active'
+     AND lower(i.verified_email)=lower(${verifiedEmail})`;
+ if(rows.length===1)return rows[0].principal_id;
+ // An identity-only shell must never win over a full profile carrying
+ // the same email-exact binding (the resolution rule getVerifiedPrincipal
+ // states for twin bindings applies here too).
+ const full=rows.filter(r=>r.kind==='user'&&!r.legacy_pilot_identity_only);
+ return full.length===1?full[0].principal_id:null;
 }
 // The principal an already-bound identity signs in to on its own record: the
 // binding itself is the vetting (owner ruling, 2026-11-05 — an account with a
 // profile on record must not depend on the pilot tester list). Only a full
 // principal counts: the identity-only coexistence principal keeps its
 // documented list gates, and an unbound identity gets nothing here.
-export async function getBoundFullPrincipal(issuer,sub){
+export async function getBoundFullPrincipal(issuer,sub,verifiedEmail=null){
  if(!validSub(sub))return null;
  const q=sql();
- const rows=await q`SELECT i.principal_id FROM principal_google_identities i
+ const rows=await q`SELECT i.principal_id,i.verified_email FROM principal_google_identities i
    JOIN principals p ON p.id=i.principal_id
    WHERE i.issuer=${issuer} AND i.google_sub=${sub}
      AND p.kind='user' AND p.status='active' AND p.legacy_pilot_identity_only=false`;
+ // ADOPT-1 (2026-11-09): with twin bindings, a sign-in must resolve to
+ // the profile whose binding carries the email Google just verified for
+ // this identity (the same person can hold two mailboxes under one
+ // Google subject in Workspace domains); without that signal the lone
+ // full binding wins, and a genuine tie still resolves to nothing.
+ if(verifiedEmail&&validEmail(verifiedEmail)){
+   const exact=rows.filter(r=>r.verified_email.toLowerCase()===verifiedEmail.toLowerCase());
+   if(exact.length===1)return exact[0].principal_id;
+ }
  return rows.length===1?rows[0].principal_id:null;
 }
 // The one identity-only shell that may graduate to a full profile at sign-in
@@ -165,10 +257,10 @@ export async function getBoundGraduatingPrincipal(issuer,sub,verifiedEmail){
 // refused, in the fixed denial vocabulary — so the sign-in page can name the
 // exact state instead of one generic refusal (2026-11-05). Never returns an
 // email, a principal id or any part of the subject.
-export async function classifyBoundIdentity(issuer,sub){
+export async function classifyBoundIdentity(issuer,sub,verifiedEmail=null){
  if(!validSub(sub))return null;
  const q=sql();
- const rows=await q`SELECT i.issuer,p.kind,p.status,
+ const rows=await q`SELECT i.issuer,i.principal_id,i.verified_email,p.kind,p.status,
      p.legacy_pilot_identity_only,p.legacy_pilot_fresh_grant
    FROM principal_google_identities i JOIN principals p ON p.id=i.principal_id
    WHERE i.google_sub=${sub}`;
@@ -177,8 +269,14 @@ export async function classifyBoundIdentity(issuer,sub){
     WHERE google_sub=${sub} LIMIT 1`;
   return accounts.length?'account_without_identity_binding':null;
  }
- const same=rows.find(r=>r.issuer===issuer);
+ // ADOPT-1 (2026-11-09): twin bindings mean the row to judge is the one
+ // carrying the verified email the caller presented, when it is known;
+ // an owner-profile binding is its own class, never a user refusal shape.
+ const same=(verifiedEmail&&validEmail(verifiedEmail)
+   ? rows.find(r=>r.issuer===issuer&&r.verified_email.toLowerCase()===verifiedEmail.toLowerCase())
+   : undefined)||rows.find(r=>r.issuer===issuer);
  if(!same)return 'bound_issuer_form_mismatch';
+ if(same.principal_id===OWNER_ID)return 'bound_owner_principal';
  if(same.kind!=='user')return 'bound_not_user_principal';
  if(same.status!=='active')return 'bound_principal_inactive';
  if(same.legacy_pilot_identity_only&&!same.legacy_pilot_fresh_grant)
@@ -203,7 +301,7 @@ export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnl
  const q=sql();
  const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
  const legacyIdentityOnly=reserved.length>0&&identityOnlyPilot===true&&legacyPilotLoginAllowed(sub);
- const old=await getVerifiedPrincipal(issuer,sub);
+ const old=await getVerifiedPrincipalForEmail(issuer,sub,verifiedEmail)??await getVerifiedPrincipal(issuer,sub);
  // A full principal's bound identity binds on its own record, even when its
  // email is a legacy-reserved mailbox and its subject is on no pilot list:
  // the reservation below guards NEW bindings and the identity-only
@@ -246,7 +344,7 @@ export async function bindVerifiedIdentity({issuer,sub,verifiedEmail,identityOnl
  ), enrolled AS (
    INSERT INTO principal_google_identities(issuer,google_sub,principal_id,verified_email)
    SELECT ${issuer},${sub},id,${verifiedEmail} FROM candidate
-   ON CONFLICT(issuer,google_sub) DO NOTHING RETURNING principal_id
+   ON CONFLICT(principal_id,issuer,google_sub) DO NOTHING RETURNING principal_id
  ), rolled_back AS (
    DELETE FROM principals WHERE id=${id}::uuid AND NOT EXISTS(SELECT 1 FROM enrolled) RETURNING id
  ) SELECT principal_id FROM enrolled`;
@@ -269,11 +367,15 @@ export async function findAccount(principalId,accountId){
 export async function listAccounts(principalId){
  requireScope(validUuid(principalId));
  const q=sql();
- return q`SELECT a.id,a.email,a.label,a.scope_list,a.token_version,a.status,
+ const rows=await q`SELECT a.id,a.email,a.label,a.scope_list,a.token_version,a.status,
    d.account_id IS NOT NULL AS is_default FROM principal_google_accounts a
    LEFT JOIN principal_defaults d ON d.principal_id=a.principal_id AND d.account_id=a.id
    WHERE a.principal_id=${principalId}::uuid AND a.status='active'
    ORDER BY is_default DESC,a.created_at ASC`;
+ // Until a person picks a default, their first connected account is it
+ // (2026-11-10 live test: a person's only account showed as not default).
+ if(rows.length&&!rows.some(r=>r.is_default))rows[0]={...rows[0],is_default:true};
+ return rows;
 }
 // The legacy tester's new user principal has no owner mailbox authority. This
 // immutable persisted principal classification blocks linking *any* Google
@@ -348,6 +450,39 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
    AND (p.kind='user' OR p.id=${OWNER_ID}::uuid)`;
  requireScope(prior.length===1,'invalid_identity');
  const historical=prior[0].historical===true;
+ // ADOPT-1 (owner-ordered, 2026-11-09): the adoption test runs BEFORE the
+ // reservation and foreign-grant refusals below, because it decides from
+ // the holding profile's own bound identity — the one fact those refusals
+ // exist to protect. TWO proofs, both required: (1) the presenter is
+ // twin-bound to the HOLDING profile's bound identity — it signed in as
+ // the very identity the holder is bound to (for the owner profile: the
+ // identity bound by the owner-migration ceremony — the systems mailbox
+ // itself), proven by matching binding rows on both profiles; and (2)
+ // this call itself carries a FRESH VERIFIED consent for the EXACT
+ // mailbox identity being claimed (the callback reaches this function
+ // only after Google verified that consent inside this profile's own
+ // browser-bound transaction). A presenter short of either proof falls
+ // through to the refusals unchanged, byte for byte — a stranger cannot
+ // produce a twin binding, and consent for mailbox X can never adopt
+ // mailbox Y because the consent and the claim are the same identity.
+ const adoptableHolder=await q`SELECT h.id AS holder_id FROM principals h
+   WHERE h.status='active' AND h.id<>${principalId}::uuid
+     AND (
+       EXISTS(SELECT 1 FROM principal_google_identities hi
+         JOIN principal_google_identities mi
+           ON mi.principal_id=${principalId}::uuid AND mi.issuer=hi.issuer
+           AND mi.google_sub=hi.google_sub
+         WHERE hi.principal_id=h.id AND hi.issuer=${issuer} AND hi.google_sub=${sub})
+       OR EXISTS(SELECT 1 FROM principal_google_accounts held
+         WHERE held.principal_id=h.id AND held.issuer=${issuer}
+           AND held.google_sub=${sub} AND held.status='active')
+     )
+     AND EXISTS(SELECT 1 FROM principal_google_identities hb
+       JOIN principal_google_identities mb
+         ON mb.principal_id=${principalId}::uuid AND mb.issuer=hb.issuer
+         AND mb.google_sub=hb.google_sub
+       WHERE hb.principal_id=h.id)`;
+ const adoption=adoptableHolder.length===1?adoptableHolder[0].holder_id:null;
  // The reservation below protects the original connection's legacy
  // mailboxes from OTHER profiles. The owner profile IS the original
  // connection's own record: its holder claiming one of those mailboxes
@@ -371,16 +506,66 @@ export async function upsertLinkedAccount({principalId,issuer,sub,verifiedEmail,
      (matching.length===1&&legacyPilotFreshConsentAllowed(sub));
    requireScope(independentlyEligible,'legacy_pilot_identity_only');
  }
- const reserved=await q`SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}) LIMIT 1`;
- requireScope(!reserved.length||independentlyEligible,'reserved_identity');
+ // ADOPT-1 (2026-11-09): the LINK reservation for a mailbox is its
+ // legacy MAPPING — or, where no mapping row exists (a legacy row
+ // created after the last schema init), the legacy row itself UNLESS
+ // the owner principal already holds that mailbox as its own active
+ // V2 account: the reservation exists to stop OTHER profiles from
+ // linking the owner's legacy mailboxes, and the owner linking one of
+ // its own — or a profile that already adopted it — is not a stranger
+ // it guards against. An adopted mailbox keeps its legacy grant row
+ // (the holder's connections read it) and carries an active grant on
+ // the adopting profile, so it stays unreserved either way. (Sign-in
+ // binding keeps the plain presence probe: a legacy-row mailbox's
+ // identity binds only through the established-profile and pilot
+ // paths in bindVerifiedIdentity.)
+ const reserved=await q`SELECT 1 WHERE EXISTS(
+   SELECT 1 FROM principal_legacy_accounts WHERE lower(email)=lower(${verifiedEmail}))
+   OR (EXISTS(SELECT 1 FROM google_accounts WHERE lower(email)=lower(${verifiedEmail}))
+     AND NOT EXISTS(SELECT 1 FROM principal_google_accounts
+       WHERE issuer=${issuer} AND google_sub=${sub} AND status='active'
+         AND principal_id=${OWNER_ID}::uuid)) LIMIT 1`;
+ requireScope(!reserved.length||independentlyEligible||adoption,'reserved_identity');
  // Ownership is an ACTIVE grant on another profile. A revoked grant there
  // is history, not ownership: the holder disconnected the account, and a
  // fresh consent here may attach it to this profile (self-move doctrine
  // below). An actively linked account can never be taken.
- const foreign=await q`SELECT id FROM principal_google_accounts
+ const foreign=await q`SELECT id,principal_id FROM principal_google_accounts
    WHERE issuer=${issuer} AND google_sub=${sub} AND principal_id<>${principalId}::uuid
      AND status='active'`;
- requireScope(!foreign.length,'identity_owned_elsewhere');
+ requireScope(!foreign.length||(adoption&&foreign.every(row=>row.principal_id===adoption)),
+   'identity_owned_elsewhere');
+ if(adoption){
+   // Adoption moves the ACCOUNT, never the holding profile's execution
+   // material: the holder's agent connections keep pointing at the old
+   // account row, and its OAuth tokens are a legacy table this function
+   // never touches. The adopted row is retired (not deleted) and
+   // principal_defaults rows that named it are dropped, exactly as a
+   // disconnect on the holder would leave them.
+   for(const row of foreign){
+     await q`UPDATE principal_google_accounts SET status='revoked',updated_at=now()
+       WHERE id=${row.id}::uuid AND principal_id=${adoption}::uuid AND status='active'`;
+     await q`DELETE FROM principal_defaults
+       WHERE principal_id=${adoption}::uuid AND account_id=${row.id}::uuid`;
+   }
+   if(reserved.length){
+     // Retire the legacy RESERVATION for THIS mailbox only: the mapping
+     // row in principal_legacy_accounts is what makes the mailbox
+     // legacy-held (initPrincipalSchema seeds it from google_accounts,
+     // and bindVerifiedIdentity's reservation reads google_accounts
+     // itself only as the legacy-presence probe). The google_accounts
+     // ROW ITSELF is NOT deleted: it is the legacy grant store
+     // (tokens/tokens_enc) that the hosted execution path reads via
+     // getGoogleTokensFor for every legacy connection naming this
+     // mailbox, so deleting it would break the holder's live legacy
+     // connections — the exact material this change must not touch.
+     // The reservation this mailbox carried is the MAPPING; removing
+     // the mapping retires the claim for exactly this mailbox, and the
+     // presenter's own active V2 grant (inserted below) is what any
+     // later link of the same mailbox resolves against.
+     await q`DELETE FROM principal_legacy_accounts WHERE lower(email)=lower(${verifiedEmail})`;
+   }
+ }
  // A sign-in identity binding on another profile does not block this link
  // either. Binding governs SIGN-IN; attaching the account as data is proven
  // by this flow itself — a session on this profile plus a fresh, verified
@@ -459,14 +644,26 @@ export async function updateLinkedGrant({principalId,accountId,version,tokens,sc
  requireScope(changed.length===1,'version_conflict');
  return changed[0].token_version;
 }
+// A server-minted context is executable for a full user principal and for
+// the owner profile itself: the owner's kind is 'legacy_owner', not 'user',
+// and the hub's own agent connections must execute like any other profile's
+// (owner ruling, 2026-11-05 — the three-account hub completes only when the
+// owner's connections actually run). Every other kind stays refused.
+const executableContext=context=>!!context&&
+ (context.principalKind==='user'||context.principalId===OWNER_ID);
 export async function persistPrincipalGoogleRefresh(context,tokens){
- requireScope(context&&trustedContexts.has(context)&&context.principalKind==='user',
+ requireScope(context&&trustedContexts.has(context)&&executableContext(context),
    'invalid_scoped_context');
  requireScope(tokens?.access_token&&typeof tokens.access_token==='string'&&
    Number.isFinite(tokens.expiry_date)&&tokens.expiry_date>Date.now()&&
    validUuid(context.principalId)&&validUuid(context.accountId)&&
    validUuid(context.connectionId),'invalid_google_refresh');
- const {principalId,accountId,connectionId,accountVersion}=context;
+ const {principalId,connectionId}=context;
+ // The connection's home account proves the connection is live; the grant
+ // refreshed is the account this call acts as (the same one unless derived).
+ const home=context.accountId;
+ const accountId=context.googleAccountId||context.accountId;
+ const accountVersion=context.googleAccountId?context.googleAccountVersion:context.accountVersion;
  const row=await findAccount(principalId,accountId);
  requireScope(row&&row.token_version===accountVersion&&row.grant_ciphertext,
    'version_conflict');
@@ -482,7 +679,7 @@ export async function persistPrincipalGoogleRefresh(context,tokens){
    AND status='active' AND EXISTS(
      SELECT 1 FROM principal_connections c JOIN principals p ON p.id=c.principal_id
      WHERE c.id=${connectionId}::uuid AND c.principal_id=${principalId}::uuid
-       AND c.account_id=${accountId}::uuid AND c.revoked_at IS NULL
+       AND c.account_id=${home}::uuid AND c.revoked_at IS NULL
        AND c.expires_at>now() AND p.status='active')
    RETURNING refresh_version`;
  return result.length===1;
@@ -543,6 +740,25 @@ export async function createTransaction({state,nonce,browser,verifier,purpose,pr
    RETURNING state_hash`;
  return rows.length===1;
 }
+// D-006 MC-7.3 (2026-11-09): the Google callback gate. A browser can hold
+// several copies of the flow cookie (an older attempt's cookie under the
+// same name and path survives alongside the current attempt's), and which
+// copies the browser sends is not guaranteed by any contract the server
+// controls. The gate therefore accepts ANY presented copy that matches a
+// live transaction for this state: the match is still an atomic
+// state+browser consume, so a copy is only ever good for the one flow
+// whose start issued it. Strict single-copy reading at this gate
+// (readCookie) killed real sign-ins whenever a stale copy rode along —
+// the 2026-11-09 22:22 UTC attempt died here with its transaction row
+// left unconsumed while clean single-copy rides passed. This mirrors how
+// requireSession and the owner-proof door already treat duplicates.
+export async function consumeBrowserTransaction({state,browsers,purpose,principalId=null}){
+ for(const browser of Array.isArray(browsers)?browsers:[]){
+  const tx=await consumeTransaction({state,browser,purpose,principalId});
+  if(tx)return tx;
+ }
+ return null;
+}
 export async function consumeTransaction({state,browser,purpose,principalId=null}){
  if(typeof state!=='string'||typeof browser!=='string'||!state||!browser)return null;
  const q=sql(),hash=digest(state);
@@ -554,6 +770,69 @@ export async function consumeTransaction({state,browser,purpose,principalId=null
  if(rows.length!==1)return null;
  return {...rows[0],...openV2(rows[0].provider_verifier_ciphertext,
    rows[0].principal_id||OWNER_ID,hash,'provider-transaction')};
+}
+
+// D-006 MC-7.0: cookie-free transactions. The public connect sign-in and
+// "add another Google account" from the Approve page carry no browser
+// cookie, because in-app browsers (Muse) lose them. Only a transaction that
+// was CREATED cookie-free can be consumed without one; every other flow
+// keeps its browser binding. Nothing reaches any app from such a sign-in
+// until the person taps Approve on a page showing who is signed in and
+// which site receives access (the GitHub public-connect safety shape).
+export async function consumeCookieFreeTransaction({state,purpose}){
+ if(typeof state!=='string'||!state)return null;
+ const q=sql(),hash=digest(state);
+ const rows=await q`UPDATE user_oauth_transactions SET consumed_at=now()
+   WHERE state_hash=${hash} AND purpose=${purpose} AND consumed_at IS NULL
+   AND expires_at>now() AND policy->>'cookieFree'='true'
+   RETURNING *`;
+ if(rows.length!==1)return null;
+ return {...rows[0],...openV2(rows[0].provider_verifier_ciphertext,
+   rows[0].principal_id||OWNER_ID,hash,'provider-transaction')};
+}
+const CONNECT_HANDLE=/^p10h_[A-Za-z0-9_-]{43}$/;
+export async function issueConnectHandle({principalId,clientId,redirectUri,resource,codeChallenge,clientState=null}){
+ requireScope(validUuid(principalId)&&typeof clientId==='string'&&clientId&&
+  typeof redirectUri==='string'&&redirectUri&&typeof resource==='string'&&resource&&
+  /^[A-Za-z0-9_-]{43}$/.test(codeChallenge||''),'invalid_connect');
+ const handle=mint('p10h_'),q=sql();
+ const rows=await q`INSERT INTO principal_connect_handles
+   (handle_hash,principal_id,client_id,redirect_uri,resource,code_challenge,client_state,expires_at)
+   SELECT ${digest(handle)},p.id,${clientId},${redirectUri},${resource},${codeChallenge},
+     ${clientState},now()+interval '15 minutes'
+   FROM principals p WHERE p.id=${principalId}::uuid AND p.status='active'
+   RETURNING handle_hash`;
+ requireScope(rows.length===1,'invalid_connect');
+ return handle;
+}
+// The handle must match the exact client, redirect, resource and PKCE
+// challenge in the address it arrived with; anything else reads as absent.
+const connectMatches=(row,expect)=>!!row&&(!expect||
+ (row.client_id===expect.clientId&&row.redirect_uri===expect.redirectUri&&
+  row.resource===expect.resource&&row.code_challenge===expect.codeChallenge));
+export async function readConnectHandle(handle,expect=null){
+ if(typeof handle!=='string'||!CONNECT_HANDLE.test(handle))return null;
+ const rows=await sql()`SELECT h.* FROM principal_connect_handles h JOIN principals p ON p.id=h.principal_id
+   WHERE h.handle_hash=${digest(handle)} AND h.consumed_at IS NULL AND h.expires_at>now()
+   AND p.status='active'`;
+ return connectMatches(rows[0],expect)?rows[0]:null;
+}
+export async function consumeConnectHandle(handle,expect=null){
+ if(typeof handle!=='string'||!CONNECT_HANDLE.test(handle))return null;
+ const q=sql();
+ if(expect&&!await readConnectHandle(handle,expect))return null;
+ const rows=await q`UPDATE principal_connect_handles SET consumed_at=now()
+   WHERE handle_hash=${digest(handle)} AND consumed_at IS NULL AND expires_at>now()
+   RETURNING *`;
+ return connectMatches(rows[0],expect)?rows[0]:null;
+}
+// The verified Google address a person signed in with (shown on the
+// Approve page so a person can see whose sign-in they are approving).
+export async function principalSignInEmail(principalId){
+ if(!validUuid(principalId))return null;
+ const rows=await sql()`SELECT verified_email FROM principal_google_identities
+   WHERE principal_id=${principalId}::uuid ORDER BY updated_at DESC LIMIT 1`;
+ return rows[0]?.verified_email||null;
 }
 
 export async function issuePrincipalCode({principalId,accountId,clientId,redirectUri,resource,
@@ -613,9 +892,10 @@ export async function readPrincipalAccess(token){
  const rows=await q`SELECT c.id AS connection_id,c.principal_id,c.account_id,c.resource,
    c.client_id,c.profile,c.listing,c.areas,c.mode,c.cost_policy,
    a.email AS account_email,a.token_version AS account_version,p.kind AS principal_kind,
-   p.status AS principal_status
+   p.status AS principal_status,COALESCE(st.writes_paused,false) AS writes_paused
    FROM principal_connections c JOIN principals p ON p.id=c.principal_id
    JOIN principal_google_accounts a ON a.id=c.account_id AND a.principal_id=c.principal_id
+   LEFT JOIN principal_settings st ON st.principal_id=c.principal_id
    WHERE c.access_hash=${digest(token)} AND c.expires_at>now()
    AND c.revoked_at IS NULL AND p.status='active' AND a.status='active'`;
  if(rows.length!==1)return null;
@@ -625,9 +905,28 @@ export async function readPrincipalAccess(token){
    profile:settings.profile,listing:settings.listing,areas:settings.areas,
    resource:row.resource,clientId:row.client_id,
    accountVersion:row.account_version,actingAs:row.account_email,
+   writesPaused:row.writes_paused===true,
    costPolicy:Object.freeze({...settings.cost_policy})});
  trustedContexts.add(context);
  return context;
+}
+// One connection, every Google account its person has linked (owner
+// ruling 2026-11-09: public users add a second and third account inside the
+// product, with no roster). The connection keeps its own account as the
+// HOME for its results, change log and rate windows; a tool call that names
+// another account gets a derived context whose Google credential is that
+// account's. Only an account this same principal holds, active, qualifies.
+export async function accountContext(context,accountId){
+ requireScope(context&&trustedContexts.has(context)&&Object.isFrozen(context)&&
+  executableContext(context),'invalid_scoped_context');
+ if(accountId===context.accountId&&!context.googleAccountId)return context;
+ const account=await findAccount(context.principalId,accountId);
+ requireScope(account&&account.principal_id===context.principalId,'outside_scope');
+ if(account.id===context.accountId)return context;
+ const derived=Object.freeze({...context,googleAccountId:account.id,
+  googleAccountVersion:account.token_version,actingAs:account.email});
+ trustedContexts.add(derived);
+ return derived;
 }
 export async function rotatePrincipalRefresh(token,{clientId,resource}={}){
  if(typeof token!=='string'||!/^p10r_[A-Za-z0-9_-]{43}$/.test(token)||
@@ -663,6 +962,32 @@ export async function listConnections(principalId){
  return q`SELECT id,account_id,client_id,resource,profile,listing,areas,
    mode,version,created_at,expires_at,revoked_at FROM principal_connections
    WHERE principal_id=${principalId}::uuid ORDER BY created_at DESC`;
+}
+// CONTROLS-1: a person changes one of their own app connections' access
+// level (Read only / Everyday / Full) from My Workspace connections. Effective
+// on the connection's next request; only a live connection this person holds.
+export async function setConnectionProfile(principalId,connectionId,profile){
+ requireScope(validUuid(principalId)&&validUuid(connectionId)&&
+  CONNECTION_PROFILES.includes(profile),'invalid_profile');
+ const rows=await sql()`UPDATE principal_connections SET profile=${profile}
+   WHERE id=${connectionId}::uuid AND principal_id=${principalId}::uuid
+   AND revoked_at IS NULL AND expires_at>now() RETURNING profile`;
+ requireScope(rows.length===1,'outside_scope');
+ return rows[0].profile;
+}
+export async function setWritesPaused(principalId,paused){
+ requireScope(validUuid(principalId)&&typeof paused==='boolean','invalid_setting');
+ const rows=await sql()`INSERT INTO principal_settings(principal_id,writes_paused)
+   SELECT id,${paused} FROM principals WHERE id=${principalId}::uuid AND status='active'
+   ON CONFLICT(principal_id) DO UPDATE SET writes_paused=excluded.writes_paused,updated_at=now()
+   RETURNING writes_paused`;
+ requireScope(rows.length===1,'outside_scope');
+ return rows[0].writes_paused;
+}
+export async function getWritesPaused(principalId){
+ if(!validUuid(principalId))return false;
+ const rows=await sql()`SELECT writes_paused FROM principal_settings WHERE principal_id=${principalId}::uuid`;
+ return rows[0]?.writes_paused===true;
 }
 /**
  * OAuth RFC 7009: an access or refresh token can revoke ONLY its registered
@@ -722,13 +1047,13 @@ export async function deletionPreview(principalId){
 
 export async function trustedCustomerDelegation(context){
  requireScope(context&&trustedContexts.has(context)&&Object.isFrozen(context)&&
-  context.principalKind==='user','invalid_scoped_context');
+  executableContext(context),'invalid_scoped_context');
  return loadCustomerDelegation(context);
 }
 export function scopedStore(context){
  // Inject this wrapper into future P10-4 public clients, never call global DB
  // helpers with a caller-provided tenant. No public tool dispatch exists yet.
- requireScope(context&&trustedContexts.has(context)&&Object.isFrozen(context)&&context.principalKind==='user'&&
+ requireScope(context&&trustedContexts.has(context)&&Object.isFrozen(context)&&executableContext(context)&&
    validUuid(context.principalId),'invalid_scoped_context');
  const principal=context.principalId;
  return Object.freeze({

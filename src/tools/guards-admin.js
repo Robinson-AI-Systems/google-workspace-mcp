@@ -308,6 +308,11 @@ export const GUARDS_ADMIN = {
     after: (a, { admin }) => data(admin.domains.get({ customer: CUSTOMER, domainName: a.domainName })).then((d) => pick(d, ['domainName', 'isPrimary', 'verified'])) },
 
   // ---------- This server's own settings (read from the database, not Google) ----------
+  // CONTROLS-2: the person's own pause switch, flipped by their agent.
+  workspace_pause_changes: { destructive: false, confirmWhen: (a) => a.paused === false, verify: (a, b, after) => after?.changesPaused === a.paused,
+    describe: (a) => ({ target: 'all app connections', summary: a.paused ? 'Pause all changes on every app connection (reading still works)' : 'Allow changes again on every app connection, each at its own access level' }),
+    before: async (_a, clients) => ({ changesPaused: clients?.store?.getChangesPaused ? await clients.store.getChangesPaused() : null }),
+    after: async (_a, clients) => ({ changesPaused: clients?.store?.getChangesPaused ? await clients.store.getChangesPaused() : null }) },
   workspace_set_default_account: { destructive: false, verify: (a, b, after) => after?.defaultAccount === lower(a.email),
     describe: (a) => ({ target: a.email, summary: `Make ${a.email} the default Google account (used by older connections that never picked one)` }),
     before: async (_args, clients) => { const { listGoogleAccounts } = await import('../db.js'); const accounts=clients?.store ? await clients.store.listAccounts() : await listGoogleAccounts(); return { defaultAccount: accounts.find((x) => x.is_default||x.isDefaultAccount)?.email || null }; },

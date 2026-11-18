@@ -188,7 +188,7 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    await db.saveGoogleTokensFor(identity.verifiedEmail,
      {access_token:'owner-record-access',refresh_token:'owner-record-refresh'});
    await migration.linkVerifiedOwner({issuer:identity.issuer,sub:identity.sub,email:identity.verifiedEmail});
-   expect(await store.classifyBoundIdentity(identity.issuer,identity.sub)).toBe('bound_not_user_principal');
+   expect(await store.classifyBoundIdentity(identity.issuer,identity.sub)).toBe('bound_owner_principal');
    expect(await store.getBoundOwnerPrincipal(identity.issuer,identity.sub)).toBe(security.OWNER_ID);
    expect(await store.bindVerifiedIdentity({...identity,identityOnlyPilot:true})).toBe(security.OWNER_ID);
    expect(await store.bindVerifiedIdentity({...identity,identityOnlyPilot:false})).toBe(security.OWNER_ID);
@@ -226,6 +226,40 @@ describe.skipIf(!url)('P10 encrypted V2 principal/legacy identity across isolate
    verifiedEmail:'owner-reserved@example.test',scopeList:['scope-mail'],
    tokens:{access_token:'google-access',refresh_token:'google-refresh'}}))
    .rejects.toThrow('reserved_identity');
+ });
+ it('the owner profile’s own agent connection executes through the scoped store',async()=>{
+  const security=await import('../../src/principals/security.js');
+  const linked=await store.upsertLinkedAccount({principalId:security.OWNER_ID,
+   issuer:'https://accounts.google.com',sub:'owner-exec-subject-001',
+   verifiedEmail:'owner-exec@example.test',scopeList:['scope-mail'],
+   tokens:{access_token:'google-access',refresh_token:'google-refresh'}});
+  const verifier=crypto.randomBytes(48).toString('base64url');
+  const challenge=crypto.createHash('sha256').update(verifier).digest('base64url');
+  const options={principalId:security.OWNER_ID,accountId:linked,clientId:'owner-exec-agent',
+   redirectUri:'https://client.test/owner-exec-callback',
+   resource:'https://service.test/api/mcp',codeChallenge:challenge,profile:'full'};
+  const code=await store.issuePrincipalCode(options);
+  const grant=await store.consumePrincipalCode({code,clientId:options.clientId,
+   redirectUri:options.redirectUri,resource:options.resource,verifier});
+  expect(grant).toBeTruthy();
+  const issued=await store.issuePrincipalConnection(grant);
+  const ctx=await store.readPrincipalAccess(issued.accessToken);
+  expect(ctx.principalId).toBe(security.OWNER_ID);
+  expect(ctx.principalKind).toBe('legacy_owner');
+  // The execution path's context gates (scoped store, delegation read and
+  // refresh persistence) must admit the owner's own minted context: before
+  // the 2026-11-05 fix they required kind 'user', so every call under an
+  // owner-bound connection died at the gate before any tool could run.
+  const scoped=store.scopedStore(ctx);
+  expect((await scoped.listAccounts()).map(x=>x.id)).toContain(linked);
+  expect(await scoped.assertActive()).toBe(true);
+  expect(await store.trustedCustomerDelegation(ctx)).toBeNull();
+  expect(await store.persistPrincipalGoogleRefresh(ctx,
+   {access_token:'google-access-2',expiry_date:Date.now()+3600e3})).toBe(true);
+  expect((await store.getLinkedGrant(security.OWNER_ID,linked)).access_token)
+   .toBe('google-access-2');
+  expect(()=>store.scopedStore(Object.freeze({...ctx,principalId:b})))
+   .toThrow('invalid_scoped_context');
  });
  it('records a sign-in refusal under a one-time id the sign-in page can read once',async()=>{
   const id=await store.recordSigninDenial({phase:'pilot_admission',code:'public_signin_not_admitted'});

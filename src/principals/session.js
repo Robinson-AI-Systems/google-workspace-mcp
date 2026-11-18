@@ -1,19 +1,25 @@
 import {createSession,readSession,revokeSession} from './store.js';
-import {cookie,readCookie,digest,requireScope,headers} from './security.js';
+import {cookie,readCookie,readCookies,digest,requireScope,headers} from './security.js';
 export const SESSION_COOKIE='p10_session';
 export const CSRF_COOKIE='p10_csrf';
 export const BROWSER_COOKIE='p10_google_browser';
 export async function requireSession(req){
- const secret=readCookie(req,SESSION_COOKIE);
- const row=await readSession(secret);
- requireScope(row,'session_required');
- return {...row,secret};
+ // D-006 MC-7.3: if the browser sends more than one session cookie, use the
+ // one the server recognises instead of treating the person as signed out.
+ for(const secret of readCookies(req,SESSION_COOKIE)){
+  const row=await readSession(secret);
+  if(row)return {...row,secret};
+ }
+ requireScope(false,'session_required');
 }
 export function requireCsrf(req,session,body={}){
- const cookieValue=readCookie(req,CSRF_COOKIE);
+ // The double-submit check still needs a cookie equal to the supplied value
+ // and matching this session; with duplicate cookies (MC-7.3) any one
+ // matching copy is enough. A forged value still fails the session hash.
+ const cookieValues=readCookies(req,CSRF_COOKIE);
  const supplied=req.headers?.['x-csrf-token']||body.csrf;
  requireScope(typeof supplied==='string'&&supplied.length>=32&&
-   cookieValue===supplied&&digest(supplied)===session.csrf_hash,'invalid_csrf');
+   cookieValues.includes(supplied)&&digest(supplied)===session.csrf_hash,'invalid_csrf');
 }
 export async function setSession(res,principalId){
  const {secret,csrf}=await createSession(principalId);

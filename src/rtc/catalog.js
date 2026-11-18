@@ -27,8 +27,13 @@ export function isWrite(name) {
  if(RTC_META.has(name))return name==='workspace_call'; // dispatcher checks actual target
  return !READ_ONLY_TOOL_NAMES.has(name);
 }
+// The person's own brake (CONTROLS-2): always callable, even while changes
+// are paused or on a Read-only connection, so an agent can always stop
+// changes for its person; turning changes back on needs confirm (handler).
+export const ALWAYS_AVAILABLE_CONTROLS=new Set(['workspace_pause_changes']);
 export function allowedTool(name, c={}) {
  if(c.principalKind==='user'&&LEGACY_OWNER_ONLY_TOOLS.has(name))return false;
+ if(ALWAYS_AVAILABLE_CONTROLS.has(name))return true;
  // The developer fixture creation/cleanup tools are TEST-only; ordinary
  // Workspace operations and non-writing integration checks remain live-capable.
  if(c.mode==='live'&&['workspace_dev_create_fixtures','workspace_dev_cleanup'].includes(name))return false;
@@ -40,10 +45,20 @@ export function allowedTool(name, c={}) {
  return true;
 }
 export function listedTools(tools,c={},listing=c.listing||'catalog'){
- return tools.filter(t=>allowedTool(t.name,c)&&(listing!=='compact'||RTC_META.has(t.name)||t.name==='workspace_whoami'||t.name.startsWith('workflow_')))
+ return tools.filter(t=>allowedTool(t.name,c)&&(listing!=='compact'||RTC_META.has(t.name)||t.name==='workspace_whoami'||ALWAYS_AVAILABLE_CONTROLS.has(t.name)||t.name.startsWith('workflow_')))
   // Compact discovery stays under its 5,000-token budget. Full schemas are
   // available from workspace_describe_tool or the normal catalog.
-  .map(t=>listing==='compact'&&t.outputSchema?(({outputSchema,...small})=>small)(t):t);
+  .map(t=>listing==='compact'?compactTool(t):t);
+}
+// Compact listing keeps every field name, type, choice list and required
+// marker, but leaves out the output schema and the explanation text inside
+// input fields. workspace_describe_tool returns the full schema on request.
+const stripDescriptions=v=>Array.isArray(v)?v.map(stripDescriptions):
+ v&&typeof v==='object'?Object.fromEntries(Object.entries(v).filter(([k,x])=>!(k==='description'&&typeof x==='string')).map(([k,x])=>[k,k==='properties'||k==='items'||typeof x==='object'?stripDescriptions(x):x])):v;
+function compactTool(t){
+ const {outputSchema,...small}=t;
+ if(RTC_META.has(t.name)||!small.inputSchema)return small;
+ return {...small,inputSchema:stripDescriptions(small.inputSchema)};
 }
 export function audienceFor(name){
  if(name.startsWith('workspace_admin_overview')||name==='workspace_where_is_setting'||name==='workspace_plan_summary')return ['owner','builder'];
