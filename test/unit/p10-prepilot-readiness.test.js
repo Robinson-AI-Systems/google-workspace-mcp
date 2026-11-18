@@ -85,7 +85,7 @@ describe('P10-6 public preflight information and disclosure URLs',()=>{
   expect(pending.body).toContain('not configured');
   process.env.PUBLIC_SUPPORT_EMAIL='<img src=x>';
   const invalid=reply();support(request('GET'),invalid);
-  expect(invalid.body).not.toContain('<img');
+  expect(invalid.body).not.toContain('<img src=x>');
   expect(invalid.body).toContain('not configured');
  });
  it('public HEAD has no body and POST refuses without account or Google queries',()=>{

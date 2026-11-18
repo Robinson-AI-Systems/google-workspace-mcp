@@ -16,6 +16,9 @@ vi.mock('../../src/db.js',()=>({
 }));
 vi.mock('../../src/principals/store.js',()=>({
  createTransaction:async input=>{h.started=input;h.consumed=false;return true;},
+ consumeCookieFreeTransaction:async()=>null,
+ issueConnectHandle:async input=>{h.connectIssued=input;return 'p10h_'+'h'.repeat(43);},
+ consumeBrowserTransaction:async({state,browsers,purpose})=>{for(const browser of browsers){if(h.consumed||!h.started||h.started.state!==state||h.started.browser!==browser||h.started.purpose!==purpose)continue;h.consumed=true;return {...h.started,nonce_hash:createHash('sha256').update(h.started.nonce).digest('hex'),principal_id:h.started.principalId,policy:h.started.policy,verifier:h.started.verifier,client_id:h.started.clientId,redirect_uri:h.started.redirectUri,resource:h.started.resource,code_challenge:h.started.codeChallenge};}return null;},
  consumeTransaction:async({state,browser,purpose})=>{
    if(h.consumed||!h.started||h.started.state!==state||h.started.browser!==browser||h.started.purpose!==purpose)return null;
    h.consumed=true;
@@ -38,6 +41,10 @@ vi.mock('../../src/principals/store.js',()=>({
  recordSigninDenial:async denial=>{h.signinDenials.push(denial);return '99999999-9999-4999-8999-999999999999';},
  getSigninDenial:async()=>h.signinDenial,deleteSigninDenial:async()=>{},
  getLatestLinkDenial:async()=>h.linkDenial,
+ getWritesPaused:async()=>h.writesPaused===true,
+ principalSignInEmail:async()=>null,
+ setWritesPaused:async(_id,v)=>{h.writesPaused=v;return v;},
+ setConnectionProfile:async(_id,_c,p)=>{h.profileSet=p;return p;},
  listAccounts:async()=>h.linkedAccounts,listConnections:async()=>[],isLegacyPilotIdentityPrincipal:async()=>h.legacyPilot,
  canLegacyPilotStartFreshConsent:async()=>h.freshConsent,
  deletionPreview:async()=>({previewOnly:true}),
@@ -220,7 +227,7 @@ describe('P10 actual route one-use browser callback and independent principal MC
    process.env.PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED='true';
    const portal=res();await account(req('GET',{},sessCookie),portal);
    expect(portal.statusCode).toBe(200);
-   expect(portal.body).toContain('Identity-only legacy tester');
+   expect(portal.body).toContain('This sign-in is a test identity');
    expect(portal.body).not.toContain('Link Google mail permissions');
    const blocked=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',csrf}),blocked);
    expect(blocked.statusCode).toBe(400);expect(h.started).toBeNull();
@@ -233,7 +240,7 @@ describe('P10 actual route one-use browser callback and independent principal MC
    process.env.PUBLIC_PILOT_LEGACY_FRESH_GRANT_ENABLED='true';
    const portal=res();await account(req('GET',{},sessCookie),portal);
    expect(portal.statusCode).toBe(200);
-   expect(portal.body).toContain('independently consent');
+   expect(portal.body).toContain('You can now connect your own Google account');
    const bad=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail'}),bad);
    expect(bad.statusCode).toBe(400);expect(h.started).toBeNull();
    const begin=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',csrf}),begin);
@@ -261,14 +268,14 @@ describe('P10 actual route one-use browser callback and independent principal MC
      created_at:new Date('2026-11-05T18:50:00.000Z')};
    const portal=res();await account(req('GET',{},sessCookie),portal);
    expect(portal.statusCode).toBe(200);
-   expect(portal.body).toContain('Most recent link attempt');
-   expect(portal.body).toContain('Google did not confirm the permissions this link needs.');
+   expect(portal.body).toContain('Your last attempt to add a Google account did not go through');
+   expect(portal.body).toContain('Google did not grant any of the permissions asked for.');
    expect(portal.body).toContain('grant_scope_missing');
  });
- it('pilot preselects God mode and public onboarding keeps it optional and off by default',async()=>{
+ it('all permissions at once is preselected for every account holder (owner ruling 2026-11-09)',async()=>{
    const pilot=res();await account(req('GET',{},sessCookie),pilot);
    expect(pilot.statusCode).toBe(200);
-   expect(pilot.body).toContain('Approved pilot: comprehensive Google acceptance setup');
+   expect(pilot.body).toContain('All permissions at once');
    expect(pilot.body).toContain('name="godMode" value="true" checked');
    const all=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',godMode:'true',csrf}),all);
    expect(all.statusCode).toBe(302);expect(h.started.policy.group).toBe('complete');
@@ -278,9 +285,10 @@ describe('P10 actual route one-use browser callback and independent principal MC
    process.env.PUBLIC_SIGNIN_MODE='public';
    const publicPage=res();await account(req('GET',{},sessCookie),publicPage);
    expect(publicPage.statusCode).toBe(200);
-   expect(publicPage.body).toContain('Authorize Google permissions as needed');
+   expect(publicPage.body).toContain('All permissions at once');
    expect(publicPage.body).toContain('name="godMode" value="true"');
-   expect(publicPage.body).not.toContain('name="godMode" value="true" checked');
+   // Owner ruling 2026-11-09 (GitHub Unleashed pattern): all permissions at once is the default for everyone.
+   expect(publicPage.body).toContain('name="godMode" value="true" checked');
    const optional=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',godMode:'true',csrf}),optional);
    expect(optional.statusCode).toBe(302);expect(h.started.policy.group).toBe('complete');
  });
@@ -288,8 +296,8 @@ describe('P10 actual route one-use browser callback and independent principal MC
    h.linkedAccounts=[{id:'44444444-4444-4444-8444-444444444444',email:'pilot@example.test',
      scope_list:['scope-mail','scope-chat','scope-admin'],is_default:true}];
    const page=res();await account(req('GET',{},sessCookie),page);
-   expect(page.body).toContain('Turn off God mode');
-   expect(page.body).toContain('God mode active locally');
+   expect(page.body).toContain('Turn off all permissions');
+   expect(page.body).toContain('all permissions</span>');
    const noConfirm=res();await account(req('POST',{},sessCookie,{action:'disable_god_mode',id:h.linkedAccounts[0].id,csrf}),noConfirm);
    expect(noConfirm.statusCode).toBe(403);
    expect(h.disconnects).toEqual([]);expect(h.providerRevokeTokens).toEqual([]);
@@ -317,7 +325,7 @@ describe('P10 actual route one-use browser callback and independent principal MC
  it('comprehensive user consent stays CSRF-bound and links the subset Google actually grants',async()=>{
   const portal=res();await account(req('GET',{},sessCookie),portal);
   expect(portal.statusCode).toBe(200);
-  expect(portal.body).toContain('God mode — request all supported Google permissions together');
+  expect(portal.body).toContain('Ask Google for every permission this service supports, in one go');
   expect(portal.body).toContain('name="godMode" value="true" checked');
   const withoutCsrf=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail',godMode:'true'}),withoutCsrf);
   expect(withoutCsrf.statusCode).toBe(400);expect(h.started).toBeNull();
@@ -355,8 +363,8 @@ describe('P10 actual route one-use browser callback and independent principal MC
     scope_list:['scope-mail'],is_default:false}];
   const page=res();await account(req('GET',{},sessCookie),page);
   expect(page.statusCode).toBe(200);
-  expect(page.body).toContain('Google granted 1 of 3 supported permissions');
-  expect(page.body).not.toContain('God mode active locally');
+  expect(page.body).toContain('Google did not grant everything this service supports for this account');
+  expect(page.body).not.toContain('all permissions</span>');
  });
  it('link requires same-origin CSRF and bound session and cannot claim owner global mailboxes',async()=>{
   const missing=res();await start(req('POST',{},sessCookie,{purpose:'link',group:'mail'}),missing);
@@ -382,6 +390,12 @@ describe('P10 actual route one-use browser callback and independent principal MC
   expect(u.searchParams.get('state')).toBe('original-client-state');
   expect(u.searchParams.get('code_challenge')).toBe(parameters.code_challenge);
   expect(u.searchParams.get('resource')).toBe(parameters.resource);
+  // D-006 MC-7.0: the Approve page is reached by a one-use handle bound to
+  // this exact client, redirect, resource and challenge, not a cookie.
+  expect(u.searchParams.get('connect')).toMatch(/^p10h_/);
+  expect(h.connectIssued).toMatchObject({clientId:'registered-client',redirectUri:parameters.redirect_uri,
+    resource:parameters.resource,codeChallenge:parameters.code_challenge,clientState:'original-client-state'});
+  expect(h.started.policy).toMatchObject({group:'complete',cookieFree:true});
  });
  it('exact S256 code and resource permit V2 issue, never forward Google tokens',async()=>{
   const payload={grant_type:'authorization_code',client_id:'registered-client',client_secret:'registered-secret',
@@ -408,7 +422,7 @@ describe('P10 actual route one-use browser callback and independent principal MC
   h.legacyPilot=true;
   const out=res();await account(req('GET',{},sessCookie),out);
   expect(out.statusCode).toBe(200);
-  expect(out.body).toContain('Identity-only legacy tester');
+  expect(out.body).toContain('This sign-in is a test identity');
   expect(out.body).not.toContain('Link Google mail permissions');
   const blocked=res();await account(req('POST',{},sessCookie,
     {action:'set_default',id:'foreign',csrf}),blocked);
@@ -499,7 +513,8 @@ describe('P10 actual route one-use browser callback and independent principal MC
   const get=res();await session(req('GET',{},sessCookie),get);
   expect(get).toMatchObject({statusCode:200,body:{authenticated:true,linkedAccounts:[]}});
   const unauth=res();await account(req(),unauth);expect(unauth.statusCode).toBe(401);
-  expect(unauth.body).toContain('Sign in with your approved Google account');
+  expect(unauth.body).toContain('Sign in with Google');
+  expect(unauth.body).not.toContain('approved');
   const read=res();await account(req('GET',{},sessCookie),read);
   expect(read.statusCode).toBe(200);expect(read.body).toContain('Workspace Unleashed by Robinson AI Systems');
   expect(read.body).toContain('Not created, operated, sponsored or endorsed by Google LLC.');
