@@ -7,17 +7,17 @@ record: **388 registered tools**.
 
 | Area | Tools | Main modules in `src/tools/` |
 | --- | ---: | --- |
-| admin | 112 | `admin-directory.js`, `admin-overview.js`, `admin-reports.js`, `admin-console-verify.js`, `licensing.js`, `extra-admin-apis.js`, `building.js`, `provision.js`, `staff.js`, `policy-audit.js`, `policy-scan.js`, `policy-evidence.js` |
-| files | 103 | `drive.js`, `docs.js`, `sheets.js`, `slides.js`, `forms.js` (via `src/auth/forms-client.js`), `shared-drives.js`, `business-resources.js` |
-| mail | 60 | `gmail.js`, `inbox.js`, `dev-gmail.js`, `email-health.js`, `postmaster.js`, `mailbox-branding.js`, `digest.js` |
-| workspace (meta) | 29 | `accounts.js`, `ops.js`, `health-report.js`, `rtc-meta.js`, `account-choice.js`, plus the five protected meta dispatchers (`workspace_call`, `workspace_batch`, …) |
-| calendar | 24 | `calendar.js`, `calendar-deletion.js`, `dev-calendar.js`, `dev-calendar-snapshot.js` |
-| tasks | 14 | `tasks.js` |
-| workflows | 12 | `workflows.js`, `bulk.js` |
-| people | 9 | `people.js` |
-| chat | 8 | `chat.js` |
-| identity | 5 | `delegated.js`, account/connection tools |
-| chrome / dns / domain / datatransfer | 3 each | `chrome-target.js`, `dns.js`, `domains.js` (in `src/`), datatransfer tools |
+| admin | 112 admin tools | `admin-directory.js`, `admin-overview.js`, `admin-reports.js`, `admin-console-verify.js`, `licensing.js`, `extra-admin-apis.js`, `building.js`, `provision.js`, `staff.js`, `policy-audit.js`, `policy-scan.js`, `policy-evidence.js` |
+| files | 103 files tools | `drive.js`, `docs.js`, `sheets.js`, `slides.js`, `forms.js` (via `src/auth/forms-client.js`), `shared-drives.js`, `business-resources.js` |
+| mail | 60 mail tools | `gmail.js`, `inbox.js`, `dev-gmail.js`, `email-health.js`, `postmaster.js`, `mailbox-branding.js`, `digest.js` |
+| workspace (meta) | 29 workspace tools | `accounts.js`, `ops.js`, `health-report.js`, `rtc-meta.js`, `account-choice.js`, plus the five protected meta dispatchers (`workspace_call`, `workspace_batch`, …) |
+| calendar | 24 calendar tools | `calendar.js`, `calendar-deletion.js`, `dev-calendar.js`, `dev-calendar-snapshot.js` |
+| tasks | 14 tasks tools | `tasks.js` |
+| workflows | 12 workflows tools | `workflows.js`, `bulk.js` |
+| people | 9 people tools | `people.js` |
+| chat | 8 chat tools | `chat.js` |
+| identity | 5 identity tools | `delegated.js`, account/connection tools |
+| chrome / dns / domain / datatransfer | 3 chrome tools, 3 dns tools, 3 domain tools, 3 datatransfer tools | `chrome-target.js`, `dns.js`, `domains.js` (in `src/`), datatransfer tools |
 
 Developer/integration tooling (`dev-*.js`, `dev-integration*.js`,
 `dev-fixtures.js`, `dev-run-state.js`) registers test-mode tools backed
