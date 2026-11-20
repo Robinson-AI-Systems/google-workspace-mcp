@@ -1,0 +1,12 @@
+{
+  "claims": [
+    {
+      "file": "00-overview.md",
+      "states": "The old local stdio mode was retired (2026-10-02)",
+      "source": {
+        "in": "docs/plan/TASKS.md",
+        "matches": "\\*\\*Decision \\(Chris, 2026-10-02\\): retire\\.\\*\\*"
+      }
+    }
+  ]
+}

@@ -11,7 +11,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check",
         "match": "matches (\\d+) registered tools"
-      }
+      },
+      "label": "tools"
     },
     {
       "name": "admin area tools",
@@ -22,7 +23,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### admin (' README.md",
         "match": "### admin \\((\\d+)\\)"
-      }
+      },
+      "label": "admin tools"
     },
     {
       "name": "files area tools",
@@ -33,7 +35,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### files (' README.md",
         "match": "### files \\((\\d+)\\)"
-      }
+      },
+      "label": "files tools"
     },
     {
       "name": "mail area tools",
@@ -44,7 +47,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### mail (' README.md",
         "match": "### mail \\((\\d+)\\)"
-      }
+      },
+      "label": "mail tools"
     },
     {
       "name": "workspace area tools",
@@ -55,7 +59,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### workspace (' README.md",
         "match": "### workspace \\((\\d+)\\)"
-      }
+      },
+      "label": "workspace tools"
     },
     {
       "name": "calendar area tools",
@@ -66,7 +71,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### calendar (' README.md",
         "match": "### calendar \\((\\d+)\\)"
-      }
+      },
+      "label": "calendar tools"
     },
     {
       "name": "tasks area tools",
@@ -77,7 +83,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### tasks (' README.md",
         "match": "### tasks \\((\\d+)\\)"
-      }
+      },
+      "label": "tasks tools"
     },
     {
       "name": "workflows area tools",
@@ -88,7 +95,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### workflows (' README.md",
         "match": "### workflows \\((\\d+)\\)"
-      }
+      },
+      "label": "workflows tools"
     },
     {
       "name": "people area tools",
@@ -99,7 +107,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### people (' README.md",
         "match": "### people \\((\\d+)\\)"
-      }
+      },
+      "label": "people tools"
     },
     {
       "name": "chat area tools",
@@ -110,7 +119,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### chat (' README.md",
         "match": "### chat \\((\\d+)\\)"
-      }
+      },
+      "label": "chat tools"
     },
     {
       "name": "identity area tools",
@@ -121,7 +131,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### identity (' README.md",
         "match": "### identity \\((\\d+)\\)"
-      }
+      },
+      "label": "identity tools"
     },
     {
       "name": "chrome area tools",
@@ -132,7 +143,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### chrome (' README.md",
         "match": "### chrome \\((\\d+)\\)"
-      }
+      },
+      "label": "chrome tools"
     },
     {
       "name": "dns area tools",
@@ -143,7 +155,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### dns (' README.md",
         "match": "### dns \\((\\d+)\\)"
-      }
+      },
+      "label": "dns tools"
     },
     {
       "name": "domain area tools",
@@ -154,7 +167,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### domain (' README.md",
         "match": "### domain \\((\\d+)\\)"
-      }
+      },
+      "label": "domain tools"
     },
     {
       "name": "datatransfer area tools",
@@ -165,7 +179,8 @@
       "how": {
         "command": "node scripts/gen-catalog.mjs --check && grep -m1 '^### datatransfer (' README.md",
         "match": "### datatransfer \\((\\d+)\\)"
-      }
+      },
+      "label": "datatransfer tools"
     }
   ]
 }

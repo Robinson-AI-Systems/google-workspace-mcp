@@ -13,4 +13,4 @@ same change; a feature is not landed until the diagram matches the code.
 - `docs/MAP.md` stays a short pointer to the map; the detail lives in
   `docs/relational-map/`.
 
-Numbers in the map are checked against the code by `scripts/check-map-counts.mjs` (MAP-COUNTS-1, 2026-11-18), using `docs/relational-map/counts.json`.
+Numbers in the map are checked against the code by `scripts/check-map-counts.mjs` (MAP-COUNTS-1, 2026-11-18), using `docs/relational-map/counts.json`. Dates, live-state claims and policy rules the map states are tied to their source in `docs/relational-map/claims.json` and checked by the same script (MAP-CLAIMS-1, 2026-11-20); a date with no registered source fails the check.
